@@ -27,7 +27,6 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.sakaiproject.nakamura.api.activity.ActivityConstants;
-import org.sakaiproject.nakamura.api.activity.ActivityUtils;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
@@ -75,14 +74,6 @@ public class LiteAllActivitiesResultProcessor implements SolrSearchResultProcess
       ContentManager contentManager = session.getContentManager();
       AuthorizableManager authorizableManager = session.getAuthorizableManager();
       String path = result.getPath();
-
-      // KERN-2127 we don't need our private results included in the all-activity feed
-      // because our own activities will be visible on the content nodes themselves
-      String sessionUser = session.getUserId();
-      String userActivityFeedPath = ActivityUtils.getUserFeed(sessionUser);
-      if (path.startsWith(userActivityFeedPath)) {
-        return;
-      }
       Content activityNode = contentManager.get(path);
       if (activityNode != null ) {
         String sourcePath = (String) activityNode.getProperty(ActivityConstants.PARAM_SOURCE);
