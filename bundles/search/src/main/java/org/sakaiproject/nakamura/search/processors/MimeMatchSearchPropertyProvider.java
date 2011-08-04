@@ -23,12 +23,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.sakaiproject.nakamura.api.search.SearchConstants;
-import org.sakaiproject.nakamura.api.search.SearchServiceFactory;
 import org.sakaiproject.nakamura.api.search.SearchUtil;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchPropertyProvider;
 import org.slf4j.Logger;
@@ -47,12 +44,6 @@ import java.util.Map;
 public class MimeMatchSearchPropertyProvider implements SolrSearchPropertyProvider {
   private static final Logger logger = LoggerFactory
       .getLogger(TagMatchSearchPropertyProvider.class);
-
-  @Reference
-  protected transient SlingRepository repository;
-
-  @Reference
-  protected transient SearchServiceFactory searchServiceFactory;
 
   /**
    * {@inheritDoc}
