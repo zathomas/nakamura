@@ -329,10 +329,8 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
     if (safeHost && "GET".equals(method)) {
       boolean safeToStream = false;
       RequestPathInfo requestPathInfo = srequest.getRequestPathInfo();
-      Resource resource = srequest.getResource();
-      LOGGER.debug("Resource type is: {}",resource.getResourceType());
       String ext = requestPathInfo.getExtension();
-      if (ext == null || "res".equals(ext) || "sakai/pooled-content".equals(resource.getResourceType())) {
+      if (ext == null || "res".equals(ext)) {
         // this is going to stream
         String path = srequest.getRequestURI();
         LOGGER.debug("Checking [{}] RequestPathInfo {}", path, requestPathInfo);
@@ -346,6 +344,7 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
             }
           }
           if (!safeToStream) {
+            Resource resource = srequest.getResource();
             if ( resource != null ) {
               Node node = resource.adaptTo(Node.class);
               if (node != null || "sling:nonexisting".equals(resource.getResourceType())) {

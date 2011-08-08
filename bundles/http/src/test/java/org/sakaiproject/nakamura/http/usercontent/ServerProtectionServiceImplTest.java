@@ -3,7 +3,6 @@ package org.sakaiproject.nakamura.http.usercontent;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
-import org.apache.sling.api.resource.Resource;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -180,8 +179,6 @@ public class ServerProtectionServiceImplTest {
     Mockito.when(hrequest.getRequestURL()).thenReturn(new StringBuffer("http://localhost:8080/p/sdsdfsdfs"));
     Mockito.when(hrequest.getQueryString()).thenReturn("x=1&y=2");
     Mockito.when(hrequest.getRemoteUser()).thenReturn(null);
-    Resource resource = Mockito.mock(Resource.class);
-    Mockito.when(hrequest.getResource()).thenReturn(resource);
     RequestPathInfo requestPathInfo = Mockito.mock(RequestPathInfo.class);
     Mockito.when(hrequest.getRequestPathInfo()).thenReturn(requestPathInfo);
     Mockito.when(requestPathInfo.getExtension()).thenReturn(null);
@@ -204,8 +201,6 @@ public class ServerProtectionServiceImplTest {
       Mockito.when(trequest.getRequestURL()).thenReturn(new StringBuffer("http://localhost:8080/p/sdsdfsdfs"));
       Mockito.when(trequest.getQueryString()).thenReturn("x=1&y=2");
       Mockito.when(trequest.getRemoteUser()).thenReturn("ieb");
-      Resource resource = Mockito.mock(Resource.class);
-      Mockito.when(trequest.getResource()).thenReturn(resource);
       RequestPathInfo requestPathInfo = Mockito.mock(RequestPathInfo.class);
       Mockito.when(trequest.getRequestPathInfo()).thenReturn(requestPathInfo);
       Mockito.when(requestPathInfo.getExtension()).thenReturn(null);
@@ -218,50 +213,6 @@ public class ServerProtectionServiceImplTest {
       String hmac = url.substring("http://localhost:8082/p/sdsdfsdfs?x=1&y=2&:hmac=".length());
       String queryString = url.substring("http://localhost:8082/p/sdsdfsdfs?".length());
       
-      Mockito.when(trequest.getMethod()).thenReturn("GET");
-      Mockito.when(trequest.getScheme()).thenReturn("http");
-      Mockito.when(trequest.getServerName()).thenReturn("localhost");
-      Mockito.when(trequest.getServerPort()).thenReturn(8082);
-      Mockito.when(trequest.getParameter(":hmac")).thenReturn(URLDecoder.decode(hmac, "UTF-8"));
-      Mockito.when(trequest.getRequestURL()).thenReturn(new StringBuffer("http://localhost:8082/p/sdsdfsdfs"));
-      Mockito.when(trequest.getQueryString()).thenReturn(queryString);
-      String userId = serverProtectionService.getTransferUserId(trequest);
-      Assert.assertEquals("ieb", userId);
-    }
-
-  }
-
-  @Test
-  public void testUnsafeUserRequestForPooledContentWithExtension() throws UnsupportedEncodingException, IOException {
-    // KERN-2061 normally, if we something has an extension, we treat it as not a file body
-    // But it can be, such as when our preview processor generates thumbnails like page1.normal.jpg
-    // For this, we check to see if the resource type is sakai/pooled-content
-    for ( int i = 0; i < 100; i++ ) {
-      SlingHttpServletRequest trequest = Mockito.mock(SlingHttpServletRequest.class);
-      SlingHttpServletResponse tresponse = Mockito.mock(SlingHttpServletResponse.class);
-      Mockito.when(trequest.getMethod()).thenReturn("GET");
-      Mockito.when(trequest.getScheme()).thenReturn("http");
-      Mockito.when(trequest.getServerName()).thenReturn("localhost");
-      Mockito.when(trequest.getServerPort()).thenReturn(8080);
-      Mockito.when(trequest.getRequestURI()).thenReturn("/p/sdsdfsdfs");
-      Mockito.when(trequest.getRequestURL()).thenReturn(new StringBuffer("http://localhost:8080/p/sdsdfsdfs"));
-      Mockito.when(trequest.getQueryString()).thenReturn("x=1&y=2");
-      Mockito.when(trequest.getRemoteUser()).thenReturn("ieb");
-      Resource resource = Mockito.mock(Resource.class);
-      Mockito.when(resource.getResourceType()).thenReturn("sakai/pooled-content");
-      Mockito.when(trequest.getResource()).thenReturn(resource);
-      RequestPathInfo requestPathInfo = Mockito.mock(RequestPathInfo.class);
-      Mockito.when(trequest.getRequestPathInfo()).thenReturn(requestPathInfo);
-      Mockito.when(requestPathInfo.getExtension()).thenReturn("jpg");
-      Assert.assertFalse(serverProtectionService.isRequestSafe(trequest, tresponse));
-      Mockito.verify(tresponse, Mockito.times(0)).sendError(Mockito.eq(400), Mockito.anyString());
-      ArgumentCaptor<String> urlCapture = ArgumentCaptor.forClass(String.class);
-      Mockito.verify(tresponse, Mockito.times(1)).sendRedirect(urlCapture.capture());
-      String url = urlCapture.getValue();
-      Assert.assertTrue(url.startsWith("http://localhost:8082/p/sdsdfsdfs?x=1&y=2&:hmac="));
-      String hmac = url.substring("http://localhost:8082/p/sdsdfsdfs?x=1&y=2&:hmac=".length());
-      String queryString = url.substring("http://localhost:8082/p/sdsdfsdfs?".length());
-
       Mockito.when(trequest.getMethod()).thenReturn("GET");
       Mockito.when(trequest.getScheme()).thenReturn("http");
       Mockito.when(trequest.getServerName()).thenReturn("localhost");
@@ -296,8 +247,6 @@ public class ServerProtectionServiceImplTest {
         new StringBuffer("http://localhost:8080/p/sdsdfsdfs"));
     Mockito.when(trequest.getQueryString()).thenReturn("x=1&y=2");
     Mockito.when(trequest.getRemoteUser()).thenReturn("ieb");
-    Resource resource = Mockito.mock(Resource.class);
-    Mockito.when(trequest.getResource()).thenReturn(resource);
     RequestPathInfo requestPathInfo = Mockito.mock(RequestPathInfo.class);
     Mockito.when(trequest.getRequestPathInfo()).thenReturn(requestPathInfo);
     Mockito.when(requestPathInfo.getExtension()).thenReturn(null);
