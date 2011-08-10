@@ -38,6 +38,8 @@ import org.sakaiproject.nakamura.api.resource.lite.SparseContentResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 
 import javax.jcr.RepositoryException;
@@ -148,6 +150,29 @@ public class ContentPoolProvider implements ResourceProvider {
             cpr.getResourceMetadata().put(CONTENT_RESOURCE_PROVIDER, this);
             LOGGER.debug("Resolved {} as {} ",path,cpr);
             return cpr;
+          } else if (possibleStructure != null && possibleStructure.length == 1) {
+            String[] possibleAltStream = StringUtils.split(resourceId, ".", 4);
+            if (possibleAltStream.length == 3) {
+              if (("." + possibleAltStream[2]).equals(content.getProperty("sakai:fileextension"))) {
+                try {
+                  Content altParent = contentManager.get(poolId + "/" + possibleAltStream[0]);
+                  InputStream altIn = contentManager.getInputStream(altParent.getPath(), possibleAltStream[1]);
+                  if (altIn != null) {
+                    SparseContentResource cpr = new SparseContentResource(altParent, session,
+                        resourceResolver, path);
+                    cpr.getResourceMetadata().put(CONTENT_RESOURCE_PROVIDER, this);
+                    LOGGER.debug("Resolved {} as {} ",path,cpr);
+                    return cpr;
+                  }
+                } catch (StorageClientException e) {
+                  LOGGER.warn(e.getMessage(), e);
+                } catch (AccessDeniedException e) {
+                  LOGGER.warn(e.getMessage(), e);
+                } catch (IOException e) {
+                  LOGGER.warn(e.getMessage(), e);
+                }
+              }
+            }
           }
         } else {
           SparseContentResource cpr = new SparseContentResource(content, session,
