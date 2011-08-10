@@ -1,4 +1,7 @@
 This migration iterates over all of the sakai content items and renames the a property to another property.
+
+## The .cfg file should be in place before you install the migratesparseuuid bundle.
+
 These property are configurable with a .cfg file in:
 
 load/org.sakaiproject.nakamura.migratesparseuuid.ContentUUIDMigrator.cfg
@@ -6,8 +9,6 @@ load/org.sakaiproject.nakamura.migratesparseuuid.ContentUUIDMigrator.cfg
     migrateuuid.original.field = _id
     migrateuuid.destination.field = _sparseId
     migrateuuid.dryrun = true
-
-This file should be in place before you install the migratesparseuuid bundle.
 
 To install the bundle
 
