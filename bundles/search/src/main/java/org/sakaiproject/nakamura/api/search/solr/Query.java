@@ -17,6 +17,8 @@
  */
 package org.sakaiproject.nakamura.api.search.solr;
 
+import com.google.common.collect.Maps;
+
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Map;
@@ -33,7 +35,7 @@ public class Query {
 
   private String queryString;
 
-  private Map<String, String> options;
+  private Map<String, String> options = Maps.newHashMap();
 
   private String name;
 
