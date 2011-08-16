@@ -16,9 +16,11 @@
  */
 package org.sakaiproject.nakamura.email.outgoing;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -31,6 +33,8 @@ import org.sakaiproject.nakamura.api.message.LiteMessageRouter;
 import org.sakaiproject.nakamura.api.message.MessageConstants;
 import org.sakaiproject.nakamura.api.message.MessageRoute;
 import org.sakaiproject.nakamura.api.message.MessageRoutes;
+import org.sakaiproject.nakamura.api.profile.ProfileService;
+import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,13 +42,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 
 @Service
-@Component(inherit = true, immediate = true)
+@Component
 public class LiteSmtpRouter implements LiteMessageRouter {
-  private static final Logger LOG = LoggerFactory.getLogger(SmtpRouter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LiteSmtpRouter.class);
 
   /**
    * The Content Repository we access.
@@ -53,12 +58,19 @@ public class LiteSmtpRouter implements LiteMessageRouter {
   @Reference
   private Repository contentRepository;
 
-  /**
-   * @param contentRepository
-   *          the contentRepository to set
-   */
-  protected void bindSlingRepository(Repository contentRepository) {
+  @Reference
+  private ProfileService profileService;
+
+  @Reference
+  private SlingRepository slingRepo;
+
+  public LiteSmtpRouter() {
+  }
+
+  LiteSmtpRouter(Repository contentRepository, SlingRepository slingRepository, ProfileService profileService) {
     this.contentRepository = contentRepository;
+    this.slingRepo = slingRepository;
+    this.profileService = profileService;
   }
 
   public int getPriority() {
@@ -84,15 +96,15 @@ public class LiteSmtpRouter implements LiteMessageRouter {
           Session session = contentRepository.loginAdministrative();
           Authorizable user = session.getAuthorizableManager().findAuthorizable(rcpt);
           if (user != null) {
-            boolean smtpPreferred = isPreferredTransportSmtp(user);
+            String profilePath = LitePersonalUtils.getProfilePath(user.getId());
+            Content profileNode = session.getContentManager().get(profilePath);
+            boolean smtpPreferred = isPreferredTransportSmtp(profileNode);
             boolean smtpMessage = isMessageTypeSmtp(message);
             if (smtpPreferred || smtpMessage) {
               LOG.debug("Message is an SMTP Message, getting email address for the user {}", user.getId());
-              // TODO PersonalUtils not yet implemented for Sparse
-              // String rcptEmailAddress = PersonalUtils.getPrimaryEmailAddress(profileNode);
-              String rcptEmailAddress = "someguy@example.com";
+              String rcptEmailAddress = getEmailAddress(user);
 
-              if (rcptEmailAddress == null || rcptEmailAddress.trim().length() == 0) {
+              if (StringUtils.isBlank(rcptEmailAddress)) {
                 LOG.warn("Can't find a primary email address for [" + rcpt
                     + "]; smtp message will not be sent to user.");
               } else {
@@ -132,16 +144,43 @@ public class LiteSmtpRouter implements LiteMessageRouter {
     return isSmtp;
   }
 
-  private boolean isPreferredTransportSmtp(Authorizable user) throws RepositoryException {
+  private boolean isPreferredTransportSmtp(Content profileNode) throws RepositoryException {
     boolean prefersSmtp = false;
 
-    if (user != null) {
-      // TODO BL120 Get this user's preferred message transport
-//      String transport = PersonalUtils.getPreferredMessageTransport(profileNode);
-      String transport = MessageConstants.TYPE_INTERNAL;
+    if (profileNode != null) {
+      // Get this user's preferred message transport
+      String transport = LitePersonalUtils.getPreferredMessageTransport(profileNode);
       prefersSmtp = MessageConstants.TYPE_SMTP.equals(transport);
     }
 
     return prefersSmtp;
+  }
+
+  private String getEmailAddress(Authorizable user) throws RepositoryException,
+      AccessDeniedException, StorageClientException {
+    String email = null;
+    javax.jcr.Session jcrSession = null;
+    try {
+      jcrSession = slingRepo.loginAdministrative(null);
+      String emailLocationPath = profileService.getEmailLocation();
+      String[] emailLocation = StringUtils.split(emailLocationPath, '/');
+      Map<String, Object> profile = profileService.getProfileMap(user, jcrSession);
+      for (int i = 0; i < emailLocation.length; i++) {
+        if (profile.containsKey(emailLocation[i])) {
+          if (i == emailLocation.length - 1) {
+            email = String.valueOf(profile.get(emailLocation[i]));
+          } else {
+            profile = (Map<String, Object>) profile.get(emailLocation[i]);
+          }
+        } else {
+          LOG.warn("Unable to find email address location: {}", emailLocationPath);
+        }
+      }
+      return email;
+    } finally {
+      if (jcrSession != null) {
+        jcrSession.logout();
+      }
+    }
   }
 }
