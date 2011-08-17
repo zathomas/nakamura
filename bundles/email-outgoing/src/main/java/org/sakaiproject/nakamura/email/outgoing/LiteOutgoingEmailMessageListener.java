@@ -356,17 +356,17 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     return rv;
   }
 
-  private HashSet<String> setRecipients(List<String> recipients,
+  private Set<String> setRecipients(List<String> recipients,
       org.sakaiproject.nakamura.api.lite.Session session
       ) throws StorageClientException,
       AccessDeniedException {
     return setRecipients(recipients, session, new HashSet<String>(), new HashSet<String>());
   }
 
-  private HashSet<String> setRecipients(List<String> recipients,
+  private Set<String> setRecipients(List<String> recipients,
       org.sakaiproject.nakamura.api.lite.Session session,
-      HashSet<String> newRecipients,
-      HashSet<String> groupsAlreadyProcessed) throws StorageClientException,
+      Set<String> newRecipients,
+      Set<String> groupsAlreadyProcessed) throws StorageClientException,
       AccessDeniedException {
     for (String recipient : recipients) {
       LOGGER.debug("Checking recipient: " + recipient);

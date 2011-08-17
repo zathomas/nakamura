@@ -103,7 +103,7 @@ public class LiteSmtpRouter implements LiteMessageRouter {
             boolean smtpMessage = isMessageTypeSmtp(message);
             if (smtpPreferred || smtpMessage) {
               LOG.debug("Message is an SMTP Message, getting email address for the authorizable {}", au.getId());
-              String rcptEmailAddress = new String();
+              String rcptEmailAddress;
               if (au instanceof Group) {
                 // Can just use the ID of the group, as the members will
                 // be looked up and email sent to them
@@ -115,8 +115,7 @@ public class LiteSmtpRouter implements LiteMessageRouter {
               }
 
               if (StringUtils.isBlank(rcptEmailAddress)) {
-                LOG.warn("Can't find a primary email address for [" + rcpt
-                    + "]; smtp message will not be sent to authorizable.");
+                LOG.warn("Can't find a primary email address for [{}]; smtp message will not be sent to authorizable.", rcpt);
               } else {
                 AbstractMessageRoute smtpRoute = new AbstractMessageRoute(
                     MessageConstants.TYPE_SMTP + ":" + rcptEmailAddress) {
