@@ -491,8 +491,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     }
 
     String _smtpServer = OsgiUtil.toString(props.get(SMTP_SERVER), "");
-    boolean smtpServerEmpty = _smtpServer == null || _smtpServer.trim().length() == 0;
-    if (!smtpServerEmpty) {
+    if (!StringUtils.isBlank(_smtpServer)) {
       if (diff(smtpServer, _smtpServer)) {
         smtpServer = _smtpServer;
       }
@@ -501,8 +500,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     }
 
     String _replyAsAddress = OsgiUtil.toString(props.get(REPLY_AS_ADDRESS), "");
-    boolean replyAsAddressEmpty = _replyAsAddress == null || _replyAsAddress.trim().length() == 0;
-    if (!replyAsAddressEmpty) {
+    if (!StringUtils.isBlank(_replyAsAddress)) {
       if (diff(replyAsAddress, _replyAsAddress)) {
         replyAsAddress = _replyAsAddress;
       }
@@ -511,8 +509,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     }
 
     String _replyAsName = OsgiUtil.toString(props.get(REPLY_AS_NAME), "");
-    boolean replyAsNameEmpty = _replyAsName == null || _replyAsName.trim().length() == 0;
-    if (!replyAsNameEmpty) {
+    if (!StringUtils.isBlank(_replyAsName)) {
       if (diff(replyAsName, _replyAsName)) {
         replyAsName = _replyAsName;
       }
