@@ -80,9 +80,8 @@ public class ProfileServiceImpl implements ProfileService {
   private ProviderSettingsFactory providerSettingsFactory = new ProviderSettingsFactory();
   public static final Logger LOG = LoggerFactory.getLogger(ProfileServiceImpl.class);
 
+  @Property
   static final String EMAIL_LOCATION = "sakai.profile.email.location";
-  static final String EMAIL_LOCATION_DEFAULT = "basic/elements/email/value";
-  @Property(name = EMAIL_LOCATION, value = EMAIL_LOCATION_DEFAULT)
   private String emailLocation;
 
   @Reference
@@ -90,7 +89,7 @@ public class ProfileServiceImpl implements ProfileService {
 
   @Activate @Modified
   protected void activate(Map<?, ?> props) {
-    emailLocation = OsgiUtil.toString(props.get(EMAIL_LOCATION), EMAIL_LOCATION_DEFAULT);
+    emailLocation = OsgiUtil.toString(props.get(EMAIL_LOCATION), null);
   }
 
   public String getEmailLocation() {

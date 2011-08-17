@@ -25,17 +25,21 @@ import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
+import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
+import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.message.AbstractMessageRoute;
 import org.sakaiproject.nakamura.api.message.LiteMessageRouter;
 import org.sakaiproject.nakamura.api.message.MessageConstants;
 import org.sakaiproject.nakamura.api.message.MessageRoute;
 import org.sakaiproject.nakamura.api.message.MessageRoutes;
 import org.sakaiproject.nakamura.api.profile.ProfileService;
+import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
+import org.sakaiproject.nakamura.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +65,9 @@ public class LiteSmtpRouter implements LiteMessageRouter {
 
   @Reference
   private ProfileService profileService;
+
+  @Reference
+  private BasicUserInfoService basicUserInfo;
 
   @Reference
   private SlingRepository slingRepo;
@@ -111,7 +118,7 @@ public class LiteSmtpRouter implements LiteMessageRouter {
                 //  future, remove this check
                 rcptEmailAddress = au.getId();
               } else {
-                rcptEmailAddress = getEmailAddress(au);
+                rcptEmailAddress = getEmailAddress(au, session);
               }
 
               if (StringUtils.isBlank(rcptEmailAddress)) {
@@ -165,31 +172,82 @@ public class LiteSmtpRouter implements LiteMessageRouter {
     return prefersSmtp;
   }
 
-  private String getEmailAddress(Authorizable user) throws RepositoryException,
+  /**
+   * Get the email address for a user.
+   * <p>
+   * There are places that are checked to improve efficiency when getting the email field.
+   * Processing in this order should allow for more efficient look ups of the email
+   * address in descending order.
+   * <ol>
+   * <li>If ProfileService.getEmailLocation() is blank, check BasicUserInfoService to see
+   * if the field is in 'basic'. If so, retrieve directly from <code>user</code>.</li>
+   * <li>Check if ProfileService.getEmailLocation() exists in ContentManager already (not
+   * from an external provider). If so, retrieve from there.</li>
+   * <li>Look up ProfileService.getEmailLocation() in the full profile
+   * (ProfileService.getProfileMap(..)).</li>
+   * </ol>
+   *
+   * @param user
+   * @param session
+   * @return
+   * @throws RepositoryException
+   * @throws AccessDeniedException
+   * @throws StorageClientException
+   */
+  private String getEmailAddress(Authorizable user, Session session) throws RepositoryException,
       AccessDeniedException, StorageClientException {
     String email = null;
-    javax.jcr.Session jcrSession = null;
-    try {
-      jcrSession = slingRepo.loginAdministrative(null);
-      String emailLocationPath = profileService.getEmailLocation();
-      String[] emailLocation = StringUtils.split(emailLocationPath, '/');
-      Map<String, Object> profile = profileService.getProfileMap(user, jcrSession);
-      for (int i = 0; i < emailLocation.length; i++) {
-        if (profile.containsKey(emailLocation[i])) {
-          if (i == emailLocation.length - 1) {
-            email = String.valueOf(profile.get(emailLocation[i]));
-          } else {
-            profile = (Map<String, Object>) profile.get(emailLocation[i]);
-          }
+    String emailLocationPath = profileService.getEmailLocation();
+
+    // check the default location first. this gives a shortcut with a more efficient check
+    // for the assumed case without having to go into a deeper lookup of the full profile
+    if (StringUtils.isBlank(emailLocationPath)) {
+      String[] basicFields = basicUserInfo.getBasicProfileElements();
+      for (String basicField : basicFields) {
+        if ("email".equals(basicField)) {
+          email = String.valueOf(user.getProperty("email"));
+        }
+      }
+    } else {
+      String profilePath = LitePersonalUtils.getProfilePath(user.getId());
+      String fieldNode = PathUtils.getParentReference(emailLocationPath);
+      String fieldName = StorageClientUtils.getObjectName(emailLocationPath);
+      ContentManager cm = session.getContentManager();
+
+      String emailPath = profilePath + ("/".equals(fieldNode) ? "" : "/" + fieldNode);
+      if (cm.exists(emailPath)) {
+        // check if the path is available locally before checking the full profile
+        Content emailNode = session.getContentManager().get(emailPath);
+        if (emailNode != null && emailNode.hasProperty(fieldName)) {
+          email = String.valueOf(emailNode.getProperty(fieldName));
         } else {
           LOG.warn("Unable to find email address location: {}", emailLocationPath);
         }
-      }
-      return email;
-    } finally {
-      if (jcrSession != null) {
-        jcrSession.logout();
+      } else {
+        javax.jcr.Session jcrSession = null;
+        try {
+          jcrSession = slingRepo.loginAdministrative(null);
+
+          String[] emailLocation = StringUtils.split(emailLocationPath, '/');
+          Map<String, Object> profile = profileService.getProfileMap(user, jcrSession);
+          for (int i = 0; i < emailLocation.length; i++) {
+            if (profile.containsKey(emailLocation[i])) {
+             if (i == emailLocation.length - 1) {
+                email = String.valueOf(profile.get(emailLocation[i]));
+             } else {
+                profile = (Map<String, Object>) profile.get(emailLocation[i]);
+             }
+            } else {
+              LOG.warn("Unable to find email address location in full profile: {}", emailLocationPath);
+            }
+          }
+        } finally {
+          if (jcrSession != null) {
+            jcrSession.logout();
+          }
+        }
       }
     }
+    return email;
   }
 }
