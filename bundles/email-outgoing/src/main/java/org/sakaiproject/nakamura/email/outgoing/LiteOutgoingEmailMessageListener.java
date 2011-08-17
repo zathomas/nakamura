@@ -260,29 +260,34 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
       PathNotFoundException, RepositoryException {
     MultiPartEmail email = new MultiPartEmail();
 
+    String from;
+    if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_FROM)) {
+      from = (String) contentNode.getProperty(MessageConstants.PROP_SAKAI_FROM);
+      try {
+        email.setFrom(convertToEmail(from, sparseSession));
+      } catch (EmailException e) {
+        throw new EmailDeliveryException("Invalid From Address [" + from
+          + "], message is being dropped :" + e.getMessage(), e);
+      }
+    } else {
+      throw new EmailDeliveryException("Must provide a 'from' address.");
+    }
     Set<String> toRecipients = new HashSet<String>();
 
     toRecipients = setRecipients(recipients, sparseSession);
     for (String r : toRecipients) {
       try {
-        email.addTo(convertToEmail(r, sparseSession));
+        if (r.equals(from)) {
+          email.addTo(convertToEmail(r, sparseSession));
+        } else {
+          email.addBcc(convertToEmail(r, sparseSession));
+        }
       } catch (EmailException e) {
         throw new EmailDeliveryException("Invalid To Address [" + r
             + "], message is being dropped :" + e.getMessage(), e);
       }
     }
 
-    if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_FROM)) {
-      String from = (String) contentNode.getProperty(MessageConstants.PROP_SAKAI_FROM);
-      try {
-        email.setFrom(convertToEmail(from, sparseSession));
-      } catch (EmailException e) {
-        throw new EmailDeliveryException("Invalid From Address [" + from
-            + "], message is being dropped :" + e.getMessage(), e);
-      }
-    } else {
-      throw new EmailDeliveryException("Must provide a 'from' address.");
-    }
 
     if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_BODY)) {
       String messageBody = (String) contentNode
