@@ -372,7 +372,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     Map<String, String> rv = new HashMap<String, String>();
     String[] values = templateParameter.split("\\|");
     for (String value : values) {
-      String[] keyValuePair = value.split("=");
+      String[] keyValuePair = value.split("=", 2);
       rv.put(keyValuePair[0], keyValuePair[1]);
     }
     return rv;
