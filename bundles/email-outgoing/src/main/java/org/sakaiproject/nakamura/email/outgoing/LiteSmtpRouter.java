@@ -202,50 +202,111 @@ public class LiteSmtpRouter implements LiteMessageRouter {
     // check the default location first. this gives a shortcut with a more efficient check
     // for the assumed case without having to go into a deeper lookup of the full profile
     if (StringUtils.isBlank(emailLocationPath)) {
-      String[] basicFields = basicUserInfo.getBasicProfileElements();
-      for (String basicField : basicFields) {
-        if ("email".equals(basicField)) {
-          email = String.valueOf(user.getProperty("email"));
-        }
-      }
+      email = getEmailFromBasic(user);
     } else {
       String profilePath = LitePersonalUtils.getProfilePath(user.getId());
       String fieldNode = PathUtils.getParentReference(emailLocationPath);
       String fieldName = StorageClientUtils.getObjectName(emailLocationPath);
       ContentManager cm = session.getContentManager();
 
+      // check if the path is available locally before checking the full profile
       String emailPath = profilePath + ("/".equals(fieldNode) ? "" : "/" + fieldNode);
       if (cm.exists(emailPath)) {
-        // check if the path is available locally before checking the full profile
-        Content emailNode = session.getContentManager().get(emailPath);
-        if (emailNode != null && emailNode.hasProperty(fieldName)) {
-          email = String.valueOf(emailNode.getProperty(fieldName));
-        } else {
+        email = getEmailFromProfile(session, emailPath, fieldName);
+        if (email == null) {
           LOG.warn("Unable to find email address location: {}", emailLocationPath);
         }
       } else {
-        javax.jcr.Session jcrSession = null;
-        try {
-          jcrSession = slingRepo.loginAdministrative(null);
+        email = getEmailFromFullProfile(user, emailLocationPath);
+        if (email == null) {
+          LOG.warn("Unable to find email address location in full profile: {}", emailLocationPath);
+        }
+      }
+    }
+    return email;
+  }
 
-          String[] emailLocation = StringUtils.split(emailLocationPath, '/');
-          Map<String, Object> profile = profileService.getProfileMap(user, jcrSession);
-          for (int i = 0; i < emailLocation.length; i++) {
-            if (profile.containsKey(emailLocation[i])) {
-             if (i == emailLocation.length - 1) {
-                email = String.valueOf(profile.get(emailLocation[i]));
-             } else {
-                profile = (Map<String, Object>) profile.get(emailLocation[i]);
-             }
-            } else {
-              LOG.warn("Unable to find email address location in full profile: {}", emailLocationPath);
-            }
-          }
-        } finally {
-          if (jcrSession != null) {
-            jcrSession.logout();
+  /**
+   * Get the email field from the "basic" profile section (i.e. from the authorizable)
+   *
+   * @param user
+   *          The user for whom to find an email address.
+   * @return The email address from "basic" if it is set to be managed in "basic"
+   *         according to the BasicUserInfoService. null otherwise.
+   */
+  private String getEmailFromBasic(Authorizable user) {
+    String email = null;
+    String[] basicFields = basicUserInfo.getBasicProfileElements();
+    for (String basicField : basicFields) {
+      if ("email".equals(basicField)) {
+        email = String.valueOf(user.getProperty("email"));
+        break;
+      }
+    }
+    return email;
+  }
+
+  /**
+   * Get the email field by checking the locally stored profile information. This does not
+   * check "basic" or externally provided profile information.
+   *
+   * @param session
+   * @param email
+   * @param emailLocationPath
+   * @param fieldName
+   * @param emailPath
+   * @return
+   * @throws StorageClientException
+   * @throws AccessDeniedException
+   */
+  private String getEmailFromProfile(Session session, String emailPath, String fieldName)
+      throws StorageClientException, AccessDeniedException {
+    String email = null;
+    Content emailNode = session.getContentManager().get(emailPath);
+    if (emailNode != null && emailNode.hasProperty(fieldName)) {
+      email = String.valueOf(emailNode.getProperty(fieldName));
+    }
+    return email;
+  }
+
+  /**
+   * Get the email field by searching through the full profile. This will check "basic"
+   * (on authorizable), profile information stored locally and profile information
+   * provided externally.
+   *
+   * @param user
+   * @param emailLocationPath
+   * @return
+   * @throws RepositoryException
+   * @throws StorageClientException
+   * @throws AccessDeniedException
+   */
+  @SuppressWarnings("unchecked")
+  private String getEmailFromFullProfile(Authorizable user, String emailLocationPath)
+      throws RepositoryException, StorageClientException, AccessDeniedException {
+    String email = null;
+    javax.jcr.Session jcrSession = null;
+    try {
+      jcrSession = slingRepo.loginAdministrative(null);
+      // the profile service returns a map/tree that is like the json seen in /system/me, so we
+      // have to break up the path and walk over the returned structure
+      String[] emailLocation = StringUtils.split(emailLocationPath, '/');
+      Map<String, Object> profile = profileService.getProfileMap(user, jcrSession);
+      for (int i = 0; i < emailLocation.length; i++) {
+        if (profile.containsKey(emailLocation[i])) {
+          if (i == emailLocation.length - 1) {
+            // looks like we've reached the last path element which should be the name of
+            // the field where the value lives
+            email = String.valueOf(profile.get(emailLocation[i]));
+          } else {
+            // set our profile reference to be the next segment down to keep digging
+            profile = (Map<String, Object>) profile.get(emailLocation[i]);
           }
         }
+      }
+    } finally {
+      if (jcrSession != null) {
+        jcrSession.logout();
       }
     }
     return email;
