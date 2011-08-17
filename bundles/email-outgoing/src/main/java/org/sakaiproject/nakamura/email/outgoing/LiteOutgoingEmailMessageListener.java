@@ -37,6 +37,7 @@ import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
+import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.message.MessageConstants;
@@ -46,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -257,39 +259,15 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
       throws EmailDeliveryException, StorageClientException, AccessDeniedException,
       PathNotFoundException, RepositoryException {
     MultiPartEmail email = new MultiPartEmail();
-    // TODO: the SAKAI_TO may make no sense in an email context
-    // and there does not appear to be any distinction between Bcc and To in java mail.
 
     Set<String> toRecipients = new HashSet<String>();
-    Set<String> bccRecipients = new HashSet<String>();
-    for (String r : recipients) {
-      bccRecipients.add(convertToEmail(r.trim(), sparseSession));
-    }
 
-    if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_TO)) {
-      String[] tor = StringUtils.split(
-          (String) contentNode.getProperty(MessageConstants.PROP_SAKAI_TO), ',');
-      for (String r : tor) {
-        r = convertToEmail(r.trim(), sparseSession);
-        if (bccRecipients.contains(r)) {
-          toRecipients.add(r);
-          bccRecipients.remove(r);
-        }
-      }
-    }
+    toRecipients = setRecipients(recipients, sparseSession);
     for (String r : toRecipients) {
       try {
         email.addTo(convertToEmail(r, sparseSession));
       } catch (EmailException e) {
         throw new EmailDeliveryException("Invalid To Address [" + r
-            + "], message is being dropped :" + e.getMessage(), e);
-      }
-    }
-    for (String r : bccRecipients) {
-      try {
-        email.addBcc(convertToEmail(r, sparseSession));
-      } catch (EmailException e) {
-        throw new EmailDeliveryException("Invalid Bcc Address [" + r
             + "], message is being dropped :" + e.getMessage(), e);
       }
     }
@@ -376,6 +354,40 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
       rv.put(keyValuePair[0], keyValuePair[1]);
     }
     return rv;
+  }
+
+  private Set<String> setRecipients(List<String> recipients,
+      org.sakaiproject.nakamura.api.lite.Session session
+      ) throws StorageClientException,
+      AccessDeniedException {
+    return setRecipients(recipients, session, new HashSet<String>(), new HashSet<String>());
+  }
+
+  private Set<String> setRecipients(List<String> recipients,
+      org.sakaiproject.nakamura.api.lite.Session session,
+      Set<String> newRecipients,
+      Set<String> groupsAlreadyProcessed) throws StorageClientException,
+      AccessDeniedException {
+    for (String recipient : recipients) {
+      LOGGER.debug("Checking recipient: " + recipient);
+      Authorizable au = session.getAuthorizableManager().findAuthorizable(recipient);
+      if (au != null && au instanceof Group) {
+        // Prevent infinite recursion in cyclic group references
+        if (!groupsAlreadyProcessed.contains(recipient)) {
+          Group group = (Group) au;
+          groupsAlreadyProcessed.add(recipient);
+          // Recurse with the group members
+          setRecipients(Arrays.asList(group.getMembers()),
+              session,
+              newRecipients,
+              groupsAlreadyProcessed);
+          }
+      } else if (!newRecipients.contains(recipient)) {
+        LOGGER.debug("Adding recipient to message delivery: " + recipient);
+        newRecipients.add(recipient);
+      }
+    }
+    return newRecipients;
   }
 
   private String convertToEmail(String address,

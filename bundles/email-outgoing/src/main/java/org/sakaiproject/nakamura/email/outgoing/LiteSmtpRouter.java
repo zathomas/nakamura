@@ -27,6 +27,7 @@ import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
+import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.message.AbstractMessageRoute;
 import org.sakaiproject.nakamura.api.message.LiteMessageRouter;
@@ -94,19 +95,27 @@ public class LiteSmtpRouter implements LiteMessageRouter {
         // preference is set to smtp, change the transport to 'smtp'.
         try {
           Session session = contentRepository.loginAdministrative();
-          Authorizable user = session.getAuthorizableManager().findAuthorizable(rcpt);
-          if (user != null) {
-            String profilePath = LitePersonalUtils.getProfilePath(user.getId());
+          Authorizable au = session.getAuthorizableManager().findAuthorizable(rcpt);
+          if (au != null) {
+            String profilePath = LitePersonalUtils.getProfilePath(au.getId());
             Content profileNode = session.getContentManager().get(profilePath);
             boolean smtpPreferred = isPreferredTransportSmtp(profileNode);
             boolean smtpMessage = isMessageTypeSmtp(message);
             if (smtpPreferred || smtpMessage) {
-              LOG.debug("Message is an SMTP Message, getting email address for the user {}", user.getId());
-              String rcptEmailAddress = getEmailAddress(user);
+              LOG.debug("Message is an SMTP Message, getting email address for the authorizable {}", au.getId());
+              String rcptEmailAddress;
+              if (au instanceof Group) {
+                // Can just use the ID of the group, as the members will
+                // be looked up and email sent to them
+                // TODO: If a group can have an email address sometime in the
+                //  future, remove this check
+                rcptEmailAddress = au.getId();
+              } else {
+                rcptEmailAddress = getEmailAddress(au);
+              }
 
               if (StringUtils.isBlank(rcptEmailAddress)) {
-                LOG.warn("Can't find a primary email address for [" + rcpt
-                    + "]; smtp message will not be sent to user.");
+                LOG.warn("Can't find a primary email address for [{}]; smtp message will not be sent to authorizable.", rcpt);
               } else {
                 AbstractMessageRoute smtpRoute = new AbstractMessageRoute(
                     MessageConstants.TYPE_SMTP + ":" + rcptEmailAddress) {
