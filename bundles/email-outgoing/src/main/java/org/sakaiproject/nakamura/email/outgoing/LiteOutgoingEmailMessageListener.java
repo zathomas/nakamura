@@ -82,6 +82,10 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
   private static final String MAX_RETRIES = "sakai.email.maxRetries";
   @Property(intValue = 30)
   private static final String RETRY_INTERVAL = "sakai.email.retryIntervalMinutes";
+  @Property(value = "no-reply@example.com")
+  private static final String REPLY_AS_ADDRESS = "sakai.email.replyAsAddress";
+  @Property(value = "Sakai OAE")
+  private static final String REPLY_AS_NAME = "sakai.email.replyAsName";
 
   protected static final String QUEUE_NAME = "org/sakaiproject/nakamura/message/email/outgoing";
 
@@ -111,6 +115,8 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
   private Integer maxRetries;
   private Integer smtpPort;
   private String smtpServer;
+  private String replyAsAddress;
+  private String replyAsName;
 
   private Integer retryInterval;
 
@@ -260,28 +266,18 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
       PathNotFoundException, RepositoryException {
     MultiPartEmail email = new MultiPartEmail();
 
-    String from;
-    if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_FROM)) {
-      from = (String) contentNode.getProperty(MessageConstants.PROP_SAKAI_FROM);
-      try {
-        email.setFrom(convertToEmail(from, sparseSession));
-      } catch (EmailException e) {
-        throw new EmailDeliveryException("Invalid From Address [" + from
-          + "], message is being dropped :" + e.getMessage(), e);
-      }
-    } else {
-      throw new EmailDeliveryException("Must provide a 'from' address.");
+    try {
+      email.setFrom(replyAsAddress, replyAsName);
+    } catch (EmailException e) {
+      LOGGER.error("Cannot send email. From: address as configured is not valid: {}", replyAsAddress);
     }
+
     Set<String> toRecipients = new HashSet<String>();
 
     toRecipients = setRecipients(recipients, sparseSession);
     for (String r : toRecipients) {
       try {
-        if (r.equals(from)) {
-          email.addTo(convertToEmail(r, sparseSession));
-        } else {
-          email.addBcc(convertToEmail(r, sparseSession));
-        }
+        email.addBcc(convertToEmail(r, sparseSession));
       } catch (EmailException e) {
         throw new EmailDeliveryException("Invalid To Address [" + r
             + "], message is being dropped :" + e.getMessage(), e);
@@ -502,6 +498,26 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
       }
     } else {
       LOGGER.error("No SMTP server set");
+    }
+
+    String _replyAsAddress = OsgiUtil.toString(props.get(REPLY_AS_ADDRESS), "");
+    boolean replyAsAddressEmpty = _replyAsAddress == null || _replyAsAddress.trim().length() == 0;
+    if (!replyAsAddressEmpty) {
+      if (diff(replyAsAddress, _replyAsAddress)) {
+        replyAsAddress = _replyAsAddress;
+      }
+    } else {
+      LOGGER.error("No reply-as email address set");
+    }
+
+    String _replyAsName = OsgiUtil.toString(props.get(REPLY_AS_NAME), "");
+    boolean replyAsNameEmpty = _replyAsName == null || _replyAsName.trim().length() == 0;
+    if (!replyAsNameEmpty) {
+      if (diff(replyAsName, _replyAsName)) {
+        replyAsName = _replyAsName;
+      }
+    } else {
+      LOGGER.error("No reply-as email name set");
     }
 
     try {
