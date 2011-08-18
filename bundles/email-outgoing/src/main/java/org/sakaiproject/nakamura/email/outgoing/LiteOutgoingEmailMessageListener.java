@@ -51,16 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
@@ -182,54 +173,53 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
                 if (messageContent.hasProperty(MessageConstants.PROP_SAKAI_TO)
                     && messageContent.hasProperty(MessageConstants.PROP_SAKAI_FROM)) {
                   // make a commons-email message from the message
-                  MultiPartEmail email = null;
-                  try {
-                    email = constructMessage(messageContent, recipients, adminSession,
-                        sparseSession);
+                  Collection<MultiPartEmail> emails = constructMessage(messageContent, recipients, adminSession, sparseSession);
+                  for (MultiPartEmail email : emails) {
+                    try {
+                      email.setSmtpPort(smtpPort);
+                      email.setHostName(smtpServer);
 
-                    email.setSmtpPort(smtpPort);
-                    email.setHostName(smtpServer);
+                      email.send();
+                    } catch (EmailException e) {
+                      String exMessage = e.getMessage();
+                      Throwable cause = e.getCause();
 
-                    email.send();
-                  } catch (EmailException e) {
-                    String exMessage = e.getMessage();
-                    Throwable cause = e.getCause();
+                      setError(messageContent, exMessage);
+                      LOGGER.warn("Unable to send email: " + exMessage);
 
-                    setError(messageContent, exMessage);
-                    LOGGER.warn("Unable to send email: " + exMessage);
-
-                    // Get the SMTP error code
-                    // There has to be a better way to do this
-                    boolean rescheduled = false;
-                    if (cause != null && cause.getMessage() != null) {
-                      String smtpError = cause.getMessage().trim();
-                      try {
-                        int errorCode = Integer.parseInt(smtpError.substring(0, 3));
-                        // All retry-able SMTP errors should have codes starting
-                        // with 4
-                        scheduleRetry(errorCode, messageContent);
-                        rescheduled = true;
-                      } catch (NumberFormatException nfe) {
-                        // smtpError didn't start with an error code, let's dig for
-                        // it
-                        String searchFor = "response:";
-                        int rindex = smtpError.indexOf(searchFor);
-                        if (rindex > -1
-                            && (rindex + searchFor.length()) < smtpError.length()) {
-                          int errorCode = Integer.parseInt(smtpError.substring(
-                              searchFor.length(), searchFor.length() + 3));
+                      // Get the SMTP error code
+                      // There has to be a better way to do this
+                      boolean rescheduled = false;
+                      if (cause != null && cause.getMessage() != null) {
+                        String smtpError = cause.getMessage().trim();
+                        try {
+                          int errorCode = Integer.parseInt(smtpError.substring(0, 3));
+                          // All retry-able SMTP errors should have codes starting
+                          // with 4
                           scheduleRetry(errorCode, messageContent);
                           rescheduled = true;
+                        } catch (NumberFormatException nfe) {
+                          // smtpError didn't start with an error code, let's dig for
+                          // it
+                          String searchFor = "response:";
+                          int rindex = smtpError.indexOf(searchFor);
+                          if (rindex > -1
+                              && (rindex + searchFor.length()) < smtpError.length()) {
+                            int errorCode = Integer.parseInt(smtpError.substring(
+                                searchFor.length(), searchFor.length() + 3));
+                            scheduleRetry(errorCode, messageContent);
+                            rescheduled = true;
+                          }
                         }
                       }
-                    }
-                    if (rescheduled) {
-                      LOGGER.info("Email {} rescheduled for redelivery. ", nodePath);
-                    } else {
-                      LOGGER
-                          .error(
-                              "Unable to reschedule email for delivery: "
-                                  + e.getMessage(), e);
+                      if (rescheduled) {
+                        LOGGER.info("Email {} rescheduled for redelivery. ", nodePath);
+                      } else {
+                        LOGGER
+                            .error(
+                                "Unable to reschedule email for delivery: "
+                                    + e.getMessage(), e);
+                      }
                     }
                   }
                 } else {
@@ -271,119 +261,99 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     }
   }
 
-  private MultiPartEmail constructMessage(Content contentNode, List<String> recipients,
+  private Collection<MultiPartEmail> constructMessage(Content contentNode, List<String> recipients,
       javax.jcr.Session session, org.sakaiproject.nakamura.api.lite.Session sparseSession)
       throws EmailDeliveryException, StorageClientException, AccessDeniedException,
       PathNotFoundException, RepositoryException {
-    MultiPartEmail email = new MultiPartEmail();
-
-    String to = null;
-    try {
-      // set from: to the reply as address
-      email.setFrom(replyAsAddress, replyAsName);
-
-      if (recipients.size() == 1) {
-        // set to: to the rcpt if sending to just one person
-        Authorizable user = sparseSession.getAuthorizableManager().findAuthorizable(
-            recipients.get(0));
-        to = OutgoingEmailUtils.getEmailAddress(user, sparseSession, basicUserInfo,
-            profileService, repository);
-
-        email.setTo(Lists.newArrayList(new InternetAddress(to)));
-      } else {
-        // set to: to the sender when sending to a group of recipients
-        String sender = String.valueOf(contentNode
-            .getProperty(MessageConstants.PROP_SAKAI_FROM));
-        Authorizable user = sparseSession.getAuthorizableManager().findAuthorizable(
-            sender);
-        to = OutgoingEmailUtils.getEmailAddress(user, sparseSession, basicUserInfo,
-            profileService, repository);
-
-        email.setTo(Lists.newArrayList(new InternetAddress(to, "undisclosed recipients")));
+    Collection<MultiPartEmail> emails = new ArrayList<MultiPartEmail>();
+    Set<String> toRecipients = setRecipients(recipients, sparseSession);
+    for (String recipient : toRecipients) {
+      if (recipient.equals(contentNode.getProperty(MessageConstants.PROP_SAKAI_FROM))) {
+        // we don't need to send a copy of the message to the sender
+        continue;
       }
-    } catch (EmailException e) {
-      LOGGER.error("Cannot send email. From: address as configured is not valid: {}", replyAsAddress);
-    } catch (AddressException e) {
-      LOGGER.error("Cannot send email. To: address is not valid: {}", to);
-    } catch (UnsupportedEncodingException e) {
-      LOGGER.error("Cannot send email. To: address is not valid: {}", to);
-    }
+      MultiPartEmail email = new MultiPartEmail();
 
-    // if we're dealing with a group of recipients, add them to bcc: to hide email
-    // addresses from the other recipients
-    if (recipients.size() > 1) {
-      Set<String> toRecipients = new HashSet<String>();
+      String to = null;
+      try {
+        // set from: to the reply as address
+        email.setFrom(replyAsAddress, replyAsName);
 
-      toRecipients = setRecipients(recipients, sparseSession);
-      for (String r : toRecipients) {
-        try {
-          email.addBcc(convertToEmail(r, sparseSession));
-        } catch (EmailException e) {
-          throw new EmailDeliveryException("Invalid To Address [" + r
-              + "], message is being dropped :" + e.getMessage(), e);
-        }
+          // set to: to the rcpt if sending to just one person
+          Authorizable user = sparseSession.getAuthorizableManager().findAuthorizable(recipient);
+          to = OutgoingEmailUtils.getEmailAddress(user, sparseSession, basicUserInfo,
+              profileService, repository);
+
+          email.setTo(Lists.newArrayList(new InternetAddress(to)));
+
+      } catch (EmailException e) {
+        LOGGER.error("Cannot send email. From: address as configured is not valid: {}", replyAsAddress);
+      } catch (AddressException e) {
+        LOGGER.error("Cannot send email. To: address is not valid: {}", to);
       }
-    }
 
-    if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_BODY)) {
-      String messageBody = (String) contentNode
-          .getProperty(MessageConstants.PROP_SAKAI_BODY);
-      // if this message has a template, use it
-      LOGGER
-          .debug("Checking for sakai:templatePath and sakai:templateParams properties on the outgoing message's node.");
-      if (contentNode.hasProperty(MessageConstants.PROP_TEMPLATE_PATH)
-          && contentNode.hasProperty(MessageConstants.PROP_TEMPLATE_PARAMS)) {
-        Map<String, String> parameters = getTemplateProperties((String) contentNode
-            .getProperty(MessageConstants.PROP_TEMPLATE_PARAMS));
-        String templatePath = (String) contentNode
-            .getProperty(MessageConstants.PROP_TEMPLATE_PATH);
-        LOGGER.debug("Got the path '{0}' to the template for this outgoing message.",
-            templatePath);
-        Node templateNode = session.getNode(templatePath);
-        if (templateNode.hasProperty("sakai:template")) {
-          String template = templateNode.getProperty("sakai:template").getString();
-          LOGGER.debug("Pulled the template body from the template node: {0}", template);
-          messageBody = templateService.evaluateTemplate(parameters, template);
-          LOGGER.debug("Performed parameter substitution in the template: {0}",
-              messageBody);
-        }
-      } else {
+      if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_BODY)) {
+        String messageBody = (String) contentNode
+            .getProperty(MessageConstants.PROP_SAKAI_BODY);
+        // if this message has a template, use it
         LOGGER
-            .debug(
-                "Message node '{0}' does not have sakai:templatePath and sakai:templateParams properties",
-                contentNode.getPath());
+            .debug("Checking for sakai:templatePath and sakai:templateParams properties on the outgoing message's node.");
+        if (contentNode.hasProperty(MessageConstants.PROP_TEMPLATE_PATH)
+            && contentNode.hasProperty(MessageConstants.PROP_TEMPLATE_PARAMS)) {
+          Map<String, String> parameters = getTemplateProperties((String) contentNode
+              .getProperty(MessageConstants.PROP_TEMPLATE_PARAMS));
+          String templatePath = (String) contentNode
+              .getProperty(MessageConstants.PROP_TEMPLATE_PATH);
+          LOGGER.debug("Got the path '{0}' to the template for this outgoing message.",
+              templatePath);
+          Node templateNode = session.getNode(templatePath);
+          if (templateNode.hasProperty("sakai:template")) {
+            String template = templateNode.getProperty("sakai:template").getString();
+            LOGGER.debug("Pulled the template body from the template node: {0}", template);
+            messageBody = templateService.evaluateTemplate(parameters, template);
+            LOGGER.debug("Performed parameter substitution in the template: {0}",
+                messageBody);
+          }
+        } else {
+          LOGGER
+              .debug(
+                  "Message node '{0}' does not have sakai:templatePath and sakai:templateParams properties",
+                  contentNode.getPath());
+        }
+        try {
+          email.setMsg(messageBody);
+        } catch (EmailException e) {
+          throw new EmailDeliveryException(
+              "Invalid Message Body, message is being dropped :" + e.getMessage(), e);
+        }
       }
-      try {
-        email.setMsg(messageBody);
-      } catch (EmailException e) {
-        throw new EmailDeliveryException(
-            "Invalid Message Body, message is being dropped :" + e.getMessage(), e);
+
+      if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_SUBJECT)) {
+        email.setSubject((String) contentNode
+            .getProperty(MessageConstants.PROP_SAKAI_SUBJECT));
       }
+
+      ContentManager contentManager = sparseSession.getContentManager();
+      for (String streamId : contentNode.listStreams()) {
+        String description = null;
+        if (contentNode.hasProperty(StorageClientUtils.getAltField(
+            MessageConstants.PROP_SAKAI_ATTACHMENT_DESCRIPTION, streamId))) {
+          description = (String) contentNode.getProperty(StorageClientUtils.getAltField(
+              MessageConstants.PROP_SAKAI_ATTACHMENT_DESCRIPTION, streamId));
+        }
+        LiteEmailDataSource ds = new LiteEmailDataSource(contentManager, contentNode,
+            streamId);
+        try {
+          email.attach(ds, streamId, description);
+        } catch (EmailException e) {
+          throw new EmailDeliveryException("Invalid Attachment [" + streamId
+              + "] message is being dropped :" + e.getMessage(), e);
+        }
+      }
+      emails.add(email);
     }
 
-    if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_SUBJECT)) {
-      email.setSubject((String) contentNode
-          .getProperty(MessageConstants.PROP_SAKAI_SUBJECT));
-    }
-
-    ContentManager contentManager = sparseSession.getContentManager();
-    for (String streamId : contentNode.listStreams()) {
-      String description = null;
-      if (contentNode.hasProperty(StorageClientUtils.getAltField(
-          MessageConstants.PROP_SAKAI_ATTACHMENT_DESCRIPTION, streamId))) {
-        description = (String) contentNode.getProperty(StorageClientUtils.getAltField(
-            MessageConstants.PROP_SAKAI_ATTACHMENT_DESCRIPTION, streamId));
-      }
-      LiteEmailDataSource ds = new LiteEmailDataSource(contentManager, contentNode,
-          streamId);
-      try {
-        email.attach(ds, streamId, description);
-      } catch (EmailException e) {
-        throw new EmailDeliveryException("Invalid Attachment [" + streamId
-            + "] message is being dropped :" + e.getMessage(), e);
-      }
-    }
-    return email;
+    return emails;
   }
 
   private Map<String, String> getTemplateProperties(String templateParameter)
