@@ -50,7 +50,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Dictionary;
@@ -291,21 +290,14 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
 
         email.setTo(Lists.newArrayList(new InternetAddress(to)));
       } else {
-        // set to: to the sender when sending to a group of recipients
-        String sender = String.valueOf(contentNode
-            .getProperty(MessageConstants.PROP_SAKAI_FROM));
-        Authorizable user = sparseSession.getAuthorizableManager().findAuthorizable(
-            sender);
-        to = OutgoingEmailUtils.getEmailAddress(user, sparseSession, basicUserInfo,
-            profileService, repository);
-
-        email.setTo(Lists.newArrayList(new InternetAddress(to, "undisclosed recipients")));
+        // set to: to 'undisclosed recipients' when sending to a group of recipients
+        // this mirrors what shows up in RFC's and most major MTAs
+        // http://www.postfix.org/postconf.5.html#undisclosed_recipients_header
+        email.addHeader("To", "undisclosed-recipients:;");
       }
     } catch (EmailException e) {
       LOGGER.error("Cannot send email. From: address as configured is not valid: {}", replyAsAddress);
     } catch (AddressException e) {
-      LOGGER.error("Cannot send email. To: address is not valid: {}", to);
-    } catch (UnsupportedEncodingException e) {
       LOGGER.error("Cannot send email. To: address is not valid: {}", to);
     }
 
