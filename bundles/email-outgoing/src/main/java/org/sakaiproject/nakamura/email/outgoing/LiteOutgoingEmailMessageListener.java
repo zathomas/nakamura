@@ -283,10 +283,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
 
       if (recipients.size() == 1) {
         // set to: to the rcpt if sending to just one person
-        Authorizable user = sparseSession.getAuthorizableManager().findAuthorizable(
-            recipients.get(0));
-        to = OutgoingEmailUtils.getEmailAddress(user, sparseSession, basicUserInfo,
-            profileService, repository);
+        to = convertToEmail(recipients.get(0), sparseSession);
 
         email.setTo(Lists.newArrayList(new InternetAddress(to)));
       } else {
