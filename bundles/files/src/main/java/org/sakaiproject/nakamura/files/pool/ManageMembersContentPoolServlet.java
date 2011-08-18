@@ -321,25 +321,11 @@ import javax.servlet.http.HttpServletResponse;
       AuthorizableManager authorizableManager = session.getAuthorizableManager();
       Authorizable thisUser = authorizableManager.findAuthorizable(session.getUserId());
       Content node = resource.adaptTo(Content.class);
-      if (! accessControlManager.can(thisUser, Security.ZONE_CONTENT, node.getPath(), Permissions.CAN_WRITE)
-          && isRequestingNonPublicOperations(request)) {
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-        return;
-      }
-
-      if (!isRequestingNonPublicOperations(request)) {
-        session = session.getRepository().loginAdministrative();
-        releaseSession = true;
-        accessControlManager = session.getAccessControlManager();
-      }
-      ContentManager contentManager = session.getContentManager();
-
       Map<String, Object> properties = node.getProperties();
-      String[] managers = (String[]) properties
-          .get(POOLED_CONTENT_USER_MANAGER);
-      String[] viewers = (String[]) properties
-          .get(POOLED_CONTENT_USER_VIEWER);
-
+      String[] managers = StorageClientUtils.nonNullStringArray((String[]) properties
+          .get(POOLED_CONTENT_USER_MANAGER));
+      String[] viewers = StorageClientUtils.nonNullStringArray((String[]) properties
+          .get(POOLED_CONTENT_USER_VIEWER));
 
       Set<String> managerSet = null;
       if ( managers == null ) {
@@ -354,6 +340,19 @@ import javax.servlet.http.HttpServletResponse;
       } else {
         viewersSet = Sets.newHashSet(viewers);
       }
+      if (!canModify(accessControlManager, thisUser, node, request, managerSet, viewersSet)
+          && isRequestingNonPublicOperations(request)) {
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        return;
+      }
+
+      if (!isRequestingNonPublicOperations(request)
+          || userInTargetSet(request, thisUser, managerSet, viewersSet)) {
+        session = session.getRepository().loginAdministrative();
+        releaseSession = true;
+        accessControlManager = session.getAccessControlManager();
+      }
+      ContentManager contentManager = session.getContentManager();
 
       List<AclModification> aclModifications = Lists.newArrayList();
 
@@ -380,7 +379,8 @@ import javax.servlet.http.HttpServletResponse;
         }
       }
       for (String removeViewer : StorageClientUtils.nonNullStringArray(request.getParameterValues(":viewer@Delete"))) {
-        if ((removeViewer.length() > 0) && viewersSet.contains(removeViewer)) {
+        // a user can only delete themselves from the viewer list
+        if ((removeViewer.length() > 0) && viewersSet.contains(removeViewer) && removeViewer.equals(thisUser.getId())) {
           viewersSet.remove(removeViewer);
           if (!managerSet.contains(removeViewer)) {
             AclModification.removeAcl(true, Permissions.CAN_READ, removeViewer,
@@ -421,6 +421,36 @@ import javax.servlet.http.HttpServletResponse;
         }
       }
     }
+  }
+
+  // does thisUser have write permissions for content or are they a member of the target set
+  // being operated on
+  private boolean canModify(AccessControlManager accessControlManager,
+      Authorizable thisUser, Content node, SlingHttpServletRequest request,
+      Set<String> managerSet, Set<String> viewersSet) {
+    boolean canModify = false;
+    if (accessControlManager.can(thisUser, Security.ZONE_CONTENT, node.getPath(),
+        Permissions.CAN_WRITE) || userInTargetSet(request, thisUser, managerSet, viewersSet)) {
+      canModify = true;
+    }
+    return canModify;
+  }
+
+  // is thisUser a member of the target set
+  @SuppressWarnings("rawtypes")
+  private boolean userInTargetSet(SlingHttpServletRequest request,
+      Authorizable thisUser, Set<String> managerSet, Set<String> viewersSet) {
+    boolean userInTargetList = false;
+    String userId = thisUser.getId();
+    Map parameterMap = request.getParameterMap();
+    if ((parameterMap.containsKey(":manager") || parameterMap
+        .containsKey(":manager@Delete")) && managerSet.contains(userId)) {
+      userInTargetList = true;
+    } else if ((parameterMap.containsKey(":viewer") || parameterMap
+        .containsKey(":viewer@Delete")) && viewersSet.contains(userId)) {
+      userInTargetList = true;
+    }
+    return userInTargetList;
   }
 
   @SuppressWarnings("rawtypes")
