@@ -67,6 +67,10 @@ public class OutgoingEmailUtils {
       BasicUserInfoService basicUserInfo, ProfileService profileService,
       SlingRepository slingRepo) throws RepositoryException, AccessDeniedException,
       StorageClientException {
+    if (user == null) {
+      return null;
+    }
+
     String email = null;
     String emailLocationPath = profileService.getEmailLocation();
 
@@ -108,6 +112,10 @@ public class OutgoingEmailUtils {
    *         according to the BasicUserInfoService. null otherwise.
    */
   public static String getEmailFromBasic(Authorizable user, BasicUserInfoService basicUserInfo) {
+    if (user == null) {
+      return null;
+    }
+      
     String email = null;
     String[] basicFields = basicUserInfo.getBasicProfileElements();
     for (String basicField : basicFields) {
@@ -158,6 +166,10 @@ public class OutgoingEmailUtils {
   public static String getEmailFromFullProfile(Authorizable user, String emailLocationPath,
       ProfileService profileService, SlingRepository slingRepo)
       throws RepositoryException, StorageClientException, AccessDeniedException {
+    if (user == null) {
+      return null;
+    }
+
     String email = null;
     javax.jcr.Session jcrSession = null;
     try {
