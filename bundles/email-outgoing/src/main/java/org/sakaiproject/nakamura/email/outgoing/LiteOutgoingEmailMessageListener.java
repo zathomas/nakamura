@@ -17,6 +17,8 @@
  */
 package org.sakaiproject.nakamura.email.outgoing;
 
+import com.google.common.collect.Lists;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.MultiPartEmail;
@@ -41,12 +43,14 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.message.MessageConstants;
+import org.sakaiproject.nakamura.api.profile.ProfileService;
 import org.sakaiproject.nakamura.api.templates.TemplateService;
-import org.sakaiproject.nakamura.api.user.UserConstants;
+import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Dictionary;
@@ -68,11 +72,13 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Queue;
 import javax.jms.Session;
+import javax.mail.internet.InternetAddress;
 
 @Component(immediate = true, metatype = true)
 public class LiteOutgoingEmailMessageListener implements MessageListener {
   private static final Logger LOGGER = LoggerFactory
       .getLogger(LiteOutgoingEmailMessageListener.class);
+
 
   @Property(value = "localhost")
   private static final String SMTP_SERVER = "sakai.smtp.server";
@@ -99,6 +105,10 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
   protected ConnectionFactoryService connFactoryService;
   @Reference
   protected TemplateService templateService;
+  @Reference
+  protected BasicUserInfoService basicUserInfo;
+  @Reference
+  protected ProfileService profileService;
 
   /**
    * If present points to a node
@@ -267,7 +277,14 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     MultiPartEmail email = new MultiPartEmail();
 
     try {
+      String sender = String.valueOf(contentNode.getProperty(MessageConstants.PROP_SAKAI_FROM));
+      Authorizable user = sparseSession.getAuthorizableManager().findAuthorizable(sender);
+      String to = OutgoingEmailUtils.getEmailAddress(user, sparseSession, basicUserInfo, profileService, repository);
+
+      email.setTo(Lists.newArrayList(new InternetAddress(to, "undisclosed recipients")));
       email.setFrom(replyAsAddress, replyAsName);
+    } catch (UnsupportedEncodingException e) {
+      LOGGER.error("Cannot send email. To: address is not valid: {}", replyAsAddress);
     } catch (EmailException e) {
       LOGGER.error("Cannot send email. From: address as configured is not valid: {}", replyAsAddress);
     }
@@ -393,17 +410,12 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
 
   private String convertToEmail(String address,
       org.sakaiproject.nakamura.api.lite.Session session) throws StorageClientException,
-      AccessDeniedException {
+      AccessDeniedException, RepositoryException {
     if (address.indexOf('@') < 0) {
-      String emailAddress = null;
-
       Authorizable user = session.getAuthorizableManager().findAuthorizable(address);
-      if (user != null) {
-        if ( user.hasProperty(UserConstants.USER_EMAIL_PROPERTY)) {
-          emailAddress = (String) user.getProperty(UserConstants.USER_EMAIL_PROPERTY);
-        }
-      }
-      if (emailAddress != null && emailAddress.trim().length() > 0) {
+      String emailAddress = OutgoingEmailUtils.getEmailAddress(user, session, basicUserInfo, profileService, repository);
+
+      if (!StringUtils.isBlank(emailAddress)) {
         address = emailAddress;
       } else {
         address = address + "@" + smtpServer;
