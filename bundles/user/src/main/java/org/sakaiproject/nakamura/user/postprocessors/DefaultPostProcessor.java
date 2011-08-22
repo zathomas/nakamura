@@ -858,7 +858,20 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
   }
 
   private void syncOwnership(Authorizable authorizable, Map<String, Object> acl,
-      List<AclModification> aclModifications) {
+      List<AclModification> aclModifications, AuthorizableManager authorizableManager) throws StorageClientException, AccessDeniedException {
+    boolean alreadySpecifiedAnonymousAcl = false;
+    boolean alreadySpecifiedEveryoneAcl = false;
+    for (AclModification aclMod : aclModifications) {
+      if (aclMod.getAceKey().equals(AclModification.grantKey(User.ANON_USER))) {
+        alreadySpecifiedAnonymousAcl = true;
+      } else if (aclMod.getAceKey().equals(AclModification.denyKey(User.ANON_USER))) {
+        alreadySpecifiedAnonymousAcl = true;
+      } else if (aclMod.getAceKey().equals(AclModification.grantKey(Group.EVERYONE))) {
+        alreadySpecifiedEveryoneAcl = true;
+      } else if (aclMod.getAceKey().equals(AclModification.denyKey(Group.EVERYONE))) {
+        alreadySpecifiedEveryoneAcl = true;
+      }
+    }
     // remove all acls we are not concerned with from the copy of the current state
 
     // make sure the owner has permission on their home
@@ -915,7 +928,7 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
                                                  Permissions.ALL.getPermission(), Operation.OP_DEL));
         aclModifications.add(new AclModification(AclModification.grantKey(User.ANON_USER),
                                                  Permissions.CAN_READ.getPermission(), Operation.OP_REPLACE));
-      } else {
+      } else if (!alreadySpecifiedAnonymousAcl) {
         // Deny "anonymous" access to everything
         aclModifications.add(new AclModification(
                                                  AclModification.grantKey(User.ANON_USER), Permissions.ALL.getPermission(),
@@ -929,7 +942,7 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
                                                  Permissions.ALL.getPermission(), Operation.OP_DEL));
         aclModifications.add(new AclModification(AclModification.grantKey(Group.EVERYONE),
                                                  Permissions.CAN_READ.getPermission(), Operation.OP_REPLACE));
-      } else {
+      } else if (!alreadySpecifiedEveryoneAcl) {
         // Deny "everyone" access to everything
         aclModifications.add(new AclModification(
                                                  AclModification.grantKey(Group.EVERYONE), Permissions.ALL.getPermission(),
@@ -938,15 +951,19 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
             Permissions.ALL.getPermission(), Operation.OP_REPLACE));
       }
     } else {
-      // anon and everyone can read
-      aclModifications.add(new AclModification(AclModification.denyKey(User.ANON_USER),
-          Permissions.ALL.getPermission(), Operation.OP_DEL));
-      aclModifications.add(new AclModification(AclModification.denyKey(Group.EVERYONE),
-          Permissions.ALL.getPermission(), Operation.OP_DEL));
-      aclModifications.add(new AclModification(AclModification.grantKey(User.ANON_USER),
-          Permissions.CAN_READ.getPermission(), Operation.OP_REPLACE));
-      aclModifications.add(new AclModification(AclModification.grantKey(Group.EVERYONE),
-          Permissions.CAN_READ.getPermission(), Operation.OP_REPLACE));
+      // assuming the permissions have not been set already, anon and everyone can read
+      if (!alreadySpecifiedAnonymousAcl) {
+        aclModifications.add(new AclModification(AclModification.denyKey(User.ANON_USER),
+            Permissions.ALL.getPermission(), Operation.OP_DEL));
+        aclModifications.add(new AclModification(AclModification.grantKey(User.ANON_USER),
+            Permissions.CAN_READ.getPermission(), Operation.OP_REPLACE));
+      }
+      if (!alreadySpecifiedEveryoneAcl) {
+        aclModifications.add(new AclModification(AclModification.denyKey(Group.EVERYONE),
+            Permissions.ALL.getPermission(), Operation.OP_DEL));
+        aclModifications.add(new AclModification(AclModification.grantKey(Group.EVERYONE),
+            Permissions.CAN_READ.getPermission(), Operation.OP_REPLACE));
+      }
 
     }
 
