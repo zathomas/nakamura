@@ -1,11 +1,6 @@
 package org.sakaiproject.nakamura.user.postprocessors;
 
 import com.google.common.collect.ImmutableMap;
-import com.sun.tools.doclets.internal.toolkit.taglets.BaseExecutableMemberTaglet;
-import com.sun.xml.internal.rngom.parse.host.Base;
-import net.jcip.annotations.Immutable;
-import org.apache.commons.digester.ObjectParamRule;
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.ModificationType;
 import org.junit.Before;
@@ -13,12 +8,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.service.event.EventAdmin;
-import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
-import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager;
-import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AclModification;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
@@ -30,7 +22,6 @@ import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.lite.BaseMemoryRepository;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
