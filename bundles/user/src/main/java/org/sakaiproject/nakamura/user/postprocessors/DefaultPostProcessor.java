@@ -858,7 +858,7 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
   }
 
   private void syncOwnership(Authorizable authorizable, Map<String, Object> acl,
-      List<AclModification> aclModifications, AuthorizableManager authorizableManager) throws StorageClientException, AccessDeniedException {
+      List<AclModification> aclModifications) throws StorageClientException, AccessDeniedException {
     boolean alreadySpecifiedAnonymousAcl = false;
     boolean alreadySpecifiedEveryoneAcl = false;
     for (AclModification aclMod : aclModifications) {
