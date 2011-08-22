@@ -87,9 +87,10 @@ public class DefaultPostProcessorTest {
     // call the object under test
     defaultPostProcessor.process(mockRequest, funGroup, session, mockChange, parameters);
 
-    // make sure zach lost access
+    // make sure zach lost access, but should still be able to read
     Authorizable zach = session.getAuthorizableManager().findAuthorizable("zach");
-    assertFalse(adminAccessControlManager.can(zach, "CO", "a:fun-group", Permissions.CAN_ANYTHING));
+    assertFalse(adminAccessControlManager.can(zach, "CO", "a:fun-group", Permissions.CAN_WRITE));
+    assertTrue(adminAccessControlManager.can(zach, "CO", "a:fun-group", Permissions.CAN_READ));
 
   }
 }
