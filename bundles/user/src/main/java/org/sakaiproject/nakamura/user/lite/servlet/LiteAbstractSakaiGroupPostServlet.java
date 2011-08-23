@@ -30,6 +30,7 @@ import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
@@ -205,7 +206,7 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
   }
 
     private boolean hasWriteAccess(Authorizable actor, Authorizable target, Session session) throws StorageClientException {
-        return session.getAccessControlManager().can(actor, "AU", target.getId(), Permissions.CAN_WRITE);
+        return session.getAccessControlManager().can(actor, Security.ZONE_AUTHORIZABLES, target.getId(), Permissions.CAN_WRITE);
     }
 
     private String getAuthIdFromParameter(String member) {
