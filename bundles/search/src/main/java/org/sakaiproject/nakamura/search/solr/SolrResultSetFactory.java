@@ -165,9 +165,10 @@ import java.util.ArrayList;
   }
 
 
-  /*
-   * Get a list of the paths that were deleted since the last Solr commit across
-   * all nodes in the cluster.
+  /**
+   * Get a list of the paths that were deleted since the last Solr commit across all nodes
+   * in the cluster. Escapes the paths to make sure they are safe for consumption in a
+   * query.
    */
   private List<String> getDeletedPaths() {
     List<String> deletedPaths = new ArrayList<String>();
@@ -181,7 +182,7 @@ import java.util.ArrayList;
         String path = (String)cache.get("path[" + idx + "]@" + serverId);
 
         if (path != null) {
-          deletedPaths.add(path);
+          deletedPaths.add(SearchUtil.escapeString(path, Query.SOLR));
         }
       }
     }
@@ -260,13 +261,14 @@ import java.util.ArrayList;
           for (Iterator<Group> gi = user.memberOf(am); gi.hasNext();) {
             readers.add(SearchUtil.escapeString(gi.next().getId(), Query.SOLR));
           }
-          readers.add(session.getUserId());
+          readers.add(SearchUtil.escapeString(session.getUserId(), Query.SOLR));
           filterQueries.add("readers:(" + StringUtils.join(readers," OR ") + ")");
         }
       }
 
       List<String> deletedPaths = getDeletedPaths();
       if (!deletedPaths.isEmpty()) {
+        // these are escaped as they are collected
         filterQueries.add("-path:(" + StringUtils.join(deletedPaths, " OR ") + ")");
       }
       // save filterQuery changes
