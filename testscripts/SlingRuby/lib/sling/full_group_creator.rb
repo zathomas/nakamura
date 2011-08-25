@@ -21,7 +21,7 @@ module SlingUsers
   class FullGroupCreator < UserManager
     attr_reader :log, :file_log
     
-    def initialize(sling, file_log)
+    def initialize(sling, file_log = nil)
       @sling = sling
       @sling.log.level = Logger::INFO
       #@sling.do_login
@@ -54,11 +54,11 @@ module SlingUsers
       batch_post[2] = {"url" => "#{update_uri}#{groupname}.update.json", "method" => "POST", "parameters" => {":manager" => "#{groupname}-manager","_charset_" => "utf-8"}, "_charset_" => "utf-8"}
       batch_post_json = JSON.generate batch_post
       @log.debug("POST 4 - updating the group managersbatch post is: #{batch_post_json}")
-      @file_log.debug("POST 4 - updating the group managersbatch post is: #{batch_post_json}")
+      @file_log.debug("POST 4 - updating the group managersbatch post is: #{batch_post_json}") if (@file_log)
       parameters = {"requests" => batch_post_json}
       response = @sling.execute_post(@sling.url_for("#{$BATCH_URI}"), parameters)
       @log.info("POST 4 - updating the group managers response code is: #{response.code}")
-      @file_log.info("POST 4 - updating the group managers response code is: #{response.code}")
+      @file_log.info("POST 4 - updating the group managers response code is: #{response.code}") if (@file_log)
       
       #POST 5 - updating the group members
       batch_post = []
@@ -67,11 +67,11 @@ module SlingUsers
       batch_post[2] = {"url" => "#{update_uri}#{groupname}.update.json", "method" => "POST", "parameters" => {":member" => "#{groupname}-manager", "_charset_" => "utf-8"}, "_charset_" => "utf-8"}
       batch_post_json = JSON.generate batch_post
       @log.debug("POST 5 - updating the group members batch post is: #{batch_post_json}")
-      @file_log.debug("POST 5 - updating the group members batch post is: #{batch_post_json}")
+      @file_log.debug("POST 5 - updating the group members batch post is: #{batch_post_json}") if (@file_log)
       parameters = {"requests" => batch_post_json}
       response = @sling.execute_post(@sling.url_for("#{$BATCH_URI}"), parameters)
       @log.info("POST 5 - updating the group members response code is: #{response.code}")
-      @file_log.info("POST 5 - updating the group members response code is: #{response.code}")
+      @file_log.info("POST 5 - updating the group members response code is: #{response.code}") if (@file_log)
       
       #POST 6 - creating test tags
       batch_post = []
@@ -79,11 +79,11 @@ module SlingUsers
       batch_post[1] = {"url" => "/tags/test-tag2", "method" => "POST", "parameters" => {"sakai:tag-name" => "test-tag2", "sling:resourceType" => "sakai/tag", "_charset_" => "utf-8"}, "_charset_" => "utf-8"}
       batch_post_json = JSON.generate batch_post
       @log.debug("POST 6 - creating test tags batch post is: #{batch_post_json}")
-      @file_log.debug("POST 6 - creating test tags batch post is: #{batch_post_json}")      
+      @file_log.debug("POST 6 - creating test tags batch post is: #{batch_post_json}") if (@file_log)      
       parameters = {"requests" => batch_post_json}
       response = @sling.execute_post(@sling.url_for("#{$BATCH_URI}"), parameters)
       @log.info("POST 6 - creating test tags response code is: #{response.code}")
-      @file_log.info("POST 6 - creating test tags response code is: #{response.code}")      
+      @file_log.info("POST 6 - creating test tags response code is: #{response.code}") if (@file_log)      
       
       #POST 7 - updating group visibility, joinability and permissions
       batch_post = []
@@ -92,11 +92,11 @@ module SlingUsers
       batch_post[2] = {"url" => "/~#{groupname}.modifyAce.html", "method" => "POST", "parameters" => {"principalId" => "anonymous", "privilege@jcr:read" => "granted", "_charset_" => "utf-8"}, "_charset_" => "utf-8"}
       batch_post_json = JSON.generate batch_post
       @log.debug("POST 7 - updating group visibility, joinability and permissions batch post is: #{batch_post_json}")
-      @file_log.debug("POST 7 - updating group visibility, joinability and permissions batch post is: #{batch_post_json}")      
+      @file_log.debug("POST 7 - updating group visibility, joinability and permissions batch post is: #{batch_post_json}") if (@file_log)      
       parameters = {"requests" => batch_post_json}
       response = @sling.execute_post(@sling.url_for("#{$BATCH_URI}"), parameters)
       @log.info("POST 7 - updating group visibility, joinability and permissions response code is: #{response.code}")
-      @file_log.info("POST 7 - updating group visibility, joinability and permissions response code is: #{response.code}") 
+      @file_log.info("POST 7 - updating group visibility, joinability and permissions response code is: #{response.code}") if (@file_log) 
       
       #POST 8 - creating initial sakai docs
       batch_post = []
@@ -109,15 +109,15 @@ module SlingUsers
                       "mimeType" => "x-sakai/document","_charset_" => "utf-8"}, "_charset_" => "utf-8"}
       batch_post_json = JSON.generate batch_post
       @log.debug("#POST 8 - creating initial sakai docs batch post is: #{batch_post_json}")
-      @file_log.debug("#POST 8 - creating initial sakai docs batch post is: #{batch_post_json}")      
+      @file_log.debug("#POST 8 - creating initial sakai docs batch post is: #{batch_post_json}") if (@file_log)      
       parameters = {"requests" => batch_post_json}
       response = @sling.execute_post(@sling.url_for("#{$BATCH_URI}"), parameters)
       @log.info("POST 8 - creating initial sakai docs response code is: #{response.code}")
-      @file_log.info("POST 8 - creating initial sakai docs response code is: #{response.code}") 
+      @file_log.info("POST 8 - creating initial sakai docs response code is: #{response.code}") if (@file_log) 
       ruby_body = JSON response.body
       results = ruby_body["results"]
       @log.debug("POST 8 - creating initial sakai docs results: #{results}")
-      @file_log.debug("POST 8 - creating initial sakai docs results: #{results}")
+      @file_log.debug("POST 8 - creating initial sakai docs results: #{results}") if (@file_log)
       library_doc_hash, participants_doc_hash = nil, nil
       i = 0
       results.each do |result|
@@ -134,7 +134,7 @@ module SlingUsers
         end
       end
       @log.info("POST 8 - creating initial sakai docs Library sakai doc hash: #{library_doc_hash}, Participants sakai doc hash #{participants_doc_hash}")
-      @file_log.info("POST 8 - creating initial sakai docs Library sakai doc hash: #{library_doc_hash}, Participants sakai doc hash #{participants_doc_hash}")
+      @file_log.info("POST 8 - creating initial sakai docs Library sakai doc hash: #{library_doc_hash}, Participants sakai doc hash #{participants_doc_hash}") if (@file_log)
  
       #POST 9 - importing sakai docs content
       batch_post = []
@@ -149,15 +149,15 @@ module SlingUsers
                        \"id439704665\":{\"participants\":{\"groupid\":\"#{groupname}\"}}}","_charset_" => "utf-8"}, "_charset_" => "utf-8"}       
       batch_post_json = JSON.generate batch_post
       @log.debug("POST 9 - importing sakai docs content batch post is: #{batch_post_json}")
-      @file_log.debug("POST 9 - importing sakai docs content batch post is: #{batch_post_json}")      
+      @file_log.debug("POST 9 - importing sakai docs content batch post is: #{batch_post_json}") if (@file_log)      
       parameters = {"requests" => batch_post_json}
       response = @sling.execute_post(@sling.url_for("#{$BATCH_URI}"), parameters)
       @log.info("POST 9 - importing sakai docs content response code is: #{response.code}")
-      @file_log.info("POST 9 - importing sakai docs content response code is: #{response.code}") 
+      @file_log.info("POST 9 - importing sakai docs content response code is: #{response.code}") if (@file_log) 
       ruby_body = JSON response.body
       results = ruby_body["results"]
       @log.debug("POST 9 - importing sakai docs content results from importing sakai docs post: #{results}")
-      @file_log.debug("POST 9 - importing sakai docs content results from importing sakai docs post: #{results}")
+      @file_log.debug("POST 9 - importing sakai docs content results from importing sakai docs post: #{results}") if (@file_log)
       
       #POST 10 - applying the test tags
       batch_post = []
@@ -166,15 +166,15 @@ module SlingUsers
       @log.debug("resource batch post is: #{batch_post}")
       batch_post_json = JSON.generate batch_post
       @log.debug("POST 10 - applying the test tags batch post is: #{batch_post_json}")
-      @file_log.debug("POST 10 - applying the test tags batch post is: #{batch_post_json}")      
+      @file_log.debug("POST 10 - applying the test tags batch post is: #{batch_post_json}") if (@file_log)      
       parameters = {"requests" => batch_post_json}
       response = @sling.execute_post(@sling.url_for("#{$BATCH_URI}"), parameters)
       @log.info("POST 10 - applying the test tags response code is: #{response.code}")
-      @file_log.info("POST 10 - applying the test tags response code is: #{response.code}")       
+      @file_log.info("POST 10 - applying the test tags response code is: #{response.code}") if (@file_log)       
       ruby_body = JSON response.body
       results = ruby_body["results"]
       @log.debug("POST 10 - applying the test tags results from :operation => tag post: #{results}")
-      @file_log.debug("POST 10 - applying the test tags results from :operation => tag post: #{results}")
+      @file_log.debug("POST 10 - applying the test tags results from :operation => tag post: #{results}") if (@file_log)
      
       
       #POST 11 - setting the global viewers and permissions on the sakai docs
@@ -185,15 +185,15 @@ module SlingUsers
       batch_post[3] = {"url" => "/p/#{participants_doc_hash}.modifyAce.html", "method" => "POST", "parameters" => {"principalId" => ["everyone", "anonymous"], "privilege@jcr:read" => "granted"}}
       batch_post_json = JSON.generate batch_post
       @log.debug("POST 11 - setting the global viewers and permissions on the sakai docs batch post is: #{batch_post_json}")
-      @file_log.debug("POST 11 - setting the global viewers and permissions on the sakai docs batch post is: #{batch_post_json}")      
+      @file_log.debug("POST 11 - setting the global viewers and permissions on the sakai docs batch post is: #{batch_post_json}") if (@file_log)      
       parameters = {"requests" => batch_post_json}
       response = @sling.execute_post(@sling.url_for("#{$BATCH_URI}"), parameters)
       @log.info("POST 11 - setting the global viewers and permissions on the sakai docs response code is: #{response.code}")
-      @file_log.info("POST 11 - setting the global viewers and permissions on the sakai docs response code is: #{response.code}")      
+      @file_log.info("POST 11 - setting the global viewers and permissions on the sakai docs response code is: #{response.code}") if (@file_log)      
       ruby_body = JSON response.body
       results = ruby_body["results"]
       @log.debug("POST 11 - setting the global viewers and permissions on the sakai docs results from setting permissions on sakai docs #{results}")
-      @file_log.debug("POST 11 - setting the global viewers and permissions on the sakai docs results from setting permissions on sakai docs #{results}")
+      @file_log.debug("POST 11 - setting the global viewers and permissions on the sakai docs results from setting permissions on sakai docs #{results}") if (@file_log)
          
       #POST 12 - setting the member viewer and manager viewer for the sakai docs
       batch_post = []
@@ -203,15 +203,15 @@ module SlingUsers
       batch_post[3] = {"url" => "/p/#{participants_doc_hash}.members.html", "method" => "POST", "parameters" => {":manager" => "#{groupname}-manager", "_charset_" =>"utf-8"},"_charset_" => "utf-8"}
       batch_post_json = JSON.generate batch_post
       @log.debug("POST 12 - setting the member viewer and manager viewer for the sakai docs batch post is: #{batch_post_json}")
-      @file_log.debug("POST 12 - setting the member viewer and manager viewer for the sakai docs batch post is: #{batch_post_json}")      
+      @file_log.debug("POST 12 - setting the member viewer and manager viewer for the sakai docs batch post is: #{batch_post_json}") if (@file_log)      
       parameters = {"requests" => batch_post_json}
       response = @sling.execute_post(@sling.url_for("#{$BATCH_URI}"), parameters)
       @log.info("POST 12 - setting the member viewer and manager viewer for the sakai docs response code is: #{response.code}")
-      @file_log.info("POST 12 - setting the member viewer and manager viewer for the sakai docs response code is: #{response.code}")        
+      @file_log.info("POST 12 - setting the member viewer and manager viewer for the sakai docs response code is: #{response.code}") if (@file_log)        
       ruby_body = JSON response.body
       results = response.body["results"]
       @log.debug("POST 12 - setting the member viewer and manager viewer for the sakai docs results from setting viewer and manager on sakai docs #{results}")
-      @file_log.debug("POST 12 - setting the member viewer and manager viewer for the sakai docs results from setting viewer and manager on sakai docs #{results}")
+      @file_log.debug("POST 12 - setting the member viewer and manager viewer for the sakai docs results from setting viewer and manager on sakai docs #{results}") if (@file_log)
       
       #POST 13 - setting the doc structure on the sakai docs
       struct0 = {}    
@@ -225,12 +225,12 @@ module SlingUsers
       params[":replaceProperties"] = true
       params["_charset_"] = "utf-8"
       @log.debug("POST 13 - setting the doc structure on the sakai docs post params are: " + params.inspect)
-      @file_log.debug("POST 13 - setting the doc structure on the sakai docs post params are: " + params.inspect)      
+      @file_log.debug("POST 13 - setting the doc structure on the sakai docs post params are: " + params.inspect) if (@file_log)      
       uri = "/~#{groupname}/docstructure"
       response = @sling.execute_post(@sling.url_for(uri), params)
       #this is an html response
       @log.info("POST 13 - setting the doc structure on the sakai docs response code: #{response.code}")
-      @file_log.info("POST 13 - setting the doc structure on the sakai docs response code: #{response.code}")
+      @file_log.info("POST 13 - setting the doc structure on the sakai docs response code: #{response.code}") if (@file_log)
       
       # return the group that was created in create_target_group
       return group
@@ -246,11 +246,11 @@ module SlingUsers
       response = @sling.execute_post(@sling.url_for($GROUP_URI), params)
       @log.info("create_pseudo_group() for #{groupname} POST response code: #{response.code}")
       @log.debug("create_pseudo_group() for #{groupname} POST response body: #{response.body}")
-      @file_log.info("create_pseudo_group() for #{groupname} POST response code: #{response.code}")
-      @file_log.debug("create_pseudo_group() for #{groupname} POST response body: #{response.body}")
+      @file_log.info("create_pseudo_group() for #{groupname} POST response code: #{response.code}") if (@file_log)
+      @file_log.debug("create_pseudo_group() for #{groupname} POST response body: #{response.body}") if (@file_log)
       if (response.code.to_i > 299)
         @log.warn("create_pseudo_group() returned #{response.code} group may already exist?")
-        @file_log.warn("create_pseudo_group() returned #{response.code} group may already exist?")
+        @file_log.warn("create_pseudo_group() returned #{response.code} group may already exist?") if (@file_log)
       end
     end
     
@@ -267,11 +267,11 @@ module SlingUsers
       response = @sling.execute_post(@sling.url_for($GROUP_URI), params)
       @log.info("create_target_group() for #{groupname} POST response code: #{response.code}")
       @log.debug("create_target_group() for #{groupname} POST response body: #{response.body}")
-      @file_log.info("create_target_group() for #{groupname} POST response code: #{response.code}")
-      @file_log.debug("create_target_group() for #{groupname} POST response body: #{response.body}")
+      @file_log.info("create_target_group() for #{groupname} POST response code: #{response.code}") if (@file_log)
+      @file_log.debug("create_target_group() for #{groupname} POST response body: #{response.body}") if (@file_log)
       if (response.code.to_i > 299)
         @log.warn("create_target_group() returned #{response.code} group may already exist?")
-        @file_log.warn("create_target_group() returned #{response.code} group may already exist?")
+        @file_log.warn("create_target_group() returned #{response.code} group may already exist?") if (@file_log)
       end
       group = Group.new(groupname)
       return group
@@ -283,8 +283,8 @@ module SlingUsers
     @sling = Sling.new("http://localhost:8080/", false)
     @sling.log.level = Logger::DEBUG
     fgc = SlingUsers::FullGroupCreator.new @sling
-    fgc.log.level = DEBUG
-    fgc.file_log.level = DEBUG
+    fgc.log.level = Logger::DEBUG
+    fgc.file_log.level = Logger::DEBUG if (@file_log)
     fgc.create_full_group "bp7742", "test-1881-group8", "test-1881-group8 Title", "test-1881-group8 Description"
   end 
 end
