@@ -12,7 +12,7 @@ class TC_Kern854 < Test::Unit::TestCase
   include SlingTest
 
   def test_widgetlisting
-    m = Time.now.to_f.to_s.gsub('.', '')
+    m = Time.now.to_nsec
 
     # Store the original widget settings somewhere.
     @widget_options = getWidgetServiceConfiguration()

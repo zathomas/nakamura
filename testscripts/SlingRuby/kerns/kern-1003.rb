@@ -20,7 +20,7 @@ class TC_Kern1003Test < Test::Unit::TestCase
   end
 
   def test_manager_can_delete_pooled_content
-    m = Time.now.to_f.to_s.gsub('.', '');
+    m = Time.now.to_nsec
 
     # Create some users
     creator = create_user("creator-#{m}")
@@ -49,7 +49,7 @@ class TC_Kern1003Test < Test::Unit::TestCase
 
 
   def test_manager_can_version_pooled_content
-    m = Time.now.to_f.to_s.gsub('.', '');
+    m = Time.now.to_nsec
 
     # Create some users
     creator = create_user("creator-#{m}")

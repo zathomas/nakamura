@@ -17,7 +17,7 @@ class TC_Kern1902Test < Test::Unit::TestCase
   def test_check_ids
     @fm = FileManager.new(@s)
     @authz = SlingAuthz::Authz.new(@s)
-    m = Time.now.to_f.to_s.gsub('.', '')
+    m = Time.now.to_nsec
     manager = create_user("user-manager-#{m}")
     @s.switch_user(manager)
     res = @fm.upload_pooled_file("random-#{m}.txt", "Plain content", "text/plain")

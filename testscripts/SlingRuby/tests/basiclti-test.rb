@@ -20,7 +20,7 @@ class TC_BasicLTI < Test::Unit::TestCase
   end
   
   def hackzzz
-    @now = Time.now.to_f.to_s.gsub('.', '');
+    @now = Time.now.to_nsec
     @creator = create_user("creator-test#{@now}");
     assert_not_nil(@creator)
     @user = create_user("user-test#{@now}");
@@ -352,7 +352,7 @@ class TC_BasicLTI < Test::Unit::TestCase
   end
 
   def prepare_group()
-    now = Time.now.to_f.to_s.gsub('.', '')
+    now = Time.now.to_nsec
     @groupid = "basiclti-group-#{now}"
     @groupname = "Basic LTI Test Group #{now}"
     @s.switch_user(@creator)

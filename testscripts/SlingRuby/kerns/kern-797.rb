@@ -22,7 +22,7 @@ class TC_MyFileTest_797 < Test::Unit::TestCase
   end
 
   def test_canModify
-    m = Time.now.to_f.to_s.gsub('.', '')
+    m = Time.now.to_nsec
     @siteid = "creator#{m}";
     creator = create_user("#{@siteid}")
 

@@ -24,7 +24,7 @@ class TC_MyFileTest_577 < Test::Unit::TestCase
   end
 
   def test_upload_file
-    m = Time.now.to_f.to_s.gsub('.', '')
+    m = Time.now.to_nsec
     @log.info("Creating user simon"+m)
     simon = create_user("simon"+m)
 
@@ -96,7 +96,7 @@ class TC_MyFileTest_577 < Test::Unit::TestCase
   end
 
   def old_functionality
-    m = Time.now.to_f.to_s.gsub('.', '');
+    m = Time.now.to_nsec
     @log.info("Creating user simon"+m)
     simon = create_user("simon"+m)
 
