@@ -13,7 +13,7 @@ class TC_Kern1100Test < Test::Unit::TestCase
 
   def test_manager_group_sees_file_members
     @fm = FileManager.new(@s)
-    m = Time.now.to_f.to_s.gsub('.', '')
+    m = Time.now.to_nsec
     @s.switch_user(User.admin_user())
     member = create_user("user-manager-#{m}")
     group = Group.new("g-test-#{m}")
@@ -54,7 +54,7 @@ class TC_Kern1100Test < Test::Unit::TestCase
 
   def test_nonmember_cannot_see_file_members
     @fm = FileManager.new(@s)
-    m = Time.now.to_f.to_s.gsub('.', '')
+    m = Time.now.to_nsec
     @s.switch_user(User.admin_user())
     nonmember = create_user("user-nonmember-#{m}")
     res = @s.execute_file_post(@s.url_for("/system/pool/createfile"), "Test #{m}", "Test #{m}", "This is some random content: #{m}.", "text/plain")
@@ -96,7 +96,7 @@ class TC_Kern1100Test < Test::Unit::TestCase
 
   def test_do_not_accidently_remove_manager_read_access
     @fm = FileManager.new(@s)
-    m = Time.now.to_f.to_s.gsub('.', '')
+    m = Time.now.to_nsec
     @s.switch_user(User.admin_user())
     manager = create_user("user-manager-#{m}")
     res = @s.execute_file_post(@s.url_for("/system/pool/createfile"), "Test #{m}", "Test #{m}", "This is some random content: #{m}.", "text/plain")

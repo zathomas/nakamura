@@ -8,6 +8,13 @@ require 'yaml'
 require 'sling/users'
 require 'logger'
 
+# Convert time to nanoseconds
+class Time
+  def to_nsec
+    self.to_f.to_s.gsub(".", "").to_i
+  end
+end
+
 class String
   def base64_decode
     unpack('m').first
