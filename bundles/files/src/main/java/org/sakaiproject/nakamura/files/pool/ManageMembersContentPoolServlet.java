@@ -37,6 +37,12 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.sakaiproject.nakamura.api.doc.BindingType;
 import org.sakaiproject.nakamura.api.doc.ServiceBinding;
 import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
@@ -55,9 +61,11 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
+import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.profile.ProfileService;
+import org.sakaiproject.nakamura.api.solr.SolrServerService;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
@@ -65,7 +73,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -185,6 +195,8 @@ import javax.servlet.http.HttpServletResponse;
   protected transient ProfileService profileService;
   @Reference
   protected transient BasicUserInfoService basicUserInfoService;
+  @Reference
+  protected transient SolrServerService solrSearchService;
 
   /**
    * Retrieves the list of members.
@@ -340,14 +352,14 @@ import javax.servlet.http.HttpServletResponse;
       } else {
         viewersSet = Sets.newHashSet(viewers);
       }
-      if (!canModify(accessControlManager, thisUser, node, request, managerSet, viewersSet)       
+      Set<String> managedGroupsSet = findMyManagedGroups(thisUser, authorizableManager);
+      if (!canModify(accessControlManager, thisUser, node, request, managerSet, viewersSet, managedGroupsSet)       
           && isRequestingNonPublicOperations(request)) {
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         return;
       }
-
       if (!isRequestingNonPublicOperations(request)
-          || userInTargetSet(request, thisUser, managerSet, viewersSet)) {
+          || userOrGroupInTargetSet(request, thisUser, managerSet, viewersSet, managedGroupsSet)) {
         session = session.getRepository().loginAdministrative();
         releaseSession = true;
         accessControlManager = session.getAccessControlManager();
@@ -378,9 +390,14 @@ import javax.servlet.http.HttpServletResponse;
           AclModification.addAcl(true, Permissions.CAN_READ, addViewer, aclModifications);
         }
       }
-      for (String removeViewer : StorageClientUtils.nonNullStringArray(request.getParameterValues(":viewer@Delete"))) {
-        // a user can only delete themselves from the viewer list
-        if ((removeViewer.length() > 0) && viewersSet.contains(removeViewer) && removeViewer.equals(thisUser.getId())) {
+      String[] removeViewers = StorageClientUtils.nonNullStringArray(request
+          .getParameterValues(":viewer@Delete"));
+      for (String removeViewer : removeViewers) {
+        removeViewer = removeViewer.trim();
+        // a user can only remove themselves or a group they manage from the viewer list
+        if (viewersSet.contains(removeViewer)
+            && (removeViewer.equals(thisUser.getId()) || managedGroupsSet
+                .contains(removeViewer))) {
           viewersSet.remove(removeViewer);
           if (!managerSet.contains(removeViewer)) {
             AclModification.removeAcl(true, Permissions.CAN_READ, removeViewer,
@@ -427,30 +444,78 @@ import javax.servlet.http.HttpServletResponse;
   // being operated on
   private boolean canModify(AccessControlManager accessControlManager,
       Authorizable thisUser, Content node, SlingHttpServletRequest request,
-      Set<String> managerSet, Set<String> viewersSet) {
+      Set<String> managerSet, Set<String> viewersSet, Set<String> managedGroupsSet) {
     boolean canModify = false;
     if (accessControlManager.can(thisUser, Security.ZONE_CONTENT, node.getPath(),
-        Permissions.CAN_WRITE) || userInTargetSet(request, thisUser, managerSet, viewersSet)) {
+        Permissions.CAN_WRITE) || userOrGroupInTargetSet(request, thisUser, managerSet, viewersSet, managedGroupsSet)) {
       canModify = true;
     }
     return canModify;
   }
 
-  // is thisUser a member of the target set
+  // is thisUser a member of the target set or does a group belong
+  // to the set of managed groups
   @SuppressWarnings("rawtypes")
-  private boolean userInTargetSet(SlingHttpServletRequest request,
-      Authorizable thisUser, Set<String> managerSet, Set<String> viewersSet) {
-    boolean userInTargetList = false;
+  private boolean userOrGroupInTargetSet(SlingHttpServletRequest request,
+      Authorizable thisUser, Set<String> managerSet, Set<String> viewersSet,
+      Set<String> managedGroupsSet) {
+    boolean userOrGroupInTargetSet = false;
     String userId = thisUser.getId();
     Map parameterMap = request.getParameterMap();
     if ((parameterMap.containsKey(":manager") || parameterMap
         .containsKey(":manager@Delete")) && managerSet.contains(userId)) {
-      userInTargetList = true;
+      userOrGroupInTargetSet = true;
     } else if ((parameterMap.containsKey(":viewer") || parameterMap
-        .containsKey(":viewer@Delete")) && viewersSet.contains(userId)) {
-      userInTargetList = true;
+        .containsKey(":viewer@Delete"))) {
+      Set<String> managedGroupsSetIntersection = Sets.newHashSet(managedGroupsSet);
+      // one or more of the viewers is a group managed by the user
+      managedGroupsSetIntersection.retainAll(viewersSet);
+      if (viewersSet.contains(userId) || managedGroupsSetIntersection.size() > 0) {
+        userOrGroupInTargetSet = true;
+      }
     }
-    return userInTargetList;
+    return userOrGroupInTargetSet;
+  }
+
+
+  private Set<String> findMyManagedGroups(Authorizable au,
+      AuthorizableManager authorizableManager) {
+    String userId = au.getId();
+    Set<String> managedGroups = Sets.newHashSet();
+    SolrServer solrServer = solrSearchService.getServer();
+    StringBuilder querySB = new StringBuilder(
+        "resourceType:authorizable AND type:g AND readers:").append(userId);
+    SolrQuery solrQuery = new SolrQuery(querySB.toString());
+    solrQuery.setRows(100);
+    String groupId;
+    QueryResponse response;
+    try {
+      response = solrServer.query(solrQuery);
+      SolrDocumentList results = response.getResults();
+      for (Iterator iterator = results.iterator(); iterator.hasNext();) {
+        SolrDocument solrDocument = (SolrDocument) iterator.next();
+        groupId = (String) solrDocument.getFieldValue("id");
+        Group group = null;
+        String[] managers = null;
+        Set<String> managersSet = null;
+        try {
+          group = (Group) authorizableManager.findAuthorizable(groupId);
+          managers = (String[]) group.getProperty("rep:group-managers");
+          managersSet = Sets.newHashSet(managers);
+          if (managersSet.contains(userId)) {
+            managedGroups.add(groupId);
+          }
+        } catch (AccessDeniedException e) {
+          LOGGER.error("failed to find group" + groupId, e);
+        } catch (StorageClientException e) {
+          LOGGER.error("failed to find group" + groupId, e);
+        }
+      }
+    } catch (SolrServerException e) {
+      LOGGER.warn(e.getMessage(), e);
+    }
+    LOGGER.debug("my managed groups: " + managedGroups);
+    return managedGroups;
   }
 
   @SuppressWarnings("rawtypes")
