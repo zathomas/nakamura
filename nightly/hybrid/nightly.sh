@@ -124,7 +124,7 @@ then
     echo "Skipping build sparsemapcontent@HEAD..."
 else
     echo "Building sparsemapcontent@HEAD..."
-    git clone -q git://github.com/ieb/sparsemapcontent.git
+    git clone -q git://github.com/sakaiproject/sparsemapcontent.git
     cd sparsemapcontent
     git checkout -b "build-HEAD" HEAD
     mvn -B -e clean install
@@ -139,7 +139,7 @@ then
     echo "Skipping build solr@HEAD..."
 else
     echo "Building solr@HEAD..."
-    git clone -q git://github.com/ieb/solr.git
+    git clone -q git://github.com/sakaiproject/solr.git
     cd solr
     git checkout -b "build-HEAD" HEAD
     mvn -B -e clean install
