@@ -263,8 +263,8 @@ module SlingInterface
         @log.debug("Set-Cookie header #{setcookie} ")
         setcookie.each do |cookieitem|
           cookie = cookieitem.split(/;/)[0]
-          cookiename = cookie.split(/=/)[0]
-          value = cookie.split(/=/)[1]
+          cookiename = cookie.split(/\=/)[0]
+          value = cookie.split(/\=/)[1]
           cookievalue = "#{cookiename}=#{value}"
           if ( @cookies[cookiename] != cookievalue ) 
              @cookies[cookiename] = cookievalue
