@@ -484,40 +484,28 @@ import javax.servlet.http.HttpServletResponse;
     Set<String> managedGroups = Sets.newHashSet();
     SolrServer solrServer = solrSearchService.getServer();
     StringBuilder querySB = new StringBuilder(
-        "resourceType:authorizable AND type:g AND readers:").append(userId);
+        "resourceType:authorizable AND type:g AND manager:").append(userId);
     SolrQuery solrQuery = new SolrQuery(querySB.toString());
-    solrQuery.setRows(100);
     String groupId;
     QueryResponse response;
     try {
       response = solrServer.query(solrQuery);
       SolrDocumentList results = response.getResults();
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug("with query {}, found {} groups managed by {}", new Object[] {
+            solrQuery, results.size(), userId });
       for (Iterator iterator = results.iterator(); iterator.hasNext();) {
         SolrDocument solrDocument = (SolrDocument) iterator.next();
         groupId = (String) solrDocument.getFieldValue("id");
-        Group group = null;
-        String[] managers = null;
-        Set<String> managersSet = null;
-        try {
-          group = (Group) authorizableManager.findAuthorizable(groupId);
-          managers = (String[]) group.getProperty("rep:group-managers");
-          managersSet = Sets.newHashSet(managers);
-          if (managersSet.contains(userId)) {
-            managedGroups.add(groupId);
-          }
-        } catch (AccessDeniedException e) {
-          LOGGER.error("failed to find group" + groupId, e);
-        } catch (StorageClientException e) {
-          LOGGER.error("failed to find group" + groupId, e);
-        }
+        managedGroups.add(groupId);
       }
     } catch (SolrServerException e) {
       LOGGER.warn(e.getMessage(), e);
     }
-    LOGGER.debug("my managed groups: " + managedGroups);
+    if (LOGGER.isDebugEnabled()) LOGGER.debug("my managed groups: " + managedGroups);
     return managedGroups;
   }
-
+  
   @SuppressWarnings("rawtypes")
   private boolean isRequestingNonPublicOperations(SlingHttpServletRequest request) {
     Map parameterMap = request.getParameterMap();
