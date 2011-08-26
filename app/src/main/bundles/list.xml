@@ -196,7 +196,7 @@ KERN-1187
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.log</artifactId>
             <version>2.0.7-20100823</version>
-        </bundle>
+        </bundle>  
     </startLevel>
     <startLevel level="5">
         <bundle>
