@@ -63,7 +63,7 @@ echo "Building sparsemapcontent@HEAD..."
 cd $BUILD_DIR
 mkdir sparsemapcontent
 cd sparsemapcontent
-git clone -q git://github.com/ieb/sparsemapcontent.git
+git clone -q git://github.com/sakaiproject/sparsemapcontent.git
 cd sparsemapcontent
 git checkout -b "build-HEAD" HEAD
 mvn -B -e clean install
@@ -73,7 +73,7 @@ echo "Building solr@HEAD..."
 cd $BUILD_DIR
 mkdir solr
 cd solr
-git clone -q git://github.com/ieb/solr.git
+git clone -q git://github.com/sakaiproject/solr.git
 cd solr
 git checkout -b "build-HEAD" HEAD
 mvn -B -e clean install

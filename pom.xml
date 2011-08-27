@@ -13,9 +13,9 @@
     <maven>2.2.0</maven>
   </prerequisites>
   <scm>
-    <connection>scm:git:git://github.com/ieb/open-experiments.git</connection>
-    <developerConnection>scm:git:git://git@github.com/ieb/open-experiments.git</developerConnection>
-    <url>http://github.com/ieb/open-experiments/</url>
+    <connection>scm:git:git://github.com/sakaiproject/nakamura.git</connection>
+    <developerConnection>scm:git:git://git@github.com/sakaiproject/nakamura.git</developerConnection>
+    <url>http://github.com/sakaiproject/nakamura/</url>
   </scm>
   <issueManagement>
     <system>jira</system>
