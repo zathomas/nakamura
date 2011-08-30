@@ -225,6 +225,11 @@ KERN-1187
             <version>1.0.2</version>
         </bundle>
         <bundle>
+            <groupId>org.sakaiproject.nakamura</groupId>
+            <artifactId>org.sakaiproject.nakamura.webconsole.solr</artifactId>
+            <version>0.11-SNAPSHOT</version>
+        </bundle>
+        <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.json</artifactId>
             <version>2.0.5-20100823</version>
