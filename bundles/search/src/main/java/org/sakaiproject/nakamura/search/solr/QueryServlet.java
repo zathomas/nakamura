@@ -17,30 +17,40 @@
  */
 package org.sakaiproject.nakamura.search.solr;
 
+import com.google.common.collect.Maps;
+
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-
-import org.sakaiproject.nakamura.api.solr.SolrServerService;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrQuery;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.util.Map;
-
-
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.osgi.framework.Constants;
 import org.sakaiproject.nakamura.api.doc.BindingType;
 import org.sakaiproject.nakamura.api.doc.ServiceBinding;
 import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
 import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
+import org.sakaiproject.nakamura.api.search.solr.QueryOutputService;
+import org.sakaiproject.nakamura.api.templates.TemplateService;
+import org.sakaiproject.nakamura.util.JcrUtils;
+import org.sakaiproject.nakamura.util.NodeInputStream;
 
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.util.Map;
+import java.util.ResourceBundle;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.servlet.ServletException;
 
 @ServiceDocumentation(
   name = "Solr Debug Servlet",
@@ -68,106 +78,106 @@ import org.apache.felix.scr.annotations.Property;
     )
   }
 )
-@Component(enabled=false)
+@Component(enabled = false)
 @SlingServlet(methods = "GET", paths = "/system/query", generateComponent = false)
-@Properties(value = {
-    @Property(name = "service.vendor", value = "The Sakai Foundation"),
-    @Property(name = "service.description", value = "Perform arbitrary queries against Solr.  WARNING: do not enable in production without separately protecting the /system/query URL.") })
-public class QueryServlet extends SlingSafeMethodsServlet {
-
+@Properties({
+  @Property(name = Constants.SERVICE_VENDOR, value = "The Sakai Foundation"),
+  @Property(name = Constants.SERVICE_DESCRIPTION, value = "Perform arbitrary queries against Solr.  WARNING: do not enable in production without separately protecting the /system/query URL.")
+})
+public class QueryServlet extends SlingAllMethodsServlet {
   static final long serialVersionUID = -7250872090976232073L;
 
+  public static final String QUERY_TEMPLATE = "sakai.query.template";
+  static final String DEFAULT_QUERY_TEMPLATE = "templates/query.html";
+  @Property(name = QUERY_TEMPLATE, value = DEFAULT_QUERY_TEMPLATE)
+  private String queryTemplate;
+
   @Reference
-  SolrServerService solrServerService;
+  private QueryOutputService queryOutput;
 
+  @Reference
+  private SlingRepository slingRepo;
 
-  private class SolrOutputIndenter {
+  @Reference
+  private TemplateService tmplService;
 
-    final int tabwidth = 4;
-
-    private int indent = 0;
-    private int list_depth = 0;
-
-
-    private boolean newline_indent(StringBuilder sb) {
-      if (list_depth <= 1) {
-        sb.append("\n");
-        for (int i = 0; i < (indent * tabwidth); i++) {
-          sb.append(" ");
-        }
-
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-
-    public String indent(String s) {
-      StringBuilder sb = new StringBuilder();
-
-      for (int i = 0; i < s.length(); i++) {
-        char ch = s.charAt(i);
-
-        if (ch == '{') {
-          sb.append(ch);
-          indent++;
-          newline_indent(sb);
-        } else if (ch == '[') {
-          sb.append(ch);
-          list_depth++;
-          indent++;
-          newline_indent(sb);
-        } else if (ch == ']') {
-          indent--;
-          newline_indent(sb);
-          list_depth--;
-          sb.append(ch);
-        } else if (ch == ',') {
-          sb.append(ch);
-          if (newline_indent(sb) && s.charAt(i + 1) == ' ') {
-            // Eat the space following the comma too.
-            i++;
-          }
-        } else if (ch == '}') {
-          indent--;
-          newline_indent(sb);
-          sb.append(ch);
-        } else {
-          sb.append(ch);
-        }
-      }
-
-      return sb.toString();
-    }
+  @Activate @Modified
+  protected void activate(Map<?, ?> props) {
+    queryTemplate = OsgiUtil.toString(props.get(QUERY_TEMPLATE), DEFAULT_QUERY_TEMPLATE);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @see org.apache.sling.api.servlets.SlingSafeMethodsServlet#doGet(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.SlingHttpServletResponse)
+   */
   @Override
-  protected void doGet(SlingHttpServletRequest request,
-                       SlingHttpServletResponse response)
-    throws ServletException, IOException {
+  protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
+      throws ServletException, IOException {
+    handleRequest(request, response);
+  }
 
-    SolrServer server = solrServerService.getServer();
+  /**
+   * {@inheritDoc}
+   *
+   * @see org.apache.sling.api.servlets.SlingSafeMethodsServlet#doPost(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.SlingHttpServletResponse)
+   */
+  @Override
+  protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
+      throws ServletException, IOException {
+    handleRequest(request, response);
+  }
 
-    SolrQuery q = new SolrQuery();
-
-    @SuppressWarnings("unchecked")
-    Map<String, String[]> params = request.getParameterMap();
-
-    for (String param : params.keySet()) {
-      q.setParam(param, params.get(param));
-    }
-
+  /**
+   * Generic request handler. The only difference between GET and POST requests are that
+   * the output is help for GET, query results for POST.
+   *
+   * @param req
+   * @param res
+   * @throws ServletException
+   * @throws IOException
+   */
+  public void handleRequest(SlingHttpServletRequest req, SlingHttpServletResponse res)
+      throws ServletException, IOException {
+    javax.jcr.Session jcrSession = null;
     try {
-      String result = server.query(q).getResponse().toString();
+      jcrSession = slingRepo.login();
 
-      if (params.get("indent") != null) {
-        result = new SolrOutputIndenter().indent(result);
+      // read in the template to use for the main page
+      String tmplPath = req.getResource().getPath() + "/" + queryTemplate;
+      Node templateNode = jcrSession.getNode(tmplPath);
+      NodeInputStream tmplNis = JcrUtils.getInputStreamForNode(templateNode);
+
+      // produce the body to fill in the template
+      StringWriter bodyWriter = new StringWriter();
+      queryOutput.writeBody(req, bodyWriter);
+
+      // collect variables needed to fill out the template
+      Map<String, Object> props = Maps.newHashMap();
+
+      long solrDocCount = queryOutput.getSolrDocCount();
+      props.put("total_solr_docs", solrDocCount);
+      props.put("output", bodyWriter.toString());
+
+      // load previous parameters
+      queryOutput.collectForm(req, props);
+
+      // load the resource bundle for i18n
+      ResourceBundle rb = req.getResourceBundle("org.sakaiproject.nakamura.search.Resources", null);
+      for (String key: rb.keySet()) {
+        props.put(key, rb.getString(key));
       }
 
-      response.getWriter().println(result);
-    } catch (Exception e) {
+      // put it all together
+      String results = tmplService.evaluateTemplate(props,
+          new InputStreamReader(tmplNis.getInputStream()));
+      res.getWriter().print(results);
+    } catch (RepositoryException e) {
       throw new ServletException(e.getMessage(), e);
+    } finally {
+      if (jcrSession != null) {
+        jcrSession.logout();
+      }
     }
   }
 }

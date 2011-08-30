@@ -1,5 +1,6 @@
 package org.sakaiproject.nakamura.api.templates;
 
+import java.io.Reader;
 import java.util.Collection;
 import java.util.Map;
 
@@ -14,6 +15,8 @@ public interface TemplateService {
   public String ID_GENERATOR = "_ids";
 
   String evaluateTemplate(Map<String, ? extends Object> parameters, String template);
+
+  String evaluateTemplate(Map<String, ? extends Object> parameters, Reader templateReader);
 
   /**
    * Checks for unresolved variable markers in a processed template. Looks for ${param}
