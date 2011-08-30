@@ -95,6 +95,7 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
     builder.put("sakai:category", "category");
     builder.put(Authorizable.LASTMODIFIED_FIELD, Content.LASTMODIFIED_FIELD);    
     builder.put(UserConstants.COUNTS_LAST_UPDATE_PROP, "countLastUpdate");
+    builder.put(UserConstants.PROP_GROUP_MANAGERS, "manager");
     GROUP_WHITELISTED_PROPS = builder.build();
   }
 
