@@ -141,7 +141,7 @@ public class SparseResultSetFactory implements ResultSetFactory {
     }
 
     // add the options to the parameters but prepend _ to avoid collision
-    for (Entry<String, String> option : query.getOptions().entrySet()) {
+    for (Entry<String, Object> option : query.getOptions().entrySet()) {
       props.put("_" + option.getKey(), option.getValue());
     }
     

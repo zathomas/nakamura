@@ -89,9 +89,9 @@ public class RelatedContentSearchPropertyProvider extends
    * The solr query options that will be used in phase one where we find source content to
    * match against.
    */
-  public static final Map<String, String> SOURCE_QUERY_OPTIONS;
+  public static final Map<String, Object> SOURCE_QUERY_OPTIONS;
   static {
-    final Map<String, String> sqo = new HashMap<String, String>(3);
+    final Map<String, Object> sqo = new HashMap<String, Object>(3);
     // sort by most recent content
     sqo.put("sort", "_lastModified desc");
     // limit source content for matching to something reasonable
