@@ -137,7 +137,7 @@
          <plugin>
           <groupId>org.apache.sling</groupId>
           <artifactId>maven-sling-plugin</artifactId>
-          <version>2.0.5-20110810.130509-298</version>
+          <version>2.0.5-SNAPSHOT</version>
           <executions>
             <execution>
               <id>install-bundle</id>
