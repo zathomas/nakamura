@@ -52,17 +52,17 @@ public class SolrSearchUtil {
 
 
   public static long[] getOffsetAndSize(SlingHttpServletRequest request,
-      final Map<String, String> options) {
+      final Map<String, Object> options) {
     long nitems;
     if (options != null && options.get(PARAMS_ITEMS_PER_PAGE) != null) {
-      nitems = Long.valueOf(options.get(PARAMS_ITEMS_PER_PAGE));
+      nitems = Long.parseLong(String.valueOf(options.get(PARAMS_ITEMS_PER_PAGE)));
     } else {
       nitems = SolrSearchUtil.longRequestParameter(request, PARAMS_ITEMS_PER_PAGE,
           DEFAULT_PAGED_ITEMS);
     }
     long page;
     if (options != null && options.get(PARAMS_PAGE) != null) {
-      page = Long.valueOf(options.get(PARAMS_PAGE));
+      page = Long.parseLong(String.valueOf(options.get(PARAMS_PAGE)));
     } else {
       page = SolrSearchUtil.longRequestParameter(request, PARAMS_PAGE, 0);
     }
@@ -183,7 +183,7 @@ public class SolrSearchUtil {
       throw new IllegalArgumentException("The number of getMoreLikeThis options must be even.");
     }
 
-    Map<String,String> mltOptions = new HashMap<String,String>();
+    Map<String,Object> mltOptions = new HashMap<String,Object>();
     for (int i = 0; i < options.length; i += 2) {
       mltOptions.put(options[i], options[i + 1]);
     }
@@ -233,7 +233,7 @@ public class SolrSearchUtil {
       throw new IllegalArgumentException("The number of getRandomResults options must be even.");
     }
 
-    final Map<String,String> queryOptions = new HashMap<String,String>();
+    final Map<String,Object> queryOptions = new HashMap<String,Object>();
     for (int i = 0; i < options.length; i += 2) {
       queryOptions.put(options[i], options[i + 1]);
     }

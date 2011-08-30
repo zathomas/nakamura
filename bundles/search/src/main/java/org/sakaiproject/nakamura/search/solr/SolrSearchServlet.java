@@ -239,7 +239,7 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
 
         // allow number of items to be specified in sakai:query-template-options
         if (query.getOptions().containsKey(PARAMS_ITEMS_PER_PAGE)) {
-          nitems = Long.valueOf(query.getOptions().get(PARAMS_ITEMS_PER_PAGE));
+          nitems = Long.valueOf(String.valueOf(query.getOptions().get(PARAMS_ITEMS_PER_PAGE)));
         } else {
           // add this to the options so that all queries are constrained to a limited
           // number of returns per page.
@@ -247,7 +247,7 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
         }
 
         if (query.getOptions().containsKey(PARAMS_PAGE)) {
-          page = Long.valueOf(query.getOptions().get(PARAMS_PAGE));
+          page = Long.valueOf(String.valueOf(query.getOptions().get(PARAMS_PAGE)));
         } else {
           // add this to the options so that all queries are constrained to a limited
           // number of returns per page.
@@ -406,7 +406,7 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
     JSONObject queryOptions = accumulateQueryOptions(queryNode);
 
     // process the options as templates and check for missing params
-    Map<String, String> options = processOptions(propertiesMap, queryOptions, queryType);
+    Map<String, Object> options = processOptions(propertiesMap, queryOptions, queryType);
 
     Query query = new Query(queryNode.getPath(), queryType, queryString, options);
     return query;
@@ -419,10 +419,10 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
    * @throws JSONException
    * @throws MissingParameterException
    */
-  private Map<String, String> processOptions(Map<String, String> propertiesMap,
+  private Map<String, Object> processOptions(Map<String, String> propertiesMap,
       JSONObject queryOptions, String queryType) throws JSONException, MissingParameterException {
     Collection<String> missingTerms;
-    Map<String, String> options = Maps.newHashMap();
+    Map<String, Object> options = Maps.newHashMap();
     if (queryOptions != null) {
       Iterator<String> keys = queryOptions.keys();
       while(keys.hasNext()) {

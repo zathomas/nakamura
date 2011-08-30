@@ -35,7 +35,7 @@ public class Query {
 
   private String queryString;
 
-  private Map<String, String> options = Maps.newHashMap();
+  private Map<String, Object> options = Maps.newHashMap();
 
   private String name;
 
@@ -55,7 +55,7 @@ public class Query {
    * @param queryString
    * @param options
    */
-  public Query(String queryString, Map<String, String> options) {
+  public Query(String queryString, Map<String, Object> options) {
     this(queryString);
 
     this.options = options;
@@ -67,7 +67,7 @@ public class Query {
    *
    * @param properties
    */
-  public Query(String type, String queryString, Map<String, String> options) {
+  public Query(String type, String queryString, Map<String, Object> options) {
     this(queryString, options);
 
     this.type = type;
@@ -75,7 +75,7 @@ public class Query {
   }
 
 
-  public Query(String name, String type, String queryString, Map<String, String> options) {
+  public Query(String name, String type, String queryString, Map<String, Object> options) {
     this(type, queryString, options);
     this.name = name;
   }
@@ -103,7 +103,7 @@ public class Query {
    *
    * @return {@link Map} of options. null if not set.
    */
-  public Map<String, String> getOptions() {
+  public Map<String, Object> getOptions() {
     return options;
   }
 
