@@ -103,8 +103,4 @@ public interface SolrSearchConstants {
    *
    */
   public static final String INFINITY = "infinity";
-  /**
-  * Solr query parameter fq
-  */
- public static final String FILTER_QUERY = "fq";
 }

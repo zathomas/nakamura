@@ -17,11 +17,10 @@
  */
 package org.sakaiproject.nakamura.search.solr;
 
-import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.FILTER_QUERY;
-
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -223,25 +222,34 @@ import java.util.ArrayList;
       // Add reader restrictions to solr fq (filter query) parameter,
       // to prevent "reader restrictions" from affecting the solr score
       // of a document.
-      Map<String, String> originalQueryOptions = query.getOptions();
-      Map<String, String> queryOptions = Maps.newHashMap();
-      String filterQuery = null;
+      Map<String, Object> originalQueryOptions = query.getOptions();
+      Map<String, Object> queryOptions = Maps.newHashMap();
+      Object filterQuery = null;
 
       if (originalQueryOptions != null) {
         // copy from originalQueryOptions in case its backed by a ImmutableMap,
         // which prevents saving of filter query changes.
         queryOptions.putAll(originalQueryOptions);
-        if (queryOptions.get(FILTER_QUERY) != null && queryOptions.get(FILTER_QUERY).length() > 0) {
-          filterQuery = queryOptions.get(FILTER_QUERY);
+        if (queryOptions.get(CommonParams.FQ) != null) {
+          filterQuery = queryOptions.get(CommonParams.FQ);
         }
       }
+
+      Set<String> filterQueries = Sets.newHashSet();
+      // add any existing filter queries to the set
+      if (filterQuery != null) {
+        if (filterQuery instanceof Object[]) {
+          CollectionUtils.addAll(filterQueries, (Object[]) filterQuery);
+        } else if (filterQuery instanceof Iterable) {
+          CollectionUtils.addAll(filterQueries, ((Iterable) filterQuery).iterator());
+        } else {
+          filterQueries.add(String.valueOf(filterQuery));
+        }
+      }
+
       // apply readers restrictions.
       if (asAnon) {
-        if (filterQuery == null) {
-          filterQuery = "readers:" + User.ANON_USER;
-        } else {
-          filterQuery = "(" + filterQuery + ")  AND readers:" + User.ANON_USER;
-        }
+        filterQueries.add("readers:" + User.ANON_USER);
       } else {
         Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
         if (!User.ADMIN_USER.equals(session.getUserId())) {
@@ -252,23 +260,18 @@ import java.util.ArrayList;
             readers.add(SearchUtil.escapeString(gi.next().getId(), Query.SOLR));
           }
           readers.add(session.getUserId());
-          if (filterQuery == null) {
-            filterQuery = "readers:(" + StringUtils.join(readers," OR ") + ")";
-          } else {
-            filterQuery = "(" + filterQuery + ") AND readers:(" + StringUtils.join(readers," OR ") + ")";
-          }
+          filterQueries.add("readers:(" + StringUtils.join(readers," OR ") + ")");
         }
       }
-      // save filterQuery changes
-      queryOptions.put(FILTER_QUERY, filterQuery);
 
-      String queryString = query.getQueryString();
       List<String> deletedPaths = getDeletedPaths();
       if (!deletedPaths.isEmpty()) {
-        queryString = "(" + queryString + ") AND -path:(" + StringUtils.join(deletedPaths, " OR ") + ")";
+        filterQueries.add("-path:(" + StringUtils.join(deletedPaths, " OR ") + ")");
       }
+      // save filterQuery changes
+      queryOptions.put(CommonParams.FQ, filterQueries);
 
-      SolrQuery solrQuery = buildQuery(request, queryString, queryOptions);
+      SolrQuery solrQuery = buildQuery(request, query.getQueryString(), queryOptions);
 
       SolrServer solrServer = solrSearchService.getServer();
       if ( LOGGER.isDebugEnabled()) {
