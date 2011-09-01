@@ -70,10 +70,10 @@ public class RandomContentSearchBatchResultProcessor extends LiteFileSearchBatch
 
   public SolrSearchResultSet getSearchResultSet(SlingHttpServletRequest request, Query query) throws SolrSearchException {
 
-    Map<String, String> options = query.getOptions();
+    Map<String, Object> options = query.getOptions();
 
     // find the number of items solr has be requested to return.
-    String originalItems = options.get(PARAMS_ITEMS_PER_PAGE); // items
+    String originalItems = String.valueOf(options.get(PARAMS_ITEMS_PER_PAGE)); // items
     int originalItemsInt = Integer.parseInt(originalItems);
 
     // increase the number of items solr will return.

@@ -25,7 +25,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
@@ -207,7 +206,7 @@ public class DirectoryTagFeedServlet extends SlingSafeMethodsServlet {
     String sortRandom = "random_" + String.valueOf(random) + " asc";
     final String queryString = sb.toString();
     org.sakaiproject.nakamura.api.search.solr.Query solrQuery = new org.sakaiproject.nakamura.api.search.solr.Query(
-        queryString, ImmutableMap.of("sort", sortRandom));
+        queryString, ImmutableMap.of("sort", (Object) sortRandom));
     final SolrSearchBatchResultProcessor rp = new LiteFileSearchBatchResultProcessor(
         solrSearchServiceFactory, profileService);
     final SolrSearchResultSet srs = rp.getSearchResultSet(request, solrQuery);

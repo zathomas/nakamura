@@ -309,7 +309,7 @@ import java.util.ArrayList;
    * @return
    */
   private SolrQuery buildQuery(SlingHttpServletRequest request, String queryString,
-      Map<String, String> options) {
+      Map<String, Object> options) {
     // build the query
     SolrQuery solrQuery = new SolrQuery(queryString);
     long[] ranges = SolrSearchUtil.getOffsetAndSize(request, options);
@@ -318,13 +318,21 @@ import java.util.ArrayList;
 
     // add in some options
     if (options != null) {
-      for (Entry<String, String> option : options.entrySet()) {
+      for (Entry<String, Object> option : options.entrySet()) {
         String key = option.getKey();
-        String val = option.getValue();
+        Object val = option.getValue();
         if (CommonParams.SORT.equals(key)) {
-          parseSort(solrQuery, val);
+          parseSort(solrQuery, String.valueOf(val));
+        } else if (val instanceof Object[]) {
+          for (Object v : (Object[]) val) {
+            solrQuery.add(key, String.valueOf(v));
+          }
+        } else if (val instanceof Iterable) {
+          for (Object v : (Iterable<Object>) val) {
+            solrQuery.add(key, String.valueOf(v));
+          }
         } else {
-          solrQuery.set(key, val);
+          solrQuery.add(key, String.valueOf(val));
         }
       }
     }
