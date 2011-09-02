@@ -1,7 +1,7 @@
 {
   "sakai:query-template": "group:(${group})",
   "sakai:query-template-options": {
-      "fq": "type:(u OR g)",
+      "fq": "resourceType:authorizable",
       "sort": "${sortOn} ${sortOrder}"
   },
   "sortOn": "score",
