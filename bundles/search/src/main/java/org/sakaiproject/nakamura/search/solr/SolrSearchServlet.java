@@ -37,7 +37,9 @@ import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SEAR
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.TIDY;
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.TOTAL;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Properties;
@@ -53,6 +55,7 @@ import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.osgi.OsgiUtil;
@@ -90,6 +93,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.Node;
@@ -421,28 +425,61 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
    */
   private Map<String, Object> processOptions(Map<String, String> propertiesMap,
       JSONObject queryOptions, String queryType) throws JSONException, MissingParameterException {
-    Collection<String> missingTerms;
+    Set<String> missingTerms = Sets.newHashSet();
     Map<String, Object> options = Maps.newHashMap();
     if (queryOptions != null) {
       Iterator<String> keys = queryOptions.keys();
       while(keys.hasNext()) {
         String key = keys.next();
-        String val = queryOptions.getString(key);
-        missingTerms = templateService.missingTerms(propertiesMap, val);
-        if (!missingTerms.isEmpty()) {
-          throw new MissingParameterException(
-              "Your request is missing parameters for the template: "
-                  + StringUtils.join(missingTerms, ", "));
+        Object vals = queryOptions.get(key);
+        if (vals instanceof JSONArray) {
+          // iterate over the array of values
+          JSONArray arr = (JSONArray) vals;
+          Set<String> processedVals = Sets.newHashSet();
+          for (int i = 0; i < arr.length(); i++) {
+            String val = arr.getString(i);
+            String processedVal = processValue(key, val, propertiesMap, queryType,
+                missingTerms);
+            processedVals.add(processedVal);
+          }
+          options.put(key, processedVals);
+        } else {
+          // treat the value as a scalar
+          String val = String.valueOf(vals);
+          String processedVal = processValue(key, val, propertiesMap, queryType,
+              missingTerms);
+          options.put(key, processedVal);
         }
-
-        String processedVal = templateService.evaluateTemplate(propertiesMap, val);
-        if ("sort".equals(key)) {
-          processedVal = SearchUtil.escapeString(processedVal, queryType);
-        }
-        options.put(key, processedVal);
       }
     }
-    return options;
+
+    if (!missingTerms.isEmpty()) {
+      throw new MissingParameterException(
+          "Your request is missing parameters for the template: "
+              + StringUtils.join(missingTerms, ", "));
+    } else {
+      return options;
+    }
+  }
+
+  /**
+   * Process a value through the template service and check for missing fields.
+   *
+   * @param key
+   * @param val
+   * @param propertiesMap
+   * @param queryType
+   * @param missingTerms
+   * @return
+   */
+  private String processValue(String key, String val, Map<String, String> propertiesMap,
+      String queryType, Set<String> missingTerms) {
+    missingTerms.addAll(templateService.missingTerms(propertiesMap, val));
+    String processedVal = templateService.evaluateTemplate(propertiesMap, val);
+    if ("sort".equals(key)) {
+      processedVal = SearchUtil.escapeString(processedVal, queryType);
+    }
+    return processedVal;
   }
 
   /**
@@ -471,9 +508,18 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
         while (props.hasNext()) {
           javax.jcr.Property prop = props.nextProperty();
           String key = prop.getName();
-          String val = prop.getString();
+
           if (!key.startsWith("jcr:")) {
-            queryOptions.put(key, val);
+            if (prop.isMultiple()) {
+              Value[] vals = prop.getValues();
+              for (Value val : vals) {
+                String strVal = val.getString();
+                queryOptions.accumulate(key, strVal);
+              }
+            } else {
+              String val = prop.getString();
+              queryOptions.put(key, val);
+            }
           }
         }
       }

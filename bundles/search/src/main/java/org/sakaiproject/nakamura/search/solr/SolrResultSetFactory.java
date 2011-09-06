@@ -216,6 +216,7 @@ import java.util.ArrayList;
    * @return
    * @throws SolrSearchException
    */
+  @SuppressWarnings("rawtypes")
   public SolrSearchResultSet processQuery(SlingHttpServletRequest request, Query query,
       boolean asAnon) throws SolrSearchException {
     try {
@@ -311,6 +312,7 @@ import java.util.ArrayList;
    * @param queryString
    * @return
    */
+  @SuppressWarnings("unchecked")
   private SolrQuery buildQuery(SlingHttpServletRequest request, String queryString,
       Map<String, Object> options) {
     // build the query
