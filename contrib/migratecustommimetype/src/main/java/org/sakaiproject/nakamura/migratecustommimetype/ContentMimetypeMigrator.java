@@ -20,8 +20,8 @@ public class ContentMimetypeMigrator implements PropertyMigrator {
   public boolean migrate(String rid, Map<String, Object> properties) {
       String contentMimetype = (String)properties.get(OLD_MIME_FIELD);
       if (contentMimetype != null){
-	  properties.put(InternalContent.MIMETYPE_FIELD, contentMimetype);
-	  properties.remove(OLD_MIME_FIELD);
+    	  properties.put(InternalContent.MIMETYPE_FIELD, contentMimetype);
+    	  properties.remove(OLD_MIME_FIELD);
           log.debug("Updated {} {} ",rid,contentMimetype);
           return true;
       }

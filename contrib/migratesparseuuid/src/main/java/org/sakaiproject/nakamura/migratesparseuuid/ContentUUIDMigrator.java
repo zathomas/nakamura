@@ -42,7 +42,7 @@ public class ContentUUIDMigrator implements PropertyMigrator {
 	public void activate(Map<String,Object> props){
 		originalField = OsgiUtil.toString(PROP_ORIGINAL_FIELD, DEFAULT_ORIGINAL_FIELD);
 	}
-
+	
 
 	public boolean migrate(String rid, Map<String, Object> properties) {
 		if (originalField.equals(Content.getUuidField())){
@@ -50,9 +50,9 @@ public class ContentUUIDMigrator implements PropertyMigrator {
 		}
         String theValue = (String)properties.get(originalField);
         if (theValue != null ){
-		properties.put(Content.getUuidField(), theValue);
-		properties.remove(originalField);
-		return true;
+        	properties.put(Content.getUuidField(), theValue);
+        	properties.remove(originalField);
+        	return true;
         }
 		return false;
 	}

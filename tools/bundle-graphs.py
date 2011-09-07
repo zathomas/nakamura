@@ -33,7 +33,7 @@ def get_sakai_bundles():
     """
     Get a list of bundles that are create as part of Sakai OAE.
     Returns a dictionary of dict[bundle_name] = bundle_id.
-
+    
     """
     tn = telnetlib.Telnet('localhost', '6666')
     tn.write('ps -s\nexit\n')
@@ -49,11 +49,11 @@ def get_package_reqs(bundle_id):
     """
     Gets the requirements (imports) for a given bundle.
     Returns a dictionary of dict[bundle_name] = bundle_id.
-
+    
     Keyword arguments:
     bundle_id -- Bundle ID returned by the server in the output of
                  get_sakai_bundles()
-
+    
     """
     tn = telnetlib.Telnet('localhost', '6666')
     tn.write('inspect package requirement %s\nexit\n' % (bundle_id))
@@ -69,7 +69,7 @@ def build_bundle_graph():
     """
     Build a graph_attr (nodes, edges) representing the connectivity
     within Sakai bundles
-
+    
     """
     sakai_bundles = get_sakai_bundles()
     bundles = {}
@@ -82,13 +82,13 @@ def draw_subgraph(name, graph, filename, successors = True):
     """
     Draw (write to disk) a subgraph that starts with or ends with
     the specified node.
-
+    
     Keyword arguments:
     name -- name of the node to focus on
     graph -- graph of paths between bundles
     filename -- filename to write subgraph to
     successors -- whether to lookup successors or predecessors
-
+    
     """
     if successors:
         nbunch = graph.successors(name)
@@ -118,3 +118,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
