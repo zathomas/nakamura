@@ -94,6 +94,10 @@
 	  <artifactId>org.sakaiproject.nakamura.doc</artifactId>
 	  <version>1.1-SNAPSHOT</version>
 	</dependency>
+    <dependency>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>org.sakaiproject.nakamura.core</artifactId>
+    </dependency>
 	<dependency>
 		<groupId>org.sakaiproject.nakamura</groupId>
 		<artifactId>org.sakaiproject.nakamura.testutils</artifactId>
