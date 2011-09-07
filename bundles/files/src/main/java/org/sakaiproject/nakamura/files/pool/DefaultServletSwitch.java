@@ -59,7 +59,7 @@ public class DefaultServletSwitch extends SlingSafeMethodsServlet implements
   @Reference(cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC, referenceInterface = DefaultServletDelegate.class, strategy = ReferenceStrategy.EVENT, bind = "bindDelegate", unbind = "unbindDelegate")
   public DefaultServletDelegate[] delegates = new DefaultServletDelegate[0];
   public Map<DefaultServletDelegate, DefaultServletDelegate> delegateStore = Maps
-      .newConcurrentHashMap();
+      .newConcurrentMap();
 
   public boolean accepts(SlingHttpServletRequest request) {
     for (DefaultServletDelegate delegate : delegates) {

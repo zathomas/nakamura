@@ -147,8 +147,8 @@
     </dependency>
   
     <dependency>
-    	<groupId>com.google.collections</groupId>
-    	<artifactId>google-collections</artifactId>
+	<groupId>com.google.guava</groupId>
+	<artifactId>guava</artifactId>
     	<type>jar</type>
     	<scope>test</scope>
     </dependency>

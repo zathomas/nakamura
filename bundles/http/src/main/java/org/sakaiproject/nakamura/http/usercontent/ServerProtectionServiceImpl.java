@@ -193,11 +193,11 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
   @Reference(cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC, strategy = ReferenceStrategy.EVENT, bind = "bindServerProtectionValidator", unbind = "unbindServerProtectionValidator")
   private ServerProtectionValidator[] serverProtectionValidators = new ServerProtectionValidator[0];
   private Map<ServiceReference, ServerProtectionValidator> serverProtectionValidatorsStore = Maps
-      .newConcurrentHashMap();
+      .newConcurrentMap();
   @Reference(cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC, strategy = ReferenceStrategy.EVENT, bind = "bindServerProtectionVeto", unbind = "unbindServerProtectionVeto")
   private ServerProtectionVeto[] serverProtectionVetos = new ServerProtectionVeto[0];
   private Map<ServiceReference, ServerProtectionVeto> serverProtectionVetosStore = Maps
-      .newConcurrentHashMap();
+      .newConcurrentMap();
 
   private BundleContext bundleContext;
   private boolean disableProtectionForDevMode;

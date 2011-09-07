@@ -347,9 +347,9 @@ KERN-1187
 
    <startLevel level="1">
     <bundle>
-      <groupId>org.sakaiproject.nakamura</groupId>
-      <artifactId>org.sakaiproject.nakamura.google-collections</artifactId>
-      <version>0.8-1.1-SNAPSHOT</version>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.guava</artifactId>
+      <version>09_1</version>
     </bundle>
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
