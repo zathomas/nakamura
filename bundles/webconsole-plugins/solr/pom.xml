@@ -16,12 +16,12 @@
   <parent>
     <groupId>org.sakaiproject.nakamura</groupId>
     <artifactId>base</artifactId>
-    <version>0.11-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
     <relativePath>../../../pom.xml</relativePath>
   </parent>
   <artifactId>org.sakaiproject.nakamura.webconsole.solr</artifactId>
   <packaging>bundle</packaging>
-  <version>0.11-SNAPSHOT</version>
+  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: Solr Web Console Bundle</name>
   <description>Web console plugin for the Felix web console.</description>
   <build>
@@ -60,14 +60,12 @@
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.search</artifactId>
-      <version>0.11-SNAPSHOT</version>
+      <version>1.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.solr</artifactId>
-      <version>1.0-SNAPSHOT</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
@@ -81,7 +79,6 @@
     <dependency>
       <groupId>com.google.collections</groupId>
       <artifactId>google-collections</artifactId>
-      <version>0.8</version>
     </dependency>
   </dependencies>
 </project>
