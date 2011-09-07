@@ -150,11 +150,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.solr</groupId>
-			<artifactId>solr-solrj</artifactId>
-			<version>1.4.1</version>
-			<type>jar</type>
-			<scope>provided</scope>
+			<groupId>org.sakaiproject.nakamura</groupId>
+			<artifactId>org.sakaiproject.nakamura.solr</artifactId>
 		</dependency>
 	</dependencies>
 </project>
