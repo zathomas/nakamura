@@ -64,7 +64,6 @@
         <module>bundles/chat</module>
         <module>bundles/doc</module>
         <module>bundles/docproxy</module>
-        <module>bundles/google-collections</module>
         <module>bundles/woodstox</module>
         <module>bundles/calendar</module>
         <module>bundles/authz</module>
@@ -825,9 +824,9 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>com.google.collections</groupId>
-        <artifactId>google-collections</artifactId>
-        <version>0.8</version>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>r09</version>
         <scope>provided</scope>
       </dependency>
       <dependency>

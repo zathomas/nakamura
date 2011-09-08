@@ -135,9 +135,8 @@
     	<scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>com.google.collections</groupId>
-    	<artifactId>google-collections</artifactId>
-    	<version>0.8</version>
+	<groupId>com.google.guava</groupId>
+	<artifactId>guava</artifactId>
     	<type>jar</type>
     	<scope>test</scope>
     </dependency>

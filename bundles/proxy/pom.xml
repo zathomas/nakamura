@@ -218,9 +218,9 @@
 		<artifactId>ical4j</artifactId>
 		<version>0.9.20</version>
 	</dependency>
-    <dependency>
-      <groupId>com.google.collections</groupId>
-      <artifactId>google-collections</artifactId>
-    </dependency>
+        <dependency>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </dependency>
   </dependencies>
 </project>

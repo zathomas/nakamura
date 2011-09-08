@@ -28,7 +28,7 @@ public class SolrSearchServiceFactoryImpl implements SolrSearchServiceFactory {
   private static final Logger LOGGER = LoggerFactory.getLogger(SolrSearchServiceFactoryImpl.class);
 
   @Reference(referenceInterface = ResultSetFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-  private ConcurrentMap<String, ResultSetFactory> resultSetFactories = Maps.newConcurrentHashMap();
+  private ConcurrentMap<String, ResultSetFactory> resultSetFactories = Maps.newConcurrentMap();
 
   protected void bindResultSetFactories(ResultSetFactory factory, Map<?, ?> props) {
     String type = OsgiUtil.toString(props.get("type"), null);
