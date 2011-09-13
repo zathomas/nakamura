@@ -7,6 +7,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.service.component.ComponentContext;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
@@ -32,9 +33,53 @@ public class BasicLTICLEToolPropertyServlet extends SlingAllMethodsServlet {
   @Property(value = "secret")
   protected static final String CLE_BASICLTI_SECRET = "sakai.cle.basiclti.secret";
 
+  @Property(longValue = 100)
+  protected static final String CLE_BASICLTI_FRAME_HEIGHT = "sakai.cle.basiclti.frame.height";
+
+  @Property(boolValue = true)
+  protected static final String LTI_URL_LOCK = "sakai.cle.basiclti.url.lock";
+
+  @Property(boolValue = true)
+  protected static final String LTI_KEY_LOCK = "sakai.cle.basiclti.key.lock";
+
+  @Property(boolValue = true)
+  protected static final String LTI_SECRET_LOCK = "sakai.cle.basiclti.secret.lock";
+
+  @Property(boolValue = true)
+  protected static final String LTI_RELEASE_NAMES = "sakai.cle.basiclti.release.names";
+
+  @Property(boolValue = true)
+  protected static final String LTI_RELEASE_NAMES_LOCK = "sakai.cle.basiclti.release.names.lock";
+
+  @Property(boolValue = true)
+  protected static final String LTI_RELEASE_EMAIL = "sakai.cle.basiclti.release.email";
+
+  @Property(boolValue = true)
+  protected static final String LTI_RELEASE_EMAIL_LOCK = "sakai.cle.basiclti.release.email.lock";
+
+  @Property(boolValue = true)
+  protected static final String LTI_RELEASE_PRINCIPAL = "sakai.cle.basiclti.release.principal";
+
+  @Property(boolValue = true)
+  protected static final String LTI_RELEASE_PRINCIPAL_LOCK = "sakai.cle.basiclti.release.principal.lock";
+
+  @Property(boolValue = false)
+  protected static final String LTI_DEBUG = "sakai.cle.basiclti.debug";
+
   private static String cleUrl;
   private static String ltiKey;
   private static String ltiSecret;
+  private static Long frameHeight;
+  private static Boolean urlLock;
+  private static Boolean keyLock;
+  private static Boolean secretLock;
+  private static Boolean releaseNames;
+  private static Boolean releaseNamesLock;
+  private static Boolean releaseEmail;
+  private static Boolean releaseEmailLock;
+  private static Boolean releasePrincipal;
+  private static Boolean releasePrincipalLock;
+  private static Boolean ltiDebug;
 
   private static final long serialVersionUID = 1L;
 
@@ -66,17 +111,17 @@ public class BasicLTICLEToolPropertyServlet extends SlingAllMethodsServlet {
       ejw.object();
       ejw.key("ltiurl").value(
           cleUrl + "/imsblti/provider/" + request.getRequestParameter("t"));
-      ejw.key("ltiurl_lock").value(true);
-      ejw.key("ltikey_lock").value(true);
-      ejw.key("ltisecret_lock").value(true);
-      ejw.key("release_names").value(true);
-      ejw.key("release_names_lock").value(true);
-      ejw.key("frame_height").value("100");
-      ejw.key("release_email").value(true);
-      ejw.key("release_email_lock").value(true);
-      ejw.key("release_principal_name").value(true);
-      ejw.key("release_principal_name_lock").value(true);
-      ejw.key("debug").value(false);
+      ejw.key("ltiurl_lock").value(urlLock);
+      ejw.key("ltikey_lock").value(keyLock);
+      ejw.key("ltisecret_lock").value(secretLock);
+      ejw.key("release_names").value(releaseNames);
+      ejw.key("release_names_lock").value(releaseNamesLock);
+      ejw.key("frame_height").value(frameHeight);
+      ejw.key("release_email").value(releaseEmail);
+      ejw.key("release_email_lock").value(releaseEmailLock);
+      ejw.key("release_principal_name").value(releasePrincipal);
+      ejw.key("release_principal_name_lock").value(releasePrincipalLock);
+      ejw.key("debug").value(ltiDebug);
       ejw.key("ltiKeys").object();
       ejw.key("ltikey").value(ltiKey);
       ejw.key("ltisecret").value(ltiSecret);
@@ -94,8 +139,20 @@ public class BasicLTICLEToolPropertyServlet extends SlingAllMethodsServlet {
   protected void activate(ComponentContext componentContext) throws Exception {
     Dictionary<?, ?> properties = componentContext.getProperties();
     LOG.info("Starting Activation of Hybrid BasicLTI CLE tool property servlet");
-    cleUrl = (String) properties.get(CLE_SERVER_URL);
-    ltiKey = (String) properties.get(CLE_BASICLTI_KEY);
-    ltiSecret = (String) properties.get(CLE_BASICLTI_SECRET);
+    cleUrl = OsgiUtil.toString(properties.get(CLE_SERVER_URL), "http://localhost");
+    ltiKey = OsgiUtil.toString(properties.get(CLE_BASICLTI_KEY), "12345");
+    ltiSecret = OsgiUtil.toString(properties.get(CLE_BASICLTI_SECRET), "secret");
+    frameHeight = OsgiUtil.toLong(properties.get(CLE_BASICLTI_FRAME_HEIGHT), 100);
+    urlLock = OsgiUtil.toBoolean(properties.get(LTI_URL_LOCK), true);
+    keyLock = OsgiUtil.toBoolean(properties.get(LTI_KEY_LOCK), true);
+    secretLock = OsgiUtil.toBoolean(properties.get(LTI_SECRET_LOCK), true);
+    releaseNames = OsgiUtil.toBoolean(properties.get(LTI_RELEASE_NAMES), true);
+    releaseNamesLock = OsgiUtil.toBoolean(properties.get(LTI_RELEASE_NAMES_LOCK), true);
+    releaseEmail = OsgiUtil.toBoolean(properties.get(LTI_RELEASE_EMAIL), true);
+    releaseEmailLock = OsgiUtil.toBoolean(properties.get(LTI_RELEASE_EMAIL_LOCK), true);
+    releasePrincipal = OsgiUtil.toBoolean(properties.get(LTI_RELEASE_PRINCIPAL), true);
+    releasePrincipalLock = OsgiUtil.toBoolean(properties.get(LTI_RELEASE_PRINCIPAL_LOCK),
+        true);
+    ltiDebug = OsgiUtil.toBoolean(properties.get(LTI_DEBUG), false);
   }
 }
