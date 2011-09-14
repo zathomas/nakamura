@@ -25,61 +25,61 @@ import javax.servlet.ServletException;
 public class BasicLTICLEToolPropertyServlet extends SlingAllMethodsServlet {
 
   @Property(value = "http://localhost")
-  protected static final String CLE_SERVER_URL = "sakai.cle.server.url";
+  protected final String CLE_SERVER_URL = "sakai.cle.server.url";
 
   @Property(value = "12345")
-  protected static final String CLE_BASICLTI_KEY = "sakai.cle.basiclti.key";
+  protected final String CLE_BASICLTI_KEY = "sakai.cle.basiclti.key";
 
   @Property(value = "secret")
-  protected static final String CLE_BASICLTI_SECRET = "sakai.cle.basiclti.secret";
+  protected final String CLE_BASICLTI_SECRET = "sakai.cle.basiclti.secret";
 
   @Property(longValue = 100)
-  protected static final String CLE_BASICLTI_FRAME_HEIGHT = "sakai.cle.basiclti.frame.height";
+  protected final String CLE_BASICLTI_FRAME_HEIGHT = "sakai.cle.basiclti.frame.height";
 
   @Property(boolValue = true)
-  protected static final String LTI_URL_LOCK = "sakai.cle.basiclti.url.lock";
+  protected final String LTI_URL_LOCK = "sakai.cle.basiclti.url.lock";
 
   @Property(boolValue = true)
-  protected static final String LTI_KEY_LOCK = "sakai.cle.basiclti.key.lock";
+  protected final String LTI_KEY_LOCK = "sakai.cle.basiclti.key.lock";
 
   @Property(boolValue = true)
-  protected static final String LTI_SECRET_LOCK = "sakai.cle.basiclti.secret.lock";
+  protected final String LTI_SECRET_LOCK = "sakai.cle.basiclti.secret.lock";
 
   @Property(boolValue = true)
-  protected static final String LTI_RELEASE_NAMES = "sakai.cle.basiclti.release.names";
+  protected final String LTI_RELEASE_NAMES = "sakai.cle.basiclti.release.names";
 
   @Property(boolValue = true)
-  protected static final String LTI_RELEASE_NAMES_LOCK = "sakai.cle.basiclti.release.names.lock";
+  protected final String LTI_RELEASE_NAMES_LOCK = "sakai.cle.basiclti.release.names.lock";
 
   @Property(boolValue = true)
-  protected static final String LTI_RELEASE_EMAIL = "sakai.cle.basiclti.release.email";
+  protected final String LTI_RELEASE_EMAIL = "sakai.cle.basiclti.release.email";
 
   @Property(boolValue = true)
-  protected static final String LTI_RELEASE_EMAIL_LOCK = "sakai.cle.basiclti.release.email.lock";
+  protected final String LTI_RELEASE_EMAIL_LOCK = "sakai.cle.basiclti.release.email.lock";
 
   @Property(boolValue = true)
-  protected static final String LTI_RELEASE_PRINCIPAL = "sakai.cle.basiclti.release.principal";
+  protected final String LTI_RELEASE_PRINCIPAL = "sakai.cle.basiclti.release.principal";
 
   @Property(boolValue = true)
-  protected static final String LTI_RELEASE_PRINCIPAL_LOCK = "sakai.cle.basiclti.release.principal.lock";
+  protected final String LTI_RELEASE_PRINCIPAL_LOCK = "sakai.cle.basiclti.release.principal.lock";
 
   @Property(boolValue = false)
-  protected static final String LTI_DEBUG = "sakai.cle.basiclti.debug";
+  protected final String LTI_DEBUG = "sakai.cle.basiclti.debug";
 
-  private static String cleUrl;
-  private static String ltiKey;
-  private static String ltiSecret;
-  private static Long frameHeight;
-  private static Boolean urlLock;
-  private static Boolean keyLock;
-  private static Boolean secretLock;
-  private static Boolean releaseNames;
-  private static Boolean releaseNamesLock;
-  private static Boolean releaseEmail;
-  private static Boolean releaseEmailLock;
-  private static Boolean releasePrincipal;
-  private static Boolean releasePrincipalLock;
-  private static Boolean ltiDebug;
+  private String cleUrl;
+  private String ltiKey;
+  private String ltiSecret;
+  private Long frameHeight;
+  private Boolean urlLock;
+  private Boolean keyLock;
+  private Boolean secretLock;
+  private Boolean releaseNames;
+  private Boolean releaseNamesLock;
+  private Boolean releaseEmail;
+  private Boolean releaseEmailLock;
+  private Boolean releasePrincipal;
+  private Boolean releasePrincipalLock;
+  private Boolean ltiDebug;
 
   private static final long serialVersionUID = 1L;
 
