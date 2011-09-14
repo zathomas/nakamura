@@ -25,46 +25,54 @@ import javax.servlet.ServletException;
 public class BasicLTICLEToolPropertyServlet extends SlingAllMethodsServlet {
 
   @Property(value = "http://localhost")
-  protected final String CLE_SERVER_URL = "sakai.cle.server.url";
+  protected static final String CLE_SERVER_URL = "sakai.cle.server.url";
 
   @Property(value = "12345")
-  protected final String CLE_BASICLTI_KEY = "sakai.cle.basiclti.key";
+  protected static final String CLE_BASICLTI_KEY = "sakai.cle.basiclti.key";
 
   @Property(value = "secret")
-  protected final String CLE_BASICLTI_SECRET = "sakai.cle.basiclti.secret";
+  protected static final String CLE_BASICLTI_SECRET = "sakai.cle.basiclti.secret";
 
   @Property(longValue = 100)
-  protected final String CLE_BASICLTI_FRAME_HEIGHT = "sakai.cle.basiclti.frame.height";
+  protected static final String CLE_BASICLTI_FRAME_HEIGHT = "sakai.cle.basiclti.frame.height";
 
   @Property(boolValue = true)
-  protected final String LTI_URL_LOCK = "sakai.cle.basiclti.url.lock";
+  protected static final String LTI_URL_LOCK = "sakai.cle.basiclti.url.lock";
 
   @Property(boolValue = true)
-  protected final String LTI_KEY_LOCK = "sakai.cle.basiclti.key.lock";
+  protected static final String LTI_KEY_LOCK = "sakai.cle.basiclti.key.lock";
 
   @Property(boolValue = true)
-  protected final String LTI_SECRET_LOCK = "sakai.cle.basiclti.secret.lock";
+  protected static final String LTI_SECRET_LOCK = "sakai.cle.basiclti.secret.lock";
 
   @Property(boolValue = true)
-  protected final String LTI_RELEASE_NAMES = "sakai.cle.basiclti.release.names";
+  protected static final String LTI_RELEASE_NAMES = "sakai.cle.basiclti.release.names";
 
   @Property(boolValue = true)
-  protected final String LTI_RELEASE_NAMES_LOCK = "sakai.cle.basiclti.release.names.lock";
+  protected static final String LTI_RELEASE_NAMES_LOCK = "sakai.cle.basiclti.release.names.lock";
 
   @Property(boolValue = true)
-  protected final String LTI_RELEASE_EMAIL = "sakai.cle.basiclti.release.email";
+  protected static final String LTI_RELEASE_EMAIL = "sakai.cle.basiclti.release.email";
 
   @Property(boolValue = true)
-  protected final String LTI_RELEASE_EMAIL_LOCK = "sakai.cle.basiclti.release.email.lock";
+  protected static final String LTI_RELEASE_EMAIL_LOCK = "sakai.cle.basiclti.release.email.lock";
 
   @Property(boolValue = true)
-  protected final String LTI_RELEASE_PRINCIPAL = "sakai.cle.basiclti.release.principal";
+  protected static final String LTI_RELEASE_PRINCIPAL = "sakai.cle.basiclti.release.principal";
 
   @Property(boolValue = true)
-  protected final String LTI_RELEASE_PRINCIPAL_LOCK = "sakai.cle.basiclti.release.principal.lock";
+  protected static final String LTI_RELEASE_PRINCIPAL_LOCK = "sakai.cle.basiclti.release.principal.lock";
 
   @Property(boolValue = false)
-  protected final String LTI_DEBUG = "sakai.cle.basiclti.debug";
+  protected static final String LTI_DEBUG = "sakai.cle.basiclti.debug";
+
+  @Property(value = { "sakai.announcements", "sakai.postem", "sakai.profile2",
+      "sakai.assignment.grades", "sakai.profile", "sakai.chat", "sakai.resources",
+      "sakai.dropbox", "sakai.rwiki", "sakai.forums", "sakai.samigo",
+      "sakai.gradebook.tool", "sakai.schedule", "sakai.mailbox", "sakai.singleuser",
+      "sakai.messages", "sakai.site.roster", "sakai.news", "sakai.summary.calendar",
+      "sakai.poll", "sakai.syllabus" })
+  protected static final String TOOL_LIST = "sakai.cle.basiclti.tool.list";
 
   private String cleUrl;
   private String ltiKey;
@@ -80,6 +88,7 @@ public class BasicLTICLEToolPropertyServlet extends SlingAllMethodsServlet {
   private Boolean releasePrincipal;
   private Boolean releasePrincipalLock;
   private Boolean ltiDebug;
+  private String[] toolList;
 
   private static final long serialVersionUID = 1L;
 
@@ -108,25 +117,31 @@ public class BasicLTICLEToolPropertyServlet extends SlingAllMethodsServlet {
       SlingHttpServletResponse response, boolean b) throws IOException {
     ExtendedJSONWriter ejw = new ExtendedJSONWriter(response.getWriter());
     try {
-      ejw.object();
-      ejw.key("ltiurl").value(
-          cleUrl + "/imsblti/provider/" + request.getRequestParameter("t"));
-      ejw.key("ltiurl_lock").value(urlLock);
-      ejw.key("ltikey_lock").value(keyLock);
-      ejw.key("ltisecret_lock").value(secretLock);
-      ejw.key("release_names").value(releaseNames);
-      ejw.key("release_names_lock").value(releaseNamesLock);
-      ejw.key("frame_height").value(frameHeight);
-      ejw.key("release_email").value(releaseEmail);
-      ejw.key("release_email_lock").value(releaseEmailLock);
-      ejw.key("release_principal_name").value(releasePrincipal);
-      ejw.key("release_principal_name_lock").value(releasePrincipalLock);
-      ejw.key("debug").value(ltiDebug);
-      ejw.key("ltiKeys").object();
-      ejw.key("ltikey").value(ltiKey);
-      ejw.key("ltisecret").value(ltiSecret);
-      ejw.endObject();
-      ejw.endObject();
+      if (request.getRequestParameter("list") != null) {
+        ejw.object();
+        ejw.key("toolList").value(toolList);
+        ejw.endObject();
+      } else {
+        ejw.object();
+        ejw.key("ltiurl").value(
+            cleUrl + "/imsblti/provider/" + request.getRequestParameter("t"));
+        ejw.key("ltiurl_lock").value(urlLock);
+        ejw.key("ltikey_lock").value(keyLock);
+        ejw.key("ltisecret_lock").value(secretLock);
+        ejw.key("release_names").value(releaseNames);
+        ejw.key("release_names_lock").value(releaseNamesLock);
+        ejw.key("frame_height").value(frameHeight);
+        ejw.key("release_email").value(releaseEmail);
+        ejw.key("release_email_lock").value(releaseEmailLock);
+        ejw.key("release_principal_name").value(releasePrincipal);
+        ejw.key("release_principal_name_lock").value(releasePrincipalLock);
+        ejw.key("debug").value(ltiDebug);
+        ejw.key("ltiKeys").object();
+        ejw.key("ltikey").value(ltiKey);
+        ejw.key("ltisecret").value(ltiSecret);
+        ejw.endObject();
+        ejw.endObject();
+      }
     } catch (JSONException e) {
       final Writer trace = new StringWriter();
       final PrintWriter pw = new PrintWriter(trace);
@@ -154,5 +169,6 @@ public class BasicLTICLEToolPropertyServlet extends SlingAllMethodsServlet {
     releasePrincipalLock = OsgiUtil.toBoolean(properties.get(LTI_RELEASE_PRINCIPAL_LOCK),
         true);
     ltiDebug = OsgiUtil.toBoolean(properties.get(LTI_DEBUG), false);
+    toolList = OsgiUtil.toStringArray(properties.get(TOOL_LIST));
   }
 }
