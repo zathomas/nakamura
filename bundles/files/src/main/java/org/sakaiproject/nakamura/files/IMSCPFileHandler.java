@@ -297,7 +297,8 @@ public class IMSCPFileHandler implements FileUploadHandler {
       for (int i = 0; i < orgs.size(); i++) {
         if (!orgs.get(i).hasSubItems())
           continue;
-        List<HasItem> items = getLeafItems(orgs.get(i));
+        List<HasItem> items = new ArrayList<HasItem>();
+        items.add(orgs.get(i));
         for (int j = 0; j < items.size(); j++) {
           if (items.get(j).getTitle() == null || items.get(j).getTitle().length() == 0) {
             items.addAll(items.get(j).getItems());
@@ -386,33 +387,4 @@ public class IMSCPFileHandler implements FileUploadHandler {
     resourceJSON.put("page", fileContent.get(res.getHref()));
     return resourceJSON;
   }
-
-  /**
-   * Return the root item
-   * @param org
-   * @return
-   */
-  private List<HasItem> getLeafItems(HasItem org) {
-    List<HasItem> result = new Vector<HasItem>();
-    result.add(org);
- /*   if (!org.hasSubItems())
-      return null;
-    boolean flag = false;
-    for (Item item : org.getItems())
-      if (item.hasSubItems()) {
-        flag = true;
-        result.addAll(getLeafItems(item));
-      }
-    if (!flag)
-      result.add(org);
-    else {
-      for (Item item : org.getItems()) {
-        if (!item.hasSubItems())
-          result.add(item);
-      }
-    } */
-    return result; 
-  }
-  
-
 }
