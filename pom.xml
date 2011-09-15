@@ -77,6 +77,8 @@
         <module>bundles/directory</module>
         <module>bundles/templates</module>
         <module>bundles/world</module>
+        <module>bundles/lom</module>
+        <module>bundles/content-packaging</module>
         <module>testscripts</module>
       </modules>
     </profile>

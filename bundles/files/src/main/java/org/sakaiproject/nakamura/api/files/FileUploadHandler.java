@@ -40,7 +40,8 @@ public interface FileUploadHandler {
    *          True if the uploaded file is new content.  False if it replaces an existing node.
    *
    **/
-  void handleFile(String poolId,
+  void handleFile(Map<String, Object> results,
+                  String poolId,
                   InputStream fileInputStream,
                   String userId,
                   boolean isNew)

@@ -281,7 +281,7 @@ public class CreateContentPoolServletTest {
     // Exceptions in a handler should be caught and logged, but shouldn't stop
     // other handlers from running.
     cp.bindFileUploadHandler(new FileUploadHandler() {
-        public void handleFile(String poolId, InputStream fileInputStream,
+        public void handleFile(Map<String, Object> results, String poolId, InputStream fileInputStream,
                                String userId, boolean isNew) throws IOException {
           throw new RuntimeException("Handler failed!");
         }
@@ -289,7 +289,7 @@ public class CreateContentPoolServletTest {
 
     final ArrayList notifiedFiles = new ArrayList();
     cp.bindFileUploadHandler(new FileUploadHandler() {
-        public void handleFile(String poolId, InputStream fileInputStream,
+        public void handleFile(Map<String, Object> results, String poolId, InputStream fileInputStream,
                                String userId, boolean isNew) throws IOException {
           notifiedFiles.add(poolId);
         }
