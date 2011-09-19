@@ -40,7 +40,7 @@ import java.util.List;
 public class PageIndexingUtil {
   private static final Logger LOGGER = LoggerFactory.getLogger(PageIndexingUtil.class);
 
-  public static void indexAllPages(Content content, ContentManager contentManager, SolrInputDocument doc, TikaService tikaService) throws StorageClientException, AccessDeniedException, UnsupportedEncodingException, PageIndexException {
+  public static void indexAllPages(Content content, ContentManager contentManager, SolrInputDocument doc, TikaService tikaService) throws PageIndexException {
     for (InputStream pageStream : getPageStreams(content, contentManager)) {
       try {
         doc.addField("content", tikaService.parseToString(pageStream));
@@ -52,10 +52,14 @@ public class PageIndexingUtil {
     }
   }
 
-  private static List<InputStream> getPageStreams(Content content, ContentManager contentManager) throws UnsupportedEncodingException, StorageClientException, AccessDeniedException, PageIndexException {
+  private static List<InputStream> getPageStreams(Content content, ContentManager contentManager) throws PageIndexException {
     List<InputStream> streams = Lists.newArrayList();
     for (Content page : getPages(content, contentManager)) {
-      streams.add(new ByteArrayInputStream(((String) page.getProperty("page")).getBytes("UTF-8")));
+      try {
+        streams.add(new ByteArrayInputStream(((String) page.getProperty("page")).getBytes("UTF-8")));
+      } catch (UnsupportedEncodingException e) {
+        throw new PageIndexException("Could not get bytes from the page property because UTF-8 is an unsupported encoding.");
+      }
     }
     return streams;
   }
@@ -67,7 +71,7 @@ public class PageIndexingUtil {
         pages.add(contentManager.get(pagePath));
       }
     } catch (StorageClientException e) {
-      throw new PageIndexException("Unable to get the child page paths for " + content.getPath());
+      throw new PageIndexException("Unable to get the child page paths for " + content.getPath(), e);
     } catch (AccessDeniedException e) {
       throw new PageIndexException("Access denied getting the child page paths for " + content.getPath());
     }
@@ -94,7 +98,7 @@ public class PageIndexingUtil {
         }
       }
     } catch (JSONException e) {
-      throw new PageIndexException("Failed to get page references for document page structure.");
+      throw new PageIndexException("Failed to get page references for document page structure.", e);
     }
     return pageReferences;
   }
@@ -103,12 +107,17 @@ public class PageIndexingUtil {
     try {
       return new JSONObject((String) content.getProperty("structure0"));
     } catch (JSONException e) {
-      throw new PageIndexException("Could not create JSON object for the pages of document " + content.getPath());
+      throw new PageIndexException("Could not create JSON object for the pages of document " + content.getPath(), e);
     }
   }
 
   public static class PageIndexException extends Exception {
     public PageIndexException(String s) {
+      super(s);
+    }
+
+    public PageIndexException(String s, Throwable t) {
+      super(s, t);
     }
   }
 }
