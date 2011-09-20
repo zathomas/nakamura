@@ -35,9 +35,10 @@ class TC_Kern2205Test < Test::Unit::TestCase
     # add main group to itself to check for membersCount
     # in non-recursive code in GroupMembersCounter.java
     group.add_member @s, group.name, "g"
+    wait_for_indexer()
     group_details = group.details(@s)
     group_members_count = group_details["properties"]["membersCount"]
-    assert_equal(3, group_members_count, "adding main group to itself leaves group has 2 members")
+    assert_equal(3, group_members_count, "adding main group to itself group should now have 3 members")
 
     members_pseudo_group = Group.new "#{group.name}-member"
     members_pseudo_group_details = members_pseudo_group.details @s
@@ -46,6 +47,7 @@ class TC_Kern2205Test < Test::Unit::TestCase
     
 #    now add the pseudo_group to iteself as a member to test recursive code in GroupMembersCounter.java
     members_pseudo_group.add_member @s, members_pseudo_group.name, "g"
+    wait_for_indexer()
     members_pseudo_group_details = members_pseudo_group.details @s
     members_pseudo_group_members_count = members_pseudo_group_details["properties"]["membersCount"]
     assert_equal(1, members_pseudo_group_members_count, "after adding members_pseudo_group to itself, members count should be 1")

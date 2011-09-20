@@ -69,9 +69,13 @@ public class GroupMembersCounter {
             LOGGER.debug("pseudoGroup: " + group.getId() + "already processed, not counted again");
           }
         } else {
-          // users and non-pseudo groups get counted as 1
-          LOGGER.debug("Counting member: " + auth.getId());
-          count++;
+          if (auth != null) {
+            // users and non-pseudo groups get counted as 1
+            LOGGER.debug("Counting member: " + auth.getId());
+            count++;
+          } else {
+            LOGGER.debug("Authorizable is null, member " + member + " likely has been deleted, not counting");
+          }
         }
       } catch (AccessDeniedException e) {
         LOGGER.error(e.getMessage(), e);
