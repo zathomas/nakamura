@@ -61,10 +61,10 @@ public class LiteAllActivitiesResultProcessor implements SolrSearchResultProcess
       .getLogger(LiteAllActivitiesResultProcessor.class);
 
   @Reference
-  private SolrSearchServiceFactory searchServiceFactory;
+  protected SolrSearchServiceFactory searchServiceFactory;
 
   @Reference
-  private BasicUserInfoService basicUserInfoService;
+  protected BasicUserInfoService basicUserInfoService;
 
   public void writeResult(SlingHttpServletRequest request, JSONWriter write, Result result)
       throws JSONException {
@@ -102,9 +102,7 @@ public class LiteAllActivitiesResultProcessor implements SolrSearchResultProcess
           ExtendedJSONWriter.writeValueMapInternals(write, basicUserInfoService
               .getProperties(authorizableManager.findAuthorizable((String) activityNode
                   .getProperty(ActivityConstants.PARAM_ACTOR_ID))));
-        } catch (AccessDeniedException e) {
-          LOGGER.warn(e.getMessage(), e);
-        } catch (StorageClientException e) {
+        } catch (Exception e) {
           LOGGER.warn(e.getMessage(), e);
         }
         write.endObject();
