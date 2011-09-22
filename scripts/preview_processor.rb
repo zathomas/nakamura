@@ -213,18 +213,10 @@ def main
             if postData != nil
               postData = JSON.parse postData.body
             end
-            tag1 = ""
-            tag2 = ""
-            tag3 = ""
+            tags = ""
             if postData != nil 
-              if postData.length > 0 
-                tag1 = postData[0] + "\n" 
-                if postData.length > 1
-                  tag2 = postData[1] + "\n"
-                  if postData.length > 2
-                    tag3 = postData[2] + "\n"
-                  end
-                end
+              for i in (0..postData.length - 1)
+                tags += "- " + postData[i] + "\n"
               end
             end
             # Add old tags to new tags
@@ -242,7 +234,7 @@ def main
             admin_id = "admin"
             origin_file_name = meta["sakai:pooled-content-file-name"]
             if postData != nil && postData.length > 0
-              msg_body = "We have automatically added the following tags for #{origin_file_name}:\n\n - #{tag1}- #{tag2}- #{tag3}-etc.\n\nThis will allow you to find it back more easily and will help other people in finding your content, in case your content is public.\n\nRegards, \nThe Sakai Team"
+              msg_body = "We have automatically added the following tags for #{origin_file_name}:\n\n #{tags}.\n\nThis will allow you to find it back more easily and will help other people in finding your content, in case your content is public.\n\nRegards, \nThe Sakai Team"
               @s.execute_post(@s.url_for("~#{admin_id}/message.create.html"), {
                 "sakai:type" => "internal",
                 "sakai:sendstate" => "pending",
