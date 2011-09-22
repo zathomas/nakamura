@@ -102,6 +102,7 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
     "/me.html",
     "/me",
     "/register",
+    "/s2site",
     "/search/sakai2",
     "/search"  };
   private static final String DEFAULT_UNTRUSTED_CONTENT_URL = "http://localhost:8082";
