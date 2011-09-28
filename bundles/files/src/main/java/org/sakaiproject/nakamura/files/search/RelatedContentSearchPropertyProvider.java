@@ -17,7 +17,7 @@
  */
 package org.sakaiproject.nakamura.files.search;
 
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -139,9 +139,9 @@ public class RelatedContentSearchPropertyProvider extends
 
     final StringBuilder sourceQuery = new StringBuilder(
         "resourceType:sakai/pooled-content AND (manager:(");
-    sourceQuery.append(Join.join(" OR ", managers));
+    sourceQuery.append(Joiner.on(" OR ").join(managers));
     sourceQuery.append(") OR viewer:(");
-    sourceQuery.append(Join.join(" OR ", viewers));
+    sourceQuery.append(Joiner.on(" OR ").join(viewers));
     sourceQuery.append("))");
     final Query query = new Query(Query.SOLR, sourceQuery.toString(),
         SOURCE_QUERY_OPTIONS);
@@ -208,11 +208,11 @@ public class RelatedContentSearchPropertyProvider extends
         if (managers.isEmpty()) { // to prevent solr parse errors
           managers.add(AVOID_FALSE_POSITIVE_MATCHES);
         }
-        propertiesMap.put("managers", Join.join(" OR ", managers));
+        propertiesMap.put("managers", Joiner.on(" OR ").join(managers));
         if (viewers.isEmpty()) { // to prevent solr parse errors
           viewers.add(AVOID_FALSE_POSITIVE_MATCHES);
         }
-        propertiesMap.put("viewers", Join.join(" OR ", viewers));
+        propertiesMap.put("viewers", Joiner.on(" OR ").join(viewers));
 
         if (allFileNames.isEmpty()) { // to prevent solr parse errors
           allFileNames.add(AVOID_FALSE_POSITIVE_MATCHES);
@@ -229,7 +229,7 @@ public class RelatedContentSearchPropertyProvider extends
           final String[] justRight = Arrays.copyOf(tooLarge, 1024);
           allFileNames = new HashSet<String>(Arrays.asList(justRight));
         }
-        propertiesMap.put("fileNames", Join.join(" OR ", allFileNames));
+        propertiesMap.put("fileNames", Joiner.on(" OR ").join(allFileNames));
 
         if (allTagUuids.isEmpty()) { // to prevent solr parse errors
           allTagUuids.add(AVOID_FALSE_POSITIVE_MATCHES);
@@ -246,7 +246,7 @@ public class RelatedContentSearchPropertyProvider extends
           final String[] justRight = Arrays.copyOf(tooLarge, 1024);
           allTagUuids = new HashSet<String>(Arrays.asList(justRight));
         }
-        propertiesMap.put("tagUuids", Join.join(" OR ", allTagUuids));
+        propertiesMap.put("tagUuids", Joiner.on(" OR ").join(allTagUuids));
 
       } catch (AccessDeniedException e) {
         LOG.error(e.getLocalizedMessage(), e);

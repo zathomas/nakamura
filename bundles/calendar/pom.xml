@@ -158,9 +158,8 @@
       <artifactId>org.sakaiproject.nakamura.solr</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.collections</groupId>
-      <artifactId>google-collections</artifactId>
-      <version>0.8</version>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
     </dependency>
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
