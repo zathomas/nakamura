@@ -75,6 +75,7 @@ import org.imsglobal.basiclti.BasicLTIConstants;
 import org.imsglobal.basiclti.BasicLTIUtil;
 import org.osgi.service.event.EventAdmin;
 import org.sakaiproject.nakamura.api.basiclti.LiteBasicLTIContextIdResolver;
+import org.sakaiproject.nakamura.api.basiclti.VirtualToolDataProvider;
 import org.sakaiproject.nakamura.api.doc.BindingType;
 import org.sakaiproject.nakamura.api.doc.ServiceBinding;
 import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
@@ -103,7 +104,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -201,6 +201,10 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
 
   @Reference
   protected transient LiteBasicLTIContextIdResolver contextIdResolver;
+
+  // TODO eventually needs to be a list of providers not just a single provider.
+  @Reference
+  protected transient VirtualToolDataProvider virtualToolDataProvider;
 
   // global properties used for every tool launch
   /**
@@ -688,7 +692,8 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
     try {
       adminSession = jcrRepository.loginAdministrative(null);
       if (adminSession.itemExists(adminNodePath)) {
-        LOG.debug("Found administrative settings for virtual tool: " + vtoolId);
+        LOG.debug("Found administrative settings for virtual tool (in JCR content): "
+            + vtoolId);
         final javax.jcr.Node adminNode = (javax.jcr.Node) adminSession
             .getItem(adminNodePath);
         if (launchMode) {
@@ -697,10 +702,13 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
           adminSettings = readProperties(adminNode);
         }
       } else {
-        LOG.debug(
-            "No administrative settings found for virtual tool: {}. No policy to apply.",
-            vtoolId);
-        adminSettings = Collections.emptyMap();
+        // No settings found in JCR; consult with VirtualToolDataProvider
+        if (launchMode) {
+          adminSettings = virtualToolDataProvider.getLaunchValues(vtoolId);
+          adminSettings.putAll(virtualToolDataProvider.getKeySecret(vtoolId));
+        } else {
+          adminSettings = virtualToolDataProvider.getLaunchValues(vtoolId);
+        }
       }
     } finally {
       if (adminSession != null) {
