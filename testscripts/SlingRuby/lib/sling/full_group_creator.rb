@@ -238,7 +238,8 @@ module SlingUsers
 
     # create the manager and member pseudo subgroups
     def create_pseudo_group(groupname, title, description)
-      params = { ":name" => groupname }
+      params = { ":name" => groupname }     
+      params["sakai:pseudoGroup"] = true
       params["sakai:excludeSearch"] = true
       params["sakai:group-description"] = description || ""
       params["sakai:group-id"] = groupname
