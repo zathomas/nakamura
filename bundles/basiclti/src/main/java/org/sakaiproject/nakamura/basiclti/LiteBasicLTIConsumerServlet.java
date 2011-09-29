@@ -104,6 +104,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -709,6 +710,9 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
         } else {
           adminSettings = virtualToolDataProvider.getLaunchValues(vtoolId);
         }
+      }
+      if (adminSettings == null) {
+        adminSettings = Collections.emptyMap();
       }
     } finally {
       if (adminSession != null) {

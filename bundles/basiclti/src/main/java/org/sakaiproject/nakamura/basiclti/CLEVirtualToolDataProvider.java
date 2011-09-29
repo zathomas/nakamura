@@ -18,6 +18,7 @@
 package org.sakaiproject.nakamura.basiclti;
 
 import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.OsgiUtil;
@@ -38,6 +39,7 @@ import java.util.Map;
 /**
  * Specific to CLE tools provided by LTI.
  */
+@Component(immediate = true, metatype = true)
 @Service
 public class CLEVirtualToolDataProvider implements VirtualToolDataProvider {
   private static final Logger LOG = LoggerFactory
