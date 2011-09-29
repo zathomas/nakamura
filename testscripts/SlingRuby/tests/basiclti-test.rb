@@ -159,10 +159,11 @@ class TC_BasicLTI < Test::Unit::TestCase
     assert_equal(200, resp.code.to_i, "Should be able to read /var.");
     resp = @s.execute_get(@s.url_for("/var/basiclti.json"));
     assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti.");
-    resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser.json"));
-    assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser.");
-    resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser/ltiKeys.json"));
-    assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser/ltiKeys.json.");
+    # From old content based policies
+    # resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser.json"));
+    # assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser.");
+    # resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser/ltiKeys.json"));
+    # assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser/ltiKeys.json.");
     
     # verify normal user cannot read /var/basiclti
     @s.switch_user(@creator);
@@ -344,10 +345,15 @@ class TC_BasicLTI < Test::Unit::TestCase
     assert_equal(@bltiJcrPath, hash["resource_link_id"], "resource_link_id should equal saveUrl");
     assert_equal(false, hash["roles"].empty?, "roles should not be empty");
     assert_equal(false, hash["tool_consumer_instance_contact_email"].empty?, "tool_consumer_instance_contact_email should not be empty");
+    assert_equal("admin@sakaiproject.org", hash["tool_consumer_instance_contact_email"]);
     assert_equal(false, hash["tool_consumer_instance_description"].empty?, "tool_consumer_instance_description should not be empty");
+    assert_equal("The Sakai Project", hash["tool_consumer_instance_description"]);
     assert_equal(false, hash["tool_consumer_instance_guid"].empty?, "tool_consumer_instance_guid should not be empty");
+    assert_equal("sakaiproject.org", hash["tool_consumer_instance_guid"]);
     assert_equal(false, hash["tool_consumer_instance_name"].empty?, "tool_consumer_instance_name should not be empty");
+    assert_equal("Sakai Development", hash["tool_consumer_instance_name"]);
     assert_equal(false, hash["tool_consumer_instance_url"].empty?, "tool_consumer_instance_url should not be empty");
+    assert_equal("http://sakaiproject.org", hash["tool_consumer_instance_url"]);
     assert_equal(false, hash["user_id"].empty?, "user_id should not be empty");
   end
 
