@@ -15,17 +15,15 @@
  * limitations under the License.
  */
 
-package org.sakaiproject.nakamura.resource.lite.servlet.post.helper;
+package org.sakaiproject.nakamura.api.resource.lite;
 
 import org.apache.sling.servlets.post.Modification;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.resource.DateParser;
-import org.sakaiproject.nakamura.api.resource.lite.SparseRequestProperty;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.List;
-
 import javax.jcr.RepositoryException;
 
 /**
@@ -33,77 +31,6 @@ import javax.jcr.RepositoryException;
  * example, "lastModified" with an empty value is stored as the current Date.
  */
 public class SparsePropertyValueHandler {
-
-  /**
-   * String constant for type name as used in serialization.
-   */
-  public static final String TYPENAME_STRING = "String";
-
-  /**
-   * String constant for type name as used in serialization.
-   */
-  public static final String TYPENAME_BINARY = "Binary";
-
-  /**
-   * String constant for type name as used in serialization.
-   */
-  public static final String TYPENAME_LONG = "Long";
-
-  /**
-   * String constant for type name as used in serialization.
-   */
-  public static final String TYPENAME_DOUBLE = "Double";
-
-  /**
-   * String constant for type name as used in serialization.
-   *
-   * @since JCR 2.0
-   */
-  public static final String TYPENAME_DECIMAL = "Decimal";
-
-  /**
-   * String constant for type name as used in serialization.
-   */
-  public static final String TYPENAME_DATE = "Date";
-
-  /**
-   * String constant for type name as used in serialization.
-   */
-  public static final String TYPENAME_BOOLEAN = "Boolean";
-
-  /**
-   * String constant for type name as used in serialization.
-   */
-  public static final String TYPENAME_NAME = "Name";
-
-  /**
-   * String constant for type name as used in serialization.
-   */
-  public static final String TYPENAME_PATH = "Path";
-
-  /**
-   * String constant for type name as used in serialization.
-   */
-  public static final String TYPENAME_REFERENCE = "Reference";
-
-  /**
-   * String constant for type name as used in serialization.
-   *
-   * @since JCR 2.0
-   */
-  public static final String TYPENAME_WEAKREFERENCE = "WeakReference";
-
-  /**
-   * String constant for type name as used in serialization.
-   *
-   * @since JCR 2.0
-   */
-  public static final String TYPENAME_URI = "URI";
-
-  /*
-   * String constant for type name as used in serialization.
-   */
-  public static final String TYPENAME_UNDEFINED = "undefined";
 
   /**
    * the post processor
@@ -121,19 +48,15 @@ public class SparsePropertyValueHandler {
   }
 
 
-
   /**
    * Removes the property with the given name from the parent node if it exists and if
    * it's not a mandatory property.
    *
-   * @param parent
-   *          the parent node
-   * @param name
-   *          the name of the property to remove
+   * @param parent the parent node
+   * @param name   the name of the property to remove
    * @return path of the property that was removed or <code>null</code> if it was not
    *         removed
-   * @throws RepositoryException
-   *           if a repository error occurs.
+   * @throws RepositoryException if a repository error occurs.
    */
   private String removePropertyIfExists(Content content, String name) {
     if (content.hasProperty(name)) {
@@ -146,17 +69,14 @@ public class SparsePropertyValueHandler {
   /**
    * set property without processing, except for type hints
    *
-   * @param parent
-   *          the parent node
-   * @param prop
-   *          the request property
-   * @throws RepositoryException
-   *           if a repository error occurs.
+   * @param parent the parent node
+   * @param prop   the request property
+   * @throws RepositoryException if a repository error occurs.
    */
   public void setProperty(Content content, SparseRequestProperty prop) {
     // no explicit typehint
 
-    String type = prop.getTypeHint();
+    SparseType type = SparseType.getByName(prop.getTypeHint());
     String[] values = prop.getStringValues();
 
     if (values == null) {
@@ -180,11 +100,11 @@ public class SparsePropertyValueHandler {
           changes.add(Modification.onDeleted(removePath));
         }
       } else {
-        content.setProperty(prop.getName(),fromRequest(type,values));
+        content.setProperty(prop.getName(), fromRequest(type, values));
         changes.add(Modification.onModified(prop.getParentPath() + "@" + prop.getName()));
       }
     } else {
-      content.setProperty(prop.getName(),fromRequest(type, values));
+      content.setProperty(prop.getName(), fromRequest(type, values));
       changes.add(Modification.onModified(prop.getParentPath() + "@" + prop.getName()));
     }
   }
@@ -192,70 +112,78 @@ public class SparsePropertyValueHandler {
   /**
    * TODO Not currently used but kept here while we work on Sparse port.
    */
-  private Object fromRequest(String type, String[] values) {
-    if ( type == null ) {
-      if ( values.length == 1 ) {
+  public Object fromRequest(SparseType type, String[] values) {
+    if (type == null || SparseType.UNDEFINED.equals(type)) {
+      if (values.length == 1) {
         return values[0];
-      } 
+      }
       return values;
     }
-    if (type.equals(TYPENAME_STRING)) {
-      if ( values.length == 1 ) {
+    if (type.equals(SparseType.STRING)) {
+      if (values.length == 1) {
         return values[0];
-      } 
+      }
       return values;
-    } else if (type.equals(TYPENAME_BINARY)) {
-      return null;
-    } else if (type.equals(TYPENAME_BOOLEAN)) {
+    } else if (type.equals(SparseType.BOOLEAN)) {
       boolean[] b = new boolean[values.length];
       for (int i = 0; i < values.length; i++) {
         b[i] = Boolean.parseBoolean(values[i]);
       }
-      if ( values.length == 1 ) {
+      if (values.length == 1) {
         return b[0];
-      } 
+      }
       return b;
-      
-    } else if (type.equals(TYPENAME_LONG)) {
+
+    } else if (type.equals(SparseType.LONG)) {
       long[] b = new long[values.length];
       for (int i = 0; i < values.length; i++) {
         b[i] = Long.parseLong(values[i]);
       }
-      if ( values.length == 1 ) {
+      if (values.length == 1) {
         return b[0];
-      } 
+      }
       return b;
-    } else if (type.equals(TYPENAME_DOUBLE)) {
+    } else if (type.equals(SparseType.DOUBLE)) {
       double[] b = new double[values.length];
       for (int i = 0; i < values.length; i++) {
         b[i] = Double.parseDouble(values[i]);
       }
-      if ( values.length == 1 ) {
+      if (values.length == 1) {
         return b[0];
-      } 
+      }
       return b;
-    } else if (type.equals(TYPENAME_DECIMAL)) {
+    } else if (type.equals(SparseType.DECIMAL)) {
       BigDecimal[] b = new BigDecimal[values.length];
       for (int i = 0; i < values.length; i++) {
         b[i] = new BigDecimal(values[i]);
       }
-      if ( values.length == 1 ) {
+      if (values.length == 1) {
         return b[0];
-      } 
+      }
       return b;
-    } else if (type.equals(TYPENAME_DATE)) {
+    } else if (type.equals(SparseType.DATE)) {
       Calendar[] b = new Calendar[values.length];
       for (int i = 0; i < values.length; i++) {
         b[i] = dateParser.parse(values[i]);
       }
-      if ( values.length == 1 ) {
+      if (values.length == 1) {
         return b[0];
-      } 
+      }
+      return b;
+    } else if (type.equals(SparseType.INTEGER)) {
+      Integer[] b = new Integer[values.length];
+      for (int i = 0; i < values.length; i++) {
+        b[i] = Integer.parseInt(values[i]);
+      }
+      if (values.length == 1) {
+        return b[0];
+      }
       return b;
     }
-    if ( values.length == 1 ) {
+
+    if (values.length == 1) {
       return values[0];
-    } 
+    }
     return values;
   }
 
