@@ -706,7 +706,9 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
         // No settings found in JCR; consult with VirtualToolDataProvider
         if (launchMode) {
           adminSettings = virtualToolDataProvider.getLaunchValues(vtoolId);
-          adminSettings.putAll(virtualToolDataProvider.getKeySecret(vtoolId));
+          if (adminSettings != null) {
+            adminSettings.putAll(virtualToolDataProvider.getKeySecret(vtoolId));
+          }
         } else {
           adminSettings = virtualToolDataProvider.getLaunchValues(vtoolId);
         }

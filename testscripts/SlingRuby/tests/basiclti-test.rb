@@ -159,10 +159,11 @@ class TC_BasicLTI < Test::Unit::TestCase
     assert_equal(200, resp.code.to_i, "Should be able to read /var.");
     resp = @s.execute_get(@s.url_for("/var/basiclti.json"));
     assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti.");
-    resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser.json"));
-    assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser.");
-    resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser/ltiKeys.json"));
-    assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser/ltiKeys.json.");
+    # From old content based policies
+    # resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser.json"));
+    # assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser.");
+    # resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser/ltiKeys.json"));
+    # assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser/ltiKeys.json.");
     
     # verify normal user cannot read /var/basiclti
     @s.switch_user(@creator);
