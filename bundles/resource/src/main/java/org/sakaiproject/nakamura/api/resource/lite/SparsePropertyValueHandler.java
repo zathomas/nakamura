@@ -125,7 +125,7 @@ public class SparsePropertyValueHandler {
       }
       return values;
     } else if (type.equals(SparseType.BOOLEAN)) {
-      boolean[] b = new boolean[values.length];
+      Boolean[] b = new Boolean[values.length];
       for (int i = 0; i < values.length; i++) {
         b[i] = Boolean.parseBoolean(values[i]);
       }
@@ -135,7 +135,7 @@ public class SparsePropertyValueHandler {
       return b;
 
     } else if (type.equals(SparseType.LONG)) {
-      long[] b = new long[values.length];
+      Long[] b = new Long[values.length];
       for (int i = 0; i < values.length; i++) {
         b[i] = Long.parseLong(values[i]);
       }
@@ -144,7 +144,7 @@ public class SparsePropertyValueHandler {
       }
       return b;
     } else if (type.equals(SparseType.DOUBLE)) {
-      double[] b = new double[values.length];
+      Double[] b = new Double[values.length];
       for (int i = 0; i < values.length; i++) {
         b[i] = Double.parseDouble(values[i]);
       }

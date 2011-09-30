@@ -34,6 +34,9 @@ public enum SparseType {
   UNDEFINED;
 
   public static SparseType getByName(String name) {
+    if ( name == null ) {
+      return UNDEFINED;
+    }
     SparseType type = SparseType.valueOf(name.toUpperCase());
     if (type != null) {
       return type;
