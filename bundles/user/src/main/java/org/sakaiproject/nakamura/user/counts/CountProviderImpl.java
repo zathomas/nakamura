@@ -77,6 +77,7 @@ public class CountProviderImpl implements CountProvider {
       return;
     }
     AuthorizableManager authorizableManager = session.getAuthorizableManager();
+    authorizableManager.setMaintenanceMode(Boolean.TRUE);
     if (authorizable != null) {
       int contentCount = getContentCount(authorizable);
       authorizable.setProperty(UserConstants.CONTENT_ITEMS_PROP, contentCount);
