@@ -17,6 +17,7 @@
  */
 package org.sakaiproject.nakamura.auth.saml;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -115,15 +116,22 @@ public class SamlLoginServlet extends SlingAllMethodsServlet {
    */
   String getReturnPath(HttpServletRequest request) {
     final String returnPath;
-    Object resObj = request.getAttribute(Authenticator.LOGIN_RESOURCE);
-    if ((resObj instanceof String) && ((String) resObj).length() > 0) {
-      returnPath = (String) resObj;
+    // RelayState is a common SAML parameter for redirecting after login
+    // http://en.wikipedia.org/wiki/SAML_2.0
+    String relayState = request.getParameter("RelayState");
+    if (!StringUtils.isBlank(relayState)) {
+      returnPath = relayState;
     } else {
-      String resource = request.getParameter(Authenticator.LOGIN_RESOURCE);
-      if ((resource != null) && (resource.length() > 0)) {
-        returnPath = resource;
+      Object resObj = request.getAttribute(Authenticator.LOGIN_RESOURCE);
+      if ((resObj instanceof String) && ((String) resObj).length() > 0) {
+        returnPath = (String) resObj;
       } else {
-        returnPath = null;
+        String resource = request.getParameter(Authenticator.LOGIN_RESOURCE);
+        if ((resource != null) && (resource.length() > 0)) {
+          returnPath = resource;
+        } else {
+          returnPath = null;
+        }
       }
     }
     return returnPath;

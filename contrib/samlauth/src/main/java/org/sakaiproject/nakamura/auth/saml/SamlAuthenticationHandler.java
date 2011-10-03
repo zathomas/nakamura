@@ -20,6 +20,7 @@ package org.sakaiproject.nakamura.auth.saml;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -103,7 +104,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.jcr.SimpleCredentials;
@@ -417,6 +417,13 @@ public class SamlAuthenticationHandler implements AuthenticationHandler,
     } else {
       LOGGER.info("Redirecting to: \"{}\"", loginUrl);
       toUrl = loginUrl;
+
+      // check for a 'url' parameter from the UI. If found, send it to SSO as RelayState
+      // so we can redirect there after login which is handled in the servlet
+      String relayState = request.getParameter("resource");
+      if (!StringUtils.isBlank(relayState)) {
+        toUrl += "&RelayState=" + relayState;
+      }
     }
     response.sendRedirect(toUrl);
     return true;
@@ -711,7 +718,6 @@ public class SamlAuthenticationHandler implements AuthenticationHandler,
   }
 
   static final class SamlPrincipal implements Principal {
-    private static final long serialVersionUID = -6232157660434175773L;
     private String principalName;
 
     public SamlPrincipal(String principalName) {
