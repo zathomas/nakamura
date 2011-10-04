@@ -472,7 +472,7 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
       // FIXME how to determine site type?
       // CourseSection probably satisfies 90% of our use cases.
       // Maybe Group should be used for project sites?
-      launchProps.put(CONTEXT_TYPE, "CourseSection");
+      launchProps.put(CONTEXT_TYPE, "course");
 
       final org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager accessControlManager = session
           .getAccessControlManager();
@@ -489,7 +489,8 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
       } else if (canManageSite) {
         launchProps.put(ROLES, "Instructor");
       } else {
-        launchProps.put(ROLES, "Learner");
+      //OAE-33
+        launchProps.put(ROLES, "Student");
       }
       final boolean releaseNames = (Boolean)effectiveSettings
           .get(RELEASE_NAMES);
