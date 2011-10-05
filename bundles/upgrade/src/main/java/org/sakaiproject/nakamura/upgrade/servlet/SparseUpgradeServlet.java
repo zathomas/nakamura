@@ -24,6 +24,14 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.sakaiproject.nakamura.api.doc.BindingType;
+import org.sakaiproject.nakamura.api.doc.ServiceBinding;
+import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
+import org.sakaiproject.nakamura.api.doc.ServiceExtension;
+import org.sakaiproject.nakamura.api.doc.ServiceMethod;
+import org.sakaiproject.nakamura.api.doc.ServiceParameter;
+import org.sakaiproject.nakamura.api.doc.ServiceResponse;
+import org.sakaiproject.nakamura.api.doc.ServiceSelector;
 import org.sakaiproject.nakamura.api.lite.Feedback;
 import org.sakaiproject.nakamura.api.lite.MigrateContentService;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -39,6 +47,27 @@ import java.text.MessageFormat;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+@ServiceDocumentation(name="Sparse Upgrade Servlet", okForVersion = "0.11",
+    description="Upgrades data stored in sparsemapcontent storage layer by running all the PropertyMigrator instances " +
+        "that are registered. Note that the upgrade only works for JDBC storage clients. The upgrade may take a long " +
+        "time to run; progress of the upgrade gets written to the response every so often and can be seen in realtime if " +
+        "your client supports buffered HTTP requests. Use -N option in curl to enable this. Your system log will have " +
+        "more detail on the progress of the upgrade.",
+    shortDescription="Upgrades data stored in sparsemapcontent",
+    bindings=@ServiceBinding(type = BindingType.PATH, bindings = "/system/sparseupgrade"),
+    methods=@ServiceMethod(name="POST",
+        description={"Upgrades data stored in sparsemapcontent",
+            "Example<br>" +
+            "<pre>curl -N -u admin:password -e http://localhost:8080 -FdryRun=false -FreindexAll=true -Flimit=5000 http://localhost:8080/system/sparseupgrade</pre>"},
+        parameters={
+        @ServiceParameter(name="dryRun", description="Whether this is a dry run or not; in dry run, no data is actually saved. Default=true."),
+        @ServiceParameter(name="limit",description="If dryRun is true, then process up to this many rows; no effect if dryRun is false. Default=Integer.MAX_VALUE (2147483647)."),
+        @ServiceParameter(name="reindexAll",description="If true, then reindex every row whether it's changed or not. Makes the upgrade take longer. Default=false.")
+        },
+        response={
+          @ServiceResponse(code=200,description="Success, the upgrade ran with no issues."),
+          @ServiceResponse(code=500,description="Failure with HTML explanation.")}
+        ))
 @SlingServlet(paths = {"/system/sparseupgrade"}, generateComponent = true, generateService = true, methods = {"POST"})
 public class SparseUpgradeServlet extends SlingAllMethodsServlet {
 
