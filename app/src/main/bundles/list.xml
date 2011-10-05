@@ -467,7 +467,7 @@ KERN-1187
         <bundle>
             <groupId>org.sakaiproject.nakamura</groupId>
             <artifactId>org.sakaiproject.nakamura.solr</artifactId>
-            <version>1.0</version>
+            <version>1.0.1</version>
         </bundle>
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
