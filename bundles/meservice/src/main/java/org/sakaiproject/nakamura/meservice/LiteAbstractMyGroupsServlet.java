@@ -202,7 +202,7 @@ public abstract class LiteAbstractMyGroupsServlet extends SlingSafeMethodsServle
   }
 
   protected boolean isPseudoGroup(Group group) {
-    return ("true".equals(group.getProperty(UserConstants.PROP_PSEUDO_GROUP)) &&
+    return (Boolean.TRUE.equals(group.getProperty(UserConstants.PROP_PSEUDO_GROUP)) &&
             group.getProperty(UserConstants.PROP_PSEUDO_GROUP_PARENT) != null);
   }
 
