@@ -1,9 +1,8 @@
 #!/usr/bin/env ruby
 require 'fileutils'
-require './ruby-lib-dir'
-require 'sling/sling'
+require 'nakamura'
 include SlingInterface
-require 'sling/users'
+require 'nakamura/users'
 include SlingUsers
 require 'rubygems'
 require 'docsplit'

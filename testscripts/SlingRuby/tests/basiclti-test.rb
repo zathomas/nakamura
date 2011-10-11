@@ -1,11 +1,9 @@
 #!/usr/bin/env ruby
 
-# Add all files in testscripts\SlingRuby\lib directory to ruby "require" search path
-require './ruby-lib-dir.rb'
 
 require 'set'
-require 'sling/test'
-require 'sling/message'
+require 'nakamura/test'
+require 'nakamura/message'
 require 'rexml/document'
 require 'rexml/streamlistener'
 include REXML
@@ -158,12 +156,7 @@ class TC_BasicLTI < Test::Unit::TestCase
     resp = @s.execute_get(@s.url_for("/var.json"));
     assert_equal(200, resp.code.to_i, "Should be able to read /var.");
     resp = @s.execute_get(@s.url_for("/var/basiclti.json"));
-    assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti.");
-    # From old content based policies
-    # resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser.json"));
-    # assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser.");
-    # resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser/ltiKeys.json"));
-    # assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser/ltiKeys.json.");
+    assert_equal("{}", resp.body, "Should NOT be able to read /var/basiclti.");
     
     # verify normal user cannot read /var/basiclti
     @s.switch_user(@creator);
@@ -171,11 +164,7 @@ class TC_BasicLTI < Test::Unit::TestCase
     resp = @s.execute_get(@s.url_for("/var.json"));
     assert_equal(200, resp.code.to_i, "Should be able to read /var.");
     resp = @s.execute_get(@s.url_for("/var/basiclti.json"));
-    assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti.");
-    resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser.json"));
-    assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser.");
-    resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser/ltiKeys.json"));
-    assert_equal(404, resp.code.to_i, "Should NOT be able to read /var/basiclti/sakai.singleuser/ltiKeys.json.");
+    assert_equal("{}", resp.body, "Should NOT be able to read /var/basiclti.");
     
     # verify admin user can read /var/basiclti
     @s.switch_user(@admin);
@@ -194,10 +183,6 @@ class TC_BasicLTI < Test::Unit::TestCase
     assert_not_nil(props["jcr:mixinTypes"]);
     assert_not_nil(props["jcr:mixinTypes"][0]);
     assert_equal("rep:AccessControllable", props["jcr:mixinTypes"][0], "Node should be accessed controlled");
-    resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser.json"));
-    assert_equal(200, resp.code.to_i, "Admin should be able to read /var/basiclti/sakai.singleuser.");
-    resp = @s.execute_get(@s.url_for("/var/basiclti/sakai.singleuser/ltiKeys.json"));
-    assert_equal(200, resp.code.to_i, "Admin should be able to read /var/basiclti/sakai.singleuser/ltiKeys.json.");
     
     # create a sakai/basiclti VirtualTool node
     prepare_group()

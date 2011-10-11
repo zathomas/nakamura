@@ -1,13 +1,11 @@
 #!/usr/bin/env ruby
 
-# Add all files in testscripts\SlingRuby\lib directory to ruby "require" search path
-require 'ruby-lib-dir.rb'
 
-require 'sling/sling'
-require 'sling/test'
-require 'sling/file'
-require 'sling/sites'
-require 'sling/message'
+require 'nakamura'
+require 'nakamura/test'
+require 'nakamura/file'
+require 'nakamura/sites'
+require 'nakamura/message'
 require 'test/unit.rb'
 include SlingInterface
 include SlingUsers
