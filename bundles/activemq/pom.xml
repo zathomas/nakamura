@@ -129,7 +129,6 @@ org.apache.geronimo.transaction.manager*;resolution:=optional,
     <dependency>
       <groupId>commons-pool</groupId>
       <artifactId>commons-pool</artifactId>
-      <version>1.5.4</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
