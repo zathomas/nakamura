@@ -17,12 +17,12 @@
     <groupId>org.sakaiproject.nakamura</groupId>
     <artifactId>base</artifactId>
     <version>1.1-SNAPSHOT</version>
-    <relativePath>../../pom.xml</relativePath>
+    <relativePath>../../../pom.xml</relativePath>
   </parent>
-  <artifactId>org.sakaiproject.nakamura.search</artifactId>
+  <artifactId>org.sakaiproject.nakamura.search.impl</artifactId>
   <packaging>bundle</packaging>
   <version>1.1-SNAPSHOT</version>
-  <name>Sakai Nakamura :: Search Support Bundle</name>
+  <name>Sakai Nakamura :: Search Support Impl Bundle</name>
   <description>Search Support bundle that allows searches to be defined in JCR.</description>
   <build>
     <plugins>
@@ -37,7 +37,6 @@
         <configuration>
           <instructions>
             <Bundle-Category> sakai-nakamura </Bundle-Category>
-            <Export-Package>org.sakaiproject.nakamura.api.search.*</Export-Package>
             <Private-Package>org.sakaiproject.nakamura.search.*</Private-Package>
             <Sling-Initial-Content>SLING-INF/content;overwriteProperties:=true;uninstall:=false</Sling-Initial-Content>
             <Embed-Transitive>true</Embed-Transitive>
@@ -66,6 +65,11 @@
     </dependency>
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>org.sakaiproject.nakamura.search.api</artifactId>
+      <version>1.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.utils</artifactId>
       <version>1.1-SNAPSHOT</version>
       <scope>provided</scope>
@@ -90,7 +94,7 @@
     </dependency>
     <dependency>
         <groupId>org.sakaiproject.nakamura</groupId>
-        <artifactId>org.sakaiproject.nakamura.profile</artifactId>
+        <artifactId>org.sakaiproject.nakamura.profile.api</artifactId>
         <version>1.1-SNAPSHOT</version>
         <scope>provided</scope>
     </dependency>

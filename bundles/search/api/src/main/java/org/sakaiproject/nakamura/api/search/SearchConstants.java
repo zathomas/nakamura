@@ -119,4 +119,11 @@ public interface SearchConstants {
    * this node and it's entire tree.
    */
   public static final String SAKAI_EXCLUDE_TREE = "sakai:search-exclude-tree";
+  
+  /**
+   * moved here from SearchServlet as that creates a dependency on the impl package
+   */
+  public static final String TIDY = "tidy";
+  
+  public static final String INFINITY = "infinity";
 }

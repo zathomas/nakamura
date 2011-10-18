@@ -38,6 +38,7 @@ import static org.sakaiproject.nakamura.api.search.SearchConstants.SEARCH_BATCH_
 import static org.sakaiproject.nakamura.api.search.SearchConstants.SEARCH_PATH_PREFIX;
 import static org.sakaiproject.nakamura.api.search.SearchConstants.SEARCH_PROPERTY_PROVIDER;
 import static org.sakaiproject.nakamura.api.search.SearchConstants.SEARCH_RESULT_PROCESSOR;
+import static org.sakaiproject.nakamura.api.search.SearchConstants.TIDY;
 import static org.sakaiproject.nakamura.api.search.SearchConstants.TOTAL;
 import static org.sakaiproject.nakamura.api.search.SearchUtil.escapeString;
 
@@ -209,9 +210,6 @@ public class SearchServlet extends SlingSafeMethodsServlet {
    */
   private static final long serialVersionUID = 4130126304725079596L;
   private static final Logger LOGGER = LoggerFactory.getLogger(SearchServlet.class);
-
-  public static final String TIDY = "tidy";
-  public static final String INFINITY = "infinity";
 
   private static Pattern ALL_WILDCARDS = Pattern.compile("[?*~]+");
   private static Pattern FUZZY_SEARCH = Pattern.compile(".*~$");

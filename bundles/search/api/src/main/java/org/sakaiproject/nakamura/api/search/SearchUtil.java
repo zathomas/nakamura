@@ -17,13 +17,14 @@
  */
 package org.sakaiproject.nakamura.api.search;
 
+import static org.sakaiproject.nakamura.api.search.SearchConstants.INFINITY;
 import static org.sakaiproject.nakamura.api.search.SearchConstants.PARAMS_ITEMS_PER_PAGE;
 import static org.sakaiproject.nakamura.api.search.SearchConstants.PARAMS_PAGE;
+import static org.sakaiproject.nakamura.api.search.SearchConstants.TIDY;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.solr.client.solrj.util.ClientUtils;
-import org.sakaiproject.nakamura.search.SearchServlet;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,8 +138,8 @@ public class SearchUtil {
     final String[] selectors = req.getRequestPathInfo().getSelectors();
     if (selectors != null && selectors.length > 0) {
       final String level = selectors[selectors.length - 1];
-      if (!SearchServlet.TIDY.equals(level)) {
-        if (SearchServlet.INFINITY.equals(level)) {
+      if (!TIDY.equals(level)) {
+        if (INFINITY.equals(level)) {
           maxRecursionLevels = -1;
         } else {
           try {
