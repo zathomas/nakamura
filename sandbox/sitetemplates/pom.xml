@@ -126,7 +126,7 @@
 	<version>1.1-SNAPSHOT</version>
     	<exclusions>
     		<exclusion>
-    			<artifactId>org.sakaiproject.nakamura.profile</artifactId>
+    			<artifactId>org.sakaiproject.nakamura.profile.api</artifactId>
     			<groupId>org.sakaiproject.nakamura</groupId>
     		</exclusion>
     	</exclusions>

@@ -19,11 +19,11 @@
     <version>1.1-SNAPSHOT</version>
     <relativePath>../../../pom.xml</relativePath>
   </parent>
-  <artifactId>org.sakaiproject.nakamura.webconsole.solr</artifactId>
+  <artifactId>org.sakaiproject.nakamura.search.api</artifactId>
   <packaging>bundle</packaging>
   <version>1.1-SNAPSHOT</version>
-  <name>Sakai Nakamura :: Solr Web Console Bundle</name>
-  <description>Web console plugin for the Felix web console.</description>
+  <name>Sakai Nakamura :: Search Support API Bundle</name>
+  <description>API for Search Support bundle that allows searches to be defined in JCR.</description>
   <build>
     <plugins>
       <plugin>
@@ -36,8 +36,9 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-Category>sakai-nakamura</Bundle-Category>
-            <Private-Package>org.sakaiproject.nakamura.webconsole.solr</Private-Package>
+            <Bundle-Category> sakai-nakamura </Bundle-Category>
+            <Export-Package>org.sakaiproject.nakamura.api.search.*</Export-Package>
+            <Embed-Transitive>true</Embed-Transitive>
           </instructions>
         </configuration>
       </plugin>
@@ -45,40 +46,21 @@
   </build>
   <dependencies>
     <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.webconsole</artifactId>
-      <version>3.1.8</version>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.sakaiproject.nakamura</groupId>
-      <artifactId>org.sakaiproject.nakamura.search.api</artifactId>
-      <version>1.1-SNAPSHOT</version>
-      <scope>provided</scope>
-    </dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.json</artifactId>
+    </dependency>     
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.solr</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.commons.osgi</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
-    </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-      </dependency>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>org.sakaiproject.nakamura.utils</artifactId>
+	  <version>1.1-SNAPSHOT</version>	  
+    </dependency>	  
   </dependencies>
 </project>
-

@@ -49,7 +49,8 @@
         <module>bundles/server</module>
         <module>bundles/image</module>
         <module>bundles/proxy</module>
-        <module>bundles/search</module>
+        <module>bundles/search/api</module>
+        <module>bundles/search/impl</module>
         <module>bundles/discussion</module>
         <module>bundles/smtp</module>
         <module>bundles/user</module>
@@ -68,7 +69,8 @@
         <module>bundles/calendar</module>
         <module>bundles/authz</module>
         <module>bundles/basiclti</module>
-        <module>bundles/profile</module>
+        <module>bundles/profile/api</module>
+        <module>bundles/profile/impl</module>        
         <module>bundles/tika</module>
         <module>bundles/captcha</module>
         <module>bundles/pages</module>

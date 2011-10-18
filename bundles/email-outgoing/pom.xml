@@ -98,7 +98,7 @@
     </dependency>
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
-      <artifactId>org.sakaiproject.nakamura.profile</artifactId>
+      <artifactId>org.sakaiproject.nakamura.profile.api</artifactId>
       <version>1.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
