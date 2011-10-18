@@ -48,10 +48,20 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-api</artifactId>
-      <version>2.0.0</version>
-      <scope>provided</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.jcr.resource</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.json</artifactId>
+    </dependency>
+    
     <!-- Sakai dependencies -->  
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
@@ -62,6 +72,6 @@
       <artifactId>org.sakaiproject.nakamura.user</artifactId>
       <version>1.1-SNAPSHOT</version>
       <scope>provided</scope>
-    </dependency>
+    </dependency>    
   </dependencies>
 </project>
