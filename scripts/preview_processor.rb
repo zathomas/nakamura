@@ -8,7 +8,9 @@ require 'rubygems'
 require 'docsplit'
 RMAGICK_BYPASS_VERSION_TEST = true
 require 'RMagick'
+require "getopt/long"
 
+Dir.chdir(File.dirname(__FILE__))
 MAIN_DIR = Dir.getwd
 DOCS_DIR = "#{MAIN_DIR}/docs"
 PREV_DIR = "#{MAIN_DIR}/previews"
@@ -121,16 +123,13 @@ def log msg, level = :info
 end
 
 # This is the main method we call at the end of the script.
-def main
+def main(server, admin_password, term_server)
   # Setup loggers.
   Dir.mkdir LOGS_DIR unless File.directory? LOGS_DIR
   @loggers << Logger.new(STDOUT)
   @loggers << Logger.new("#{LOGS_DIR}/#{Date.today}.log", 'daily')
   @loggers.each { |logger| logger.level = Logger::INFO }
 
-  server=ARGV[0]
-  admin_password = ARGV[1] || "admin"
-  term_server = ARGV[2] + "terms"
   @s = Sling.new(server)
   admin = User.new("admin", admin_password)
   @s.switch_user(admin)
@@ -310,4 +309,26 @@ def main
   FileUtils.remove_dir DOCS_DIR
 end
 
-main
+def usage
+  puts "usage: #{$0} [-h|--help] [-s|--server] <server> [-p|--password] <adminpassword> [-t|--term] <term-extraction address> [-i|--interval] [interval]"
+  puts "example: #{$0} http://localhost:8080/ admin http://localhost:8085/ 20"
+end
+
+## Parse command line opts and call main ##
+opt = Getopt::Long.getopts(
+  ["--help", "-h", Getopt::BOOLEAN],
+  ["--server", "-s", Getopt::REQUIRED],
+  ["--password", "-p", Getopt::REQUIRED],
+  ["--term", "-t", Getopt::REQUIRED],
+  ["--interval", "-i", Getopt::REQUIRED]
+)
+
+if opt['help'] || not(opt['server'] && opt['password'] && opt['term'])
+  usage()
+else
+  interval = opt['interval'] || 15
+  interval = Integer(interval)
+  begin
+    main(opt['server'], opt['password'], opt['term'])
+  end while sleep(interval)
+end
