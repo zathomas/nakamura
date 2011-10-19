@@ -16,9 +16,9 @@
     <groupId>org.sakaiproject.nakamura</groupId>
     <artifactId>base</artifactId>
     <version>1.1-SNAPSHOT</version>
-    <relativePath>../../pom.xml</relativePath>
+    <relativePath>../../../pom.xml</relativePath>
   </parent>
-  <artifactId>org.sakaiproject.nakamura.files</artifactId>
+  <artifactId>org.sakaiproject.nakamura.files.impl</artifactId>
   <packaging>bundle</packaging>
 
   <version>1.1-SNAPSHOT</version>
@@ -37,7 +37,7 @@
         <configuration>
           <instructions>
             <Bundle-Category> sakai-nakamura </Bundle-Category>
-            <Export-Package> org.sakaiproject.nakamura.api.files </Export-Package>
+            <Export-Package/>
             <Private-Package> org.sakaiproject.nakamura.files.* </Private-Package>
             <Sling-Initial-Content>SLING-INF/content;overwriteProperties:=true;uninstall:=false</Sling-Initial-Content>
           </instructions>
@@ -148,6 +148,12 @@
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.profile.api</artifactId>
+      <version>1.1-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>org.sakaiproject.nakamura.files.api</artifactId>
       <version>1.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
