@@ -93,7 +93,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
   
   private MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
 
-  @Property( value = {"0"} )
+  @Property( boolValue = false )
   private static final String IS_HIERARCHICAL_PROP = "isHierarchical";
   
   private boolean isHierarchical = false;
@@ -102,8 +102,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
   @Modified
   public void activate(Map<String, Object> properties ) {
       zipTypes = ImmutableSet.of(OsgiUtil.toStringArray(properties.get(ZIP_TYPES_PROP), DEFAULT_ZIP_TYPES)); 
-      if (properties.get(IS_HIERARCHICAL_PROP).equals("1"))
-        isHierarchical = true;
+      isHierarchical = OsgiUtil.toBoolean(properties.get(IS_HIERARCHICAL_PROP), false);
   }
   
   public void handleFile(Map<String, Object> results, String poolId,
@@ -214,9 +213,13 @@ public class IMSCPFileHandler implements FileUploadHandler {
     String isHier = (String)content.getProperty("isHierarchical");
     
     JSONObject pageSetJSON;
-    if (isHier != null && isHier.equals("1"))
-      isHierarchical = true;
-    pageSetJSON = manifestToPageSet(manifest, poolId, fileContent);
+    if (isHier != null && isHier.equals("1")) {
+      pageSetJSON = manifestToPageSet(manifest, poolId, fileContent, true);
+    } else if (isHier != null)
+      pageSetJSON = manifestToPageSet(manifest, poolId, fileContent, false);
+    else
+      pageSetJSON = manifestToPageSet(manifest, poolId, fileContent, isHierarchical);
+    
     Iterator<String> keys = pageSetJSON.keys();
     while (keys.hasNext()) {
       String key = keys.next();
@@ -253,7 +256,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
    * @throws JSONException
    */
   private JSONObject manifestToPageSet(Manifest manifest, String poolId, 
-      HashMap<String, String> fileContent) throws JSONException {
+      HashMap<String, String> fileContent, boolean isHierarchical) throws JSONException {
     JSONObject pages = new JSONObject();
     List<Organization> orgs = manifest.getOrganizations().getOrganizations();
     String description = "";
@@ -322,7 +325,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
             continue;
           }
           JSONObject object = itemToJson(items.get(j), poolId, orgIndex++, manifest,
-              resourceJSON, "id" + String.valueOf(orgIndex));
+              resourceJSON, "id" + String.valueOf(orgIndex), isHierarchical);
           structureJSON.put(object.getString("_id"), object);
         }
       }
@@ -332,7 +335,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
   }
   
   private JSONObject itemToJson (HasItem item, String poolId, int index, Manifest manifest, 
-      HashMap<String, JSONObject> resourceJSON, String itemId) throws JSONException{
+      HashMap<String, JSONObject> resourceJSON, String itemId, boolean isHierarchical) throws JSONException{
     JSONObject itemJSON = new JSONObject();
     itemJSON.put("_id", itemId);
     itemJSON.put("_title", item.getTitle());
@@ -368,7 +371,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
       for (int i = 0; i < item.getItems().size(); i++) {
         Item subItem = item.getItems().get(i);
         JSONObject subJSON = itemToJson(subItem, poolId, subIndex++, manifest, resourceJSON, 
-            itemId + "id" + String.valueOf(i));
+            itemId + "id" + String.valueOf(i), isHierarchical);
         itemJSON.put(subJSON.getString("_id"), subJSON);
         elementsArray.put(subJSON);
       }
