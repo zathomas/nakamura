@@ -18,7 +18,6 @@
 
 package org.sakaiproject.nakamura.files;
 
-
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_FILENAME;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_DESCRIPTION;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAGS;
@@ -72,12 +71,10 @@ import java.util.zip.ZipInputStream;
 
 import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.ServletException;
-@Component(immediate = true)
-@Service (value = FileUploadHandler.class)
+
+@Component(metatype = true)
+@Service
 public class IMSCPFileHandler implements FileUploadHandler {
-//  @Reference
-//  public EventAdmin eventAdmin; 
-  
   @Reference
   protected Repository sparseRepository;
   
@@ -89,11 +86,11 @@ public class IMSCPFileHandler implements FileUploadHandler {
   @Property( value = {"application/zip", "application/x-zip-compressed" } )
   private static final String ZIP_TYPES_PROP = "zip-types";
 
-  private Set<String> zipTypes = ImmutableSet.of(DEFAULT_ZIP_TYPES);
+  private Set<String> zipTypes = ImmutableSet.copyOf(DEFAULT_ZIP_TYPES);
   
   private MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
 
-  @Property( boolValue = false )
+  @Property(boolValue = false)
   private static final String IS_HIERARCHICAL_PROP = "isHierarchical";
   
   private boolean isHierarchical = false;
@@ -101,7 +98,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
   @Activate
   @Modified
   public void activate(Map<String, Object> properties ) {
-      zipTypes = ImmutableSet.of(OsgiUtil.toStringArray(properties.get(ZIP_TYPES_PROP), DEFAULT_ZIP_TYPES)); 
+      zipTypes = ImmutableSet.copyOf(OsgiUtil.toStringArray(properties.get(ZIP_TYPES_PROP), DEFAULT_ZIP_TYPES)); 
       isHierarchical = OsgiUtil.toBoolean(properties.get(IS_HIERARCHICAL_PROP), false);
   }
   
