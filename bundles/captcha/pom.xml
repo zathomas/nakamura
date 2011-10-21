@@ -111,10 +111,8 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.sakaiproject.nakamura</groupId>
-      <artifactId>org.sakaiproject.nakamura.commons.commons-httpclient</artifactId>
-      <version>3.1-1.1-SNAPSHOT</version>
-      <scope>provided</scope>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
     </dependency>
 
     <!-- TEST dependencies -->

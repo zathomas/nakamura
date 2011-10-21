@@ -431,9 +431,9 @@ KERN-1187
       <version>3.0.2</version>
     </bundle>
     <bundle>
-      <groupId>org.sakaiproject.nakamura</groupId>
-      <artifactId>org.sakaiproject.nakamura.commons.commons-httpclient</artifactId>
-      <version>3.1-1.1-SNAPSHOT</version>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.commons-httpclient</artifactId>
+      <version>3.1_6</version>
     </bundle>
    </startLevel>
    <startLevel level="12" >
@@ -575,7 +575,12 @@ KERN-1187
     </bundle>
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
-      <artifactId>org.sakaiproject.nakamura.files</artifactId>
+      <artifactId>org.sakaiproject.nakamura.files.api</artifactId>
+      <version>1.1-SNAPSHOT</version>
+    </bundle>
+    <bundle>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>org.sakaiproject.nakamura.files.impl</artifactId>
       <version>1.1-SNAPSHOT</version>
     </bundle>
     <bundle>
