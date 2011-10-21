@@ -600,13 +600,15 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
       for (FacetField field : fields) {
         writer.object();
         writer.key(field.getName());
-        writer.object();
+        writer.array();
         List<FacetField.Count> values = field.getValues();
         for ( FacetField.Count value : values ) {
+          writer.object();
           writer.key(value.getName());
           writer.value(value.getCount());
+          writer.endObject();
         }
-        writer.endObject();
+        writer.endArray();
         writer.endObject();
       }
       writer.endArray();
