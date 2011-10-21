@@ -20,7 +20,7 @@ LOGS_DIR = "#{MAIN_DIR}/logs"
 # in order to properly set the referrer.
 module Net::HTTPHeader
   def initialize_http_header(initheader)
-    @header = {"Referer" => [ARGV[0]]}
+    @header = {"Referer" => [$preview_referer]}
     return unless initheader
     initheader.each do |key, value|
       warn "net/http: warning: duplicated HTTP header: #{key}" if key?(key) and $VERBOSE
@@ -122,8 +122,7 @@ def log msg, level = :info
   @loggers.each { |logger| logger.send(level, msg) }
 end
 
-# This is the main method we call at the end of the script.
-def main(server, admin_password, term_server)
+def setup(server, admin_password)
   # Setup loggers.
   Dir.mkdir LOGS_DIR unless File.directory? LOGS_DIR
   @loggers << Logger.new(STDOUT)
@@ -134,7 +133,10 @@ def main(server, admin_password, term_server)
   admin = User.new("admin", admin_password)
   @s.switch_user(admin)
   @s.do_login
+end
 
+# This is the main method we call at the end of the script.
+def main(term_server)
   res = @s.execute_get(@s.url_for("var/search/needsprocessing.json"))
   unless res.code == '200'
     raise "Failed to retrieve list to process [#{res.code}]"
@@ -320,15 +322,27 @@ opt = Getopt::Long.getopts(
   ["--server", "-s", Getopt::REQUIRED],
   ["--password", "-p", Getopt::REQUIRED],
   ["--term", "-t", Getopt::REQUIRED],
-  ["--interval", "-i", Getopt::REQUIRED]
+  ["--interval", "-i", Getopt::REQUIRED],
+  ["--count", "-n", Getopt::REQUIRED]
 )
 
 if opt['help'] || not(opt['server'] && opt['password'] && opt['term'])
   usage()
 else
+  setup(opt['server'], opt['password'])
+  $preview_referer = opt['server']
   interval = opt['interval'] || 15
   interval = Integer(interval)
+  count = opt['count'] || 0
+  count = Integer(count)
   begin
-    main(opt['server'], opt['password'], opt['term'])
+    main(opt['term'])
+    if opt['count']
+      if count > 1
+        count -= 1
+      else
+        break
+      end
+    end
   end while sleep(interval)
 end
