@@ -83,9 +83,6 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
   @Reference
   private TikaService tika;
 
-  private static Map<String, String> quickIndexFields = ImmutableMap.of(
-      FilesConstants.POOLED_CONTENT_USER_MANAGER, "manager");
-
   private static Map<String, String> getFieldMap() {
     Builder<String, String> builder = ImmutableMap.builder();
     builder.put(FilesConstants.POOLED_CONTENT_USER_MANAGER, "manager");
@@ -115,6 +112,7 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
   public void activate(Map<String, Object> properties) throws Exception {
     for (String type : CONTENT_TYPES) {
       resourceIndexingService.addHandler(type, this);
+      resourceIndexingService.addImmediateHandler(type, this);
     }
   }
 
@@ -122,18 +120,19 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
   public void deactivate(Map<String, Object> properties) {
     for (String type : CONTENT_TYPES) {
       resourceIndexingService.removeHandler(type, this);
+      resourceIndexingService.removeImmediateHandler(type, this);
     }
   }
 
   // ---------- ImmediateIndexingHandler interface -----------------------------
   public Collection<SolrInputDocument> getImmediateDocuments(RepositorySession repositorySession,
       Event event) {
-    return getDocuments(repositorySession, event, false);
+    return getDocuments(repositorySession, event, true);
   }
 
   public Collection<String> getImmediateDeleteQueries(RepositorySession repositorySession,
       Event event) {
-    return null;
+    return Collections.emptyList();
   }
 
   // ---------- IndexingHandler interface --------------------------------------
@@ -145,7 +144,7 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
    */
   public Collection<SolrInputDocument> getDocuments(RepositorySession repositorySession,
       Event event) {
-    return getDocuments(repositorySession, event, true);
+    return getDocuments(repositorySession, event, false);
   }
 
   private Collection<SolrInputDocument> getDocuments(RepositorySession repositorySession,
@@ -182,40 +181,32 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
                     "Skipping document return for pooled content {} at event {}; file upload is incomplete",
                     path, event);
           } else {
-            if (quickIndex) {
-              for (Entry<String, String> entry : quickIndexFields.entrySet()) {
-                Object val = properties.get(entry.getKey());
-                if (val != null) {
-                  doc.addField(entry.getValue(), val);
-                }
-              }
-            } else {
-              for (Entry<String, Object> p : properties.entrySet()) {
-                String indexName = index(p);
-                if (indexName != null) {
-                  for (Object o : convertToIndex(p)) {
-                    doc.addField(indexName, o);
-                  }
+            for (Entry<String, Object> p : properties.entrySet()) {
+              String indexName = index(p);
+              if (indexName != null) {
+                for (Object o : convertToIndex(p)) {
+                  doc.addField(indexName, o);
                 }
               }
             }
-            
-            if (isPageContent) {
-              long startIndexing = System.currentTimeMillis();
-              PageIndexingUtil.indexAllPages(content, contentManager, doc, tika);
-              long finishIndexing = System.currentTimeMillis();
-              if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Indexing all pages of {} in {} milliseconds.", content.getPath(), finishIndexing - startIndexing);
-              }
-            } else {
-              try {
-                InputStream contentStream = contentManager.getInputStream(path);
-                if (contentStream != null) {
-                  String extracted = tika.parseToString(contentManager.getInputStream(path));
-                  doc.addField("content", extracted);
+            if (!quickIndex) {
+              if (isPageContent) {
+                long startIndexing = System.currentTimeMillis();
+                PageIndexingUtil.indexAllPages(content, contentManager, doc, tika);
+                long finishIndexing = System.currentTimeMillis();
+                if (LOGGER.isDebugEnabled()) {
+                  LOGGER.debug("Indexing all pages of {} in {} milliseconds.", content.getPath(), finishIndexing - startIndexing);
                 }
-              } catch (TikaException e) {
-                LOGGER.warn(e.getMessage(), e);
+              } else {
+                try {
+                  InputStream contentStream = contentManager.getInputStream(path);
+                  if (contentStream != null) {
+                    String extracted = tika.parseToString(contentManager.getInputStream(path));
+                    doc.addField("content", extracted);
+                  }
+                } catch (TikaException e) {
+                  LOGGER.warn(e.getMessage(), e);
+                }
               }
             }
 
