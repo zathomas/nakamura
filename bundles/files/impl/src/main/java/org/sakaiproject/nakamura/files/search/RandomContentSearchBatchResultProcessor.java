@@ -17,16 +17,14 @@
  */
 package org.sakaiproject.nakamura.files.search;
 
-import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.PARAMS_ITEMS_PER_PAGE;
-
 import com.google.common.collect.Lists;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.solr.client.solrj.response.FacetField;
 import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.Result;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchBatchResultProcessor;
@@ -41,6 +39,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.PARAMS_ITEMS_PER_PAGE;
 
 /**
  * Batch result processor for a random selection of content. It is expected that this
@@ -143,6 +143,11 @@ public class RandomContentSearchBatchResultProcessor extends LiteFileSearchBatch
     public long getSize() {
       return results.size();
     }
+
+    public List<FacetField> getFacetFields() {
+      return null;
+    }
+
   }
 
   /**
