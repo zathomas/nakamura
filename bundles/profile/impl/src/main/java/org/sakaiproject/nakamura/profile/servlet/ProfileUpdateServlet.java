@@ -54,6 +54,7 @@ import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.profile.ProfileConstants;
 import org.sakaiproject.nakamura.api.profile.ProfileService;
 import org.sakaiproject.nakamura.api.resource.JSONResponse;
+import org.sakaiproject.nakamura.api.resource.ResourceService;
 import org.sakaiproject.nakamura.api.resource.lite.ResourceModifyOperation;
 import org.sakaiproject.nakamura.api.resource.lite.SparseContentResource;
 import org.sakaiproject.nakamura.api.resource.lite.SparsePostOperation;
@@ -113,7 +114,10 @@ public class ProfileUpdateServlet extends SlingAllMethodsServlet {
 
   @Reference
   private ProfileService profileService;
-  private ResourceModifyOperation modifyOperation;
+
+  @Reference
+  private ResourceService resourceService;
+  private SparsePostOperation modifyOperation;
 
   @Reference(name = "postOperation", referenceInterface = SparsePostOperation.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
   Map<String, SparsePostOperation> postOperations = new ConcurrentHashMap<String, SparsePostOperation>();
@@ -123,7 +127,7 @@ public class ProfileUpdateServlet extends SlingAllMethodsServlet {
   @Override
   public void init() {
     // default operation: create/modify
-    modifyOperation = new ResourceModifyOperation(getServletContext());
+    modifyOperation = resourceService.getDefaultSparsePostOperation(getServletContext());
   }
   @Override
   protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)

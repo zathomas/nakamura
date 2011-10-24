@@ -412,7 +412,12 @@ KERN-1187
    <startLevel level="11" >
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
-      <artifactId>org.sakaiproject.nakamura.resource</artifactId>
+      <artifactId>org.sakaiproject.nakamura.resource.api</artifactId>
+      <version>1.1-SNAPSHOT</version>
+    </bundle>
+    <bundle>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>org.sakaiproject.nakamura.resource.impl</artifactId>
       <version>1.1-SNAPSHOT</version>
     </bundle>
     <bundle>

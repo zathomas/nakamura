@@ -45,7 +45,8 @@
         <module>bundles/files/impl</module>
         <module>bundles/personal</module>
         <module>bundles/presence</module>
-        <module>bundles/resource</module>
+        <module>bundles/resource/api</module>
+        <module>bundles/resource/impl</module>
         <module>bundles/meservice</module>
         <module>bundles/server</module>
         <module>bundles/image</module>

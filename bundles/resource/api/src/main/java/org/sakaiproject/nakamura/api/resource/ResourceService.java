@@ -15,17 +15,22 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.api.resource.lite;
+package org.sakaiproject.nakamura.api.resource;
 
-import org.sakaiproject.nakamura.api.resource.DateParser;
-import org.sakaiproject.nakamura.resource.lite.servlet.post.helper.DefaultNodeNameGenerator;
-import org.sakaiproject.nakamura.resource.lite.servlet.post.operations.ModifyOperation;
+import org.sakaiproject.nakamura.api.resource.lite.SparsePostOperation;
 
 import javax.servlet.ServletContext;
 
-public class ResourceModifyOperation extends ModifyOperation {
+/**
+ *
+ */
+public interface ResourceService {
 
-  public ResourceModifyOperation(ServletContext servletContext) {
-    super(new DefaultNodeNameGenerator(new String[]{}, 255), new DateParser(), servletContext);
-  }
+  /**
+   * A factory method to return an instance of a SparsePostOperation.
+   *
+   * @return
+   */
+  SparsePostOperation getDefaultSparsePostOperation(ServletContext servletContext);
+
 }
