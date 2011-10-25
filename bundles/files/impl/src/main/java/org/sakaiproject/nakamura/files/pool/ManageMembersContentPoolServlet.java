@@ -394,10 +394,10 @@ import javax.servlet.http.HttpServletResponse;
           .getParameterValues(":viewer@Delete"));
       for (String removeViewer : removeViewers) {
         removeViewer = removeViewer.trim();
-        // a user can only remove themselves or a group they manage from the viewer list
+        // a user who is not manager can only remove themselves or a group they manage from the viewer list
         if (viewersSet.contains(removeViewer)
-            && (removeViewer.equals(thisUser.getId()) || managedGroupsSet
-                .contains(removeViewer))) {
+            && (managerSet.contains(thisUser.getId()) || (removeViewer.equals(thisUser.getId()) || managedGroupsSet
+                .contains(removeViewer)))) {
           viewersSet.remove(removeViewer);
           if (!managerSet.contains(removeViewer)) {
             AclModification.removeAcl(true, Permissions.CAN_READ, removeViewer,
