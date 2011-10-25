@@ -62,7 +62,7 @@ import java.util.Set;
  * searching.
  */
 @Component(immediate = true)
-public class MessageIndexingHandler implements ImmediateIndexingHandler {
+public class MessageIndexingHandler implements IndexingHandler, ImmediateIndexingHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(MessageIndexingHandler.class);
 
   private static final Map<String, String> QUICK_INDEX;
