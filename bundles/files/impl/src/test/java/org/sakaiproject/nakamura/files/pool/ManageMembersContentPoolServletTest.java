@@ -18,6 +18,7 @@
 package org.sakaiproject.nakamura.files.pool;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -62,6 +63,7 @@ import org.sakaiproject.nakamura.lite.BaseMemoryRepository;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import javax.jcr.Node;
@@ -311,5 +313,18 @@ public class ManageMembersContentPoolServletTest {
 
     // Verify we saved everything and then properly logged out.
     verify(response).setStatus(200);
+  }
+
+  @Test
+  public void testManagerCanRemoveViewer() throws Exception {
+    // We want to delete bob as a viewer
+    when(request.getParameterValues(":viewer@Delete")).thenReturn(
+        new String[] { "bob" });
+
+    servlet.doPost(request, response);
+
+    // Verify bob was really removed from the viewers list
+    String[] viewers = (String[]) sparseSession.getContentManager().get("pooled-content-id").getProperty("sakai:pooled-content-viewer");
+    assertFalse("'bob' should not still be in the viewers list.",Arrays.asList(viewers).contains("bob"));
   }
 }
