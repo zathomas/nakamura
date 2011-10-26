@@ -21,7 +21,6 @@
   </parent>
   <artifactId>org.sakaiproject.nakamura.personal</artifactId>
   <packaging>bundle</packaging>
-  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: Personal Space Bundle</name>
   <description>Provides support for the personal storage area bound to the current user, and
     support for public user spaces addressable via a url containing the user id.</description>

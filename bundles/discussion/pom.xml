@@ -27,7 +27,6 @@
   </parent>
   <artifactId>org.sakaiproject.nakamura.discussion</artifactId>
   <packaging>bundle</packaging>
-  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: Discussion Management Bundle</name>
   <description>Discussion services to retrieve and create discussion or comment posts.</description>
   <build>

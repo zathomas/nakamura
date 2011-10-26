@@ -20,7 +20,6 @@
   </parent>
   <artifactId>org.sakaiproject.nakamura.auth.cas</artifactId>
   <packaging>bundle</packaging>
-  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: CAS Authentication Bundle</name>
   <description>Provides CAS based authentication support to the request cycle.</description>
   <build>

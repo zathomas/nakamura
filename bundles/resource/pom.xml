@@ -27,7 +27,6 @@
   </parent>
   <artifactId>org.sakaiproject.nakamura.resource</artifactId>
   <packaging>bundle</packaging>
-  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: Sling Resource Extension Bundle</name>
   <description>Sling Resource Extension bundle containing adaptations of existing extension points</description>
   <build>

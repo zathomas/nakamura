@@ -21,7 +21,6 @@
   </parent>
   <artifactId>org.sakaiproject.nakamura.user</artifactId>
   <packaging>bundle</packaging>
-  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: User Extension Bundle</name>
   <description>Extension bundle that provides additional functionality in the user area as
     required by Sakai.</description>

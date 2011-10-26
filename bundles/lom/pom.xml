@@ -21,7 +21,6 @@
   </parent>
   <artifactId>org.sakaiproject.nakamura.lom</artifactId>
   <packaging>bundle</packaging>
-  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: LOM Bundle</name>
   <description>Provides full support for IEEE LOM Standard</description>
   <build>

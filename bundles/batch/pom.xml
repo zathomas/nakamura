@@ -22,7 +22,6 @@
   <artifactId>org.sakaiproject.nakamura.batch</artifactId>
   <packaging>bundle</packaging>
   <name>Sakai Nakamura :: Batch Bundle</name>
-  <version>1.1-SNAPSHOT</version>
   <description>Batch operations such as batch GET, POST, DELETE and tree...</description>
   <build>
     <plugins>
