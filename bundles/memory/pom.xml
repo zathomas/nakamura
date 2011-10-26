@@ -47,31 +47,13 @@
               WARNING, these had to be excluded from the imports to get the bundle to activate there
               may be classcast exceptions
             -->
-            <Import-Package>!sun.misc,!org.jgroups.*,!org.hibernate.cache,*
-            </Import-Package>
+            <Import-Package>!sun.misc,!org.jgroups.*,!org.hibernate.*,*</Import-Package>
             <Private-Package>org.sakaiproject.nakamura.memory.*</Private-Package>
             <DynamicImport-Package>sun.misc.*</DynamicImport-Package>
             <Embed-Transitive>true</Embed-Transitive>
-            <Embed-Dependency>ehcache,backport-util-concurrent,jsr107cache</Embed-Dependency>
+            <Embed-Dependency>ehcache-core,backport-util-concurrent,jsr107cache</Embed-Dependency>
           </instructions>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>embed-dependencies</id>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <includeArtifactIds>ehcache,backport-util-concurrent,jsr107cache</includeArtifactIds>
-              <excludeTransitive>false</excludeTransitive>
-              <outputDirectory> ${project.build.outputDirectory} </outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
     <pluginManagement>
@@ -128,7 +110,7 @@
   </dependency>
     <dependency>
       <groupId>net.sf.ehcache</groupId>
-      <artifactId>ehcache</artifactId>
+      <artifactId>ehcache-core</artifactId>
     </dependency>
     <dependency>
       <groupId>backport-util-concurrent</groupId>

@@ -100,8 +100,10 @@ public class ContentPoolProvider implements ResourceProvider {
   private Resource resolveMappedResource(ResourceResolver resourceResolver, String path)
       throws StorageClientException, AccessDeniedException, RepositoryException {
     String poolId = null;
-    Session session = JackrabbitSparseUtils.getSparseSession(resourceResolver
-        .adaptTo(javax.jcr.Session.class));
+    Session session = resourceResolver.adaptTo(Session.class);
+    if (session == null) {
+      session = StorageClientUtils.adaptToSession(resourceResolver.adaptTo(javax.jcr.Session.class));
+    }
     ContentManager contentManager = session.getContentManager();
 
     if (path.startsWith("/p/")) {
