@@ -81,8 +81,8 @@ public class ContentPoolSparseSearchPropertyProvider implements SolrSearchProper
 
       // create the manager and viewer query parameters
       String userId = ClientUtils.escapeQueryChars(sessionUserId);
-      StringBuilder managers = new StringBuilder("AND sakai\\:pooled\\-content\\-manager:(").append(userId);
-      StringBuilder viewers = new StringBuilder("AND sakai\\:pooled\\-content\\-viewer:(").append(userId);
+      StringBuilder managers = new StringBuilder("AND manager:(").append(userId);
+      StringBuilder viewers = new StringBuilder("AND viewer:(").append(userId);
 
       // add groups to the parameters
       String[] groups = auth.getPrincipals();

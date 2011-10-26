@@ -1,12 +1,13 @@
 {
-  "sakai:query-template": 'sling\\:resourceType:sakai/pooled-content ${_meManagerGroups}',
+//  "sakai:query-template": 'sling\\:resourceType:sakai/pooled-content ${_meManagerGroups}',
+  "sakai:query-template": "resourceType:sakai/pooled-content ${_meManagerGroups}",
   "sakai:query-template-options": {
       "sort": "${sortOn} ${sortOrder}"
   },
   "_meManagerGroups": "",
   "sortOn": "score",
   "sortOrder": "desc",
-  "sling:resourceType": "sakai/sparse-search",
+  "sling:resourceType": "sakai/solr-search",
   "sakai:propertyprovider" : "PooledContentSparse",
   "sakai:batchresultprocessor": "LiteMeManagerFiles",
   "sakai:title": "Pooled Content - Me - Manager - All",
