@@ -21,7 +21,6 @@
   </parent>
   <artifactId>org.sakaiproject.nakamura.securityloader</artifactId>
   <packaging>bundle</packaging>
-  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: Security Loader Bundle</name>
   <description>Security Loader Bundle, watches for bundles with security configuration and
     loads them into the JCR on startup, recording the details in /var in the JCR .</description>

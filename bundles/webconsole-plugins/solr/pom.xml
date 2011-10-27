@@ -21,7 +21,6 @@
   </parent>
   <artifactId>org.sakaiproject.nakamura.webconsole.solr</artifactId>
   <packaging>bundle</packaging>
-  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: Solr Web Console Bundle</name>
   <description>Web console plugin for the Felix web console.</description>
   <build>

@@ -27,7 +27,6 @@
   </parent>
   <artifactId>org.sakaiproject.nakamura.utils</artifactId>
   <packaging>bundle</packaging>
-  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: Utilities</name>
   <description>Utility Library providing path, string, array, IO, date and other utilities, generally not available elsewhere.</description>
   <build>

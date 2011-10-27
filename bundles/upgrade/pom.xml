@@ -13,7 +13,6 @@
     <artifactId>org.sakaiproject.nakamura.upgrade</artifactId>
 
     <packaging>bundle</packaging>
-    <version>1.1-SNAPSHOT</version>
     <name>Sakai Nakamura :: Upgrade Bundle</name>
     <description>Bundle that provides framework and management services for data upgrades.</description>
     <repositories>

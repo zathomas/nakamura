@@ -27,7 +27,6 @@
   </parent>
   <artifactId>org.sakaiproject.nakamura.meservice</artifactId>
   <packaging>bundle</packaging>
-  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: Me Service Bundle</name>
   <description>Me service to provide information on the current user.</description>
   <build>

@@ -10,7 +10,6 @@
   <artifactId>org.sakaiproject.nakamura.proxy</artifactId>
   <packaging>bundle</packaging>
   <name>Sakai Nakamura :: proxy service</name>
-  <version>1.1-SNAPSHOT</version>
   <description>This will proxy through to other websites and fetch data</description>
   <build>
     <plugins>

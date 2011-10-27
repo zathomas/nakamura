@@ -21,7 +21,6 @@
   </parent>
   <artifactId>org.sakaiproject.nakamura.search.impl</artifactId>
   <packaging>bundle</packaging>
-  <version>1.1-SNAPSHOT</version>
   <name>Sakai Nakamura :: Search Support Impl Bundle</name>
   <description>Search Support bundle that allows searches to be defined in JCR.</description>
   <build>

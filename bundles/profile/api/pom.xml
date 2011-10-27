@@ -10,7 +10,6 @@
   </parent>
   <groupId>org.sakaiproject.nakamura</groupId>
   <artifactId>org.sakaiproject.nakamura.profile.api</artifactId>
-  <version>1.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <name>Sakai Nakamura :: Profile API Bundle</name>
   <build>

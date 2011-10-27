@@ -97,7 +97,6 @@
         <module>contrib/ldapauth</module>
         <module>contrib/samlauth</module>
         <module>contrib/restauth</module>
-        <module>contrib/ldap</module>
         <!-- <module>contrib/remotefiles</module> -->
         <!-- to build oracle you must download and install oracle.jar first  <module>contrib/oracle-jdbc</module> -->
         <!-- <module>contrib/sitejoin</module> -->
