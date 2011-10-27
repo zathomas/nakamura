@@ -4,22 +4,13 @@
     "Description": "Create an OAE cluster of at least two app instances running Amazon 32 bit Linux, plus a load balancer and MySQL 5.5 database.",
 
     "Parameters": {
-        "ElasticIP": {
-            "Description": "An Amazon elastic IP to use for the NFS host",
-            "Type": "String"
-        },
-        "InstanceType": {
-            "Description": "Type of EC2 instance to launch",
-            "Type": "String",
-            "Default": "m1.small"
-        },
         "KeyName": {
             "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
             "Type": "String"
         },
         "NakamuraBinaryURL": {
-            "Default": "http://builds.sakaiproject.org/org.sakaiproject.nakamura.app-1.0.2.jar",
-            "Description": "The URL to the OAE jar file to use. Be sure your jar includes the MySQL driver.",
+            "Default": "http://source.sakaiproject.org/release/oae/1.0.2/binary/org.sakaiproject.nakamura.app-1.0.2.jar",
+            "Description": "The URL to the OAE jar file to use.",
             "Type": "String",
             "MinLength": "1",
             "AllowedPattern": "https?://.*",
@@ -72,8 +63,13 @@
             "AllowedValues": ["db.m1.small", "db.m1.large", "db.m1.xlarge", "db.m2.xlarge", "db.m2.2xlarge", "db.m2.4xlarge"],
             "ConstraintDescription": "must select a valid database instance type."
         },
-        "AlertEmail": {
-            "Description": "email address to notify of operational issues",
+        "EC2SecurityGroup": {
+            "Default": "default",
+            "Description": "The EC2 security group that contains instances that need access to the database",
+            "Type": "String"
+        },
+        "AlarmTopic": {
+            "Description": "SNS topic to notify if there are operational issues",
             "Type": "String"
         },
         "MultiAZ": {
@@ -93,58 +89,21 @@
     },
 
     "Mappings": {
-        "AWSInstanceType2Arch": {
-            "t1.micro": {
-                "Arch": "64"
-            },
-            "m1.small": {
-                "Arch": "32"
-            },
-            "m1.large": {
-                "Arch": "64"
-            },
-            "m1.xlarge": {
-                "Arch": "64"
-            },
-            "m2.xlarge": {
-                "Arch": "64"
-            },
-            "m2.2xlarge": {
-                "Arch": "64"
-            },
-            "m2.4xlarge": {
-                "Arch": "64"
-            },
-            "c1.medium": {
-                "Arch": "32"
-            },
-            "c1.xlarge": {
-                "Arch": "64"
-            },
-            "cc1.4xlarge": {
-                "Arch": "64"
-            }
-        },
-        "AWSRegionArch2AMI": {
+        "RegionMap": {
             "us-east-1": {
-                "32": "ami-76f0061f",
-                "64": "ami-7341831a"
+                "AMI": "ami-76f0061f"
             },
             "us-west-1": {
-                "32": "ami-655a0a20",
-                "64": "ami-cfc7978a"
+                "AMI": "ami-655a0a20"
             },
             "eu-west-1": {
-                "32": "ami-7fd4e10b",
-                "64": "ami-31c2f645"
+                "AMI": "ami-7fd4e10b"
             },
             "ap-southeast-1": {
-                "32": "ami-72621c20",
-                "64": "ami-60f28c32"
+                "AMI": "ami-72621c20"
             },
             "ap-northeast-1": {
-                "32": "ami-8e08a38f",
-                "64": "ami-a003a8a1"
+                "AMI": "ami-8e08a38f"
             }
         },
         "InstanceTypeMap": {
@@ -188,17 +147,6 @@
     },
 
     "Resources": {
-        "AlarmTopic": {
-            "Type": "AWS::SNS::Topic",
-            "Properties": {
-                "Subscription": [{
-                    "Protocol": "email",
-                    "Endpoint": {
-                        "Ref": "AlertEmail"
-                    }
-                }]
-            }
-        },
         "ElasticLoadBalancer": {
             "Properties": {
                 "Listeners": [
@@ -245,45 +193,47 @@
             },
             "Type": "AWS::ElasticLoadBalancing::LoadBalancer"
         },
-        "Ec2Instance1": {
-            "Type": "AWS::EC2::Instance",
+        "WebServerGroup": {
             "Properties": {
-                "SecurityGroups": [{
-                    "Ref": "InstanceSecurityGroup"
-                }],
-                "KeyName": {
-                    "Ref": "KeyName"
+                "LoadBalancerNames": [
+                {
+                    "Ref": "ElasticLoadBalancer"
+                }
+                ],
+                "MinSize": "2",
+                "LaunchConfigurationName": {
+                    "Ref": "LaunchConfig"
                 },
+                "AvailabilityZones": {
+                    "Fn::GetAZs": {
+                        "Ref": "AWS::Region"
+                    }
+                },
+                "MaxSize": "3"
+            },
+            "Type": "AWS::AutoScaling::AutoScalingGroup"
+        },
+        "LaunchConfig": {
+            "Properties": {
+                "SecurityGroups": [
+                {
+                    "Ref": "EC2SecurityGroup"
+                }
+                ],
                 "ImageId": {
-                    "Fn::FindInMap": ["AWSRegionArch2AMI", {
+                    "Fn::FindInMap": ["RegionMap", {
                         "Ref": "AWS::Region"
                     },
-                    {
-                        "Fn::FindInMap": ["AWSInstanceType2Arch", {
-                            "Ref": "InstanceType"
-                        },
-                        "Arch"]
-                    }]
+                    "AMI"]
                 },
                 "UserData": {
                     "Fn::Base64": {
                         "Fn::Join": ["", [
                         "#!/bin/bash -ex", "\n",
-                        "sudo yum -y install nfs-utils rpcbind", "\n",
-                        "mkdir /home/ec2-user/store", "\n",
-                        "sudo cat << EOF > /etc/exports", "\n",
-                        "/home/ec2-user/store ", {
-                            "Fn::GetAtt": ["Ec2Instance2", "PublicDnsName"]
-                        },
-                        "(rw,async)", "\n",
-                        "sudo exportfs -ar", "\n",
-                        "sudo service rpcbind start", "\n",
-                        "sudo service nfs start", "\n",
-                        "sudo service nfslock start", "\n",
-                        "mkdir /home/ec2-user/load", "\n",
-                        "cat << EOF > /home/ec2-user/load/org.sakaiproject.nakamura.lite.storage.jdbc.JDBCStorageClientPool.cfg", "\n",
-                        "jdbc-driver=com.mysql.jdbc.Driver", "\n",
-                        "jdbc-url=", {
+                        "mkdir /home/ec2-user/load","\n",
+                        "cat << EOF > /home/ec2-user/load/org.sakaiproject.nakamura.lite.storage.jdbc.JDBCStorageClientPool.cfg","\n",
+                        "jdbc-driver=com.mysql.jdbc.Driver","\n",
+                        "jdbc-url=",{
                             "Fn::Join": ["", ["jdbc:mysql://",
                             {
                                 "Fn::GetAtt": ["SparseMapDB", "Endpoint.Address"]
@@ -296,29 +246,10 @@
                             {
                                 "Ref": "DBName"
                             }]]
-                        },
-                        "\n",
-                        "username=", {
-                            "Ref": "DBUser"
-                        },
-                        "\n",
-                        "password=", {
-                            "Ref": "DBPassword"
-                        },
-                        "\n",
-                        "EOF", "\n",
-                        "cat << EOF > /home/ec2-user/load/org.sakaiproject.nakamura.http.usercontent.ServerProtectionServiceImpl.cfg", "\n",
-                        "disable.protection.for.dev.mode=true", "\n",
-                        "#untrusted.contenturl=http://", "\n",
-                        "#trusted.referer=http://", {
-                            "Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]
-                        },
-                        "\n",
-                        "#trusted.hosts=http://", {
-                            "Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]
-                        },
-                        "\n",
-                        "EOF", "\n",
+                        },"\n",
+                        "username=",{"Ref": "DBUser"},"\n",
+                        "password=",{"Ref": "DBPassword"},"\n",
+                        "EOF","\n",
                         "cd /home/ec2-user && wget ", {
                             "Ref": "NakamuraBinaryURL"
                         },
@@ -328,151 +259,13 @@
                         },
                         " -f - 1> run.log 2>&1 &", "\n"]]
                     }
-                }
-            }
-        },
-        "IPAssoc": {
-            "Type": "AWS::EC2::EIPAssociation",
-            "Properties": {
-                "InstanceId": {
-                    "Ref": "Ec2Instance1"
                 },
-                "EIP": {
-                    "Ref": "ElasticIP"
-                }
-            }
-        },
-        "Ec2Instance2": {
-            "Type": "AWS::EC2::Instance",
-            "Properties": {
-                "SecurityGroups": [{
-                    "Ref": "InstanceSecurityGroup"
-                }],
                 "KeyName": {
                     "Ref": "KeyName"
                 },
-                "ImageId": {
-                    "Fn::FindInMap": ["AWSRegionArch2AMI", {
-                        "Ref": "AWS::Region"
-                    },
-                    {
-                        "Fn::FindInMap": ["AWSInstanceType2Arch", {
-                            "Ref": "InstanceType"
-                        },
-                        "Arch"]
-                    }]
-                },
-                "UserData": {
-                    "Fn::Base64": {
-                        "Fn::Join": ["", [
-                        "#!/bin/bash -ex", "\n",
-                        "sudo yum -y install nfs-utils rpcbind", "\n",
-                        "sudo service rpcbind start", "\n",
-                        "sudo service nfslock start", "\n",
-                        "sudo chkconfig --level 2345 rpcbind on", "\n",
-                        "sudo chkconfig --level 2345 nfslock on", "\n",
-                        "sudo mount -t nfs ", {
-                            "Ref": "ElasticIP"
-                        },
-                        ":/home/ec2-user/store /home/ec2-user/store", "\n",
-                        "mkdir /home/ec2-user/load", "\n",
-                        "mkdir /home/ec2-user/store", "\n",
-                        "cat << EOF > /home/ec2-user/load/org.sakaiproject.nakamura.lite.storage.jdbc.JDBCStorageClientPool.cfg", "\n",
-                        "jdbc-driver=com.mysql.jdbc.Driver", "\n",
-                        "jdbc-url=", {
-                            "Fn::Join": ["", ["jdbc:mysql://",
-                            {
-                                "Fn::GetAtt": ["SparseMapDB", "Endpoint.Address"]
-                            },
-                            ":",
-                            {
-                                "Fn::GetAtt": ["SparseMapDB", "Endpoint.Port"]
-                            },
-                            "/",
-                            {
-                                "Ref": "DBName"
-                            }]]
-                        },
-                        "\n",
-                        "username=", {
-                            "Ref": "DBUser"
-                        },
-                        "\n",
-                        "password=", {
-                            "Ref": "DBPassword"
-                        },
-                        "\n",
-                        "EOF", "\n",
-                        "cat << EOF > /home/ec2-user/load/org.sakaiproject.nakamura.http.usercontent.ServerProtectionServiceImpl.cfg", "\n",
-                        "disable.protection.for.dev.mode=true", "\n",
-                        "#untrusted.contenturl=http://", "\n",
-                        "#trusted.referer=http://", {
-                            "Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]
-                        },
-                        "\n",
-                        "#trusted.hosts=http://", {
-                            "Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]
-                        },
-                        "\n",
-                        "EOF", "\n",
-                        "cd /home/ec2-user && wget ", {
-                            "Ref": "NakamuraBinaryURL"
-                        },
-                        "\n",
-                        "java -XX:MaxPermSize=128m -Xmx512m -server -Dcom.sun.management.jmxremote -jar ", {
-                            "Ref": "NakamuraBinaryFilename"
-                        },
-                        " -f - 1> run.log 2>&1 &", "\n"]]
-                    }
-                }
-            }
-        },
-        "InstanceSecurityGroup": {
-            "Type": "AWS::EC2::SecurityGroup",
-            "Properties": {
-                "GroupDescription": "Enable SSH, NFS, and HTTP access on the inbound port",
-                "SecurityGroupIngress": [{
-                    "IpProtocol": "tcp",
-                    "FromPort": "22",
-                    "ToPort": "22",
-                    "CidrIp": "0.0.0.0/0"
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": {
-                        "Ref": "WebServerPort"
-                    },
-                    "ToPort": {
-                        "Ref": "WebServerPort"
-                    },
-                    "CidrIp": "0.0.0.0/0"
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "111",
-                    "ToPort": "111",
-                    "CidrIp": "0.0.0.0/0"
-                },
-                {
-                    "IpProtocol": "udp",
-                    "FromPort": "111",
-                    "ToPort": "111",
-                    "CidrIp": "0.0.0.0/0"
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "2049",
-                    "ToPort": "2049",
-                    "CidrIp": "0.0.0.0/0"
-                },
-                {
-                    "IpProtocol": "udp",
-                    "FromPort": "32806",
-                    "ToPort": "32806",
-                    "CidrIp": "0.0.0.0/0"
-                }
-                ]
-            }
+                "InstanceType": "m1.small"
+            },
+            "Type": "AWS::AutoScaling::LaunchConfiguration"
         },
         "SparseMapDB": {
             "Type": "AWS::RDS::DBInstance",
@@ -509,7 +302,7 @@
             "Properties": {
                 "DBSecurityGroupIngress": {
                     "EC2SecurityGroupName": {
-                        "Ref": "InstanceSecurityGroup"
+                        "Ref": "EC2SecurityGroup"
                     }
                 },
                 "GroupDescription": "database access"
