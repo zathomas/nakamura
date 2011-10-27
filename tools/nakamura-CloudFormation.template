@@ -4,16 +4,12 @@
     "Description": "Create an OAE cluster of at least two app instances running Amazon 32 bit Linux, plus a load balancer and MySQL 5.5 database.",
 
     "Parameters": {
-        "ElasticIP": {
-            "Description": "An Amazon elastic IP to use for the NFS client",
-            "Type": "String"
-        },
         "KeyName": {
             "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
             "Type": "String"
         },
         "NakamuraBinaryURL": {
-            "Default": "http://source.sakaiproject.org/release/oae/1.0.2/binary/org.sakaiproject.nakamura.app-1.0.2.jar",
+            "Default": "http://builds.sakaiproject.org/org.sakaiproject.nakamura.app-1.0.2.jar",
             "Description": "The URL to the OAE jar file to use.",
             "Type": "String",
             "MinLength": "1",
@@ -197,6 +193,14 @@
                         "#!/bin/bash -ex", "\n",
                         "exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1", "\n",
                         "yum -y install nfs-utils rpcbind", "\n",
+                        "mkdir /home/ec2-user/store", "\n",
+                        "cat << EOF > /etc/exports", "\n",
+                        "/home/ec2-user/store *(rw,async)", "\n",
+                        "EOF", "\n",
+                        "exportfs -ar", "\n",
+                        "service rpcbind start", "\n",
+                        "service nfs start", "\n",
+                        "service nfslock start", "\n",
                         "mkdir /home/ec2-user/load", "\n",
                         "cat << EOF > /home/ec2-user/load/org.sakaiproject.nakamura.lite.storage.jdbc.JDBCStorageClientPool.cfg", "\n",
                         "jdbc-driver=com.mysql.jdbc.Driver", "\n",
@@ -253,18 +257,64 @@
                 },
                 "AMI"]
             },
-            "UserData" : { "Fn::Base64" : { "Ref" : "WebServerPort" }}
-          }
-        },
-        "IPAssoc": {
-          "Type": "AWS::EC2::EIPAssociation",
-          "Properties": {
-              "InstanceId": {
-                  "Ref": "Ec2Instance2"
-              },
-              "EIP": {
-                  "Ref": "ElasticIP"
-              }
+            "UserData": {
+                "Fn::Base64": {
+                    "Fn::Join": ["", [
+                    "#!/bin/bash -ex", "\n",
+                    "exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1", "\n",
+                    "yum -y install nfs-utils rpcbind", "\n",
+                    "mkdir /home/ec2-user/store", "\n",
+                    "service rpcbind start", "\n",
+                    "service nfslock start", "\n",
+                    "chkconfig --level 2345 rpcbind on", "\n",
+                    "chkconfig --level 2345 nfslock on", "\n",
+                    "mount -t nfs ", {
+                        "Fn::GetAtt": ["Ec2Instance1", "PublicDnsName"]
+                    },
+                    ":/home/ec2-user/store /home/ec2-user/store", "\n",
+                    "mkdir /home/ec2-user/load", "\n",
+                    "cat << EOF > /home/ec2-user/load/org.sakaiproject.nakamura.lite.storage.jdbc.JDBCStorageClientPool.cfg", "\n",
+                    "jdbc-driver=com.mysql.jdbc.Driver", "\n",
+                    "jdbc-url=", {
+                        "Fn::Join": ["", ["jdbc:mysql://",
+                        {
+                            "Fn::GetAtt": ["SparseMapDB", "Endpoint.Address"]
+                        },
+                        ":",
+                        {
+                            "Fn::GetAtt": ["SparseMapDB", "Endpoint.Port"]
+                        },
+                        "/",
+                        {
+                            "Ref": "DBName"
+                        }]]
+                    },
+                    "\n",
+                    "username=", {
+                        "Ref": "DBUser"
+                    },
+                    "\n",
+                    "password=", {
+                        "Ref": "DBPassword"
+                    },
+                    "\n",
+                    "EOF", "\n",
+                    "cat << EOF > /home/ec2-user/load/org.sakaiproject.nakamura.http.usercontent.ServerProtectionServiceImpl.cfg", "\n",
+                    "disable.protection.for.dev.mode=true", "\n",
+                    "#untrusted.contenturl=http://", "\n",
+                    "#trusted.referer=http://", "\n",
+                    "#trusted.hosts=http://", "\n",
+                    "EOF", "\n",
+                    "cd /home/ec2-user && wget ", {
+                        "Ref": "NakamuraBinaryURL"
+                    },
+                    "\n",
+                    "java -XX:MaxPermSize=128m -Xmx512m -server -Dcom.sun.management.jmxremote -jar ", {
+                        "Ref": "NakamuraBinaryFilename"
+                    },
+                    " -f - 1> run.log 2>&1 &", "\n"]]
+                }
+            }
           }
         },
         "InstanceSecurityGroup": {
