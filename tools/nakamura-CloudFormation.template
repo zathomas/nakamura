@@ -213,6 +213,75 @@
             },
             "Type": "AWS::AutoScaling::AutoScalingGroup"
         },
+        "Ec2Instance1": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "SecurityGroups": [{
+                    "Ref": "EC2SecurityGroup"
+                }],
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "ImageId": {
+                    "Fn::FindInMap": ["RegionMap", {
+                        "Ref": "AWS::Region"
+                    },
+                    "AMI"]
+                },
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": ["", [
+                        "#!/bin/bash -ex", "\n",
+                        "cat << EOF > /home/ec2-user/load/org.sakaiproject.nakamura.lite.storage.jdbc.JDBCStorageClientPool.cfg", "\n",
+                        "jdbc-driver=com.mysql.jdbc.Driver", "\n",
+                        "jdbc-url=", {
+                            "Fn::Join": ["", ["jdbc:mysql://",
+                            {
+                                "Fn::GetAtt": ["SparseMapDB", "Endpoint.Address"]
+                            },
+                            ":",
+                            {
+                                "Fn::GetAtt": ["SparseMapDB", "Endpoint.Port"]
+                            },
+                            "/",
+                            {
+                                "Ref": "DBName"
+                            }]]
+                        },
+                        "\n",
+                        "username=", {
+                            "Ref": "DBUser"
+                        },
+                        "\n",
+                        "password=", {
+                            "Ref": "DBPassword"
+                        },
+                        "\n",
+                        "EOF", "\n",
+                        "cat << EOF > /home/ec2-user/load/org.sakaiproject.nakamura.http.usercontent.ServerProtectionServiceImpl.cfg", "\n",
+                        "disable.protection.for.dev.mode=true", "\n",
+                        "#untrusted.contenturl=http://", "\n",
+                        "#trusted.referer=http://", {
+                            "Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]
+                        },
+                        "\n",
+                        "#trusted.hosts=http://", {
+                            "Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]
+                        },
+                        "\n",
+                        "EOF", "\n",
+                        "cd /home/ec2-user && wget ", {
+                            "Ref": "NakamuraBinaryURL"
+                        },
+                        "\n",
+                        "java -XX:MaxPermSize=128m -Xmx512m -server -Dcom.sun.management.jmxremote -jar ", {
+                            "Ref": "NakamuraBinaryFilename"
+                        },
+                        " -f - 1> run.log 2>&1 &", "\n"]]
+                    }
+                }
+            }
+        },
         "LaunchConfig": {
             "Properties": {
                 "SecurityGroups": [
