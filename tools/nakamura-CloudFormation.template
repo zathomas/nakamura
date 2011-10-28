@@ -158,6 +158,10 @@
           "Properties" : {
             "AvailabilityZones" : { "Fn::GetAZs" : "" },
             "Instances" : [ { "Ref" : "Ec2Instance1" },{ "Ref" : "Ec2Instance2" } ],
+            "AppCookieStickinessPolicy" : [ {
+               "CookieName" : "SAKAI-TRACKING",
+               "PolicyName" : "SakaiStickyPolicy" 
+            } ],
             "Listeners" : [ {
               "LoadBalancerPort" : "80",
               "InstancePort" : { "Ref" : "WebServerPort" },
