@@ -398,7 +398,7 @@
             "Type": "AWS::RDS::DBSecurityGroup",
             "Properties": {
                 "DBSecurityGroupIngress": {
-                    "EC2SecurityGroupName": "default"
+                    "EC2SecurityGroupName": { "Ref" : "InstanceSecurityGroup" }
                 },
                 "GroupDescription": "database access"
             }
