@@ -1,5 +1,5 @@
 {
-  "sakai:query-template": "resourceType:sakai/pooled-content AND (manager:(${au}) OR viewer:(${au}))${_q}",
+  "sakai:query-template": "resourceType:sakai/pooled-content ${_mimetype} AND (manager:(${au}) OR viewer:(${au}))${_q}",
   "sakai:query-template-options": {
       "sort": "${sortOn} ${sortOrder}",
       "facet" : true,
@@ -9,7 +9,7 @@
   "sortOrder": "desc",
   "_q": "",
   "sling:resourceType": "sakai/solr-search",
-  "sakai:propertyprovider" : "MeManagerViewer",
+  "sakai:propertyprovider" : ["MeManagerViewer", "MimeMatch"],
   "sakai:resultprocessor": "AllFiles",
   "sakai:title": "Pooled Content - All",
   "sakai:shortDescription": "Search through all the pooled files.",
