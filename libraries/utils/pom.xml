@@ -41,7 +41,7 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-Category> sakaiux </Bundle-Category>
+            <Bundle-Category> sakai-nakamura </Bundle-Category>
             <Export-Package> org.sakaiproject.nakamura.util.*</Export-Package>
             <Embed-Transitive>true</Embed-Transitive>
             <Embed-Dependency>
