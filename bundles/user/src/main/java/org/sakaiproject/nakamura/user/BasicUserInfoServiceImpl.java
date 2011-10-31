@@ -159,6 +159,7 @@ public class BasicUserInfoServiceImpl implements BasicUserInfoService {
     basicInfo.put("lastModified", group.getProperty("lastModified"));
     basicInfo.put("createdBy", group.getProperty("createdBy"));
     basicInfo.put("lastModifiedBy", group.getProperty("lastModifiedBy"));
+    basicInfo.put("sakai:group-joinable", group.getProperty("sakai:group-joinable"));
   }
 
   private  Map<String, Object> basicProfileMapForAuthorizable(Authorizable authorizable) {
