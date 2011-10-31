@@ -33,7 +33,7 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.osgi.service.component.ComponentContext;
@@ -559,7 +559,7 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
 
   @SuppressWarnings({"UnusedDeclaration"})
   protected void activate(ComponentContext componentContext) {
-    maximumResults = OsgiUtil.toLong(componentContext.getProperties().get("maximumResults"), 100);
+    maximumResults = PropertiesUtil.toLong(componentContext.getProperties().get("maximumResults"), 100);
   }
 
   /**

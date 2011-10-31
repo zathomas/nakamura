@@ -23,7 +23,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.Result;
@@ -124,7 +124,7 @@ public class RandomContentSearchBatchResultProcessor extends LiteFileSearchBatch
    * @param props
    */
   protected void activate(Map<?, ?> props) {
-    solrItemsMultiplier = OsgiUtil.toInteger(props.get("solrItemsMultiplier"), 4);
+    solrItemsMultiplier = PropertiesUtil.toInteger(props.get("solrItemsMultiplier"), 4);
   }
 
   // inner class, use by method getSearchResultSet(..),

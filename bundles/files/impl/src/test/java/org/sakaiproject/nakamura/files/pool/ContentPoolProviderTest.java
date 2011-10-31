@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -66,6 +67,14 @@ public class ContentPoolProviderTest {
     repository = baseMemoryRepository.getRepository();
   }
 
+  @Before
+  public void setUp() throws Exception {
+    Mockito.when(resourceResolver.adaptTo(javax.jcr.Session.class)).thenReturn(jackrabbitSession);
+    Mockito.when(jackrabbitSession.getUserManager()).thenReturn(sparseMapUserManager);
+    Session session = repository.loginAdministrative();
+    Mockito.when(sparseMapUserManager.getSession()).thenReturn(session);
+  }
+
   @SuppressWarnings(value = { "DLS_DEAD_LOCAL_STORE" }, justification = "Unit testing fail mode")
   @Test
   public void testNonExisting() throws AccessDeniedException,
@@ -79,12 +88,6 @@ public class ContentPoolProviderTest {
     ResourceMetadata resourceMetadata = new ResourceMetadata();
     Mockito.when(resource.getResourceMetadata()).thenReturn(resourceMetadata);
     
-    Mockito.when(resourceResolver.adaptTo(javax.jcr.Session.class)).thenReturn(jackrabbitSession);
-    
-    Mockito.when(jackrabbitSession.getUserManager()).thenReturn(sparseMapUserManager);
-    Session session = repository.loginAdministrative();
-    Mockito.when(sparseMapUserManager.getSession()).thenReturn(session);
-
     Resource result = cp.getResource(resourceResolver, "/");
     Assert.assertNull(result);
     result = cp.getResource(resourceResolver, "/_");
@@ -119,7 +122,7 @@ public class ContentPoolProviderTest {
     Assert.assertEquals(null, result);
   }
 
-  @Test
+  @Test(expected = SlingException.class)
   public void testProviderExt() {
     // A ResourceProvider should only return a resource when the full path to it matches
     // the JCR path.
@@ -128,14 +131,13 @@ public class ContentPoolProviderTest {
 
   }
 
-  @Test
+  @Test(expected = SlingException.class)
   public void testProviderExtAndSelector() {
-
     testProviderWithId(".tidy.json", "");
 
   }
 
-  @Test
+  @Test(expected = SlingException.class)
   public void testProviderExtAndSelectorAndExtra() {
     testProviderWithId(".tidy.json", "/some/other/path/with.dots.in.it.pdf");
   }

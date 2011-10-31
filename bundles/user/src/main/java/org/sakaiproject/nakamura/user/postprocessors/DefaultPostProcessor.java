@@ -36,7 +36,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.ModificationType;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -261,7 +261,7 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
   @Modified
   protected void modified(Map<?, ?> props) throws Exception {
 
-    visibilityPreference = OsgiUtil.toString(props.get(VISIBILITY_PREFERENCE),
+    visibilityPreference = PropertiesUtil.toString(props.get(VISIBILITY_PREFERENCE),
         VISIBILITY_PREFERENCE_DEFAULT);
 
     defaultProfileTemplate = PROFILE_IMPORT_TEMPLATE_DEFAULT;
@@ -278,9 +278,9 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
       startPos = endPos;
     }
 
-    defaultUserPagesTemplate = OsgiUtil.toString(props.get(DEFAULT_USER_PAGES_TEMPLATE),
+    defaultUserPagesTemplate = PropertiesUtil.toString(props.get(DEFAULT_USER_PAGES_TEMPLATE),
         "");
-    defaultGroupPagesTemplate = OsgiUtil.toString(
+    defaultGroupPagesTemplate = PropertiesUtil.toString(
         props.get(DEFAULT_GROUP_PAGES_TEMPLATE), "");
 
     createDefaultUsers();
@@ -899,14 +899,14 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
 
     Set<String> managerSettings = null;
     if (authorizable.hasProperty(UserConstants.PROP_GROUP_MANAGERS)) {
-      managerSettings = ImmutableSet.of((String[]) authorizable
+      managerSettings = ImmutableSet.copyOf((String[]) authorizable
           .getProperty(UserConstants.PROP_GROUP_MANAGERS));
     } else {
       managerSettings = ImmutableSet.of();
     }
     Set<String> viewerSettings = null;
     if (authorizable.hasProperty(UserConstants.PROP_GROUP_VIEWERS)) {
-      viewerSettings = ImmutableSet.of((String[]) authorizable
+      viewerSettings = ImmutableSet.copyOf((String[]) authorizable
           .getProperty(UserConstants.PROP_GROUP_VIEWERS));
     } else {
       viewerSettings = ImmutableSet.of();

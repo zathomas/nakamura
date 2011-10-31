@@ -34,7 +34,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.sakaiproject.nakamura.api.files.FileUploadHandler;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -98,8 +98,8 @@ public class IMSCPFileHandler implements FileUploadHandler {
   @Activate
   @Modified
   public void activate(Map<String, Object> properties ) {
-      zipTypes = ImmutableSet.copyOf(OsgiUtil.toStringArray(properties.get(ZIP_TYPES_PROP), DEFAULT_ZIP_TYPES)); 
-      isHierarchical = OsgiUtil.toBoolean(properties.get(IS_HIERARCHICAL_PROP), false);
+      zipTypes = ImmutableSet.copyOf(PropertiesUtil.toStringArray(properties.get(ZIP_TYPES_PROP), DEFAULT_ZIP_TYPES)); 
+      isHierarchical = PropertiesUtil.toBoolean(properties.get(IS_HIERARCHICAL_PROP), false);
   }
   
   public void handleFile(Map<String, Object> results, String poolId,
