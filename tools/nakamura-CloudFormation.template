@@ -165,7 +165,8 @@
             "Listeners" : [ {
               "LoadBalancerPort" : "80",
               "InstancePort" : { "Ref" : "WebServerPort" },
-              "Protocol" : "HTTP"
+              "Protocol" : "HTTP",
+              "PolicyNames" : ["SakaiStickyPolicy"]
             } ],
             "HealthCheck" : {
               "Target" : { "Fn::Join" : [ "", ["HTTP:", { "Ref" : "WebServerPort" }, "/"]]},
