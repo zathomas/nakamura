@@ -17,7 +17,10 @@
  */
 package org.sakaiproject.nakamura.auth.cas;
 
+import static org.apache.sling.jcr.resource.JcrResourceConstants.AUTHENTICATION_INFO_CREDENTIALS;
+
 import com.ctc.wstx.stax.WstxInputFactory;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
@@ -26,18 +29,25 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.auth.Authenticator;
-import org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
-import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.SimpleCredentials;
 import javax.servlet.http.HttpServletRequest;
@@ -50,18 +60,6 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.Characters;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import static org.apache.sling.jcr.resource.JcrResourceConstants.AUTHENTICATION_INFO_CREDENTIALS;
 
 /**
  * This class integrates SSO with the Sling authentication framework.
@@ -69,7 +67,7 @@ import static org.apache.sling.jcr.resource.JcrResourceConstants.AUTHENTICATION_
  * support in the OSGi / Sling environment.
  */
 @Component(metatype = true)
-@Service({CasAuthenticationHandler.class, AuthenticationHandler.class, AuthenticationFeedbackHandler.class})
+@Service({CasAuthenticationHandler.class, AuthenticationHandler.class})
 @Properties(value = {
     @Property(name = Constants.SERVICE_RANKING, intValue = -5),
     @Property(name = AuthenticationHandler.PATH_PROPERTY, value = "/"),
@@ -80,8 +78,7 @@ import static org.apache.sling.jcr.resource.JcrResourceConstants.AUTHENTICATION_
     @Property(name = CasAuthenticationHandler.RENEW, boolValue = CasAuthenticationHandler.DEFAULT_RENEW),
     @Property(name = CasAuthenticationHandler.GATEWAY, boolValue = CasAuthenticationHandler.DEFAULT_GATEWAY)
 })
-public class CasAuthenticationHandler implements AuthenticationHandler,
-    AuthenticationFeedbackHandler {
+public class CasAuthenticationHandler implements AuthenticationHandler {
 
   public static final String AUTH_TYPE = "CAS";
 
@@ -97,10 +94,6 @@ public class CasAuthenticationHandler implements AuthenticationHandler,
 
   /** Represents the constant for where the assertion will be located in memory. */
   static final String AUTHN_INFO = "org.sakaiproject.nakamura.auth.cas.SsoAuthnInfo";
-
-  // needed for the automatic user creation.
-  @Reference
-  protected SlingRepository repository;
 
   static final String LOGIN_URL = "sakai.auth.cas.url.login";
   private String loginUrl;
@@ -127,16 +120,8 @@ public class CasAuthenticationHandler implements AuthenticationHandler,
   public CasAuthenticationHandler() {
   }
 
-  CasAuthenticationHandler(SlingRepository repository) {
-    this.repository = repository;
-  }
-
   //----------- OSGi integration ----------------------------
   @Activate
-  protected void activate(Map<?, ?> props) {
-    modified(props);
-  }
-
   @Modified
   protected void modified(Map<?, ?> props) {
     loginUrl = PropertiesUtil.toString(props.get(LOGIN_URL), DEFAULT_LOGIN_URL);
@@ -253,57 +238,6 @@ public class CasAuthenticationHandler implements AuthenticationHandler,
 
     params.add("service=" + service);
     return loginUrl + "?" + StringUtils.join(params, '&');
-  }
-
-  //----------- AuthenticationFeedbackHandler interface ----------------------------
-
-  /**
-   * {@inheritDoc}
-   *
-   * @see org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler#authenticationFailed(javax.servlet.http.HttpServletRequest,
-   *      javax.servlet.http.HttpServletResponse,
-   *      org.apache.sling.auth.core.spi.AuthenticationInfo)
-   */
-  public void authenticationFailed(HttpServletRequest request,
-      HttpServletResponse response, AuthenticationInfo authInfo) {
-//    LOGGER.debug("authenticationFailed called");
-//    final HttpSession session = request.getSession(false);
-//    if (session != null) {
-//      final SsoPrincipal principal = (SsoPrincipal) session
-//          .getAttribute(CONST_SSO_ASSERTION);
-//      if (principal != null) {
-//        LOGGER.warn("SSO assertion is set", new Exception());
-//      }
-//    }
-  }
-
-  /**
-   * If a redirect is configured, this method will take care of the redirect.
-   * <p>
-   * If user auto-creation is configured, this method will check for an existing
-   * Authorizable that matches the principal. If not found, it creates a new Jackrabbit
-   * user with all properties blank except for the ID and a randomly generated password.
-   * WARNING: Currently this will not perform the extra work done by the Nakamura
-   * CreateUserServlet, and the resulting user will not be associated with a valid
-   * profile.
-   * <p>
-   * Note: do not try to inject the token here.  The request has not had the authenticated
-   * user added to it so request.getUserPrincipal() and request.getRemoteUser() both
-   * return null.
-   * <p>
-   * TODO This really needs to be dropped to allow for user pull, person directory
-   * integrations, etc. See SLING-1563 for the related issue of user population via
-   * OpenID.
-   *
-   * @see org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler#authenticationSucceeded(javax.servlet.http.HttpServletRequest,
-   *      javax.servlet.http.HttpServletResponse,
-   *      org.apache.sling.auth.core.spi.AuthenticationInfo)
-   */
-  public boolean authenticationSucceeded(HttpServletRequest request,
-      HttpServletResponse response, AuthenticationInfo authInfo) {
-    LOGGER.debug("authenticationSucceeded called");
-    // Check for the default post-authentication redirect.
-    return DefaultAuthenticationFeedbackHandler.handleRedirect(request, response);
   }
 
   //----------- Internal ----------------------------
