@@ -55,10 +55,12 @@ public class PageIndexingUtil {
   private static List<InputStream> getPageStreams(Content content, ContentManager contentManager) throws PageIndexException {
     List<InputStream> streams = Lists.newArrayList();
     for (Content page : getPages(content, contentManager)) {
-      try {
-        streams.add(new ByteArrayInputStream(((String) page.getProperty("page")).getBytes("UTF-8")));
-      } catch (UnsupportedEncodingException e) {
-        throw new PageIndexException("Could not get bytes from the page property because UTF-8 is an unsupported encoding.");
+      if (page.hasProperty("page")) {
+        try {
+          streams.add(new ByteArrayInputStream(((String) page.getProperty("page")).getBytes("UTF-8")));
+        } catch (UnsupportedEncodingException e) {
+          throw new PageIndexException("Could not get bytes from the page property because UTF-8 is an unsupported encoding.");
+        }
       }
     }
     return streams;
