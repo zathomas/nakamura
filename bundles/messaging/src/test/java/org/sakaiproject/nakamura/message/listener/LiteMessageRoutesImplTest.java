@@ -17,31 +17,24 @@
  */
 package org.sakaiproject.nakamura.message.listener;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 
+import java.util.Map;
+
 import org.junit.Test;
+import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.message.MessageConstants;
 
-import javax.jcr.Node;
-import javax.jcr.Property;
+import com.google.common.collect.ImmutableMap;
 
-public class MessageRoutesImplTest {
+public class LiteMessageRoutesImplTest {
 
   @Test
   public void testConstructWithNode() throws Exception {
-    Property prop = createMock(Property.class);
-    expect(prop.getString()).andReturn("smtp:foo@localhost,smtp:bar@localhost");
-
-    Node node = createMock(Node.class);
-    expect(node.getProperty(MessageConstants.PROP_SAKAI_TO)).andReturn(prop);
-    expect(node.getPath()).andReturn("").anyTimes();
-    expect(node.isNew()).andReturn(true).anyTimes();
-
-    replay(node, prop);
-    MessageRoutesImpl mri = new MessageRoutesImpl(node);
+    Map<String, Object> props = ImmutableMap.of(MessageConstants.PROP_SAKAI_TO,
+        (Object) "smtp:foo@localhost,smtp:bar@localhost");
+    Content c = new Content("", props);
+    LiteMessageRoutesImpl mri = new LiteMessageRoutesImpl(c);
     assertEquals(2, mri.size());
   }
 }

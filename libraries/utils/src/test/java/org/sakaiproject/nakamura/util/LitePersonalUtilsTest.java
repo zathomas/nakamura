@@ -28,30 +28,30 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
+import org.sakaiproject.nakamura.api.lite.content.Content;
+
+import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import javax.jcr.Node;
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.nodetype.PropertyDefinition;
 
 /**
  *
  */
-@SuppressWarnings("deprecation")
-public class PersonalUtilsTest {
+public class LitePersonalUtilsTest {
 
   private Authorizable adminUser;
   private Authorizable myGroup;
-  private String groupName = "g-mygroup";
+  private String groupName = "mygroup";
   private String userName = "admin";
-  private String groupPublicPath = "/_group/g/g-/g-mygroup/public";
-  private String userPublicPath = "/_user/a/ad/admin/public";
-  private String groupPrivatePath = "/_group/g/g-/g-mygroup/private";
-  private String userPrivatePath = "/_user/a/ad/admin/private";
+  private String groupPublicPath = "a:mygroup/public";
+  private String userPublicPath = "a:admin/public";
+  private String groupPrivatePath = "a:mygroup/private";
+  private String userPrivatePath = "a:admin/private";
 
   private List<Object> mocks;
 
@@ -65,71 +65,52 @@ public class PersonalUtilsTest {
   }
 
   @Test
-  public void testPublicPath() {
+  public void testPublicPath() throws Exception {
     // Group
-    String result = PersonalUtils.getPublicPath(myGroup);
+    String result = LitePersonalUtils.getPublicPath(myGroup.getID());
     Assert.assertEquals(groupPublicPath, result);
 
     // User
-    result = PersonalUtils.getPublicPath(adminUser);
+    result = LitePersonalUtils.getPublicPath(adminUser.getID());
     Assert.assertEquals(userPublicPath, result);
   }
 
   @Test
-  public void testProfilePath() {
-    String result = PersonalUtils.getProfilePath(adminUser);
+  public void testProfilePath() throws Exception {
+    String result = LitePersonalUtils.getProfilePath(adminUser.getID());
     Assert.assertEquals(userPublicPath + "/authprofile", result);
   }
 
   @Test
-  public void testPrivatePath() {
+  public void testPrivatePath() throws Exception {
     // Group
-    String result = PersonalUtils.getPrivatePath(myGroup);
+    String result = LitePersonalUtils.getPrivatePath(myGroup.getID());
     Assert.assertEquals(groupPrivatePath, result);
 
     // User
-    result = PersonalUtils.getPrivatePath(adminUser);
+    result = LitePersonalUtils.getPrivatePath(adminUser.getID());
     Assert.assertEquals(userPrivatePath, result);
   }
 
   @Test
   public void testGetPrefferedMailTransport() throws Exception {
     String pref = "internal";
-    Node node = createMock(Node.class);
-    Property prop = createMock(Property.class);
-    expect(node.hasProperty(PersonalUtils.PROP_PREFERRED_MESSAGE_TRANSPORT)).andReturn(
-        true);
-    expect(node.getProperty(PersonalUtils.PROP_PREFERRED_MESSAGE_TRANSPORT)).andReturn(
-        prop);
-    expect(prop.getString()).andReturn(pref);
-    replay();
+    Map<String, Object> props = ImmutableMap.of(LitePersonalUtils.PROP_PREFERRED_MESSAGE_TRANSPORT,
+        (Object) pref);
+    Content node = new Content("user", props);
 
-    String result = PersonalUtils.getPreferredMessageTransport(node);
+    String result = LitePersonalUtils.getPreferredMessageTransport(node);
     Assert.assertEquals(pref, result);
   }
 
   @Test
   public void testGetEmailAddresses() throws RepositoryException {
     String[] mails = { "foo@bar.com", "test@test.com" };
-    Node node = createMock(Node.class);
-    Property prop = createMock(Property.class);
-    PropertyDefinition propDef = createMock(PropertyDefinition.class);
-    Value[] vals = new Value[2];
-    vals[0] = createMock(Value.class);
-    vals[1] = createMock(Value.class);
-    expect(vals[0].getString()).andReturn(mails[0]);
-    expect(vals[1].getString()).andReturn(mails[1]);
-
-    expect(propDef.isMultiple()).andReturn(true);
-
-    expect(node.hasProperty(PersonalUtils.PROP_EMAIL_ADDRESS)).andReturn(true).times(2);
-    expect(node.getProperty(PersonalUtils.PROP_EMAIL_ADDRESS)).andReturn(prop);
-    expect(prop.getDefinition()).andReturn(propDef);
-    expect(prop.getValues()).andReturn(vals);
-
-    replay();
-
-    String[] result = PersonalUtils.getEmailAddresses(node);
+    Map<String, Object> props = ImmutableMap.of(LitePersonalUtils.PROP_EMAIL_ADDRESS,
+        (Object) mails);
+    Content node = new Content("user", props);
+    
+    String[] result = LitePersonalUtils.getEmailAddresses(node);
     for (int i = 0; i < mails.length; i++) {
       Assert.assertEquals(mails[i], result[i]);
     }
@@ -138,25 +119,11 @@ public class PersonalUtilsTest {
   @Test
   public void testPrimaryEmailAddress() throws RepositoryException {
     String[] mails = { "foo@bar.com", "test@test.com" };
-    Node node = createMock(Node.class);
-    Property prop = createMock(Property.class);
-    PropertyDefinition propDef = createMock(PropertyDefinition.class);
-    Value[] vals = new Value[2];
-    vals[0] = createMock(Value.class);
-    vals[1] = createMock(Value.class);
-    expect(vals[0].getString()).andReturn(mails[0]);
-    expect(vals[1].getString()).andReturn(mails[1]);
+    Map<String, Object> props = ImmutableMap.of(LitePersonalUtils.PROP_EMAIL_ADDRESS,
+        (Object) mails[0]);
+    Content node = new Content("user", props);
 
-    expect(propDef.isMultiple()).andReturn(true);
-
-    expect(node.hasProperty(PersonalUtils.PROP_EMAIL_ADDRESS)).andReturn(true).times(2);
-    expect(node.getProperty(PersonalUtils.PROP_EMAIL_ADDRESS)).andReturn(prop);
-    expect(prop.getDefinition()).andReturn(propDef);
-    expect(prop.getValues()).andReturn(vals);
-
-    replay();
-
-    String result = PersonalUtils.getPrimaryEmailAddress(node);
+    String result = LitePersonalUtils.getPrimaryEmailAddress(node);
     Assert.assertEquals(mails[0], result);
   }
 

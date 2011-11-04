@@ -22,7 +22,6 @@
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.sakaiproject.nakamura</groupId>
 	<artifactId>org.sakaiproject.nakamura.chat</artifactId>
 	<packaging>bundle</packaging>
 	<name>Sakai Nakamura :: Chat services bundle</name>
@@ -168,6 +167,12 @@
 			<groupId>org.apache.sling</groupId>
 			<artifactId>org.apache.sling.commons.testing</artifactId>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>junit-dep</artifactId>
+					<groupId>junit</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.sakaiproject.nakamura</groupId>

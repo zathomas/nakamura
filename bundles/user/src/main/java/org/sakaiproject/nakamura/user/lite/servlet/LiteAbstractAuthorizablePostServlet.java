@@ -192,7 +192,7 @@ public abstract class LiteAbstractAuthorizablePostServlet extends
     /**
      * Creates an instance of a HtmlResponse.
      * @param req The request being serviced
-     * @return a {@link org.apache.sling.servlets.post.impl.helper.JSONResponse} if any of these conditions are true:
+     * @return a {@link org.apache.sling.api.servlets.JSONResponse} if any of these conditions are true:
      * <ul>
      *   <li>the response content type is application/json
      * </ul>

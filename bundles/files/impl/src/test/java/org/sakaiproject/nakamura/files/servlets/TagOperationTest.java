@@ -17,44 +17,11 @@
  */
 package org.sakaiproject.nakamura.files.servlets;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.servlets.HtmlResponse;
-import org.apache.sling.commons.testing.jcr.MockNode;
-import org.apache.sling.commons.testing.jcr.MockPropertyDefinition;
-import org.apache.sling.commons.testing.jcr.MockValue;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
-import org.sakaiproject.nakamura.api.files.FilesConstants;
-import org.sakaiproject.nakamura.api.user.UserConstants;
-
-import java.io.UnsupportedEncodingException;
-import java.security.NoSuchAlgorithmException;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.ValueFactory;
-import javax.jcr.nodetype.NodeType;
-
 /**
  *
  */
 public class TagOperationTest {
-
+/*
   private TagOperation operation;
   private SlingRepository slingRepo;
   private Session session;
@@ -302,4 +269,5 @@ public class TagOperationTest {
     //verify(adminSession).logout();
 
   }
+*/
 }
