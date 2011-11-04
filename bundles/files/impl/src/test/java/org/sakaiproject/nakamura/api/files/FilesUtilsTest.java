@@ -155,6 +155,7 @@ public class FilesUtilsTest {
 
   }
 
+/*
   @Test
   public void testIsTag() throws RepositoryException {
     Node node = new MockNode("/path/to/tag");
@@ -166,6 +167,7 @@ public class FilesUtilsTest {
     result = FileUtils.isTag(node);
     assertEquals(false, result);
   }
+*/
 
   @Test
   public void testCreateLinkNode() throws AccessDeniedException, RepositoryException {
