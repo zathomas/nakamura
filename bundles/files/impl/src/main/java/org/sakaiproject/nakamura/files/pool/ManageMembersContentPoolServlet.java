@@ -360,10 +360,12 @@ import javax.servlet.http.HttpServletResponse;
           return;
         }
 
-        Set<String> groupsIManage = calculateViewerGroupsIManage(thisUser, viewerSet, session);
         for (String name : removeViewers) {
-          if (!thisUser.getId().equals(name) || groupsIManage.contains(name)) {
-            response.sendError(SC_FORBIDDEN, "Non-managers may not remove any viewer other than themselves or a group which they manage.");
+          if (!thisUser.getId().equals(name)) {
+            Authorizable viewer = authorizableManager.findAuthorizable(name);
+            if (viewer != null && !accessControlManager.can(thisUser, Security.ZONE_AUTHORIZABLES, name, Permissions.CAN_WRITE)) {
+              response.sendError(SC_FORBIDDEN, "Non-managers may not remove any viewer other than themselves or a group which they manage.");
+            }
           }
         }
 
@@ -427,21 +429,6 @@ import javax.servlet.http.HttpServletResponse;
         }
       }
     }
-  }
-
-  private Set<String> calculateViewerGroupsIManage(Authorizable thisUser, Set<String> viewersSet, Session session) throws StorageClientException, AccessDeniedException {
-    Set<String> groupsIManage = Sets.newHashSet();
-    AuthorizableManager authorizableManager = session.getAuthorizableManager();
-    AccessControlManager accessControlManager = session.getAccessControlManager();
-    for (String authorizable : viewersSet) {
-      if (!Group.EVERYONE.equals(authorizable) && !User.ANON_USER.equals(authorizable)) {
-        Authorizable authz = authorizableManager.findAuthorizable(authorizable);
-        if (authz != null && authz.isGroup() && accessControlManager.can(thisUser, Security.ZONE_AUTHORIZABLES, authorizable, Permissions.CAN_WRITE)) {
-          groupsIManage.add(authz.getId());
-        }
-      }
-    }
-    return groupsIManage;
   }
 
   private void updateContentMembers(Session session, Content content, Set<String> viewerSet, Set<String> managerSet) throws StorageClientException, AccessDeniedException {
