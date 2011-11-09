@@ -25,6 +25,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
@@ -96,18 +97,22 @@ public class GetAlternativeContentPoolStreamServlet extends SlingSafeMethodsServ
   private String getAlternativeStream(SlingHttpServletRequest request) {
     // be sure to keep this logic in sync with accepts
     RequestPathInfo rpi = request.getRequestPathInfo();
+    Resource resource = request.getResource();
+    String fileName = null;
+    if ( resource != null ) {
+      Content content = resource.adaptTo(Content.class);
+      if ( content != null ) {
+        fileName = (String) content.getProperty(FilesConstants.POOLED_CONTENT_FILENAME);
+      }
+    }
     String alternativeStream = null;
     String[] selectors = rpi.getSelectors();
     if ((selectors == null || selectors.length == 0) && rpi.getExtension() == null) {
-      String[] lastPieces = parseResourcePath(rpi);
-      if (lastPieces != null && lastPieces.length == 3) {
-        alternativeStream = parseResourcePath(rpi)[1];
-      } else {
-        LOGGER.debug("Found resource path with unexpected structure [size:{}]",
-            lastPieces.length);
+      String[] lastPieces = parseResourcePath(rpi, fileName);
+      if (lastPieces != null && lastPieces.length == 3
+        && !RESERVED_SELECTORS.contains(lastPieces[1])){
+        alternativeStream = lastPieces[1];
       }
-    } else {
-      LOGGER.debug("Resource should not have selectors or an extension");
     }
     return alternativeStream;
   }
@@ -121,26 +126,18 @@ public class GetAlternativeContentPoolStreamServlet extends SlingSafeMethodsServ
    * @see org.apache.sling.api.servlets.OptingServlet#accepts(org.apache.sling.api.SlingHttpServletRequest)
    */
   public boolean accepts(SlingHttpServletRequest request) {
-    // be sure to keep this logic in sync with getAlternativeStream
-    RequestPathInfo rpi = request.getRequestPathInfo();
-    String[] selectors = rpi.getSelectors();
-    if ((selectors == null || selectors.length == 0) && rpi.getExtension() == null) {
-      String[] lastPieces = parseResourcePath(rpi);
-      if (lastPieces != null && lastPieces.length == 3
-          && !RESERVED_SELECTORS.contains(lastPieces[1])) {
-        return true;
-      }
-    }
-    return false;
+    return getAlternativeStream(request) != null;
   }
 
-  private String[] parseResourcePath(RequestPathInfo rpi) {
+  private String[] parseResourcePath(RequestPathInfo rpi, String fileName) {
     String[] lastPieces = null;
     String path = rpi.getResourcePath();
     int lastSlash = path.lastIndexOf('/');
     if (lastSlash > 0 && lastSlash < path.length() - 1) {
       String resourcePathEnding = path.substring(lastSlash + 1);
-      lastPieces = StringUtils.split(resourcePathEnding, ".", 4);
+      if ( fileName == null || !fileName.equals(resourcePathEnding)) {
+        lastPieces = StringUtils.split(resourcePathEnding, ".", 4);
+      }
     }
     return lastPieces;
   }
