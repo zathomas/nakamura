@@ -351,6 +351,7 @@ import javax.servlet.http.HttpServletResponse;
           // asking to remove managers who don't exist is harmless
           if (managerSet.contains(name)) {
             response.sendError(SC_FORBIDDEN, "Non-managers may not remove managers from content.");
+            return;
           }
         }
 
