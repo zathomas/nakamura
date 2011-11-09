@@ -24,7 +24,6 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Test;

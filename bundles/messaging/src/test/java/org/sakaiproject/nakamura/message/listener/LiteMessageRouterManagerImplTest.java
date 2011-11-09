@@ -25,24 +25,24 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.sakaiproject.nakamura.api.message.MessageRouter;
+import org.sakaiproject.nakamura.api.message.LiteMessageRouter;
 
 import java.util.List;
 
 /**
  *
  */
-public class MessageRouterManagerImplTest {
+public class LiteMessageRouterManagerImplTest {
 
-  private MessageRouterManagerImpl manager;
-  private MessageRouter routerA;
-  private MessageRouter routerB;
+  private LiteMessageRouterManagerImpl manager;
+  private LiteMessageRouter routerA;
+  private LiteMessageRouter routerB;
 
   @Before
   public void setUp() {
-    manager = new MessageRouterManagerImpl();
-    routerA = mock(MessageRouter.class);
-    routerB = mock(MessageRouter.class);
+    manager = new LiteMessageRouterManagerImpl();
+    routerA = mock(LiteMessageRouter.class);
+    routerB = mock(LiteMessageRouter.class);
     when(routerA.getPriority()).thenReturn(100);
     when(routerB.getPriority()).thenReturn(50);
 
@@ -54,7 +54,7 @@ public class MessageRouterManagerImplTest {
 
   @Test
   public void testOrder() {
-    List<MessageRouter> sortedRouters = manager.getSortedRouterList();
+    List<LiteMessageRouter> sortedRouters = manager.getSortedRouterList();
 
     assertEquals(100, sortedRouters.get(0).getPriority());
     assertEquals(50, sortedRouters.get(1).getPriority());

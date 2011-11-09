@@ -73,7 +73,7 @@ import java.util.Map;
 @Service
 public class LiteDiscussionMessageTransport implements LiteMessageTransport {
   private static final Logger LOG = LoggerFactory
-      .getLogger(DiscussionMessageTransport.class);
+      .getLogger(LiteDiscussionMessageTransport.class);
   private static final String TYPE = DiscussionConstants.TYPE_DISCUSSION;
 
   @Reference

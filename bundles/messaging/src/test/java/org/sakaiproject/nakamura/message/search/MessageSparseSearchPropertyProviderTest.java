@@ -20,19 +20,20 @@ package org.sakaiproject.nakamura.message.search;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.junit.Test;
+import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.SessionAdaptable;
+import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
+import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.message.LiteMessagingService;
 import org.sakaiproject.nakamura.api.message.MessageConstants;
 import org.sakaiproject.nakamura.message.LiteMessagingServiceImpl;
-import org.sakaiproject.nakamura.testutils.easymock.AbstractEasyMockTest;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 
 import java.util.HashMap;
@@ -41,21 +42,26 @@ import java.util.Map;
 /**
  *
  */
-public class MessageSearchPropertyProviderTest extends AbstractEasyMockTest {
+public class MessageSparseSearchPropertyProviderTest {
 
   @Test
   public void testProperties() throws Exception {
     SlingHttpServletRequest request = mock(SlingHttpServletRequest.class);
 
     ResourceResolver resolver = mock(ResourceResolver.class);
-    JackrabbitSession jackrabbitSession = mock(JackrabbitSession.class);
-    when(resolver.adaptTo(javax.jcr.Session.class)).thenReturn(jackrabbitSession);
+    javax.jcr.Session jcrSession = mock(javax.jcr.Session.class, withSettings().extraInterfaces(SessionAdaptable.class));
+    Session session = mock(Session.class);
+    
     when(request.getResourceResolver()).thenReturn(resolver);
+    when(resolver.adaptTo(javax.jcr.Session.class)).thenReturn(jcrSession);
+    when(((SessionAdaptable) jcrSession).getSession()).thenReturn(session);
+
     when(request.getRemoteUser()).thenReturn("admin");
 
-    Authorizable au = createAuthorizable("admin", false, true);
-    UserManager um = createUserManager(null, true, au);
-    when(jackrabbitSession.getUserManager()).thenReturn(um);
+    AuthorizableManager am = mock(AuthorizableManager.class);
+    Authorizable au = mock(Authorizable.class);
+    when(am.findAuthorizable("admin")).thenReturn(au);
+    when(session.getAuthorizableManager()).thenReturn(am);
 
     // Special requests
     RequestParameter fromParam = mock(RequestParameter.class);
@@ -64,7 +70,7 @@ public class MessageSearchPropertyProviderTest extends AbstractEasyMockTest {
 
     Map<String, String> pMap = new HashMap<String, String>();
 
-    MessageSearchPropertyProvider provider = new MessageSearchPropertyProvider();
+    MessageSparseSearchPropertyProvider provider = new MessageSparseSearchPropertyProvider();
     LiteMessagingService messagingService = new LiteMessagingServiceImpl();
     provider.messagingService = messagingService;
     provider.loadUserProperties(request, pMap);
@@ -72,8 +78,7 @@ public class MessageSearchPropertyProviderTest extends AbstractEasyMockTest {
 
     assertEquals(
         ClientUtils.escapeQueryChars(LitePersonalUtils.PATH_AUTHORIZABLE
-            + "admin/message/")
-            + "*", pMap.get(MessageConstants.SEARCH_PROP_MESSAGESTORE));
+            + "admin/message/"), pMap.get(MessageConstants.SEARCH_PROP_MESSAGESTORE));
 
     assertEquals("from:(\"usera\" OR \"userb\")", pMap.get("_from"));
   }
