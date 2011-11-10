@@ -19,8 +19,6 @@ package org.sakaiproject.nakamura.files.servlets;
 
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAGS;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_NAME;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_UUIDS;
-
 import com.google.common.collect.Sets;
 
 import org.apache.felix.scr.annotations.Component;
@@ -135,22 +133,21 @@ public class DeleteTagOperation extends AbstractSparsePostOperation {
       return;
     }
 
-    String uuid = tag.getId();
-    String tagName = (String)tag.getProperty(SAKAI_TAG_NAME),
-      existingTagUUIDs[] = (String[]) content.getProperty(SAKAI_TAG_UUIDS);
-    boolean
-        tagged = false;
+    String tagName = (String)tag.getProperty(SAKAI_TAG_NAME);
+    String[] existingTags = (String[]) content.getProperty(SAKAI_TAGS);
+    boolean tagged = false;
 
-    for (String existingTagUUID : existingTagUUIDs)
-    {
-      if (existingTagUUID.equals(uuid))
+    for (String existingTag : existingTags) {
+      if (existingTag.equals(tagName)) {
         tagged = true;
+        break;
+      }
     }
 
     if (tagged)
     {
-      LOGGER.debug ("deleting tag {} ({}) from {}", new String[] {tagName, uuid, content.getPath()});
-      FileUtils.deleteTag(contentManager, content, new String[] {uuid, tagName});
+      LOGGER.debug ("deleting tag {} from {}", new String[] {tagName, content.getPath()});
+      FileUtils.deleteTag(contentManager, content, tagName);
       // keep authz in sync with authprofile
       final AuthorizableManager authManager = session.getAuthorizableManager();
       final String resourceType = (String) content.getProperty("sling:resourceType");
@@ -161,12 +158,6 @@ public class DeleteTagOperation extends AbstractSparsePostOperation {
         final String azId = PathUtils.getAuthorizableId(content.getPath());
         final Authorizable authorizable = authManager.findAuthorizable(azId);
         if (authorizable != null) {
-          final Set<String> uuidSet = Sets
-              .newHashSet(StorageClientUtils.nonNullStringArray((String[]) authorizable
-                  .getProperty(SAKAI_TAG_UUIDS)));
-          uuidSet.remove(uuid);
-          authorizable.setProperty(SAKAI_TAG_UUIDS,
-              uuidSet.toArray(new String[uuidSet.size()]));
 
           final Set<String> nameSet = Sets
               .newHashSet(StorageClientUtils.nonNullStringArray((String[]) authorizable

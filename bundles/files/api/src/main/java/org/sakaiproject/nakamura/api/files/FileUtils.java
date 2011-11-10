@@ -22,12 +22,12 @@ import static org.sakaiproject.nakamura.api.files.FilesConstants.RT_SAKAI_LINK;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_LINK;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAGS;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_NAME;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_UUIDS;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
@@ -58,8 +58,6 @@ import java.util.Set;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -421,70 +419,46 @@ public class FileUtils {
           "Cant tag non existant nodes, sorry, both must exist prior to tagging. File:"
               + contentNode);
     }
-    return addTag(contentManager, contentNode, getTags(tagNode));
+    String tagName = String.valueOf(tagNode.getProperty(SAKAI_TAG_NAME));
+    return addTag(contentManager, contentNode, StringUtils.defaultIfBlank(tagName, null));
   }
 
-  private static String[] getTags(Content tagNode) {
-    String tagUuid = (String) tagNode.getId();
-    String tagName = "";
-    if (tagNode.hasProperty(SAKAI_TAG_NAME)) {
-      tagName = (String) tagNode.getProperty(SAKAI_TAG_NAME);
-    }
-    return new String[] { tagUuid, tagName };
-  }
-
-  private static boolean addTag(ContentManager contentManager, Content content,
-      String[] tags)
+  private static boolean addTag(ContentManager contentManager, Content content, String tag)
       throws org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException,
       StorageClientException {
     boolean sendEvent = false;
-    Map<String, Object> properties = content.getProperties();
-    Set<String> uuidSet = Sets.newHashSet(StorageClientUtils.nonNullStringArray((String[]) properties
-        .get(SAKAI_TAG_UUIDS)));
-    if (!uuidSet.contains(tags[0])) {
-      uuidSet.add(tags[0]);
-      content.setProperty(SAKAI_TAG_UUIDS,
-          uuidSet.toArray(new String[uuidSet.size()]));
-      sendEvent = true;
-    }
-    Set<String> nameSet = Sets.newHashSet(StorageClientUtils.nonNullStringArray((String[]) properties
-        .get(SAKAI_TAGS)));
-    if (!nameSet.contains(tags[1])) {
-      nameSet.add(tags[1]);
-      content.setProperty(SAKAI_TAGS,
-          nameSet.toArray(new String[nameSet.size()]));
-      sendEvent = true;
-    }
+    if (tag != null) {
+      Map<String, Object> properties = content.getProperties();
+      Set<String> nameSet = Sets.newHashSet(StorageClientUtils.nonNullStringArray((String[]) properties
+          .get(SAKAI_TAGS)));
+      if (!nameSet.contains(tag)) {
+        nameSet.add(tag);
+        content.setProperty(SAKAI_TAGS,
+            nameSet.toArray(new String[nameSet.size()]));
+        sendEvent = true;
+      }
 
-    if (sendEvent) {
-      contentManager.update(content);
-      return true;
+      if (sendEvent) {
+        contentManager.update(content);
+      }
     }
-    return false;
+    return sendEvent;
   }
 
   public static boolean deleteTag(ContentManager contentManager, Content content,
-      String[] tags)
+      String tag)
       throws org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException,
       StorageClientException {
 
-      if (tags == null || tags.length < 1)
+      if (StringUtils.isBlank(tag))
         return false;
 
     boolean updated = false;
     Map<String, Object> properties = content.getProperties();
-    Set<String> uuidSet = Sets.newHashSet(StorageClientUtils.nonNullStringArray((String[]) properties
-        .get(SAKAI_TAG_UUIDS)));
-    if (uuidSet.contains(tags[0])) {
-      uuidSet.remove(tags[0]);
-      content.setProperty(SAKAI_TAG_UUIDS,
-          uuidSet.toArray(new String[uuidSet.size()]));
-      updated = true;
-    }
     Set<String> nameSet = Sets.newHashSet(StorageClientUtils.nonNullStringArray((String[]) properties
         .get(SAKAI_TAGS)));
-    if (tags.length > 1 && nameSet.contains(tags[1])) {
-      nameSet.remove(tags[1]);
+    if (nameSet.contains(tag)) {
+      nameSet.remove(tag);
       content.setProperty(SAKAI_TAGS,
           nameSet.toArray(new String[nameSet.size()]));
       updated = true;
@@ -519,7 +493,10 @@ public class FileUtils {
     Node node = null;
     try {
       if (pathOrIdentifier.startsWith("/")) { // it is a path specification
-        node = resourceResolver.resolve(pathOrIdentifier).adaptTo(Node.class);
+        Resource r = resourceResolver.resolve(pathOrIdentifier);
+        if (r != null) {
+          node = r.adaptTo(Node.class);
+        }
       } else {
         // Not a full resource path, so try the two flavors of ID.
         Session session = resourceResolver.adaptTo(Session.class);

@@ -19,8 +19,12 @@ package org.sakaiproject.nakamura.files.servlets;
 
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_NAME;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAGS;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_UUIDS;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.TOPIC_FILES_TAG;
+
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -60,17 +64,11 @@ import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.resource.lite.AbstractSparsePostOperation;
 import org.sakaiproject.nakamura.api.resource.lite.SparsePostOperation;
 import org.sakaiproject.nakamura.api.user.UserConstants;
-import org.sakaiproject.nakamura.util.JcrUtils;
 import org.sakaiproject.nakamura.util.PathUtils;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.servlet.http.HttpServletResponse;
 
 @Component(immediate = true)
@@ -121,20 +119,15 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
    * @throws AccessDeniedException
    * @throws StorageClientException
    */
-  protected Content getOrCreateTag (ResourceResolver resolver, String tagContentPath)
-      throws AccessDeniedException, StorageClientException
-  {
-      Resource
-          tagResource = resolver.getResource(tagContentPath);
-      Content
-          tagContent = null;
+  protected Content getOrCreateTag(ResourceResolver resolver, String tagContentPath)
+      throws AccessDeniedException, StorageClientException {
+    Resource tagResource = resolver.getResource(tagContentPath);
+    Content tagContent = null;
 
-      if (tagResource == null)
-      {
-          LOGGER.info ("tag {} is being created", tagContentPath);
-          Session
-              session = StorageClientUtils.adaptToSession(resolver.adaptTo(javax.jcr.Session.class)),
-              adminSession = session.getRepository().loginAdministrative();
+    if (tagResource == null) {
+      LOGGER.info("tag {} is being created", tagContentPath);
+      Session session = StorageClientUtils.adaptToSession(resolver.adaptTo(javax.jcr.Session.class));
+      Session adminSession = session.getRepository().loginAdministrative();
 
           //wrap in a try so we can ensure logout in finally
           try
@@ -241,7 +234,6 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
     String tagContentPath = key.getString();
     
     String tagName = "";
-    String tagUuid = "";
     try {
 
       Content
@@ -252,7 +244,6 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
           return;
       }
 
-      tagUuid = (String) tagResource.getId();
       tagName = tagContentWithContentTag(contentManager, content, tagResource);
 
     } catch (Exception e) {
@@ -265,13 +256,6 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
       final String azId = PathUtils.getAuthorizableId(content.getPath());
       Authorizable authorizable = authManager.findAuthorizable(azId);
       if (authorizable != null) {
-        // add tag uuids
-        Set<String> tagUuidSet = Sets.newHashSet(StorageClientUtils
-            .nonNullStringArray((String[]) authorizable.getProperty(SAKAI_TAG_UUIDS)));
-        tagUuidSet.add(tagUuid);
-        authorizable.setProperty(SAKAI_TAG_UUIDS,
-            tagUuidSet.toArray(new String[tagUuidSet.size()]));
-        
         // add tag names
         Set<String> tagNameSet = Sets.newHashSet(StorageClientUtils
             .nonNullStringArray((String[]) authorizable.getProperty(SAKAI_TAGS)));

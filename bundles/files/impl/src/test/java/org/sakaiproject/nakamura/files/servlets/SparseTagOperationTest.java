@@ -147,14 +147,10 @@ public class SparseTagOperationTest {
       assertEquals ("foo", tagResult.getProperty("sakai:tag-name"));
       assertEquals ("sakai/tag", tagResult.getProperty("sling:resourceType"));
 
-      String
-          tags[] = (String[]) result.getProperty("sakai:tags"),
-          uuids[] = (String[]) result.getProperty("sakai:tag-uuid");
+      String tags[] = (String[]) result.getProperty("sakai:tags");
 
       Arrays.sort(tags);
-      Arrays.sort(uuids);
       assertTrue (Arrays.binarySearch(tags, "foo") > -1);
-      assertTrue (Arrays.binarySearch(uuids, tagResult.getId()) > -1);
   }
 
     @Test
@@ -197,14 +193,10 @@ public class SparseTagOperationTest {
 
         assertEquals ("oldtag", tagResult.getProperty("sakai:tag-name"));
 
-        String
-            tags[] = (String[]) result.getProperty("sakai:tags"),
-            uuids[] = (String[]) result.getProperty("sakai:tag-uuid");
+        String tags[] = (String[]) result.getProperty("sakai:tags");
 
         Arrays.sort(tags);
-        Arrays.sort(uuids);
         assertTrue (Arrays.binarySearch(tags, "oldtag") > -1);
-        assertTrue (Arrays.binarySearch(uuids, tagResult.getId()) > -1);
     }
 
 }
