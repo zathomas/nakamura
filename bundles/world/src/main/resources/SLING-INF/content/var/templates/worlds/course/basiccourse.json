@@ -1,32 +1,34 @@
 {
-  id: "basiccourse",
-  title: "__MSG__BASIC_COURSE__",
-  img: "/dev/images/worldtemplates/basiccourse.png",
-  fullImg: "/dev/images/worldtemplates/basiccourse-full.png",
-  perfectFor: "__MSG__BASIC_COURSE_PERFECT_FOR__",
-  roles: [
+  "id": "basiccourse",
+  "title": "__MSG__BASIC_COURSE__",
+  "img": "/dev/images/worldtemplates/basiccourse.png",
+  "fullImg": "/dev/images/worldtemplates/basiccourse-full.png",
+  "perfectFor": "__MSG__BASIC_COURSE_PERFECT_FOR__",
+  "roles": [
     {
-      id: "student",
-      roleTitle: "__MSG__STUDENTS__",
-      title: "__MSG__STUDENT__",
-      allowManage: false
+      "id": "student",
+      "titlePlural": "__MSG__STUDENTS__",
+      "title": "__MSG__STUDENT__",
+      "isManagerRole": false
     },
     {
-      id: "ta",
-      roleTitle: "__MSG__TEACHING_ASSISTANTS__",
-      title: "__MSG__TEACHING_ASSISTANT__",
-      allowManage: true
+      "id": "ta",
+      "titlePlural": "__MSG__TEACHING_ASSISTANTS__",
+      "title": "__MSG__TEACHING_ASSISTANT__",
+      "isManagerRole": true,
+      "manages" : [ "student" ]
     },
     {
-      id: "lecturer",
-      roleTitle: "__MSG__LECTURERS__",
-      title: "__MSG__LECTURER__",
-      allowManage: true
+      "id": "lecturer",
+      "titlePlural": "__MSG__LECTURERS__",
+      "title": "__MSG__LECTURER__",
+      "isManagerRole": true,
+      "manages" : [ "ta", "student" ]
     }
   ],
-  docs: {
+  "docs": {
     "${pid}0": {
-      structure0: {
+      "structure0": {
         "library":{
           "_ref":"${refid}0",
           "_order":0,
@@ -41,16 +43,16 @@
         }
       },
       "${refid}0": {
-        page: "<img id='widget_mylibrary_${refid}1' class='widget_inline' style='display: block; padding: 10px; margin: 4px;' src='/devwidgets/mylibrary/images/mylibrary.png' data-mce-src='/devwidgets/mylibrary/images/mylibrary.png' data-mce-style='display: block; padding: 10px; margin: 4px;' border='1'><br></p>"
+        "page": "<img id='widget_mylibrary_${refid}1' class='widget_inline' style='display: block; padding: 10px; margin: 4px;' src='/devwidgets/mylibrary/images/mylibrary.png' data-mce-src='/devwidgets/mylibrary/images/mylibrary.png' data-mce-style='display: block; padding: 10px; margin: 4px;' border='1'><br></p>"
       },
       "${refid}1": {
-        mylibrary: {
+        "mylibrary": {
           "groupid": "${groupid}"
         }
       }
     },
     "${pid}1": {
-      structure0: {
+      "structure0": {
         "participants":{
           "_ref":"${refid}2",
           "_order":0,
@@ -65,16 +67,16 @@
         }
       },
       "${refid}2": {
-        page: "<img id='widget_participants_${refid}3' class='widget_inline' style='display: block; padding: 10px; margin: 4px;' src='/devwidgets/participants/images/participants.png' data-mce-src='/devwidgets/participants/images/participants.png' data-mce-style='display: block; padding: 10px; margin: 4px;' border='1'><br></p>"
+        "page": "<img id='widget_participants_${refid}3' class='widget_inline' style='display: block; padding: 10px; margin: 4px;' src='/devwidgets/participants/images/participants.png' data-mce-src='/devwidgets/participants/images/participants.png' data-mce-style='display: block; padding: 10px; margin: 4px;' border='1'><br></p>"
       },
       "${refid}3": {
-        participants: {
+        "participants": {
           "groupid": "${groupid}"
         }
       }
     }
   },
-  structure: {
+  "structure": {
     "library": {
       "_title": "Library",
       "_order": 0,
@@ -92,6 +94,6 @@
       "_edit": ["-ta", "-lecturer"]
     }
   },
-  joinRole: "student",
-  creatorRole: "lecturer"
+  "joinRole": "student",
+  "creatorRole": "lecturer"
 }

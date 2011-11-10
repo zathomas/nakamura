@@ -1,21 +1,22 @@
 {
-  id: "researchsupport",
-  title: "__MSG__RESEARCH_SUPPORT_GROUP__",
-  img: "/dev/images/worldtemplates/researchsupport.png",
-  fullImg: "/dev/images/worldtemplates/researchsupport-full.png",
-  perfectFor: "__MSG__RESEARCH_SUPPORT_GROUP_PERFECT_FOR__",
-  roles: [
+  "id": "researchsupport",
+  "title": "__MSG__RESEARCH_SUPPORT_GROUP__",
+  "img": "/dev/images/worldtemplates/researchsupport.png",
+  "fullImg": "/dev/images/worldtemplates/researchsupport-full.png",
+  "perfectFor": "__MSG__RESEARCH_SUPPORT_GROUP_PERFECT_FOR__",
+  "roles": [
     {
-      id: "participant",
-      roleTitle: "__MSG__PARTICIPANTS__",
-      title: "__MSG__PARTICIPANT__",
-      allowManage: true
+      "id": "participant",
+      "titlePlural": "__MSG__PARTICIPANTS__",
+      "title": "__MSG__PARTICIPANT__",
+      "isManagerRole": true,
+      "manages" : [ "lurker" ]
     },
     {
-      id: "lurker",
-      roleTitle: "__MSG__LURKERS__",
-      title: "__MSG__LURKER__",
-      allowManage: false
+      "id": "lurker",
+      "titlePlural": "__MSG__LURKERS__",
+      "title": "__MSG__LURKER__",
+      "isManagerRole": false
     }
   ],
   docs: {
