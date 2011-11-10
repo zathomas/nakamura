@@ -19,7 +19,7 @@ package org.sakaiproject.nakamura.files.pool;
 
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
-import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_USER_MANAGER;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_USER_VIEWER;
 
@@ -37,12 +37,6 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
 import org.sakaiproject.nakamura.api.doc.BindingType;
 import org.sakaiproject.nakamura.api.doc.ServiceBinding;
 import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
@@ -62,20 +56,17 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
+import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.lite.content.Content;
-import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.profile.ProfileService;
 import org.sakaiproject.nakamura.api.solr.SolrServerService;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
-import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -195,8 +186,6 @@ import javax.servlet.http.HttpServletResponse;
   protected transient ProfileService profileService;
   @Reference
   protected transient BasicUserInfoService basicUserInfoService;
-  @Reference
-  protected transient SolrServerService solrSearchService;
 
   /**
    * Retrieves the list of members.
@@ -288,7 +277,7 @@ import javax.servlet.http.HttpServletResponse;
       throws JSONException, AccessDeniedException, StorageClientException, RepositoryException {
     Authorizable au = um.findAuthorizable(user);
     if (au != null) {
-      ValueMap profileMap = null;
+      ValueMap profileMap;
       if (detailed) {
         profileMap = profileService.getProfileMap(au, jcrSession);
       } else {
@@ -316,59 +305,76 @@ import javax.servlet.http.HttpServletResponse;
   @Override
   protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
       throws ServletException, IOException {
-    // Anonymous users cannot do anything.
-    // This is just a safety check really, they SHOULD NOT even be able to get to this
-    // point.
-    if (UserConstants.ANON_USERID.equals(request.getRemoteUser())) {
-      response.sendError(SC_UNAUTHORIZED, "Anonymous users cannot manipulate content.");
+    // fail if anonymous
+    String remoteUser = request.getRemoteUser();
+    if (User.ANON_USER.equals(remoteUser)) {
+      response.sendError(SC_FORBIDDEN, "Anonymous users cannot update content members.");
       return;
     }
-    boolean releaseSession = false;
     Session session = null;
+    boolean releaseSession = false;
     try {
-      // Get the node.
       Resource resource = request.getResource();
       session = resource.adaptTo(Session.class);
+      Content pooledContent = resource.adaptTo(Content.class);
       AccessControlManager accessControlManager = session.getAccessControlManager();
       AuthorizableManager authorizableManager = session.getAuthorizableManager();
-      Authorizable thisUser = authorizableManager.findAuthorizable(session.getUserId());
-      Content node = resource.adaptTo(Content.class);
-      Map<String, Object> properties = node.getProperties();
+      User thisUser = authorizableManager.getUser();
+      if (!accessControlManager.can(thisUser, Security.ZONE_CONTENT, pooledContent.getPath(), Permissions.CAN_READ)) {
+        response.sendError(SC_FORBIDDEN, "Insufficient permission to read this content.");
+      }
+
+      Map<String, Object> properties = pooledContent.getProperties();
       String[] managers = StorageClientUtils.nonNullStringArray((String[]) properties
           .get(POOLED_CONTENT_USER_MANAGER));
       String[] viewers = StorageClientUtils.nonNullStringArray((String[]) properties
           .get(POOLED_CONTENT_USER_VIEWER));
 
-      Set<String> managerSet = null;
-      if ( managers == null ) {
-        managerSet = Sets.newHashSet();
-      } else {
-        managerSet = Sets.newHashSet(managers);
-      }
+      Set<String> managerSet = Sets.newHashSet(managers);
+      Set<String> viewerSet = Sets.newHashSet(viewers);
 
-      Set<String> viewersSet = null;
-      if ( viewers == null ) {
-        viewersSet = Sets.newHashSet();
-      } else {
-        viewersSet = Sets.newHashSet(viewers);
-      }
-      Set<String> managedGroupsSet = findMyManagedGroups(thisUser, authorizableManager);
-      if (!canModify(accessControlManager, thisUser, node, request, managerSet, viewersSet, managedGroupsSet)
-          && isRequestingNonPublicOperations(request)) {
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-        return;
-      }
-      if (!isRequestingNonPublicOperations(request)
-          || userOrGroupInTargetSet(request, thisUser, managerSet, viewersSet, managedGroupsSet)) {
+      List<String> removeViewers = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":viewer@Delete")));
+      List<String> removeManagers = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":manager@Delete")));
+      List<String> addViewers = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":viewer")));
+      List<String> addManagers = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":manager")));
+
+
+      if (!accessControlManager.can(thisUser, Security.ZONE_CONTENT, pooledContent.getPath(), Permissions.CAN_WRITE)) {
+        if (!addManagers.isEmpty()) {
+          response.sendError(SC_FORBIDDEN, "Non-managers may not add managers to content.");
+          return;
+        }
+
+        for (String name : removeManagers) {
+          // asking to remove managers who don't exist is harmless
+          if (managerSet.contains(name)) {
+            response.sendError(SC_FORBIDDEN, "Non-managers may not remove managers from content.");
+            return;
+          }
+        }
+
+        if (addViewers.contains(User.ANON_USER) || addViewers.contains(Group.EVERYONE)) {
+          response.sendError(SC_FORBIDDEN, "Non-managers may not add 'anonymous' or 'everyone' as viewers.");
+          return;
+        }
+
+        for (String name : removeViewers) {
+          if (!thisUser.getId().equals(name)) {
+            Authorizable viewer = authorizableManager.findAuthorizable(name);
+            if (viewer != null && !accessControlManager.can(thisUser, Security.ZONE_AUTHORIZABLES, name, Permissions.CAN_WRITE)) {
+              response.sendError(SC_FORBIDDEN, "Non-managers may not remove any viewer other than themselves or a group which they manage.");
+            }
+          }
+        }
+
+        // the request has passed all the rules that govern non-manager users
+        // so we'll grant an administrative session
         session = session.getRepository().loginAdministrative();
         releaseSession = true;
-        accessControlManager = session.getAccessControlManager();
       }
-      ContentManager contentManager = session.getContentManager();
-
       List<AclModification> aclModifications = Lists.newArrayList();
 
-      for (String addManager : StorageClientUtils.nonNullStringArray(request.getParameterValues(":manager"))) {
+      for (String addManager : addManagers) {
         if ((addManager.length() > 0) && !managerSet.contains(addManager)) {
           managerSet.add(addManager);
           AclModification.addAcl(true, Permissions.CAN_MANAGE, addManager,
@@ -376,7 +382,7 @@ import javax.servlet.http.HttpServletResponse;
         }
       }
 
-      for (String removeManager : StorageClientUtils.nonNullStringArray(request.getParameterValues(":manager@Delete"))) {
+      for (String removeManager : removeManagers) {
         if ((removeManager.length() > 0) && managerSet.contains(removeManager)) {
           managerSet.remove(removeManager);
           AclModification.removeAcl(true, Permissions.CAN_MANAGE, removeManager,
@@ -384,21 +390,17 @@ import javax.servlet.http.HttpServletResponse;
         }
       }
 
-      for (String addViewer : StorageClientUtils.nonNullStringArray(request.getParameterValues(":viewer"))) {
-        if ((addViewer.length() > 0) && !viewersSet.contains(addViewer)) {
-          viewersSet.add(addViewer);
+      for (String addViewer : addViewers) {
+        if ((addViewer.length() > 0) && !viewerSet.contains(addViewer)) {
+          viewerSet.add(addViewer);
           AclModification.addAcl(true, Permissions.CAN_READ, addViewer, aclModifications);
         }
       }
-      String[] removeViewers = StorageClientUtils.nonNullStringArray(request
-          .getParameterValues(":viewer@Delete"));
+
       for (String removeViewer : removeViewers) {
         removeViewer = removeViewer.trim();
-        // a user who is not manager can only remove themselves or a group they manage from the viewer list
-        if (viewersSet.contains(removeViewer)
-            && (managerSet.contains(thisUser.getId()) || (removeViewer.equals(thisUser.getId()) || managedGroupsSet
-                .contains(removeViewer)))) {
-          viewersSet.remove(removeViewer);
+        if ((removeViewer.length() > 0) && viewerSet.contains(removeViewer)) {
+          viewerSet.remove(removeViewer);
           if (!managerSet.contains(removeViewer)) {
             AclModification.removeAcl(true, Permissions.CAN_READ, removeViewer,
                 aclModifications);
@@ -406,113 +408,41 @@ import javax.servlet.http.HttpServletResponse;
         }
       }
 
-      node.setProperty(POOLED_CONTENT_USER_VIEWER,
-          viewersSet.toArray(new String[viewersSet.size()]));
-      node.setProperty(POOLED_CONTENT_USER_MANAGER,
-          managerSet.toArray(new String[managerSet.size()]));
-      LOGGER.debug("Set Managers to {}",Arrays.toString(managerSet.toArray(new String[managerSet.size()])));
-      LOGGER.debug("Set Viewsers to {}",Arrays.toString(viewersSet.toArray(new String[managerSet.size()])));
-      LOGGER.debug("ACL Modifications {}",Arrays.toString(aclModifications.toArray(new AclModification[aclModifications.size()])));
-
-      contentManager.update(node);
-      accessControlManager.setAcl(Security.ZONE_CONTENT, node.getPath(),
-          aclModifications.toArray(new AclModification[aclModifications.size()]));
+      updateContentMembers(session, pooledContent, viewerSet,  managerSet);
+      updateContentAccess(session, pooledContent, aclModifications);
 
       response.setStatus(SC_OK);
-    } catch (AccessDeniedException e) {
-      LOGGER.error("Insufficient permissions to modify [{}] Cause:{}",
-          request.getPathInfo(), e.getMessage());
-      LOGGER.debug(e.getMessage(), e);
-      response.sendError(SC_UNAUTHORIZED, "Could not set permissions.");
+
     } catch (StorageClientException e) {
-      LOGGER.error("Could not set some permissions on [{}] Cause:{}",
-          request.getPathInfo(), e.getMessage());
-      LOGGER.debug("Cause: ", e);
-      response.sendError(SC_INTERNAL_SERVER_ERROR, "Could not save content node.");
+      LOGGER.error(e.getMessage());
+      response.sendError(SC_INTERNAL_SERVER_ERROR, "StorageClientException: " + e.getLocalizedMessage());
+    } catch (AccessDeniedException e) {
+      response.sendError(SC_FORBIDDEN, "Insufficient permission to update content members at " + request.getRequestURI());
     } finally {
-      if (releaseSession && session != null) {
+      if (session != null && releaseSession) {
         try {
           session.logout();
         } catch (ClientPoolException e) {
-          LOGGER.error("Unable to logout from administrative session.", e);
+          LOGGER.error(e.getMessage());
         }
       }
     }
   }
 
-  // does thisUser have write permissions for content or are they a member of the target set
-  // being operated on
-  private boolean canModify(AccessControlManager accessControlManager,
-      Authorizable thisUser, Content node, SlingHttpServletRequest request,
-      Set<String> managerSet, Set<String> viewersSet, Set<String> managedGroupsSet) {
-    boolean canModify = false;
-    if (accessControlManager.can(thisUser, Security.ZONE_CONTENT, node.getPath(),
-        Permissions.CAN_WRITE) || userOrGroupInTargetSet(request, thisUser, managerSet, viewersSet, managedGroupsSet)) {
-      canModify = true;
-    }
-    return canModify;
+  private void updateContentMembers(Session session, Content content, Set<String> viewerSet, Set<String> managerSet) throws StorageClientException, AccessDeniedException {
+    content.setProperty(POOLED_CONTENT_USER_VIEWER,
+        viewerSet.toArray(new String[viewerSet.size()]));
+    content.setProperty(POOLED_CONTENT_USER_MANAGER,
+        managerSet.toArray(new String[managerSet.size()]));
+    LOGGER.debug("Set Managers to {}",Arrays.toString(managerSet.toArray(new String[managerSet.size()])));
+    LOGGER.debug("Set Viewers to {}",Arrays.toString(viewerSet.toArray(new String[managerSet.size()])));
+    session.getContentManager().update(content);
   }
 
-  // is thisUser a member of the target set or does a group belong
-  // to the set of managed groups
-  @SuppressWarnings("rawtypes")
-  private boolean userOrGroupInTargetSet(SlingHttpServletRequest request,
-      Authorizable thisUser, Set<String> managerSet, Set<String> viewersSet,
-      Set<String> managedGroupsSet) {
-    boolean userOrGroupInTargetSet = false;
-    String userId = thisUser.getId();
-    Map parameterMap = request.getParameterMap();
-    if ((parameterMap.containsKey(":manager") || parameterMap
-        .containsKey(":manager@Delete")) && managerSet.contains(userId)) {
-      userOrGroupInTargetSet = true;
-    } else if ((parameterMap.containsKey(":viewer") || parameterMap
-        .containsKey(":viewer@Delete"))) {
-      Set<String> managedGroupsSetIntersection = Sets.newHashSet(managedGroupsSet);
-      // one or more of the viewers is a group managed by the user
-      managedGroupsSetIntersection.retainAll(viewersSet);
-      if (viewersSet.contains(userId) || managedGroupsSetIntersection.size() > 0) {
-        userOrGroupInTargetSet = true;
-      }
-    }
-    return userOrGroupInTargetSet;
+  private void updateContentAccess(Session session, Content content, List<AclModification> aclModifications) throws StorageClientException, AccessDeniedException {
+    LOGGER.debug("ACL Modifications {}",Arrays.toString(aclModifications.toArray(new AclModification[aclModifications.size()])));
+    session.getAccessControlManager().setAcl(Security.ZONE_CONTENT, content.getPath(),
+      aclModifications.toArray(new AclModification[aclModifications.size()]));
   }
-
-
-  private Set<String> findMyManagedGroups(Authorizable au,
-      AuthorizableManager authorizableManager) {
-    String userId = au.getId();
-    Set<String> managedGroups = Sets.newHashSet();
-    SolrServer solrServer = solrSearchService.getServer();
-    StringBuilder querySB = new StringBuilder(
-        "resourceType:authorizable AND type:g AND manager:").append(userId);
-    SolrQuery solrQuery = new SolrQuery(querySB.toString());
-    String groupId;
-    QueryResponse response;
-    try {
-      response = solrServer.query(solrQuery);
-      SolrDocumentList results = response.getResults();
-      if (LOGGER.isDebugEnabled())
-        LOGGER.debug("with query {}, found {} groups managed by {}", new Object[] {
-            solrQuery, results.size(), userId });
-      for (Iterator iterator = results.iterator(); iterator.hasNext();) {
-        SolrDocument solrDocument = (SolrDocument) iterator.next();
-        groupId = (String) solrDocument.getFieldValue("id");
-        managedGroups.add(groupId);
-      }
-    } catch (SolrServerException e) {
-      LOGGER.warn(e.getMessage(), e);
-    }
-    if (LOGGER.isDebugEnabled()) LOGGER.debug("my managed groups: " + managedGroups);
-    return managedGroups;
-  }
-
-  @SuppressWarnings("rawtypes")
-  private boolean isRequestingNonPublicOperations(SlingHttpServletRequest request) {
-    Map parameterMap = request.getParameterMap();
-    return (parameterMap.containsKey(":manager")
-        || parameterMap.containsKey(":manager@Delete")
-        || parameterMap.containsKey(":viewer@Delete"));
-  }
-
 
 }
