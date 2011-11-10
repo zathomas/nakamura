@@ -86,7 +86,7 @@ public class SafeHostFilter implements Filter {
     if (serverProtectionService.isMethodSafe(hrequest, hresponse)) {
       chain.doFilter(request, response);      
     } else {
-      LOGGER.debug("Method {} is not safe on {} {}?{}",new Object[]{hrequest.getMethod(),hrequest.getRequestURL(),hrequest.getQueryString()});
+      LOGGER.debug("Method {} is not safe on {} {}?{}",new Object[]{hrequest.getMethod(),hrequest.getServerName(),hrequest.getRequestURL(),hrequest.getQueryString()});
     }
   }
   
