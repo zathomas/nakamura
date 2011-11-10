@@ -186,8 +186,6 @@ import javax.servlet.http.HttpServletResponse;
   protected transient ProfileService profileService;
   @Reference
   protected transient BasicUserInfoService basicUserInfoService;
-  @Reference
-  protected transient SolrServerService solrSearchService;
 
   /**
    * Retrieves the list of members.

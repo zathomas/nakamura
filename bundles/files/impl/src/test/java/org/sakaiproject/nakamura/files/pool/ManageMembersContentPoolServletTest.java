@@ -19,6 +19,8 @@ package org.sakaiproject.nakamura.files.pool;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,11 +39,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.jcr.MockNode;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocumentList;
-import org.apache.solr.common.params.SolrParams;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,17 +46,22 @@ import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
+import org.sakaiproject.nakamura.api.lite.StorageClientException;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AclModification;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AclModification.Operation;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
+import org.sakaiproject.nakamura.api.lite.authorizable.Group;
+import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.profile.ProfileService;
-import org.sakaiproject.nakamura.api.solr.SolrServerService;
 import org.sakaiproject.nakamura.lite.BaseMemoryRepository;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.security.Principal;
@@ -75,6 +77,7 @@ import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  *
@@ -106,16 +109,6 @@ public class ManageMembersContentPoolServletTest {
   @Mock
   private ProfileService profileService;
   @Mock
-  private SolrServerService solrSearchService;
-  @Mock
-  private SolrServer solrServer;
-  @Mock
-  QueryResponse queryResponse;
-  @Mock
-  SolrQuery query;
-  @Mock
-  SolrDocumentList results;
-  @Mock
   Iterator iterator;
 
   private ManageMembersContentPoolServlet servlet;
@@ -134,24 +127,45 @@ public class ManageMembersContentPoolServletTest {
     sparseSession = sparseRepository.loginAdministrative();
     sparseSession.getAuthorizableManager().createUser("ieb", "Ian Boston", "test",
         ImmutableMap.of("x", (Object) "y"));
+    sparseSession.getAuthorizableManager().createUser("bob", "Bob Barker", "test",
+      ImmutableMap.of("x", (Object) "y"));
+    sparseSession.getAuthorizableManager().createUser("mark", "Marky Mark", "test",
+      ImmutableMap.of("x", (Object) "y"));
+    sparseSession.getAuthorizableManager().createGroup("SkyDivers", "All About Skydiving", ImmutableMap.of("x", (Object) "y"));
+    sparseSession.getAuthorizableManager().createGroup("Accountants", "Accountants Know How to Party", ImmutableMap.of("x", (Object) "y"));
     sparseSession.getContentManager().update(
-        new Content("pooled-content-id", ImmutableMap.of("x", (Object) "y",
-            POOLED_CONTENT_USER_MANAGER, new String[]{"alice","ieb"}, POOLED_CONTENT_USER_VIEWER,
-            new String[]{"bob","mark","john"})));
+      new Content("pooled-content-id", ImmutableMap.of("x", (Object) "y",
+        POOLED_CONTENT_USER_MANAGER, new String[]{"alice", "ieb"}, POOLED_CONTENT_USER_VIEWER,
+        new String[]{"bob", "mark", "john", "SkyDivers", "Accountants"})));
     sparseSession.getAccessControlManager().setAcl(
         Security.ZONE_CONTENT,
         "pooled-content-id",
         new AclModification[] { new AclModification(AclModification.grantKey("ieb"),
             Permissions.CAN_MANAGE.getPermission(), Operation.OP_REPLACE) });
+    sparseSession.getAccessControlManager().setAcl(
+      Security.ZONE_CONTENT,
+      "pooled-content-id",
+      new AclModification[]{new AclModification(AclModification.grantKey("bob"),
+        Permissions.CAN_READ.getPermission(), Operation.OP_REPLACE)});
+    sparseSession.getAccessControlManager().setAcl(
+      Security.ZONE_CONTENT,
+      "pooled-content-id",
+      new AclModification[]{new AclModification(AclModification.grantKey(Group.EVERYONE),
+        Permissions.ALL.getPermission(), Operation.OP_DEL)});
+    sparseSession.getAccessControlManager().setAcl(
+      Security.ZONE_CONTENT,
+      "pooled-content-id",
+      new AclModification[]{new AclModification(AclModification.denyKey(Group.EVERYONE),
+        Permissions.ALL.getPermission(), Operation.OP_REPLACE)});
+    sparseSession.getAccessControlManager().setAcl(
+        Security.ZONE_AUTHORIZABLES,
+        "SkyDivers",
+        new AclModification[] { new AclModification(AclModification.grantKey("bob"),
+            Permissions.CAN_MANAGE.getPermission(), Operation.OP_REPLACE) });
     sparseSession.logout();
-    sparseSession = sparseRepository.loginAdministrative("ieb");
+    initializeSessionWithUser("ieb");
     servlet = new ManageMembersContentPoolServlet();
     // servlet.slingRepository = slingRepository;
-    servlet.solrSearchService = solrSearchService;
-    when(solrSearchService.getServer()).thenReturn(solrServer);
-    when(solrServer.query((SolrParams) Mockito.any())).thenReturn(queryResponse);
-    when(queryResponse.getResults()).thenReturn(results);
-    when(results.iterator()).thenReturn(iterator);
     // TODO With this, we are testing the internals of the ProfileServiceImpl
     // class as well as the internals of the MeServlet class. Mocking it would
     // reduce the cost of test maintenance.
@@ -159,13 +173,6 @@ public class ManageMembersContentPoolServletTest {
     when(resource.getResourceResolver()).thenReturn(resourceResolver);
     when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
 
-    when(resource.adaptTo(org.sakaiproject.nakamura.api.lite.Session.class)).thenReturn(
-        sparseSession);
-    Content contentNode = sparseSession.getContentManager().get("pooled-content-id");
-    Assert.assertNotNull(contentNode);
-    when(resource.adaptTo(Content.class)).thenReturn(contentNode);
-    when(resource.adaptTo(ContentManager.class)).thenReturn(
-        sparseSession.getContentManager());
     // Mock the request and the filenode.
     when(request.getResource()).thenReturn(resource);
 
@@ -196,6 +203,93 @@ public class ManageMembersContentPoolServletTest {
 
     // Mock the users for this file.
 
+  }
+
+  @Test
+  public void assureViewerCannotPromoteSelf() throws Exception {
+    initializeSessionWithUser("bob");
+    when(request.getParameterValues(":manager")).thenReturn(new String[] {"bob"});
+    servlet.doPost(request, response);
+    assertForbidden();
+  }
+
+  @Test
+  public void assureViewerCannotAddEveryoneViewer() throws Exception {
+    initializeSessionWithUser("bob");
+    when(request.getParameterValues(":viewer")).thenReturn(new String[] {Group.EVERYONE});
+    servlet.doPost(request, response);
+    assertForbidden();
+  }
+
+  @Test
+  public void assureViewerCannotAddAnonymousViewer() throws Exception {
+    initializeSessionWithUser("bob");
+    when(request.getParameterValues(":viewer")).thenReturn(new String[] {User.ANON_USER});
+    servlet.doPost(request, response);
+    assertForbidden();
+  }
+
+  @Test
+  public void assureViewerCannotRemoveManager() throws Exception {
+    initializeSessionWithUser("bob");
+    when(request.getParameterValues(":manager@Delete")).thenReturn(new String[] {"ieb"});
+    servlet.doPost(request, response);
+    assertForbidden();
+  }
+
+  @Test
+  public void assureViewerCanRemoveNonExistentManager() throws Exception {
+    initializeSessionWithUser("bob");
+    when(request.getParameterValues(":manager@Delete")).thenReturn(new String[] {"unicorn"});
+    servlet.doPost(request, response);
+    verify(response).setStatus(200);
+  }
+
+  @Test
+  public void assureViewerCannotRemoveViewer() throws Exception {
+    initializeSessionWithUser("bob");
+    when(request.getParameterValues(":viewer@Delete")).thenReturn(new String[] {"mark"});
+    servlet.doPost(request, response);
+    assertForbidden();
+  }
+
+  @Test
+  public void assureViewerCanRemoveNonExistentViewer() throws Exception {
+    initializeSessionWithUser("bob");
+    when(request.getParameterValues(":viewer@Delete")).thenReturn(new String[] {"yeti"});
+    servlet.doPost(request, response);
+    verify(response).setStatus(200);
+  }
+
+  @Test
+  public void assureViewerCanRemoveSelf() throws Exception {
+    initializeSessionWithUser("bob");
+    when(request.getParameterValues(":viewer@Delete")).thenReturn(new String[] {"bob"});
+    servlet.doPost(request, response);
+    verify(response).setStatus(200);
+  }
+
+  @Test
+  public void assureViewerCanRemoveGroupHeManages() throws Exception {
+    initializeSessionWithUser("bob");
+    when(request.getParameterValues(":viewer@Delete")).thenReturn(new String[] {"SkyDivers"});
+    servlet.doPost(request, response);
+    verify(response).setStatus(200);
+  }
+
+  @Test
+  public void assureViewerCannotRemoveGroupHeDoesNotManage() throws Exception {
+    initializeSessionWithUser("bob");
+    when(request.getParameterValues(":viewer@Delete")).thenReturn(new String[] {"Accountants"});
+    servlet.doPost(request, response);
+    assertForbidden();
+  }
+
+  @Test
+  public void assureNoReadPermissionMeansFail() throws Exception {
+    initializeSessionWithUser("mark");
+    servlet.doPost(request, response);
+    assertForbidden();
   }
 
   @Test
@@ -326,5 +420,25 @@ public class ManageMembersContentPoolServletTest {
     // Verify bob was really removed from the viewers list
     String[] viewers = (String[]) sparseSession.getContentManager().get("pooled-content-id").getProperty("sakai:pooled-content-viewer");
     assertFalse("'bob' should not still be in the viewers list.",Arrays.asList(viewers).contains("bob"));
+  }
+
+  private void initializeSessionWithUser(String userId) throws StorageClientException, AccessDeniedException {
+    sparseSession = sparseRepository.loginAdministrative();
+    Content contentNode = sparseSession.getContentManager().get("pooled-content-id");
+    Assert.assertNotNull(contentNode);
+    when(resource.adaptTo(Content.class)).thenReturn(contentNode);
+    sparseSession.logout();
+    sparseSession = sparseRepository.loginAdministrative(userId);
+    when(resource.adaptTo(org.sakaiproject.nakamura.api.lite.Session.class)).thenReturn(
+      sparseSession);
+    when(resource.adaptTo(ContentManager.class)).thenReturn(
+        sparseSession.getContentManager());
+
+
+    when(request.getRemoteUser()).thenReturn(userId);
+  }
+
+  private void assertForbidden() throws IOException {
+    verify(response).sendError(eq(HttpServletResponse.SC_FORBIDDEN), anyString());
   }
 }
