@@ -80,7 +80,7 @@ import javax.servlet.http.HttpServletResponse;
   methods = {
     @ServiceMethod(name = "GET", description = "",
       parameters = {
-        @ServiceParameter(name = "d", description = "The destination path to be redirected to after saving the authentication token.")
+        @ServiceParameter(name = "url", description = "The destination path to be redirected to after saving the authentication token.")
       },
       response = {
         @ServiceResponse(code = HttpServletResponse.SC_OK, description = "Request has been processed successfully."),
@@ -97,7 +97,7 @@ public final class TrustedAuthenticationServlet extends HttpServlet implements H
   private static final long serialVersionUID = 4265672306115024805L;
 
   
-  private static final String PARAM_DESTINATION = "d";
+  private static final String PARAM_DESTINATION = "url";
 
   @Property(value = "Trusted Authentication Servlet", propertyPrivate = true)
   static final String DESCRIPTION_PROPERTY = "service.description";
