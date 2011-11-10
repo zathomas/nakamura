@@ -17,6 +17,7 @@
  */
 package org.sakaiproject.nakamura.presence.search;
 
+import java.util.Map;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -36,7 +37,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.presence.PresenceService;
 import org.sakaiproject.nakamura.api.presence.PresenceUtils;
-import org.sakaiproject.nakamura.api.profile.ProfileService;
+import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.search.SearchConstants;
 import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.Result;
@@ -71,7 +72,7 @@ public class ProfileNodeSearchResultProcessor implements SolrSearchResultProcess
   protected SolrSearchServiceFactory searchServiceFactory;
 
   @Reference
-  protected ProfileService profileService;
+  private BasicUserInfoService basicUserInfoService;
 
   @Reference
   protected PresenceService presenceService;
@@ -83,14 +84,14 @@ public class ProfileNodeSearchResultProcessor implements SolrSearchResultProcess
   }
 
   ProfileNodeSearchResultProcessor(SolrSearchServiceFactory searchServiceFactory,
-      ProfileService profileService, PresenceService presenceService) {
-    if (searchServiceFactory == null || profileService == null || presenceService == null) {
+      BasicUserInfoService basicUserInfoService, PresenceService presenceService) {
+    if (searchServiceFactory == null || basicUserInfoService == null || presenceService == null) {
       throw new IllegalArgumentException(
-          "SearchServiceFactory, ProfileService and PresenceService must be set when not using as a component");
+          "SearchServiceFactory, BasicUserInfoService and PresenceService must be set when not using as a component");
     }
     this.searchServiceFactory = searchServiceFactory;
     this.presenceService = presenceService;
-    this.profileService = profileService;
+    this.basicUserInfoService = basicUserInfoService;
   }
 
   /**
@@ -132,7 +133,8 @@ public class ProfileNodeSearchResultProcessor implements SolrSearchResultProcess
         write.object();
       }
       if (auth != null) {
-        ValueMap map = profileService.getProfileMap(auth, jcrSession);
+        Map<String,Object> map = basicUserInfoService.getProperties(auth);
+
         ExtendedJSONWriter.writeValueMapInternals(write, map);
 
         // If this is a User Profile, then include Presence data.
@@ -148,8 +150,6 @@ public class ProfileNodeSearchResultProcessor implements SolrSearchResultProcess
     } catch (StorageClientException e) {
       LOGGER.error(e.getMessage(), e);
     } catch (AccessDeniedException e) {
-      LOGGER.error(e.getMessage(), e);
-    } catch (RepositoryException e) {
       LOGGER.error(e.getMessage(), e);
     }
   }
