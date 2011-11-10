@@ -97,6 +97,7 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.Permission;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
+import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
@@ -425,8 +426,41 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
             new IllegalStateException(message), response);
         return;
       }
-      final String sitePath = pooledContentNode.getPath();
-      final String contextId = contextIdResolver.resolveContextId(pooledContentNode);
+      final String sitePath;
+      final boolean usingGroup;
+      if (request.getParameter("groupid") != null) {
+        sitePath = request.getParameter("groupid");
+        usingGroup = true;
+      }
+      else {
+        sitePath = pooledContentNode.getPath();
+        usingGroup = false;
+      }
+      String contextId;
+      if (usingGroup) {
+        contextId = sitePath;
+        Group group = (Group) userManager.findAuthorizable(sitePath);
+        // If we are using a Group, we check the group's node to see if it has the optional
+        // cle-site property which will correspond to a concrete site on the CLE installs that
+        // we wish to use for the context on Sakai2Tools widgets. 
+        // After that we also check to see if the current vtoolid is actually a Sakai2Tool
+        // ( it could be from a completely seperate location, etherpad etc. ). If it is
+        // a Sakai 2 Tool, then we use the cle-site property as the context for that BLTI
+        // launch.
+        String sakaiSite = (String) group.getProperty("sakai:cle-site");
+        if (sakaiSite != null) {
+          // Check and see if this is a Sakai Site
+          // Right now the only virtualtoolprovider is for Sakai CLE.
+          String vtoolid = (String) node.getProperty(LTI_VTOOL_ID);
+          if (vtoolid != null && 
+              virtualToolDataProvider.getSupportedVirtualToolIds().contains(vtoolid)) {
+            contextId = sakaiSite;
+          }
+        }
+      }
+      else {
+        contextId = contextIdResolver.resolveContextId(pooledContentNode);
+      }
       if (contextId == null) {
         throw new IllegalStateException("Could not resolve context_id!");
       }
@@ -459,7 +493,12 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
 
       final org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager accessControlManager = session
           .getAccessControlManager();
-      final boolean canManageSite = accessControlManager.can(az, Security.ZONE_CONTENT,
+      
+      String zone = Security.ZONE_CONTENT;
+      if (usingGroup) {
+        zone = Security.ZONE_AUTHORIZABLES;
+      } 
+      final boolean canManageSite = accessControlManager.can(az, zone,
           sitePath, Permissions.CAN_WRITE_ACL);
       LOG.info("hasPrivileges(modifyAccessControl)=" + canManageSite);
       if (UserConstants.ANON_USERID.equals(session.getUserId())) {
@@ -469,7 +508,6 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
       } else {
         launchProps.put(ROLES, "Learner");
       }
-
       final boolean releaseNames = (Boolean)effectiveSettings
           .get(RELEASE_NAMES);
       if (releaseNames) {
