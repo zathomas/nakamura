@@ -210,7 +210,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
     String isHier = (String)content.getProperty("isHierarchical");
     
     JSONObject pageSetJSON;
-    if (isHier != null && isHier.equals("1")) {
+    if (isHier != null && (isHier.equals("1") || isHier.equals("true"))) {
       pageSetJSON = manifestToPageSet(manifest, poolId, fileContent, true);
     } else if (isHier != null)
       pageSetJSON = manifestToPageSet(manifest, poolId, fileContent, false);
@@ -222,6 +222,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
       String key = keys.next();
       content.setProperty(key, pageSetJSON.optString(key));
     }
+
     contentManager.update(content);
     return contentManager.get(poolId);
   }
@@ -339,7 +340,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
     itemJSON.put("_order", index);
     itemJSON.put("_canEdit", true);
     itemJSON.put("_canSubedit", true);
-    itemJSON.put("_nonEditable", true);
+    itemJSON.put("_nonEditable", false);
     itemJSON.put("_ref", "");
     int subIndex = 0;
     JSONArray elementsArray = new JSONArray();

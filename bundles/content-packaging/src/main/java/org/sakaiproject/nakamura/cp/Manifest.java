@@ -187,7 +187,15 @@ public class Manifest {
   }
   
   public String generateXML() {
-    StringBuilder head = new StringBuilder("<manifest");
+    StringBuilder head = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<manifest");
+    String attr = " xmlns=\"http://www.imsglobal.org/xsd/imscp_v1p1\" " +
+    		"xmlns:imsmd=\"http://www.imsglobal.org/xsd/imsmd_v1p2\" " +
+    		"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
+    		"xsi:schemaLocation=\"http://www.imsglobal.org/xsd/imscp_v1p1 " +
+    		"http://www.imsglobal.org/xsd/imscp_v1p1.xsd " +
+    		"http://www.imsglobal.org/xsd/imsmd_v1p2 " +
+    		"http://www.imsglobal.org/xsd/imsmd_v1p2.xsd\"";
+    head.append(attr);
     StringBuilder sb = new StringBuilder("");
     if (this.getMetadata() != null)
       sb.append(this.getMetadata().generateXML());
