@@ -59,6 +59,7 @@ public class MeManagerViewerSearchPropertyProvider implements SolrSearchProperty
   
   @Reference
   protected ConnectionManager connectionManager;
+  private static final int MAX_DEPTH = 6;
 
   public void loadUserProperties(SlingHttpServletRequest request,
       Map<String, String> propertiesMap) {
@@ -72,10 +73,23 @@ public class MeManagerViewerSearchPropertyProvider implements SolrSearchProperty
     javax.jcr.Session jcrSession = request.getResourceResolver().adaptTo(javax.jcr.Session.class);
     Session session =
       StorageClientUtils.adaptToSession(jcrSession);
+    int levels = 0;
+    try {
+      if (request.getParameter("levels") != null) {
+        levels = Integer.parseInt(request.getParameter("levels"));
+      }
+    } catch (NumberFormatException nfe) {
+      throw new IllegalArgumentException("The levels parameter must be parseable to an integer.");
+    }
     final Set<String> viewerAndManagerPrincipals = getPrincipals(session,
-        user);
+        user, levels);
     if (!viewerAndManagerPrincipals.isEmpty()) {
       propertiesMap.put("au", Joiner.on(" OR ").join(viewerAndManagerPrincipals));
+    }
+
+    final Set<String> allViewerAndManagerPrincipals = getPrincipals(session, user, MAX_DEPTH);
+    if (!allViewerAndManagerPrincipals.isEmpty()) {
+      propertiesMap.put("all", Joiner.on(" OR ").join(allViewerAndManagerPrincipals));
     }
 
     String q = request.getParameter("q");
@@ -99,21 +113,35 @@ public class MeManagerViewerSearchPropertyProvider implements SolrSearchProperty
 
   /**
    * @param session
-   * @param user
+   * @param authorizable
    * @return An empty list if the user cannot be found. Values will be solr query escaped.
    */
-  protected static Set<String> getPrincipals(final Session session, final String user) {
-
+  protected static Set<String> getPrincipals(final Session session, final String authorizable, int levels) {
+    // put a limit on recursion
+    if (levels > MAX_DEPTH) {
+      levels = MAX_DEPTH;
+    }
     final Set<String> viewerAndManagerPrincipals = new HashSet<String>();
     try {
       final AuthorizableManager authManager = session.getAuthorizableManager();
-      final Authorizable userAuthorizable = authManager.findAuthorizable(user);
-      if (userAuthorizable != null) {
-        for (final String principal : userAuthorizable.getPrincipals()) {
-          viewerAndManagerPrincipals.add(ClientUtils.escapeQueryChars(principal));
+      final Authorizable anAuthorizable = authManager.findAuthorizable(authorizable);
+      if (anAuthorizable != null) {
+        boolean isPseudoGroup = (anAuthorizable.hasProperty("sakai:pseudoGroup") && Boolean.valueOf((Boolean) anAuthorizable.getProperty("sakai:pseudoGroup")));
+        if (isPseudoGroup) {
+          levels++;
+        }
+        if (levels > 0) {
+          levels--;
+          for (final String principal : anAuthorizable.getPrincipals()) {
+            if (!Group.EVERYONE.equals(principal)) {
+              viewerAndManagerPrincipals.addAll(getPrincipals(session, principal, levels));
+            }
+          }
+        }
+        if (!isPseudoGroup) {
+          viewerAndManagerPrincipals.add(ClientUtils.escapeQueryChars(authorizable));
         }
         viewerAndManagerPrincipals.remove(Group.EVERYONE);
-        viewerAndManagerPrincipals.add(ClientUtils.escapeQueryChars(user));
       }
     } catch (StorageClientException e) {
       throw new IllegalStateException(e);

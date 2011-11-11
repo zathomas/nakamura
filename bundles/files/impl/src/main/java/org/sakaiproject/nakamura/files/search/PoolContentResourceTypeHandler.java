@@ -103,6 +103,7 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
     builder.put(FilesConstants.SAKAI_DESCRIPTION, "description");
     builder.put(FilesConstants.POOLED_CONTENT_COMMENT, "comment");
     builder.put(FilesConstants.POOLED_CONTENT_HAS_PREVIEW, "hasPreview");
+    builder.put(FilesConstants.POOLED_CONTENT_SHOW_ALWAYS, "showalways");
     return builder.build();
   }
 
