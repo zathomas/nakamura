@@ -259,7 +259,14 @@ public class LiteGroupMemberServlet extends SlingSafeMethodsServlet {
     String[] members = group.getMembers();
     List<String> managers = Arrays.asList(StorageClientUtils.nonNullStringArray((String[]) group.getProperty(UserConstants.PROP_GROUP_MANAGERS)));
     for ( String memberName : members) {
-      Authorizable member = authorizableManager.findAuthorizable(memberName);
+      Authorizable member = null;
+      try {
+        member = authorizableManager.findAuthorizable(memberName);
+      } catch (AccessDeniedException e) {
+        // this means a group has a member we're not allowed to see
+        // that's normal, and we'll just skip over it. (KERN-2302)
+        continue;
+      }
       // filter this out if it is a manager member
       if (!managers.contains(memberName)) {
         String name = getName(member);
@@ -299,7 +306,14 @@ public class LiteGroupMemberServlet extends SlingSafeMethodsServlet {
     String[] members = group.getMembers();
     List<String> managers = Arrays.asList(StorageClientUtils.nonNullStringArray((String[]) group.getProperty(UserConstants.PROP_GROUP_MANAGERS)));
     for  (String memberName : members) {
-      Authorizable mau = authorizableManager.findAuthorizable(memberName);
+      Authorizable mau = null;
+      try {
+        mau = authorizableManager.findAuthorizable(memberName);
+      } catch (AccessDeniedException e) {
+        // this means a group has a member we're not allowed to see
+        // that's normal, and we'll just skip over it. (KERN-2302)
+        continue;
+      }
       if (managers.contains(memberName)) {
         String name = getName(mau);
         map.put(name, mau);
