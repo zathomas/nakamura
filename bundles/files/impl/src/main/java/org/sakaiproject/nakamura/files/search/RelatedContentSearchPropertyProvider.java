@@ -134,7 +134,7 @@ public class RelatedContentSearchPropertyProvider extends
 
     final Session session = StorageClientUtils.adaptToSession(request
         .getResourceResolver().adaptTo(javax.jcr.Session.class));
-    final Set<String> managers = super.getPrincipals(session, user);
+    final Set<String> managers = super.getPrincipals(session, user, 1);
     final Set<String> viewers = new HashSet<String>(managers);
 
     final StringBuilder sourceQuery = new StringBuilder(

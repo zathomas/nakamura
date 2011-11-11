@@ -140,6 +140,12 @@ public interface FilesConstants {
   public static final String POOLED_CONTENT_HAS_PREVIEW = "sakai:hasPreview";
 
   /**
+   * Property to specify that content should show in a result feed even if
+   * it is many levels indirect from the user doing the search.
+   */
+  public static final String POOLED_CONTENT_SHOW_ALWAYS = "sakai:showalways";
+
+  /**
    * Selector for feed of related content which is accessible by any logged-in user.
    */
   public static final String POOLED_CONTENT_RELATED_SELECTOR = "related";
