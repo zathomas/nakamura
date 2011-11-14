@@ -97,6 +97,7 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.Permission;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
+import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
@@ -425,8 +426,19 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
             new IllegalStateException(message), response);
         return;
       }
-      final String sitePath = pooledContentNode.getPath();
-      final String contextId = contextIdResolver.resolveContextId(pooledContentNode);
+      final String sitePath;
+      final boolean usingGroup;
+      String groupId = null;
+      if (request.getParameter("groupid") != null) {
+        groupId = sitePath = request.getParameter("groupid");
+        usingGroup = true;
+      }
+      else {
+        sitePath = pooledContentNode.getPath();
+        usingGroup = false;
+      }
+       
+      final String contextId = contextIdResolver.resolveContextId(pooledContentNode, groupId, session);
       if (contextId == null) {
         throw new IllegalStateException("Could not resolve context_id!");
       }
@@ -459,7 +471,12 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
 
       final org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager accessControlManager = session
           .getAccessControlManager();
-      final boolean canManageSite = accessControlManager.can(az, Security.ZONE_CONTENT,
+      
+      String zone = Security.ZONE_CONTENT;
+      if (usingGroup) {
+        zone = Security.ZONE_AUTHORIZABLES;
+      } 
+      final boolean canManageSite = accessControlManager.can(az, zone,
           sitePath, Permissions.CAN_WRITE_ACL);
       LOG.info("hasPrivileges(modifyAccessControl)=" + canManageSite);
       if (UserConstants.ANON_USERID.equals(session.getUserId())) {
@@ -469,7 +486,6 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
       } else {
         launchProps.put(ROLES, "Learner");
       }
-
       final boolean releaseNames = (Boolean)effectiveSettings
           .get(RELEASE_NAMES);
       if (releaseNames) {
