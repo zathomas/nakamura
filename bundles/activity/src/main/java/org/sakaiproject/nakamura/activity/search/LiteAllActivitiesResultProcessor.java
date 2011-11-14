@@ -85,7 +85,7 @@ public class LiteAllActivitiesResultProcessor implements SolrSearchResultProcess
           LOGGER.debug(e.getMessage(),e);
         }
         write.object();
-        Map<String, Object> contentProperties = null;
+        Map<String, Object> contentProperties;
         if ( contentNode != null ) {
           contentProperties = contentNode.getProperties();
           ExtendedJSONWriter.writeValueMapInternals(write, contentProperties);
@@ -102,20 +102,24 @@ public class LiteAllActivitiesResultProcessor implements SolrSearchResultProcess
           ExtendedJSONWriter.writeValueMapInternals(write, basicUserInfoService
               .getProperties(authorizableManager.findAuthorizable((String) activityNode
                   .getProperty(ActivityConstants.PARAM_ACTOR_ID))));
-        } catch (Exception e) {
-          LOGGER.warn(e.getMessage(), e);
+        } catch (AccessDeniedException e) {
+          LOGGER.debug(e.getMessage(), e);
         }
         write.endObject();
-        if ( contentNode != null ) {
+        if (contentNode != null) {
           // KERN-1867 Activity feed should return more data about a group
           if ("sakai/group-home".equals(contentNode.getProperty("sling:resourceType"))) {
-            final Authorizable group = authorizableManager.findAuthorizable(PathUtils
-                .getAuthorizableId(contentNode.getPath()));
-            final Map<String, Object> basicUserInfo = basicUserInfoService
-                .getProperties(group);
-            if (basicUserInfo != null) {
-              write.key("profile");
-              ExtendedJSONWriter.writeValueMap(write, basicUserInfo);
+            try {
+              final Authorizable group = authorizableManager.findAuthorizable(PathUtils
+                      .getAuthorizableId(contentNode.getPath()));
+              final Map<String, Object> basicUserInfo = basicUserInfoService
+                      .getProperties(group);
+              if (basicUserInfo != null) {
+                write.key("profile");
+                ExtendedJSONWriter.writeValueMap(write, basicUserInfo);
+              }
+            } catch (AccessDeniedException e) {
+              LOGGER.debug(e.getMessage(), e);
             }
           }
           // KERN-1864 Return comment in activity feed
