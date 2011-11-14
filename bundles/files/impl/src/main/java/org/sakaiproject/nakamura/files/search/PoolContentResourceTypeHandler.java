@@ -169,6 +169,10 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
           if (!CONTENT_TYPES.contains(content.getProperty("sling:resourceType"))) {
             return documents;
           }
+          // KERN-2347 check if the content is marked to be excluded from searches
+          if (Boolean.parseBoolean(String.valueOf(content.getProperty("sakai:excludeSearch")))) {
+            return documents;
+          }
 
           SolrInputDocument doc = new SolrInputDocument();
 
