@@ -175,7 +175,10 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
             Authorizable author = authorizableManager.findAuthorizable(authorId);
             ValueMap profile = new ValueMapDecorator(basicUserInfoService.getProperties(author));
             w.valueMapInternals(profile);
-          } catch (StorageClientException e ) {
+          } catch (StorageClientException e) {
+            w.key(AUTHOR);
+            w.value(authorId);
+          } catch (AccessDeniedException e) {
             w.key(AUTHOR);
             w.value(authorId);
           }
