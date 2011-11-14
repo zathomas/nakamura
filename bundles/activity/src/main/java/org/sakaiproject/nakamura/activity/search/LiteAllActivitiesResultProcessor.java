@@ -85,10 +85,8 @@ public class LiteAllActivitiesResultProcessor implements SolrSearchResultProcess
           LOGGER.debug(e.getMessage(),e);
         }
         write.object();
-        Map<String, Object> contentProperties;
         if ( contentNode != null ) {
-          contentProperties = contentNode.getProperties();
-          ExtendedJSONWriter.writeValueMapInternals(write, contentProperties);
+          ExtendedJSONWriter.writeValueMapInternals(write, contentNode.getProperties());
           ExtendedJSONWriter.writeValueMapInternals(write, StorageClientUtils.getFilterMap(
               activityNode.getProperties(), null, null, contentNode.getProperties().keySet(), true));
         } else {
