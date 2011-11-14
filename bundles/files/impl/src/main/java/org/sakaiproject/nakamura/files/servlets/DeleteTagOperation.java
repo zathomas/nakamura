@@ -17,23 +17,19 @@
  */
 package org.sakaiproject.nakamura.files.servlets;
 
-import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAGS;import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_NAME;import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_UUIDS;
-
+import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAGS;
+import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_NAME;
 import com.google.common.collect.Sets;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HtmlResponse;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.servlets.post.Modification;
-import org.osgi.service.event.EventAdmin;
 import org.sakaiproject.nakamura.api.doc.BindingType;
 import org.sakaiproject.nakamura.api.doc.ServiceBinding;
 import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
@@ -41,7 +37,7 @@ import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceParameter;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.files.FileUtils;
-import org.sakaiproject.nakamura.api.files.FilesConstants;import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
@@ -52,16 +48,12 @@ import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.resource.lite.AbstractSparsePostOperation;
 import org.sakaiproject.nakamura.api.resource.lite.SparsePostOperation;
 import org.sakaiproject.nakamura.api.user.UserConstants;
-import org.sakaiproject.nakamura.util.JcrUtils;
 import org.sakaiproject.nakamura.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.servlet.http.HttpServletResponse;
 
 @ServiceDocumentation(name = "DeleteTagOperation", okForVersion = "0.11",
@@ -81,14 +73,6 @@ import javax.servlet.http.HttpServletResponse;
     @Property(name = "service.vendor", value = "The Sakai Foundation") })
 public class DeleteTagOperation extends AbstractSparsePostOperation {
 
-  private static final String SAKAI_TAG_NAME = "sakai:tag-name";
-
-  @Reference
-  protected transient SlingRepository slingRepository;
-
-  @Reference
-  protected transient EventAdmin eventAdmin;
-
   private static final Logger LOGGER = LoggerFactory.getLogger(DeleteTagOperation.class);
 
   private static final long serialVersionUID = -7724827744698056843L;
@@ -103,29 +87,32 @@ public class DeleteTagOperation extends AbstractSparsePostOperation {
   protected void doRun(SlingHttpServletRequest request, HtmlResponse response,
       ContentManager contentManager, List<Modification> changes, String contentPath) throws StorageClientException, AccessDeniedException {
 
+    Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
+
     // Check if the user has the required minimum privilege.
     String user = request.getRemoteUser();
     if (UserConstants.ANON_USERID.equals(user)) {
+      LOGGER.warn ("Anonymous user denied ability to delete tag.");
       response.setStatus(HttpServletResponse.SC_FORBIDDEN,
-          "Anonymous users can't tag things.");
+          "Anonymous users can't delete tags.");
       return;
     }
 
     // Check if the uuid is in the request.
     RequestParameter key = request.getRequestParameter("key");
     if (key == null || "".equals(key.getString())) {
+      LOGGER.warn ("attempt to delete tag without key");
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST,
           "Missing parameter: key");
       return;
     }
 
-    ResourceResolver resourceResolver = request.getResourceResolver();
-    Node tagNode = null;
     Resource resource = request.getResource();
-    Node node = resource.adaptTo(Node.class);
-    Content content = resource.adaptTo(Content.class);
+    Content content = resource.adaptTo(Content.class),
+        tag;
 
-    if (node == null && content == null) {
+    if (content == null) {
+      LOGGER.warn ("attempt to delete a tag on a null resource");
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST,
           "A tag operation must be performed on an actual resource");
       return;
@@ -133,188 +120,55 @@ public class DeleteTagOperation extends AbstractSparsePostOperation {
 
 
     // Grab the tagNode.
-    try {
-      tagNode = FileUtils.resolveNode(key.getString(), resourceResolver);
-      if (tagNode == null) {
-        response.setStatus(HttpServletResponse.SC_NOT_FOUND, "Provided key not found.");
-        return;
-      }
-      if (!FileUtils.isTag(tagNode)) {
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST,
-            "Provided key doesn't point to a tag.");
-        return;
-      }
-    } catch (RepositoryException e1) {
-      response.setStatus(HttpServletResponse.SC_BAD_REQUEST, "Could not locate the tag.");
+    tag = contentManager.get(key.toString());
+    if (tag == null) {
+      LOGGER.warn ("attempted to delete tag {} which does not exist", key.toString());
+      response.setStatus(HttpServletResponse.SC_NOT_FOUND, "Provided key not found.");
+      return;
+    }
+    if (!FileUtils.isTag(tag)) {
+      LOGGER.warn ("{} is not a tag and so cannot be deleted via DeleteTagOperation", key.toString());
+      response.setStatus(HttpServletResponse.SC_BAD_REQUEST,
+          "Provided key doesn't point to a tag.");
       return;
     }
 
-    try {
-      String uuid = tagNode.getIdentifier();
-      String tagName = tagNode.getProperty(SAKAI_TAG_NAME).getString();
+    String tagName = (String)tag.getProperty(SAKAI_TAG_NAME);
+    String[] existingTags = (String[]) content.getProperty(SAKAI_TAGS);
+    boolean tagged = false;
 
-      // We check if the node already has this tag.
-      // If it does, we ignore it..
-      if (node != null && hasUuid(node, uuid)) {
-        javax.jcr.Session adminSession = null;
-        try {
-          adminSession = slingRepository.loginAdministrative(null);
-
-          LOGGER.info("Delete tagging [{}] from  [{}] [{}] ",
-              new Object[] { tagNode, node, uuid });
-          // Add the tag on the file.
-          FileUtils.deleteTag(adminSession, node, tagNode);
-
-          // Save our modifications.
-          if (adminSession.hasPendingChanges()) {
-            adminSession.save();
-          }
-        } finally {
-          adminSession.logout();
-        }
-      } else if ( content != null ) {
-        FileUtils.deleteTag(contentManager, content, tagNode);
-        javax.jcr.Session adminSession = null;
-        try {
-          adminSession = slingRepository.loginAdministrative(null);
-          Node adminTagNode = adminSession.getNode(tagNode.getPath());
-          String[] tagNames = StorageClientUtils.nonNullStringArray((String[]) content.getProperty(FilesConstants.SAKAI_TAGS));
-          String resourceType = (String) content.getProperty("sling:resourceType");
-          boolean isProfile = "sakai/user-profile".equals(resourceType) || "sakai/group-profile".equals(resourceType);
-          if (!isProfile) {
-            decrementTagCounts(adminTagNode, tagNames, false);
-          }
-          if (adminSession.hasPendingChanges()) {
-            adminSession.save();
-          }
-        } finally {
-          if (adminSession != null) {
-            adminSession.logout();
-          }
-        }
-        // keep authz in sync with authprofile
-        final Session session = StorageClientUtils.adaptToSession(request.getResource()
-            .getResourceResolver().adaptTo(javax.jcr.Session.class));
-        final AuthorizableManager authManager = session.getAuthorizableManager();
-        final String resourceType = (String) content.getProperty("sling:resourceType");
-        final boolean isProfile = "sakai/user-profile".equals(resourceType)
-            || "sakai/group-profile".equals(resourceType);
-        // If we're remove a tag on an authprofile, remove the property here
-        if (isProfile) {
-          final String azId = PathUtils.getAuthorizableId(content.getPath());
-          final Authorizable authorizable = authManager.findAuthorizable(azId);
-          if (authorizable != null) {
-            final Set<String> uuidSet = Sets
-                .newHashSet(StorageClientUtils.nonNullStringArray((String[]) authorizable
-                    .getProperty(SAKAI_TAG_UUIDS)));
-            uuidSet.remove(uuid);
-            authorizable.setProperty(SAKAI_TAG_UUIDS,
-                uuidSet.toArray(new String[uuidSet.size()]));
-
-            final Set<String> nameSet = Sets
-                .newHashSet(StorageClientUtils.nonNullStringArray((String[]) authorizable
-                    .getProperty(SAKAI_TAGS)));
-            nameSet.remove(tagName);
-            authorizable.setProperty(SAKAI_TAGS,
-                nameSet.toArray(new String[nameSet.size()]));
-
-            authManager.updateAuthorizable(authorizable);
-          }
-        }
-      }
-
-    } catch (RepositoryException e) {
-      LOGGER.error("Failed to Delete Tag ",e);
-      response.setStatus(500, e.getMessage());
-    } catch (AccessDeniedException e) {
-      LOGGER.error("Failed to Delete Tag ",e);
-      response.setStatus(500, e.getMessage());
-    } catch (StorageClientException e) {
-      LOGGER.error("Failed to Delete Tag ",e);
-      response.setStatus(500, e.getMessage());
-    }
-
-  }
-
-  private void decrementTagCounts(Node nodeTag, String[] tagNames, boolean calledByAChild) throws RepositoryException {
-      if (calledByAChild || !alreadyTaggedBelowThisLevel(nodeTag, tagNames)) {
-        Long tagCount = 0L;
-        if (nodeTag.hasProperty(FilesConstants.SAKAI_TAG_COUNT)) {
-          tagCount = nodeTag.getProperty(FilesConstants.SAKAI_TAG_COUNT).getLong();
-          tagCount--;
-        }
-        nodeTag.setProperty(FilesConstants.SAKAI_TAG_COUNT, tagCount);
-      }
-
-      // if this node's parent is not the root, we keep going up
-      List<String> peerTags = new ArrayList<String>();
-      peerTags.addAll(ancestorTags(nodeTag));
-      NodeIterator nodeIterator = nodeTag.getParent().getNodes();
-      while(nodeIterator.hasNext()) {
-        Node peer = nodeIterator.nextNode();
-        if (FileUtils.isTag(peer) && !nodeTag.isSame(peer)) {
-          peerTags.add(peer.getProperty(SAKAI_TAG_NAME).getString());
-        }
-      }
-      if (!isChildOfRoot(nodeTag) && !alreadyTaggedAtOrAboveThisLevel(tagNames, peerTags)) {
-        decrementTagCounts(nodeTag.getParent(), tagNames, true);
-      }
-  }
-
-  private boolean alreadyTaggedBelowThisLevel(Node tagNode, String[] tagNames) throws RepositoryException {
-    List<String> tagNamesList = Arrays.asList(tagNames);
-    NodeIterator childNodes = tagNode.getNodes();
-    while(childNodes.hasNext()){
-      Node child = childNodes.nextNode();
-      if (alreadyTaggedBelowThisLevel(child, tagNames)) {
-        return true;
-      }
-      if (FileUtils.isTag(child) && tagNamesList.contains(child.getProperty(SAKAI_TAG_NAME).getString())) {
-        return true;
+    for (String existingTag : existingTags) {
+      if (existingTag.equals(tagName)) {
+        tagged = true;
+        break;
       }
     }
-    return false;
-  }
 
-  private boolean alreadyTaggedAtOrAboveThisLevel(String[] tagNames, List<String>peerTags) {
-    for(String tagName : tagNames) {
-      if(peerTags.contains(tagName)) {
-        return true;
-      }
-    }
-    return false;
-  }
+    if (tagged)
+    {
+      LOGGER.debug ("deleting tag {} from {}", new String[] {tagName, content.getPath()});
+      FileUtils.deleteTag(contentManager, content, tagName);
+      // keep authz in sync with authprofile
+      final AuthorizableManager authManager = session.getAuthorizableManager();
+      final String resourceType = (String) content.getProperty("sling:resourceType");
+      final boolean isProfile = "sakai/user-profile".equals(resourceType)
+              || "sakai/group-profile".equals(resourceType);
+      // If we're remove a tag on an authprofile, remove the property here
+      if (isProfile) {
+        final String azId = PathUtils.getAuthorizableId(content.getPath());
+        final Authorizable authorizable = authManager.findAuthorizable(azId);
+        if (authorizable != null) {
 
-  private Collection<String> ancestorTags(Node tagNode) throws RepositoryException {
-      Collection<String> rv = new ArrayList<String>();
-      if(!isChildOfRoot(tagNode)) {
-        Node parentNode = tagNode.getParent();
-        if (FileUtils.isTag(parentNode)) {
-          rv.add(parentNode.getProperty(SAKAI_TAG_NAME).getString());
+          final Set<String> nameSet = Sets
+              .newHashSet(StorageClientUtils.nonNullStringArray((String[]) authorizable
+                  .getProperty(SAKAI_TAGS)));
+          nameSet.remove(tagName);
+          authorizable.setProperty(SAKAI_TAGS,
+              nameSet.toArray(new String[nameSet.size()]));
+
+          authManager.updateAuthorizable(authorizable);
         }
-        rv.addAll(ancestorTags(parentNode));
-      }
-      return rv;
-  }
-
-  private boolean isChildOfRoot(Node node) throws RepositoryException {
-    return node.getParent().isSame(node.getSession().getRootNode());
-  }
-  /**
-   * Checks if the node already has the uuid in it's properties.
-   *
-   * @param node
-   * @param uuid
-   * @return
-   * @throws RepositoryException
-   */
-  protected boolean hasUuid(Node node, String uuid) throws RepositoryException {
-    Value[] uuids = JcrUtils.getValues(node, SAKAI_TAG_UUIDS);
-    for (Value v : uuids) {
-      if (v.getString().equals(uuid)) {
-        return true;
       }
     }
-    return false;
   }
 }

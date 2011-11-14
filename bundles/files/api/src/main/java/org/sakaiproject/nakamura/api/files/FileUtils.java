@@ -22,12 +22,12 @@ import static org.sakaiproject.nakamura.api.files.FilesConstants.RT_SAKAI_LINK;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_LINK;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAGS;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_NAME;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_UUIDS;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
@@ -58,8 +58,6 @@ import java.util.Set;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -403,24 +401,7 @@ public class FileUtils {
    * @return true if the node is a tag, false if it is not.
    * @throws RepositoryException
    */
-  public static boolean isTag(Node node) throws RepositoryException {
-    if (node != null && node.hasProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY)
-        && FilesConstants.RT_SAKAI_TAG.equals(node.getProperty(
-            JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY).getString())) {
-      return true;
-    }
-    return false;
-  }
-  
-  /**
-   * Check if a node is a proper sakai tag.
-   *
-   * @param node
-   *          The node to check if it is a tag.
-   * @return true if the node is a tag, false if it is not.
-   * @throws RepositoryException
-   */
-  public static boolean isTag(Content node) throws RepositoryException {
+  public static boolean isTag(Content node) {
     if (node != null && node.hasProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY)
         && FilesConstants.RT_SAKAI_TAG.equals(node.getProperty(
             JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY))) {
@@ -429,46 +410,6 @@ public class FileUtils {
     return false;
   }
 
-  /**
-   * Add's a tag on a node. If the tag has a name defined in the {@link Property property}
-   * sakai:tag-name it will be added in the fileNode as well.
-   *
-   * @param adminSession
-   *          The session that can be used to modify the fileNode.
-   * @param fileNode
-   *          The node that needs to be tagged.
-   * @param tagNode
-   *          The node that represents the tag.
-   */
-  public static boolean addTag(Session adminSession, Node fileNode, Node tagNode)
-      throws RepositoryException {
-    if (fileNode == null) {
-      throw new RuntimeException(
-          "Cant tag non existant nodes, sorry, both must exist prior to tagging. File:"
-              + fileNode);
-    }
-    // Grab the node via the adminSession
-    String path = fileNode.getPath();
-    fileNode = (Node) adminSession.getItem(path);
-
-    // Check if the mixin is on the node.
-    // This is nescecary for nt:file nodes.
-
-    return addTag(adminSession, fileNode, getTags(tagNode));
-  }
-
-  public static boolean addTag(ContentManager contentManager, Content contentNode,
-      Node tagNode)
-      throws org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException,
-      StorageClientException, RepositoryException {
-    if (contentNode == null) {
-      throw new RuntimeException(
-          "Cant tag non existant nodes, sorry, both must exist prior to tagging. File:"
-              + contentNode);
-    }
-    return addTag(contentManager, contentNode, getTags(tagNode));
-  }
-  
   public static boolean addTag(ContentManager contentManager, Content contentNode,
       Content tagNode)
       throws org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException,
@@ -478,144 +419,46 @@ public class FileUtils {
           "Cant tag non existant nodes, sorry, both must exist prior to tagging. File:"
               + contentNode);
     }
-    return addTag(contentManager, contentNode, getTags(tagNode));
+    String tagName = String.valueOf(tagNode.getProperty(SAKAI_TAG_NAME));
+    return addTag(contentManager, contentNode, StringUtils.defaultIfBlank(tagName, null));
   }
 
-  private static boolean addTag(Session adminSession, Node fileNode, String[] tags)
-      throws RepositoryException {
-    boolean added = false;
-    if (!JcrUtils.hasMixin(fileNode, REQUIRED_MIXIN)) {
-      if (fileNode.canAddMixin(REQUIRED_MIXIN)) {
-        fileNode.addMixin(REQUIRED_MIXIN);
-      }
-    }
-    if (JcrUtils.addUniqueValue(adminSession, fileNode, SAKAI_TAG_UUIDS, tags[0],
-        PropertyType.STRING)) {
-      added = true;
-    }
-    if (JcrUtils.addUniqueValue(adminSession, fileNode, SAKAI_TAGS, tags[1],
-        PropertyType.STRING)) {
-      added = true;
-    }
-    return added;
-  }
-
-  private static String[] getTags(Node tagNode) throws RepositoryException {
-    String tagUuid = tagNode.getIdentifier();
-    String tagName = tagNode.getName();
-    if (tagNode.hasProperty(SAKAI_TAG_NAME)) {
-      tagName = tagNode.getProperty(SAKAI_TAG_NAME).getString();
-    }
-    return new String[] { tagUuid, tagName };
-  }
-  
-  private static String[] getTags(Content tagNode) {
-    String tagUuid = (String) tagNode.getProperty(Content.getUuidField());
-    String tagName = "";
-    if (tagNode.hasProperty(SAKAI_TAG_NAME)) {
-      tagName = (String) tagNode.getProperty(SAKAI_TAG_NAME);
-    }
-    return new String[] { tagUuid, tagName };
-  }
-
-  private static boolean addTag(ContentManager contentManager, Content content,
-      String[] tags)
+  private static boolean addTag(ContentManager contentManager, Content content, String tag)
       throws org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException,
       StorageClientException {
     boolean sendEvent = false;
-    Map<String, Object> properties = content.getProperties();
-    Set<String> uuidSet = Sets.newHashSet(StorageClientUtils.nonNullStringArray((String[]) properties
-        .get(SAKAI_TAG_UUIDS)));
-    if (!uuidSet.contains(tags[0])) {
-      uuidSet.add(tags[0]);
-      content.setProperty(SAKAI_TAG_UUIDS,
-          uuidSet.toArray(new String[uuidSet.size()]));
-      sendEvent = true;
-    }
-    Set<String> nameSet = Sets.newHashSet(StorageClientUtils.nonNullStringArray((String[]) properties
-        .get(SAKAI_TAGS)));
-    if (!nameSet.contains(tags[1])) {
-      nameSet.add(tags[1]);
-      content.setProperty(SAKAI_TAGS,
-          nameSet.toArray(new String[nameSet.size()]));
-      sendEvent = true;
-    }
+    if (tag != null) {
+      Map<String, Object> properties = content.getProperties();
+      Set<String> nameSet = Sets.newHashSet(StorageClientUtils.nonNullStringArray((String[]) properties
+          .get(SAKAI_TAGS)));
+      if (!nameSet.contains(tag)) {
+        nameSet.add(tag);
+        content.setProperty(SAKAI_TAGS,
+            nameSet.toArray(new String[nameSet.size()]));
+        sendEvent = true;
+      }
 
-    if (sendEvent) {
-      contentManager.update(content);
-      return true;
+      if (sendEvent) {
+        contentManager.update(content);
+      }
     }
-    return false;
+    return sendEvent;
   }
 
-  /**
-   * Delete a tag from a node.
-   *
-   * @param adminSession
-   * @param fileNode
-   * @param tagNode
-   * @throws RepositoryException
-   */
-  public static void deleteTag(Session adminSession, Node fileNode, Node tagNode)
-      throws RepositoryException {
-    if (tagNode == null || fileNode == null) {
-      throw new RuntimeException("Can't delete tag from non existent nodes. File:"
-          + fileNode + " Node To Tag:" + tagNode);
-    }
-    // Grab the node via the adminSession
-    String path = fileNode.getPath();
-    fileNode = (Node) adminSession.getItem(path);
-
-    // Add the reference from the tag to the node.
-    deleteTag(adminSession, fileNode, getTags(tagNode));
-  }
-
-  /**
-   * Delete a tag from a node.
-   *
-   * @param adminSession
-   * @param fileNode
-   * @param tagNode
-   * @throws RepositoryException
-   * @throws StorageClientException
-   * @throws org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException
-   */
-  public static void deleteTag(ContentManager contentManager, Content contentNode,
-      Node tagNode) throws RepositoryException,
-      org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException,
-      StorageClientException {
-    if (contentNode == null || contentNode == null) {
-      throw new RuntimeException("Can't delete tag from non existent nodes. File:"
-          + contentNode + " Node To Tag:" + tagNode);
-    }
-    // Add the reference from the tag to the node.
-    deleteTag(contentManager, contentNode, getTags(tagNode));
-  }
-
-  private static void deleteTag(Session adminSession, Node fileNode, String[] tags)
-      throws RepositoryException {
-    JcrUtils.deleteValue(adminSession, fileNode, SAKAI_TAG_UUIDS, tags[0]);
-    JcrUtils.deleteValue(adminSession, fileNode, SAKAI_TAGS, tags[1]);
-  }
-
-  private static boolean deleteTag(ContentManager contentManager, Content content,
-      String[] tags)
+  public static boolean deleteTag(ContentManager contentManager, Content content,
+      String tag)
       throws org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException,
       StorageClientException {
+
+      if (StringUtils.isBlank(tag))
+        return false;
+
     boolean updated = false;
     Map<String, Object> properties = content.getProperties();
-    Set<String> uuidSet = Sets.newHashSet(StorageClientUtils.nonNullStringArray((String[]) properties
-        .get(SAKAI_TAG_UUIDS)));
-    if (uuidSet.contains(tags[0])) {
-      uuidSet.remove(tags[0]);
-      content.setProperty(SAKAI_TAG_UUIDS,
-          uuidSet.toArray(new String[uuidSet.size()]));
-      updated = true;
-    }
     Set<String> nameSet = Sets.newHashSet(StorageClientUtils.nonNullStringArray((String[]) properties
         .get(SAKAI_TAGS)));
-    if (nameSet.contains(tags[1])) {
-      nameSet.remove(tags[1]);
+    if (nameSet.contains(tag)) {
+      nameSet.remove(tag);
       content.setProperty(SAKAI_TAGS,
           nameSet.toArray(new String[nameSet.size()]));
       updated = true;
@@ -650,7 +493,10 @@ public class FileUtils {
     Node node = null;
     try {
       if (pathOrIdentifier.startsWith("/")) { // it is a path specification
-        node = resourceResolver.resolve(pathOrIdentifier).adaptTo(Node.class);
+        Resource r = resourceResolver.resolve(pathOrIdentifier);
+        if (r != null) {
+          node = r.adaptTo(Node.class);
+        }
       } else {
         // Not a full resource path, so try the two flavors of ID.
         Session session = resourceResolver.adaptTo(Session.class);
