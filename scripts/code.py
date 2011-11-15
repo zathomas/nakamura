@@ -44,7 +44,7 @@ class terms:
     if callback and re.match('^[a-zA-Z0-9._\[\]]+$', callback):
       return callback + '(' + list + ')'
     else:
-      return list	
+      return list
     #return json.dumps(list, indent=4)
     #return json.dumps(extractor(i.context).sort(term_compare))
 if __name__ == "__main__":

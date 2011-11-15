@@ -37,7 +37,7 @@ module Net::HTTPHeader
     else
       "#{urlencode(k)}=#{urlencode(vs.to_s)}"
     end
-  end  
+  end
 end
 
 # Re-sized an image and saves the stream of bytes of the re-sized image to a new file with a specific filename.
@@ -88,7 +88,7 @@ end
 # mimetype entry in mime.types and use it for the extension to create a preview
 def determine_file_extension_with_mime_type(mimetype, given_extension)
   # strip off the leading . in the given extension
-  if given_extension
+  if given_extension and given_extension.match(/^\./)
     given_extension = given_extension[1..-1]
   end
   File.open("../mime.types", "r") do |f|
@@ -214,7 +214,7 @@ def main(term_server)
               postData = JSON.parse postData.body
             end
             tags = ""
-            if postData != nil 
+            if postData != nil
               for i in (0..postData.length - 1)
                 tags += "- " + postData[i] + "\n"
               end
