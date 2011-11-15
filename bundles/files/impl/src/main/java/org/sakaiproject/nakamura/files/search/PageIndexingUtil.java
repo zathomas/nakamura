@@ -57,7 +57,9 @@ public class PageIndexingUtil {
     for (Content page : getPages(content, contentManager)) {
       if (page.hasProperty("page")) {
         try {
-          streams.add(new ByteArrayInputStream(((String) page.getProperty("page")).getBytes("UTF-8")));
+          // The UX posts a string, but it may have been silently stored as a LongString value.
+          String pageProperty = page.getProperty("page").toString();
+          streams.add(new ByteArrayInputStream(pageProperty.getBytes("UTF-8")));
         } catch (UnsupportedEncodingException e) {
           throw new PageIndexException("Could not get bytes from the page property because UTF-8 is an unsupported encoding.");
         }
