@@ -88,7 +88,7 @@ end
 # mimetype entry in mime.types and use it for the extension to create a preview
 def determine_file_extension_with_mime_type(mimetype, given_extension)
   # strip off the leading . in the given extension
-  if given_extension
+  if given_extension and given_extension.match(/^\./)
     given_extension = given_extension[1..-1]
   end
   File.open("../mime.types", "r") do |f|
