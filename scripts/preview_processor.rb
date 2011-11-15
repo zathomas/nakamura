@@ -37,7 +37,7 @@ module Net::HTTPHeader
     else
       "#{urlencode(k)}=#{urlencode(vs.to_s)}"
     end
-  end  
+  end
 end
 
 # Re-sized an image and saves the stream of bytes of the re-sized image to a new file with a specific filename.
@@ -214,7 +214,7 @@ def main(term_server)
               postData = JSON.parse postData.body
             end
             tags = ""
-            if postData != nil 
+            if postData != nil
               for i in (0..postData.length - 1)
                 tags += "- " + postData[i] + "\n"
               end
