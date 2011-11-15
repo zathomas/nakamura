@@ -33,7 +33,6 @@ import org.sakaiproject.nakamura.api.message.MessageConstants;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchPropertyProvider;
 
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Provides properties to process the search
