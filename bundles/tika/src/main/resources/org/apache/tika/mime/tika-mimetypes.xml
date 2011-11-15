@@ -3663,6 +3663,8 @@
     <root-XML localName="BODY"/>
     <root-XML localName="p"/>
     <root-XML localName="P"/>
+    <root-XML localName="div"/>
+    <root-XML localName="DIV"/>
     <root-XML localName="script"/>
     <root-XML localName="SCRIPT"/>
     <root-XML localName="frameset"/>
@@ -3691,6 +3693,10 @@
       <match value="&lt;title" type="string" offset="0"/>
       <match value="&lt;h1" type="string" offset="0"/>
       <match value="&lt;H1" type="string" offset="0"/>
+      <match value="&lt;div" type="string" offset="0"/>
+      <match value="&lt;DIV" type="string" offset="0"/>
+      <match value="&lt;p" type="string" offset="0"/>
+      <match value="&lt;P" type="string" offset="0"/>
       <match value="&lt;!doctype HTML" type="string" offset="0"/>
       <match value="&lt;!DOCTYPE html" type="string" offset="0"/>
     </magic>

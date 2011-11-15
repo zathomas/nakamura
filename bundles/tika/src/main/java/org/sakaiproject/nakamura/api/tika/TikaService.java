@@ -25,7 +25,6 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.tika.Tika;
-import org.apache.tika.config.TikaConfig;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.osgi.framework.BundleContext;
@@ -67,10 +66,8 @@ public class TikaService {
   // ---------- SCR integration ----------
   @Activate @Modified
   protected void activate(BundleContext bundleContext, Map<?, ?> props) throws Exception {
-    URL configUrl = bundleContext.getBundle().getResource(
-        "/org/sakaiproject/nakamura/tika/tika-config.xml");
+    tika = new Tika();
     maxStringLength = PropertiesUtil.toInteger(props.get(MAX_STRING_LENGTH), DEFAULT_MAX_STRING_LENGTH);
-    tika = new Tika(new TikaConfig(configUrl));
     tika.setMaxStringLength(maxStringLength);
   }
 

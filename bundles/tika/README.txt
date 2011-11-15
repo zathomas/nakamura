@@ -37,15 +37,6 @@ stored statically in the source tree.
   an OSGi tika service.
 
 
-tika-config.xml
----------------
-tika-config.xml is loaded by TikaService to configure an OSGi Tika
-service. This file last appeared in tika-core v0.6 and was originally
-copied from there but the verbosity needed to configure Tika has been
-greatly reduced in later releases. The only point of interest in this
-file is the mimeTypeRepository element.
-
-
 tika-mimetypes.xml
 ------------------
 tika-mimetypes.xml is copied from the tika-core artifact (inlined in
@@ -53,6 +44,12 @@ the tika-bundle artifact) with the following modifications made:
 
 1. Remove comment matching from XML processing:
   <mime-type type="application/xml">
+    <root-XML localName="p"/>
+    <root-XML localName="P"/>
++    <root-XML localName="div"/>
++    <root-XML localName="DIV"/>
+    <root-XML localName="script"/>
+    <root-XML localName="SCRIPT"/>
     ...
     <magic priority="50">
       <match value="&lt;?xml" type="string" offset="0"/>
@@ -65,10 +62,28 @@ the tika-bundle artifact) with the following modifications made:
     ...
     <magic priority="40">
 +      <match value="&lt;!--" type="string" offset="0:5"/>
-       <match value="&lt;!DOCTYPE HTML" type="string" offset="0:64"/>
-       <match value="&lt;!doctype html" type="string" offset="0:64"/>
-       <match value="&lt;HEAD" type="string" offset="0:64"/>
-       <match value="&lt;head" type="string" offset="0:64"/>
-       <match value="&lt;TITLE" type="string" offset="0:64"/>
-       <match value="&lt;title" type="string" offset="0:64"/>
+      <match value="&lt;!DOCTYPE HTML" type="string" offset="0:64"/>
+      <match value="&lt;!doctype html" type="string" offset="0:64"/>
+      <match value="&lt;HEAD" type="string" offset="0:64"/>
+      <match value="&lt;head" type="string" offset="0:64"/>
+      <match value="&lt;TITLE" type="string" offset="0:64"/>
+      <match value="&lt;title" type="string" offset="0:64"/>
 +      <match value="&lt;link" type="string" offset="0:64"/>
+      ...
+      <match value="&lt;h1" type="string" offset="0"/>
+      <match value="&lt;H1" type="string" offset="0"/>
++      <match value="&lt;div" type="string" offset="0"/>
++      <match value="&lt;DIV" type="string" offset="0"/>
++      <match value="&lt;p" type="string" offset="0"/>
++      <match value="&lt;P" type="string" offset="0"/>
+      <match value="&lt;!doctype HTML" type="string" offset="0"/>
+      <match value="&lt;!DOCTYPE html" type="string" offset="0"/>
+
+
+tika-config.xml
+---------------
+Since we modify tika-mimetypes.xml and put it back in the same location
+as expected by Tika, there is no need to introduce tika-config.xml at
+this time. If we want to add our own parsers or limit the parsers that
+can be used by Tika, then we should introduce tika-config.xml to take
+care of this.
