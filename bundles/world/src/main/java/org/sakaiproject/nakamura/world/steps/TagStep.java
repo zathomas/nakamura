@@ -53,18 +53,8 @@ public class TagStep extends AbstractWorldCreationStep {
 
     for (int i = 0; i < tags.length(); i++) {
       String tagName = tags.getString(i);
-      createTag(tagName);
       applyTagToGroupProfile(tagName);
     }
-  }
-
-  private void createTag(String tagName) throws JSONException, URISyntaxException, IOException, ServletException {
-    JSONObject tagData = new JSONObject();
-    tagData.put("sakai:tag-name", tagName);
-    tagData.put("sling:resourceType", "sakai/tag");
-    LOGGER.debug("Creating tag " + tagName + "; data = " + tagData.toString(2));
-    SubRequest tagCreateStep = new SubRequest("/tags/" + tagName, "POST", tagData, request, response, write);
-    tagCreateStep.doForward();
   }
 
   private void applyTagToGroupProfile(String tagName) throws JSONException, URISyntaxException, IOException, ServletException {
