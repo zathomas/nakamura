@@ -33,6 +33,7 @@ import org.sakaiproject.nakamura.api.message.MessageConstants;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchPropertyProvider;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Provides properties to process the search
@@ -44,6 +45,8 @@ import java.util.Map;
     @Property(name = "service.description", value = "Provides some message search properties."),
     @Property(name = "sakai.search.provider", value = "MessageSparse") })
 public class MessageSparseSearchPropertyProvider implements SolrSearchPropertyProvider {
+
+  private static final Pattern TRAILING_SLASH = Pattern.compile("/$");
 
   @Reference
   LiteMessagingService messagingService;
@@ -60,8 +63,8 @@ public class MessageSparseSearchPropertyProvider implements SolrSearchPropertyPr
     Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
     final String resourceType = propertiesMap.get("sling:resourceType");
     final boolean solrSearchType = "sakai/solr-search".equals(resourceType);
-    String fullPathToStore = ClientUtils.escapeQueryChars(messagingService
-        .getFullPathToStore(user, session));
+    String fullPathToStore = TRAILING_SLASH.matcher(ClientUtils.escapeQueryChars(messagingService
+        .getFullPathToStore(user, session))).replaceFirst("");
     propertiesMap.put(MessageConstants.SEARCH_PROP_MESSAGESTORE, fullPathToStore);
 
     RequestParameter address = request.getRequestParameter("address");
@@ -90,7 +93,7 @@ public class MessageSparseSearchPropertyProvider implements SolrSearchPropertyPr
           starter++;
         }
         for (int i = starter; i < commaSeparatedTerms.length; i++) {
-          categoryClauseBuffer.append(" OR " + commaSeparatedTerms[i]);
+          categoryClauseBuffer.append(" OR ").append(commaSeparatedTerms[i]);
         }
       }
       categoryClauseBuffer.append(")");
