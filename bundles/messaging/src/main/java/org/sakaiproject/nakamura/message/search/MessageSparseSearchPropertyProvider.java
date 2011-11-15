@@ -62,6 +62,9 @@ public class MessageSparseSearchPropertyProvider implements SolrSearchPropertyPr
     final boolean solrSearchType = "sakai/solr-search".equals(resourceType);
     String fullPathToStore = ClientUtils.escapeQueryChars(messagingService
         .getFullPathToStore(user, session));
+    if ( fullPathToStore.endsWith("/")) {
+      fullPathToStore = fullPathToStore.substring(0, fullPathToStore.length() - 1);
+    }
     propertiesMap.put(MessageConstants.SEARCH_PROP_MESSAGESTORE, fullPathToStore);
 
     RequestParameter address = request.getRequestParameter("address");
@@ -90,7 +93,7 @@ public class MessageSparseSearchPropertyProvider implements SolrSearchPropertyPr
           starter++;
         }
         for (int i = starter; i < commaSeparatedTerms.length; i++) {
-          categoryClauseBuffer.append(" OR " + commaSeparatedTerms[i]);
+          categoryClauseBuffer.append(" OR ").append(commaSeparatedTerms[i]);
         }
       }
       categoryClauseBuffer.append(")");
