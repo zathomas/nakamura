@@ -46,8 +46,6 @@ import java.util.regex.Pattern;
     @Property(name = "sakai.search.provider", value = "MessageSparse") })
 public class MessageSparseSearchPropertyProvider implements SolrSearchPropertyProvider {
 
-  private static final Pattern TRAILING_SLASH = Pattern.compile("/$");
-
   @Reference
   LiteMessagingService messagingService;
 
@@ -63,8 +61,11 @@ public class MessageSparseSearchPropertyProvider implements SolrSearchPropertyPr
     Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
     final String resourceType = propertiesMap.get("sling:resourceType");
     final boolean solrSearchType = "sakai/solr-search".equals(resourceType);
-    String fullPathToStore = TRAILING_SLASH.matcher(ClientUtils.escapeQueryChars(messagingService
-        .getFullPathToStore(user, session))).replaceFirst("");
+    String fullPathToStore = ClientUtils.escapeQueryChars(messagingService
+        .getFullPathToStore(user, session));
+    if ( fullPathToStore.endsWith("/")) {
+      fullPathToStore = fullPathToStore.substring(0, fullPathToStore.length() - 1);
+    }
     propertiesMap.put(MessageConstants.SEARCH_PROP_MESSAGESTORE, fullPathToStore);
 
     RequestParameter address = request.getRequestParameter("address");
