@@ -139,11 +139,6 @@ KERN-1187
             <artifactId>org.apache.sling.fsresource</artifactId>
             <version>1.0.2</version>
         </bundle>
-        <bundle>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.i18n</artifactId>
-            <version>2.1.2</version>
-        </bundle>
 
         <!-- Launchpad initial content -->
         <bundle>
