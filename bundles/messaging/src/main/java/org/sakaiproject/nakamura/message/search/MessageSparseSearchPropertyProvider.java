@@ -62,9 +62,6 @@ public class MessageSparseSearchPropertyProvider implements SolrSearchPropertyPr
     final boolean solrSearchType = "sakai/solr-search".equals(resourceType);
     String fullPathToStore = ClientUtils.escapeQueryChars(messagingService
         .getFullPathToStore(user, session));
-    if ( fullPathToStore.endsWith("/")) {
-      fullPathToStore = fullPathToStore.substring(0, fullPathToStore.length() - 1);
-    }
     propertiesMap.put(MessageConstants.SEARCH_PROP_MESSAGESTORE, fullPathToStore);
 
     RequestParameter address = request.getRequestParameter("address");
