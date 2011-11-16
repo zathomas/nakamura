@@ -45,9 +45,9 @@ import org.sakaiproject.nakamura.util.NodeInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
-
+import java.util.Map.Entry;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
@@ -101,6 +101,8 @@ public class QueryServlet extends SlingAllMethodsServlet {
   @Reference
   private TemplateService tmplService;
 
+  private static final String RESOURCE_TMPL = "%s/resources/%s.properties";
+
   @Activate @Modified
   protected void activate(Map<?, ?> props) {
     queryTemplate = PropertiesUtil.toString(props.get(QUERY_TEMPLATE), DEFAULT_QUERY_TEMPLATE);
@@ -144,7 +146,8 @@ public class QueryServlet extends SlingAllMethodsServlet {
       jcrSession = slingRepo.login();
 
       // read in the template to use for the main page
-      String tmplPath = req.getResource().getPath() + "/" + queryTemplate;
+      String resPathBase = req.getResource().getPath();
+      String tmplPath = resPathBase + "/" + queryTemplate;
       Node templateNode = jcrSession.getNode(tmplPath);
       NodeInputStream tmplNis = JcrUtils.getInputStreamForNode(templateNode);
 
@@ -163,9 +166,18 @@ public class QueryServlet extends SlingAllMethodsServlet {
       queryOutput.collectForm(req, props);
 
       // load the resource bundle for i18n
-      ResourceBundle rb = req.getResourceBundle("org.sakaiproject.nakamura.search.Resources", null);
-      for (String key: rb.keySet()) {
-        props.put(key, rb.getString(key));
+      Locale reqLocale = req.getLocale();
+      String locale = null != reqLocale ? reqLocale.getLanguage()
+          : Locale.getDefault().getLanguage();
+      if (!jcrSession.itemExists(String.format(RESOURCE_TMPL, resPathBase, locale))) {
+        locale = "en";
+      }
+      java.util.Properties resProps = new java.util.Properties();
+      Node resNode = jcrSession.getNode(String.format(RESOURCE_TMPL, resPathBase, locale));
+      resProps.load(JcrUtils.getInputStreamForNode(resNode).getInputStream());
+
+      for (Entry<Object, Object> entry: resProps.entrySet()) {
+        props.put((String) entry.getKey(), entry.getValue());
       }
 
       // put it all together
