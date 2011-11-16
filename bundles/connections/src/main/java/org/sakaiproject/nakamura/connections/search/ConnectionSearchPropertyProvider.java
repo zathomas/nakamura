@@ -19,6 +19,7 @@ package org.sakaiproject.nakamura.connections.search;
 
 import static org.sakaiproject.nakamura.api.connections.ConnectionConstants.SEARCH_PROP_CONNECTIONSTORE;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -46,7 +47,11 @@ public class ConnectionSearchPropertyProvider implements SolrSearchPropertyProvi
    */
   public void loadUserProperties(SlingHttpServletRequest request,
       Map<String, String> propertiesMap) {
-    String user = request.getRemoteUser();
+    // KERN-2350 allow requesters to search contacts that are not their own
+    String user = request.getParameter("user");
+    if (StringUtils.isBlank(user)) {
+      user = request.getRemoteUser();
+    }
     String connectionPath = ClientUtils.escapeQueryChars(ConnectionUtils
         .getConnectionPathBase(user));
     if ( connectionPath.startsWith("/"))  {
