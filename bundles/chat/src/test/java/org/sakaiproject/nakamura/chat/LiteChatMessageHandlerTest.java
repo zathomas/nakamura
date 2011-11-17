@@ -77,7 +77,7 @@ public class LiteChatMessageHandlerTest {
         .thenReturn(pathToMessage);
 
     // chat manager service mocks
-    chatCache = new MapCacheImpl<Object>();
+    chatCache = new MapCacheImpl<Object>("testchat",CacheScope.INSTANCE);
     when(cacheManagerService.getCache("chat", CacheScope.CLUSTERREPLICATED))
         .thenReturn(chatCache);
     chatManagerService = new ChatManagerServiceImpl();

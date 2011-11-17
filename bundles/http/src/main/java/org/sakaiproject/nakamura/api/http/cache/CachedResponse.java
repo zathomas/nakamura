@@ -15,7 +15,11 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.http.cache;
+package org.sakaiproject.nakamura.api.http.cache;
+
+import org.sakaiproject.nakamura.api.http.cache.Operation;
+import org.sakaiproject.nakamura.http.cache.OperationResponseCapture;
+import org.sakaiproject.nakamura.http.cache.OperationResponseReplay;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -28,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 public class CachedResponse implements Serializable {
 
   /**
-   * 
+   *
    */
   private static final long serialVersionUID = -533080549451000116L;
   private long expires;
@@ -52,7 +56,7 @@ public class CachedResponse implements Serializable {
     OperationResponseReplay responseOperation = new OperationResponseReplay(operations, byteContent, stringContent);
     responseOperation.replay(response);
   }
-  
+
   @Override
   public String toString() {
     return "redo "+operations.length+" operations "+String.valueOf(stringContent==null?byteContent.length:stringContent.length());
