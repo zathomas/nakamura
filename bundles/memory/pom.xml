@@ -49,7 +49,7 @@
             -->
             <Import-Package>!sun.misc,!org.jgroups.*,!org.hibernate.*,*</Import-Package>
             <Private-Package>org.sakaiproject.nakamura.memory.*</Private-Package>
-            <DynamicImport-Package>sun.misc.*</DynamicImport-Package>
+            <DynamicImport-Package>*</DynamicImport-Package>
             <Embed-Transitive>true</Embed-Transitive>
             <Embed-Dependency>ehcache-core,backport-util-concurrent,jsr107cache</Embed-Dependency>
           </instructions>
@@ -121,6 +121,10 @@
       <groupId>net.sf.jsr107cache</groupId>
       <artifactId>jsr107cache</artifactId>
       <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.osgi</artifactId>
     </dependency>
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
