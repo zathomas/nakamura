@@ -20,6 +20,10 @@ class TC_Kern2274 < Test::Unit::TestCase
 
     @fourth_user = create_test_user("fourthUser")
 
+    @template_path = "/var/templates/test/kern-2274/simple-test-template-" +@m
+
+    create_template
+
     @s.switch_user(@u)
 
     @world_service = @s.url_for("/system/world/create")
@@ -54,7 +58,7 @@ class TC_Kern2274 < Test::Unit::TestCase
             "tag1-' + group_id + '",
             "tag2-' + group_id + '"
           ],
-          "worldTemplate" : "/var/templates/worlds/group/simple-group",
+          "worldTemplate" : "' + @template_path + '",
           "visibility": "public",
           "joinability": "no", 
 
@@ -109,7 +113,6 @@ class TC_Kern2274 < Test::Unit::TestCase
     result = @s.execute_get(@s.url_for("/~" + group_id + ".infinity.json"))
     assert_equal(200, result.code.to_i)
     json = JSON.parse(result.body)
-    assert_equal(2, json["public"]["authprofile"]["sakai:tag-uuid"].length)
     assert_equal(2, json["public"]["authprofile"]["sakai:tags"].length)
 
     # check for the tags
@@ -165,7 +168,7 @@ class TC_Kern2274 < Test::Unit::TestCase
           "id": "' + group_id + '",
           "title" : "Redundant Group Title",
           "description" : "Group Description",
-          "worldTemplate" : "/var/templates/worlds/group/simple-group",
+          "worldTemplate" : "' + @template_path + '",
           "visibility": "public",
           "joinability": "no"
         }'
@@ -179,7 +182,7 @@ class TC_Kern2274 < Test::Unit::TestCase
           "id": "' + group_id + '",
           "title" : "Redundant Group Title",
           "description" : "Group Description",
-          "worldTemplate" : "/var/templates/worlds/group/simple-group",
+          "worldTemplate" : "' + @template_path + '",
           "visibility": "public",
           "joinability": "no"
         }'
@@ -208,7 +211,7 @@ class TC_Kern2274 < Test::Unit::TestCase
             "tag1-' + group_id + '",
             "tag2-' + group_id + '"
           ],
-          "worldTemplate" : "/var/templates/worlds/group/simple-group",
+          "worldTemplate" : "' + @template_path + '",
           "visibility": "members-only",
           "joinability": "yes"
         }'
@@ -275,7 +278,7 @@ class TC_Kern2274 < Test::Unit::TestCase
             "tag1-' + group_id + '",
             "tag2-' + group_id + '"
           ],
-          "worldTemplate" : "/var/templates/worlds/group/simple-group",
+          "worldTemplate" : "' + @template_path + '",
           "visibility": "logged-in-only",
           "joinability": "withauth"
         }'
@@ -320,4 +323,115 @@ class TC_Kern2274 < Test::Unit::TestCase
 
   end
 
+  def create_template
+
+    template = '{
+      "id": "simplegroup",
+      "title": "__MSG__SIMPLE_GROUP__",
+      "img": "/dev/images/worldtemplates/simplegroup.png",
+      "fullImg": "/dev/images/worldtemplates/simplegroup-full.png",
+      "perfectFor": "__MSG__SIMPLE_GROUP_PERFECT_FOR__",
+
+      "roles": [
+        {
+          "id": "member",
+          "title": "MEMBER",
+          "titlePlural": "MEMBERS",
+          "isManagerRole": false,
+          "manages":[]
+        },
+        {
+          "id": "manager",
+          "title": "MANAGER",
+          "titlePlural":"MANAGERS",
+          "isManagerRole":true,
+          "manages":[
+            "member"
+          ]
+        }
+      ],
+
+      "joinRole": "member",
+      "creatorRole": "manager",
+
+      "docs": {
+        "${pid}0": {
+          "structure0": {
+            "library":{
+              "_ref":"${refid}0",
+              "_order":0,
+              "_nonEditable": true,
+              "_title": "Library",
+              "main":{
+                "_ref":"${refid}0",
+                "_order":0,
+                "_nonEditable": true,
+                "_title":"Library"
+              }
+            }
+          },
+          "${refid}0": {
+            "page": "html content goes here in a real template"
+
+          },
+          "${refid}1": {
+            "mylibrary": {
+              "groupid": "${groupid}"
+            }
+          }
+        },
+        "${pid}1": {
+          "structure0": {
+            "participants":{
+              "_ref":"${refid}2",
+              "_order":0,
+              "_title":"Participants",
+              "_nonEditable": true,
+              "main":{
+                "_ref":"${refid}2",
+                "_order":0,
+                "_nonEditable": true,
+                "_title":"Participants"
+              }
+            }
+          },
+          "${refid}2": {
+            "page": "html content goes here in a real template"
+          },
+          "${refid}3": {
+            "participants": {
+              "groupid": "${groupid}"
+            }
+          }
+        }
+      },
+
+      "structure": {
+        "library": {
+          "_title": "Library",
+          "_order": 0,
+          "_docref": "${pid}0",
+          "_nonEditable": true,
+          "_view": ["everyone", "anonymous", "-member"],
+          "_edit": ["-manager"]
+        },
+        "participants": {
+          "_title": "Participants",
+          "_order": 1,
+          "_docref": "${pid}1",
+          "_nonEditable": true,
+          "_view": ["everyone", "anonymous", "-member"],
+          "_edit": ["-manager"]
+        }
+      }
+    }'
+
+    data = {}
+    data[':operation'] = 'import'
+    data[':contentType'] = 'json'
+    data[':content'] = template
+
+    @s.execute_post(@s.url_for(@template_path), data)
+
+  end
 end

@@ -43,9 +43,6 @@
           <instructions>
             <Bundle-Category> sakai-nakamura </Bundle-Category>
             <Private-Package>org.sakaiproject.nakamura.world.*</Private-Package>
-            <Sling-Initial-Content>
-                SLING-INF/content/var/templates/worlds;path:=/var/templates/worlds;uninstall:=false;overwriteProperties:=true
-            </Sling-Initial-Content>
           </instructions>
         </configuration>
       </plugin>
