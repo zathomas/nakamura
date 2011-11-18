@@ -91,13 +91,13 @@ public class ContentLikeThisPropertyProvider  implements SolrSearchPropertyProvi
                                          "fl", "*,score",
                                          "rows", "10",
                                          "mlt", "true",
-                                         "mlt.fl", "resourceType,manager,viewer,title,name,taguuid",
+                                         "mlt.fl", "resourceType,manager,viewer,title,name,tagname",
                                          "mlt.count", "10",
                                          "mlt.maxntp", "0",
                                          "mlt.mintf", "1",
                                          "mlt.mindf", "1",
                                          "mlt.boost", "true",
-                                         "mlt.qf", "resourceType^100 manager^4 viewer^3 name^2 taguuid^1 title^1");
+                                         "mlt.qf", "resourceType^100 manager^4 viewer^3 name^2 tagname^1 title^1");
 
       }
 

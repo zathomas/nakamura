@@ -92,7 +92,6 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
     builder.put(FilesConstants.POOLED_CONTENT_MIMETYPE, "mimeType");
     builder.put(FilesConstants.SAKAI_FILE, "file");
     builder.put(FilesConstants.SAKAI_TAG_NAME, "tagname");
-    builder.put(FilesConstants.SAKAI_TAG_UUIDS, "taguuid");
     builder.put(FilesConstants.SAKAI_TAGS, "tag");
     builder.put(FilesConstants.SAKAI_PAGE_COUNT, "pagecount");
     builder.put(FilesConstants.LAST_MODIFIED, FilesConstants.LAST_MODIFIED);

@@ -19,7 +19,6 @@ package org.sakaiproject.nakamura.files.servlets;
 
 import com.google.common.collect.ImmutableMap;
 
-import org.apache.commons.lang.CharSet;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -167,7 +166,7 @@ public class DirectoryTagFeedServlet extends SlingSafeMethodsServlet {
           write.object();
           ExtendedJSONWriter.writeNodeContentsToWriter(write, child);
           write.key("content");
-          writeOneTaggedItemForTagUuids(request, getTagUuidsForDirectoryBranch(child), write);
+          writeOneTaggedItemForTags(request, getTagsForDirectoryBranch(child), write);
           write.endObject();
         }
       }
@@ -180,7 +179,7 @@ public class DirectoryTagFeedServlet extends SlingSafeMethodsServlet {
   }
 
 
-  private List<String> getTagUuidsForDirectoryBranch(Node branch) throws RepositoryException {
+  private List<String> getTagsForDirectoryBranch(Node branch) throws RepositoryException {
     List<String> rv = new ArrayList<String>();
     if (branch.hasProperty("sling:resourceType") && "sakai/tag".equals(branch.getProperty("sling:resourceType").getString())) {
       rv.add(branch.getIdentifier());
@@ -189,19 +188,19 @@ public class DirectoryTagFeedServlet extends SlingSafeMethodsServlet {
     NodeIterator branchIterator = branch.getNodes();
     while (branchIterator.hasNext()) {
       Node branchChild = branchIterator.nextNode();
-      rv.addAll(getTagUuidsForDirectoryBranch(branchChild));
+      rv.addAll(getTagsForDirectoryBranch(branchChild));
     }
     return rv;
   }
   
-  private void writeOneTaggedItemForTagUuids(SlingHttpServletRequest request,
-      List<String> tagUuids, JSONWriter write) throws RepositoryException, SearchException, JSONException, SolrSearchException {
+  private void writeOneTaggedItemForTags(SlingHttpServletRequest request,
+      List<String> tags, JSONWriter write) throws RepositoryException, SearchException, JSONException, SolrSearchException {
     // BL120 KERN-1617 Need to include Content tagged with tag uuid
     final StringBuilder sb = new StringBuilder();
-    sb.append("taguuid:(");
+    sb.append("tag:(");
     String sep = "";
-    for (String tagUuid : tagUuids) {
-      sb.append(sep).append(ClientUtils.escapeQueryChars(tagUuid));
+    for (String tag : tags) {
+      sb.append(sep).append(ClientUtils.escapeQueryChars(tag));
       sep = " ";
     }
     sb.append(") AND resourceType:").append(ClientUtils.escapeQueryChars(FilesConstants.POOLED_CONTENT_RT));

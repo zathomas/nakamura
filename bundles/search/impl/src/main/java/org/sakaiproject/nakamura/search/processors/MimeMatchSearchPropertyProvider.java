@@ -43,7 +43,7 @@ import java.util.Map;
     @Property(name = SearchConstants.REG_PROVIDER_NAMES, value = "MimeMatch") })
 public class MimeMatchSearchPropertyProvider implements SolrSearchPropertyProvider {
   private static final Logger logger = LoggerFactory
-      .getLogger(TagMatchSearchPropertyProvider.class);
+      .getLogger(MimeMatchSearchPropertyProvider.class);
 
   /**
    * {@inheritDoc}

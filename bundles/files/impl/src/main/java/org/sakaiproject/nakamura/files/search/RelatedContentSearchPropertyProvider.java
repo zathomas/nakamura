@@ -158,7 +158,7 @@ public class RelatedContentSearchPropertyProvider extends
         final ContentManager contentManager = session.getContentManager();
         final Iterator<Result> i = rs.getResultSetIterator();
         Set<String> allFileNames = new HashSet<String>();
-        Set<String> allTagUuids = new HashSet<String>();
+        Set<String> allTags = new HashSet<String>();
         int count = 0;
         while (i.hasNext() && count < MAX_SOURCE_LIMIT) {
           final Result result = i.next();
@@ -181,11 +181,11 @@ public class RelatedContentSearchPropertyProvider extends
               allFileNames.addAll(Arrays.asList(foundFileNames));
             }
 
-            // grab all the unique tag uuids
-            final String[] tagUuids = (String[]) content
-                .getProperty(FilesConstants.SAKAI_TAG_UUIDS);
-            if (tagUuids != null) {
-              allTagUuids.addAll(Arrays.asList(tagUuids));
+            // grab all the unique tags
+            final String[] tags = (String[]) content
+                .getProperty(FilesConstants.SAKAI_TAGS);
+            if (tags != null) {
+              allTags.addAll(Arrays.asList(tags));
             }
           } else {
             // fail quietly in this edge case
@@ -231,22 +231,22 @@ public class RelatedContentSearchPropertyProvider extends
         }
         propertiesMap.put("fileNames", Joiner.on(" OR ").join(allFileNames));
 
-        if (allTagUuids.isEmpty()) { // to prevent solr parse errors
-          allTagUuids.add(AVOID_FALSE_POSITIVE_MATCHES);
+        if (allTags.isEmpty()) { // to prevent solr parse errors
+          allTags.add(AVOID_FALSE_POSITIVE_MATCHES);
         }
-        if (allTagUuids.size() > 1024) {
+        if (allTags.size() > 1024) {
           /*
            * solr allows a maximum of 1024. Performance will likely be an issue by this
            * point.
            */
           LOG.warn(
               "Exceeded maximum number of solr binary operations: {}. Reduced size to 1024.",
-              allTagUuids.size());
-          final String[] tooLarge = (String[]) allTagUuids.toArray();
+              allTags.size());
+          final String[] tooLarge = (String[]) allTags.toArray();
           final String[] justRight = Arrays.copyOf(tooLarge, 1024);
-          allTagUuids = new HashSet<String>(Arrays.asList(justRight));
+          allTags = new HashSet<String>(Arrays.asList(justRight));
         }
-        propertiesMap.put("tagUuids", Joiner.on(" OR ").join(allTagUuids));
+        propertiesMap.put("tags", Joiner.on(" OR ").join(allTags));
 
       } catch (AccessDeniedException e) {
         LOG.error(e.getLocalizedMessage(), e);

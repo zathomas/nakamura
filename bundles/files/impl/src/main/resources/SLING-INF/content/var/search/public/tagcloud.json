@@ -1,8 +1,10 @@
 {
-  "sakai:query-template": "taguuid:[* TO *]${_groupReaderAnd}",
+  "sakai:query-template": "tag:[* TO *]${_groupReaderAnd}",
   "sakai:query-template-options": {
-      "sort": "${sortOn} ${sortOrder}",
-      "items": "10000"
+      "items": "0",
+      "facet": true,
+      "facet.field": "tagname",
+      "facet.mincount": 1
   },
   "sortOn": "_lastModified",
   "sortOrder": "desc",

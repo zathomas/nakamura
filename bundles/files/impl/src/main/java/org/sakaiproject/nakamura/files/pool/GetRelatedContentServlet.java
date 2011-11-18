@@ -20,7 +20,7 @@ package org.sakaiproject.nakamura.files.pool;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_PUBLIC_RELATED_SELECTOR;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_RELATED_SELECTOR;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_RT;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_UUIDS;
+import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAGS;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -74,7 +74,7 @@ import javax.servlet.http.HttpServletResponse;
     "This servlet returns an array of content related to the targeted node.",
     "Currently, relatedness is determined by the number of shared tags.",
     "<pre>curl http://localhost:8080/p/hHnm6yipCo.related.tidy.json</pre>",
-    "<pre>[{\n    \"_lastModifiedBy\": \"suzy\",\n    \"_previousBlockId\": \"UbGXYKGfEeCAXdkUrBABAw+\",\n    \"_previousVersion\": \"UbCF8KGfEeCAXdkUrBABAw+\",\n    \"sakai:fileextension\": \".png\",\n    \"_path\": \"hESoXumAT\",\n    \"_blockId\": \"UbGXYKGfEeCAXdkUrBABAw+\",\n    \"sakai:allowcomments\": \"true\",\n    \"sakai:pooled-content-viewer\": [\"anonymous\", \"everyone\"],\n    \"sakai:pool-content-created-for\": \"suzy\",\n    \"_bodyCreatedBy\": \"admin\",\n    \"_id\": \"UchTsaGfEeCAXdkUrBABAw+\",\n    \"sakai:pooled-content-file-name\": \"hero-zach-unmasked.png\",\n    \"_bodyCreated\": 1309276646363,\n    \"sakai:copyright\": \"creativecommons\",\n    \"_length\": 25606,\n    \"sakai:needsprocessing\": \"true\",\n    \"sakai:permissions\": \"public\",\n    \"_mimeType\": \"image/png\",\n    \"_bodyLastModifiedBy\": \"admin\",\n    \"_createdBy\": \"admin\",\n    \"sakai:tag-uuid\": [\"d1cdceb4-f3c2-4fda-9744-69097bb573bd\"],\n    \"_versionHistoryId\": \"UchTsKGfEeCAXdkUrBABAw+\",\n    \"sakai:tags\": [\"great\"],\n    \"sakai:showcomments\": \"true\",\n    \"sling:resourceType\": \"sakai/pooled-content\",\n    \"sakai:pooled-content-manager\": [\"suzy\"],\n    \"_created\": 1309276646351,\n    \"_bodyLastModified\": 1309276646363,\n    \"_lastModified\": 1309286723834,\n    \"_bodyLocation\": \"2011/5/-V/7P/mM/-V7PmMdM-QDHyHslMftAMF21H4s\"\n}]</pre>"
+    "<pre>[{\n    \"_lastModifiedBy\": \"suzy\",\n    \"_previousBlockId\": \"UbGXYKGfEeCAXdkUrBABAw+\",\n    \"_previousVersion\": \"UbCF8KGfEeCAXdkUrBABAw+\",\n    \"sakai:fileextension\": \".png\",\n    \"_path\": \"hESoXumAT\",\n    \"_blockId\": \"UbGXYKGfEeCAXdkUrBABAw+\",\n    \"sakai:allowcomments\": \"true\",\n    \"sakai:pooled-content-viewer\": [\"anonymous\", \"everyone\"],\n    \"sakai:pool-content-created-for\": \"suzy\",\n    \"_bodyCreatedBy\": \"admin\",\n    \"_id\": \"UchTsaGfEeCAXdkUrBABAw+\",\n    \"sakai:pooled-content-file-name\": \"hero-zach-unmasked.png\",\n    \"_bodyCreated\": 1309276646363,\n    \"sakai:copyright\": \"creativecommons\",\n    \"_length\": 25606,\n    \"sakai:needsprocessing\": \"true\",\n    \"sakai:permissions\": \"public\",\n    \"_mimeType\": \"image/png\",\n    \"_bodyLastModifiedBy\": \"admin\",\n    \"_createdBy\": \"admin\",\n    \"sakai:tag\": [\"great tag\"],\n    \"_versionHistoryId\": \"UchTsKGfEeCAXdkUrBABAw+\",\n    \"sakai:tags\": [\"great\"],\n    \"sakai:showcomments\": \"true\",\n    \"sling:resourceType\": \"sakai/pooled-content\",\n    \"sakai:pooled-content-manager\": [\"suzy\"],\n    \"_created\": 1309276646351,\n    \"_bodyLastModified\": 1309276646363,\n    \"_lastModified\": 1309286723834,\n    \"_bodyLocation\": \"2011/5/-V/7P/mM/-V7PmMdM-QDHyHslMftAMF21H4s\"\n}]</pre>"
   },
   bindings = { @ServiceBinding(type = BindingType.TYPE,
     bindings = { POOLED_CONTENT_RT },
@@ -127,19 +127,19 @@ public class GetRelatedContentServlet extends SlingSafeMethodsServlet {
       writer.setTidy(selectors.contains("tidy"));
       writer.array();
 
-      if (content.hasProperty(SAKAI_TAG_UUIDS)) {
+      if (content.hasProperty(SAKAI_TAGS)) {
         String nodePath = content.getPath();
         Map<String, Object> properties = content.getProperties();
-        Set<String> tagUuids = Sets.newHashSet();
-        if (properties.containsKey(SAKAI_TAG_UUIDS)) {
-          String[] uuids = (String[]) properties.get(SAKAI_TAG_UUIDS);
-          for (String uuid : uuids) {
-            tagUuids.add(ClientUtils.escapeQueryChars(uuid));
+        Set<String> tags = Sets.newHashSet();
+        if (properties.containsKey(SAKAI_TAGS)) {
+          String[] contentTags = (String[]) properties.get(SAKAI_TAGS);
+          for (String contentTag : contentTags) {
+            tags.add(ClientUtils.escapeQueryChars(contentTag));
           }
         }
 
-        if (tagUuids.size() > 0) {
-          sb.append("taguuid:(").append(StringUtils.join(tagUuids, " OR "))
+        if (tags.size() > 0) {
+          sb.append("tag:(").append(StringUtils.join(tags, " OR "))
               .append(")");
         }
         Query query = new Query(sb.toString());
@@ -169,7 +169,7 @@ public class GetRelatedContentServlet extends SlingSafeMethodsServlet {
           }
         }
       } else {
-        LOGGER.info("No UUID Tags in {} ",content.getProperties());
+        LOGGER.info("No Tags in {} ",content.getProperties());
       }
       writer.endArray();
     } catch (JSONException e) {
