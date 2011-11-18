@@ -211,6 +211,13 @@ public class ExtendedJSONWriter extends JSONWriter {
           }
           endArray();
         }
+      } else {
+        if (collapseArray) {
+          value("");
+        } else {
+          array();
+          endArray();
+        }
       }
       return this;
     } else {
