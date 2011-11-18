@@ -5,7 +5,7 @@
       "fq": "resourceType:(authorizable OR sakai/pooled-content)",
       "sort": "${sortOn} ${sortOrder}",
       "facet" : true,
-      "facet.field" : "tag"
+      "facet.field" : "tagname"
   },
   "sortOn": "score",
   "sortOrder": "desc",
