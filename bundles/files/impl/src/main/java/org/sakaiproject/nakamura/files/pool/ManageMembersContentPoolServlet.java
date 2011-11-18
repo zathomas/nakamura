@@ -17,15 +17,15 @@
  */
 package org.sakaiproject.nakamura.files.pool;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_USER_EDITOR;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_USER_MANAGER;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_USER_VIEWER;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -51,6 +51,7 @@ import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AclModification;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.Permission;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
@@ -59,7 +60,6 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.profile.ProfileService;
-import org.sakaiproject.nakamura.api.solr.SolrServerService;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
@@ -70,7 +70,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -78,10 +77,10 @@ import javax.servlet.http.HttpServletResponse;
 @SlingServlet(methods = { "GET", "POST" }, resourceTypes = { "sakai/pooled-content" }, selectors = { "members" })
 @Properties(value = {
   @Property(name = "service.vendor", value = "The Sakai Foundation"),
-  @Property(name = "service.description", value = "Manages the Managers and Viewers for pooled content.") })
+  @Property(name = "service.description", value = "Manages the Managers, Editors, and Viewers for pooled content.") })
 @ServiceDocumentation(name = "Manage Members Content Pool Servlet", okForVersion = "0.11",
-  shortDescription = "List and manage the managers and viewers for a file in the content pool.",
-  description = "List and manage the managers and viewers for a file in the content pool.",
+  shortDescription = "List and manage the managers, editors, and viewers for a file in the content pool.",
+  description = "List and manage the managers, editors, and viewers for a file in the content pool.",
   bindings = { @ServiceBinding(type = BindingType.TYPE, bindings = { "sakai/pooled-content" },
     selectors = {
       @ServiceSelector(name = "members", description = "Binds to the selector members."),
@@ -92,7 +91,7 @@ import javax.servlet.http.HttpServletResponse;
   methods = {
     @ServiceMethod(name = "GET",
       description = {
-        "Retrieves a list of members for this pooled content item.",
+        "Retrieves a list of managers, editors, and viewers for this pooled content item.",
         "<pre>curl http://localhost:8080/p/hESoXumAT.members.tidy.json</pre>",
         "<pre>{\n" +
           "    \"managers\": [{\n" +
@@ -116,6 +115,35 @@ import javax.servlet.http.HttpServletResponse;
           "        },\n" +
           "        \"rep:userId\": \"suzy\",\n" +
           "        \"userid\": \"suzy\",\n" +
+          "        \"counts\": {\n" +
+          "            \"contactsCount\": 0,\n" +
+          "            \"membershipsCount\": 0,\n" +
+          "            \"contentCount\": 3,\n" +
+          "            \"countLastUpdate\": 1309287542572\n" +
+          "        },\n" +
+          "        \"sakai:excludeSearch\": false\n" +
+          "    }],\n" +
+          "    \"editors\": [{\n" +
+          "        \"hash\": \"alice.b.toklas\",\n" +
+          "        \"basic\": {\n" +
+          "            \"access\": \"everybody\",\n" +
+          "            \"elements\": {\n" +
+          "                \"picture\": {\n" +
+          "                    \"value\": \"{\\\"name\\\":\\\"256x256_tmp1309269939493.jpg\\\",\\\"_name\\\":\\\"tmp1309269939493.jpg\\\",\\\"_charset_\\\":\\\"utf-8\\\",\\\"selectedx1\\\":0,\\\"selectedy1\\\":3,\\\"selectedx2\\\":85,\\\"selectedy2\\\":88}\"\n" +
+          "                },\n" +
+          "                \"lastName\": {\n" +
+          "                    \"value\": \"Toklas\"\n" +
+          "                },\n" +
+          "                \"email\": {\n" +
+          "                    \"value\": \"aliceb@toklas.com\"\n" +
+          "                },\n" +
+          "                \"firstName\": {\n" +
+          "                    \"value\": \"Alice\"\n" +
+          "                }\n" +
+          "            }\n" +
+          "        },\n" +
+          "        \"rep:userId\": \"aliceb\",\n" +
+          "        \"userid\": \"aliceb\",\n" +
           "        \"counts\": {\n" +
           "            \"contactsCount\": 0,\n" +
           "            \"membershipsCount\": 0,\n" +
@@ -167,6 +195,7 @@ import javax.servlet.http.HttpServletResponse;
     @ServiceMethod(name = "POST", description = "Manipulate the member list for a pooled content item.",
       parameters = {
         @ServiceParameter(name = ":manager", description = "Set the managers on the ACL of a file."),
+        @ServiceParameter(name = ":editor", description = "Set the editors on the ACL of a file."),
         @ServiceParameter(name = ":viewer", description = "Set the viewers on the ACL of a file.")
       },
       response = {
@@ -181,6 +210,7 @@ import javax.servlet.http.HttpServletResponse;
   private static final Logger LOGGER = LoggerFactory
       .getLogger(ManageMembersContentPoolServlet.class);
 
+  private static final Permission PERMISSION_EDITOR = Permissions.CAN_READ.combine(Permissions.CAN_WRITE);
 
   @Reference
   protected transient ProfileService profileService;
@@ -217,6 +247,8 @@ import javax.servlet.http.HttpServletResponse;
       Map<String, Object> properties = node.getProperties();
       String[] managers = (String[]) properties
           .get(POOLED_CONTENT_USER_MANAGER);
+      String[] editors = (String[]) properties
+          .get(POOLED_CONTENT_USER_EDITOR);
       String[] viewers = (String[]) properties
           .get(POOLED_CONTENT_USER_VIEWER);
 
@@ -242,6 +274,16 @@ import javax.servlet.http.HttpServletResponse;
           writeProfileMap(jcrSession, am, writer, manager, detailed);
         } catch (AccessDeniedException e) {
           LOGGER.debug("Skipping private manager [{}]", manager);
+        }
+      }
+      writer.endArray();
+      writer.key("editors");
+      writer.array();
+      for (String editor : StorageClientUtils.nonNullStringArray(editors)) {
+        try {
+          writeProfileMap(jcrSession, am, writer, editor, detailed);
+        } catch (AccessDeniedException e) {
+          LOGGER.debug("Skipping private editor [{}]", editor);
         }
       }
       writer.endArray();
@@ -327,17 +369,21 @@ import javax.servlet.http.HttpServletResponse;
       Map<String, Object> properties = pooledContent.getProperties();
       String[] managers = StorageClientUtils.nonNullStringArray((String[]) properties
           .get(POOLED_CONTENT_USER_MANAGER));
+      String[] editors = StorageClientUtils.nonNullStringArray((String[]) properties
+          .get(POOLED_CONTENT_USER_EDITOR));
       String[] viewers = StorageClientUtils.nonNullStringArray((String[]) properties
           .get(POOLED_CONTENT_USER_VIEWER));
 
       Set<String> managerSet = Sets.newHashSet(managers);
+      Set<String> editorSet = Sets.newHashSet(editors);
       Set<String> viewerSet = Sets.newHashSet(viewers);
 
       List<String> removeViewers = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":viewer@Delete")));
       List<String> removeManagers = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":manager@Delete")));
+      List<String> removeEditors = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":editor@Delete")));
       List<String> addViewers = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":viewer")));
       List<String> addManagers = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":manager")));
-
+      List<String> addEditors = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":editor")));
 
       if (!accessControlManager.can(thisUser, Security.ZONE_CONTENT, pooledContent.getPath(), Permissions.CAN_WRITE)) {
         if (!addManagers.isEmpty()) {
@@ -355,6 +401,11 @@ import javax.servlet.http.HttpServletResponse;
 
         if (addViewers.contains(User.ANON_USER) || addViewers.contains(Group.EVERYONE)) {
           response.sendError(SC_FORBIDDEN, "Non-managers may not add 'anonymous' or 'everyone' as viewers.");
+          return;
+        }
+
+        if (addEditors.contains(User.ANON_USER) || addEditors.contains(Group.EVERYONE)) {
+          response.sendError(SC_FORBIDDEN, "Non-managers may not add 'anonymous' or 'everyone' as editors.");
           return;
         }
 
@@ -390,6 +441,22 @@ import javax.servlet.http.HttpServletResponse;
         }
       }
 
+      for (String addEditor : addEditors) {
+        if ((addEditor.length() > 0) && !editorSet.contains(addEditor)) {
+          editorSet.add(addEditor);
+          AclModification.addAcl(true, PERMISSION_EDITOR, addEditor,
+              aclModifications);
+        }
+      }
+
+      for (String removeEditor : removeEditors) {
+        if ((removeEditor.length() > 0) && editorSet.contains(removeEditor)) {
+          editorSet.remove(removeEditor);
+          AclModification.removeAcl(true, PERMISSION_EDITOR, removeEditor,
+              aclModifications);
+        }
+      }
+
       for (String addViewer : addViewers) {
         if ((addViewer.length() > 0) && !viewerSet.contains(addViewer)) {
           viewerSet.add(addViewer);
@@ -408,7 +475,7 @@ import javax.servlet.http.HttpServletResponse;
         }
       }
 
-      updateContentMembers(session, pooledContent, viewerSet,  managerSet);
+      updateContentMembers(session, pooledContent, viewerSet,  managerSet, editorSet);
       updateContentAccess(session, pooledContent, aclModifications);
 
       response.setStatus(SC_OK);
@@ -429,12 +496,16 @@ import javax.servlet.http.HttpServletResponse;
     }
   }
 
-  private void updateContentMembers(Session session, Content content, Set<String> viewerSet, Set<String> managerSet) throws StorageClientException, AccessDeniedException {
+  private void updateContentMembers(Session session, Content content, Set<String> viewerSet, Set<String> managerSet, Set<String> editorSet)
+          throws StorageClientException, AccessDeniedException {
     content.setProperty(POOLED_CONTENT_USER_VIEWER,
         viewerSet.toArray(new String[viewerSet.size()]));
     content.setProperty(POOLED_CONTENT_USER_MANAGER,
         managerSet.toArray(new String[managerSet.size()]));
+    content.setProperty(POOLED_CONTENT_USER_EDITOR,
+        editorSet.toArray(new String[editorSet.size()]));
     LOGGER.debug("Set Managers to {}",Arrays.toString(managerSet.toArray(new String[managerSet.size()])));
+    LOGGER.debug("Set Editors to {}",Arrays.toString(editorSet.toArray(new String[editorSet.size()])));
     LOGGER.debug("Set Viewers to {}",Arrays.toString(viewerSet.toArray(new String[managerSet.size()])));
     session.getContentManager().update(content);
   }
