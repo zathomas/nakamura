@@ -5,7 +5,7 @@
       "fq": ["type:g", "resourceType:authorizable"],
       "sort": "${sortOn} ${sortOrder}",
       "facet" : true,
-      "facet.field" : "tag"
+      "facet.field" : "tagname"
   },
   "sortOn": "score",
   "sortOrder": "desc",
