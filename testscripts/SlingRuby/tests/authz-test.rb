@@ -5,7 +5,13 @@ require 'nakamura'
 require 'nakamura/test'
 require 'nakamura/authz'
 require 'test/unit.rb'
-require './authz-base.rb'
+
+dir = File.dirname(__FILE__)
+if not dir.match(/^\//)
+  dir = "./#{dir}"
+end
+
+require "#{dir}/authz-base.rb"
 include SlingInterface
 include SlingUsers
 include SlingAuthz
