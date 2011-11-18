@@ -1,13 +1,17 @@
 #!/usr/bin/env ruby
 
-
 require 'nakamura/test'
 require 'logger'
 
 SlingTest.setLogLevel(Logger::ERROR)
 
-Dir.foreach(".") do |path|
+dir = File.dirname(__FILE__)
+if not dir.match(/^\//)
+  dir = "./#{dir}"
+end
+
+Dir.foreach(dir) do |path|
   if /kern-.*\.rb/.match(File.basename(path))
-    require "./#{path}"
+    require "#{dir}/#{path}"
   end
 end

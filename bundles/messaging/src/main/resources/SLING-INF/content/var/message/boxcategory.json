@@ -1,4 +1,4 @@
-{ "sakai:query-template": "(path:${_userMessagePath} AND resourceType:sakai/message AND messagebox:(${box})${_categoryClause}) AND (title:(${q}) OR content:(${q}) OR ngram:(${q}) OR edgengram:(${q}))",
+{ "sakai:query-template": "(messagestore:${_userMessagePath} AND resourceType:sakai/message AND messagebox:(${box})${_categoryClause}) AND (title:(${q}) OR content:(${q}) OR ngram:(${q}) OR edgengram:(${q}))",
   "sakai:query-template-options": {
       "sort": "${sortOn} ${sortOrder}"
   },
