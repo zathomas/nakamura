@@ -3,7 +3,8 @@
   "sakai:query-template-options": {
       "sort": "${sortOn} ${sortOrder}",
       "facet" : true,
-      "facet.field" : "tagname"
+      "facet.field" : "tagname",
+      "facet.mincount" : 1
   },
   "sortOn": "score",
   "sortOrder": "desc",
