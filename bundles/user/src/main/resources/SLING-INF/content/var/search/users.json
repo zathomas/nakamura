@@ -1,6 +1,6 @@
 {
   "sling:resourceType": "sakai/solr-search",
-  "sakai:query-template": "name:(${q}) OR firstName:(${q}) OR lastName:(${q}) OR email:(${q}) OR title:(${q}) OR ngram:(${q}) OR edgengram:(${q})${_taguuids}",
+  "sakai:query-template": "name:(${q}) OR firstName:(${q}) OR lastName:(${q}) OR email:(${q}) OR title:(${q}) OR ngram:(${q}) OR edgengram:(${q}) OR tag:(${q})",
   "sakai:query-template-options": {
       "fq": ["type:u", "resourceType:authorizable"],
       "sort": "${sortOn} ${sortOrder}",
@@ -12,7 +12,6 @@
   },
   "sortOn": "score",
   "sortOrder": "desc",
-  "sakai:propertyprovider" : "TagMatch",
   "sakai:batchresultprocessor": "ProfileContacts",
   "sakai:title": "Users",
   "sakai:shortDescription": "Get the profiles of select users.",

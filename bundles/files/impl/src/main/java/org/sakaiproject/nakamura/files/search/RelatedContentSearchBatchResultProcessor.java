@@ -31,21 +31,16 @@ import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
-import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.Result;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchBatchResultProcessor;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultProcessor;
-import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -113,7 +108,7 @@ public class RelatedContentSearchBatchResultProcessor extends
       sourceQuery.append(") OR viewer:((everyone OR anonymous) AND NOT ");
       sourceQuery.append(user);
       // FYI: ^4 == 4 times boost; default boost value is one
-      sourceQuery.append(")) AND (description:[* TO *] OR taguuid:[* TO *]))^4");
+      sourceQuery.append(")) AND (description:[* TO *] OR tag:[* TO *]))^4");
 
       try {
         final Iterator<Result> i = SolrSearchUtil.getRandomResults(request,

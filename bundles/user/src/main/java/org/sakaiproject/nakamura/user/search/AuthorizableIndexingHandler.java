@@ -77,7 +77,6 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
     builder.put(UserConstants.USER_LASTNAME_PROPERTY, "lastName");
     builder.put(UserConstants.USER_EMAIL_PROPERTY, "email");
     builder.put("type", "type");
-    builder.put("sakai:tag-uuid", "taguuid");
     builder.put("sakai:tags", "tag");
     builder.put(Authorizable.LASTMODIFIED_FIELD, Content.LASTMODIFIED_FIELD);
     builder.put(UserConstants.COUNTS_LAST_UPDATE_PROP, "countLastUpdate");
@@ -91,7 +90,6 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
     builder.put("type", "type");
     builder.put(UserConstants.GROUP_TITLE_PROPERTY, "title");
     builder.put(UserConstants.GROUP_DESCRIPTION_PROPERTY, "description");
-    builder.put("sakai:tag-uuid", "taguuid");
     builder.put("sakai:tags", "tag");
     builder.put("sakai:category", "category");
     builder.put(Authorizable.LASTMODIFIED_FIELD, Content.LASTMODIFIED_FIELD);    

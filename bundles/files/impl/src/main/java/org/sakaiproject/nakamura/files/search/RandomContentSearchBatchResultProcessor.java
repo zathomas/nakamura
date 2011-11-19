@@ -99,7 +99,6 @@ public class RandomContentSearchBatchResultProcessor extends LiteFileSearchBatch
       Result result = results.next();
       if (result.getFirstValue("description") != null
           || result.getFirstValue("tag") != null
-          || result.getFirstValue("taguuid") != null
           || result.getFirstValue("hasPreview") != null) {
         priorityResults.add(result);
       } else {

@@ -1,5 +1,5 @@
 {
-  "sakai:query-template": "resourceType:sakai/pooled-content${_taguuids} ${_mimetype}",
+  "sakai:query-template": "resourceType:sakai/pooled-content${_tags} ${_mimetype}",
   "sakai:query-template-options": {
       "sort": "${sortOn} ${sortOrder}",
       "facet" : true,
@@ -8,6 +8,7 @@
   },
   "sortOn": "score",
   "sortOrder": "desc",
+  "_tags": "",
   "sling:resourceType": "sakai/solr-search",
   "sakai:propertyprovider" : ["TagMatch", "MimeMatch"],
   "sakai:title": "Pooled Content - All",
