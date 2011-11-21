@@ -32,6 +32,7 @@ import static org.sakaiproject.nakamura.api.user.UserConstants.USER_DATEOFBIRTH;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_DEPARTMENT;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_EMAIL_PROPERTY;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_FIRSTNAME_PROPERTY;
+import static org.sakaiproject.nakamura.api.user.UserConstants.USER_HOME_PATH;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_LASTNAME_PROPERTY;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_PICTURE;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_ROLE;
@@ -56,6 +57,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.user.counts.CountProvider;
+import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,6 +109,7 @@ public class BasicUserInfoServiceImpl implements BasicUserInfoService {
     Map<String, Object> basicUserInfo = Maps.newHashMap();
     basicUserInfo.put(USER_BASIC, basicProfileMapForAuthorizable(authorizable));
     basicUserInfo.put(COUNTS_PROP, countsMapforAuthorizable(authorizable));
+    basicUserInfo.put(USER_HOME_PATH, LitePersonalUtils.getHomeResourcePath(authorizable.getId()));
     if ( authorizable.hasProperty(UserConstants.SAKAI_EXCLUDE)) {
       basicUserInfo.put(UserConstants.SAKAI_EXCLUDE, authorizable.getProperty(UserConstants.SAKAI_EXCLUDE));
     } else {
