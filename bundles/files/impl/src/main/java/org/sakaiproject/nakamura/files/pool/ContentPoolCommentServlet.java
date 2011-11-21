@@ -27,6 +27,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
@@ -216,6 +217,7 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
     // collect the items we'll store
     String user = request.getRemoteUser();
     String body = request.getParameter(COMMENT);
+    int statusCode;
 
     // stop now if user is not logged in
     if ("anonymous".equals(user)) {
@@ -224,12 +226,6 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
       return;
     }
 
-    // stop now if no comment provided
-    if (StringUtils.isBlank(body)) {
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-          "'comment' must be provided.");
-      return;
-    }
 
     Resource resource = request.getResource();
     Session adminSession = null;
@@ -245,24 +241,56 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
         contentManager.update(comments);
       }
 
-      // have the node name be the number of the comments there are
-      Calendar cal = Calendar.getInstance();
-      String newNodeName = Long.toString(cal.getTimeInMillis());
-      String newNodePath = path + "/" + newNodeName;
-      Content newComment = new Content(newNodePath, ImmutableMap.of(AUTHOR,
-          (Object)user, COMMENT,
-          body));
+      String commentId = request.getParameter("commentId");
+      if (commentId != null) {
+        // we're going to edit an existing comment
+        if (contentManager.get(commentId) == null) {
+          response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+          "Attempting to update non-existent content: " + commentId);
+        }
+        path = commentId;
+        statusCode = HttpServletResponse.SC_OK;
+      } else {
+        // stop now if no comment provided
+        if (StringUtils.isBlank(body)) {
+          response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+            "'comment' must be provided.");
+          return;
+        }
+        // have the node name be the current time in milliseconds since the epoch
+        Calendar cal = Calendar.getInstance();
+        String newNodeName = Long.toString(cal.getTimeInMillis());
+        path = path + "/" + newNodeName;
+        statusCode = HttpServletResponse.SC_CREATED;
+      }
+      ImmutableMap.Builder<String,Object> commentPropertiesBuilder = ImmutableMap.builder();
+      commentPropertiesBuilder.put(AUTHOR, user);
+      // KERN-1536 allow arbitrary properties to be stored on a comment
+      for (String parameterName : request.getRequestParameterMap().keySet()) {
+        // commentId is not meant to be stored
+        if ("commentId" == parameterName) {
+          continue;
+        }
+        String[] parameterValues = request.getParameterValues(parameterName);
+        if (parameterValues.length == 1) {
+          commentPropertiesBuilder.put(parameterName, parameterValues[0]);
+        } else {
+          commentPropertiesBuilder.put(parameterName, parameterValues);
+        }
+      }
 
-      contentManager.update(newComment);
+      Content comment = new Content(path, commentPropertiesBuilder.build());
 
-      response.setStatus(HttpServletResponse.SC_CREATED);
+      contentManager.update(comment);
+
+      response.setStatus(statusCode);
       // return the comment id created for this comment
       response.setContentType("text/plain");
       response.setCharacterEncoding("UTF-8");
       ExtendedJSONWriter w = new ExtendedJSONWriter(response.getWriter());
       w.object();
       w.key(COMMENT_ID);
-      w.value(newNodePath);
+      w.value(path);
       w.endObject();
     } catch (JSONException e) {
       LOGGER.warn(e.getMessage(), e);
