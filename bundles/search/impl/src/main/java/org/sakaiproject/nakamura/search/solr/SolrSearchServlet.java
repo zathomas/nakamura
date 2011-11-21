@@ -53,6 +53,7 @@ import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchUtil;
 import org.sakaiproject.nakamura.api.templates.TemplateService;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
+import org.sakaiproject.nakamura.util.JcrUtils;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -391,7 +392,7 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
         javax.jcr.Property prop = queryOptions.nextProperty();
         String key = prop.getName();
 
-        if (!key.startsWith("jcr:")) {
+        if (!JcrUtils.isJCRProperty(key)) {
           if (prop.isMultiple()) {
             Set<String> processedVals = Sets.newHashSet();
             Value[] vals = prop.getValues();

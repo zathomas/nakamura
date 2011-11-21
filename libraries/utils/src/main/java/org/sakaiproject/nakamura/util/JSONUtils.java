@@ -55,7 +55,7 @@ public class JSONUtils {
           }
         }
       } else {
-        if (key.startsWith("jcr:")) {
+        if (JcrUtils.isJCRProperty(key)) {
           toRemove.add(key);
         }
       }
