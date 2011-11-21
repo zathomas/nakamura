@@ -110,6 +110,10 @@ public interface FilesConstants {
    */
   public static final String POOLED_CONTENT_USER_MANAGER = "sakai:pooled-content-manager";
   /**
+   * The name for the editors property on the pooled content members node.
+   */
+  public static final String POOLED_CONTENT_USER_EDITOR = "sakai:pooled-content-editor";
+  /**
    * The name for the viewers property on the pooled content members node.
    */
   public static final String POOLED_CONTENT_USER_VIEWER = "sakai:pooled-content-viewer";
