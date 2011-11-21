@@ -30,9 +30,7 @@ import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.util.ClientUtils;
@@ -60,11 +58,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -366,7 +362,11 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
     }
 
     // collect query options
-    JSONObject queryOptions = accumulateQueryOptions(queryNode);
+    PropertyIterator queryOptions = null;
+    if (queryNode.hasNode(SAKAI_QUERY_TEMPLATE_OPTIONS)) {
+      Node queryOptionsNode = queryNode.getNode(SAKAI_QUERY_TEMPLATE_OPTIONS);
+      queryOptions = queryOptionsNode.getProperties();
+    }
 
     // process the options as templates and check for missing params
     Map<String, Object> options = processOptions(propertiesMap, queryOptions, queryType);
@@ -382,31 +382,33 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
    * @throws MissingParameterException
    */
   private Map<String, Object> processOptions(Map<String, String> propertiesMap,
-      JSONObject queryOptions, String queryType) throws JSONException, MissingParameterException {
+      PropertyIterator queryOptions, String queryType) throws RepositoryException,
+      MissingParameterException {
     Set<String> missingTerms = Sets.newHashSet();
     Map<String, Object> options = Maps.newHashMap();
     if (queryOptions != null) {
-      Iterator<String> keys = queryOptions.keys();
-      while(keys.hasNext()) {
-        String key = keys.next();
-        Object vals = queryOptions.get(key);
-        if (vals instanceof JSONArray) {
-          // iterate over the array of values
-          JSONArray arr = (JSONArray) vals;
-          Set<String> processedVals = Sets.newHashSet();
-          for (int i = 0; i < arr.length(); i++) {
-            String val = arr.getString(i);
+      while (queryOptions.hasNext()) {
+        javax.jcr.Property prop = queryOptions.nextProperty();
+        String key = prop.getName();
+
+        if (!key.startsWith("jcr:")) {
+          if (prop.isMultiple()) {
+            Set<String> processedVals = Sets.newHashSet();
+            Value[] vals = prop.getValues();
+            for (Value val : vals) {
+              String processedVal = processValue(key, val.toString(), propertiesMap,
+                  queryType, missingTerms);
+              processedVals.add(processedVal);
+            }
+            if (!processedVals.isEmpty()) {
+              options.put(key, processedVals);
+            }
+          } else {
+            String val = prop.getString();
             String processedVal = processValue(key, val, propertiesMap, queryType,
                 missingTerms);
-            processedVals.add(processedVal);
+            options.put(key, processedVal);
           }
-          options.put(key, processedVals);
-        } else {
-          // treat the value as a scalar
-          String val = String.valueOf(vals);
-          String processedVal = processValue(key, val, propertiesMap, queryType,
-              missingTerms);
-          options.put(key, processedVal);
         }
       }
     }
@@ -438,50 +440,6 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
       processedVal = SearchUtil.escapeString(processedVal, queryType);
     }
     return processedVal;
-  }
-
-  /**
-   * @param queryNode
-   * @param queryOptions
-   * @return
-   * @throws RepositoryException
-   * @throws ValueFormatException
-   * @throws PathNotFoundException
-   * @throws JSONException
-   */
-  private JSONObject accumulateQueryOptions(Node queryNode)
-      throws RepositoryException, JSONException {
-    JSONObject queryOptions = null;
-    if (queryNode.hasProperty(SAKAI_QUERY_TEMPLATE_OPTIONS)) {
-      // process the options as JSON string
-      String optionsProp = queryNode.getProperty(SAKAI_QUERY_TEMPLATE_OPTIONS).getString();
-      queryOptions = new JSONObject(optionsProp);
-    } else if (queryNode.hasNode(SAKAI_QUERY_TEMPLATE_OPTIONS)) {
-      // process the options as a sub-node
-      Node optionsNode = queryNode.getNode(SAKAI_QUERY_TEMPLATE_OPTIONS);
-      if (optionsNode.hasProperties()) {
-        queryOptions = new JSONObject();
-        PropertyIterator props = optionsNode.getProperties();
-        while (props.hasNext()) {
-          javax.jcr.Property prop = props.nextProperty();
-          String key = prop.getName();
-
-          if (!key.startsWith("jcr:")) {
-            if (prop.isMultiple()) {
-              Value[] vals = prop.getValues();
-              for (Value val : vals) {
-                String strVal = val.getString();
-                queryOptions.accumulate(key, strVal);
-              }
-            } else {
-              String val = prop.getString();
-              queryOptions.put(key, val);
-            }
-          }
-        }
-      }
-    }
-    return queryOptions;
   }
 
   /**
