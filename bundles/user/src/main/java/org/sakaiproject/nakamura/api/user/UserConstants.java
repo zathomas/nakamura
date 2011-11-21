@@ -157,6 +157,8 @@ public interface UserConstants {
    * Default value for the access property.
    */
   public static final String EVERYBODY_ACCESS_VALUE = "everybody";
+
+  public static final String USER_HOME_PATH = "homePath";
   
   /**
    * Property name for the full title/name of a group. ie: Title: The 2010 Mathematics 101
