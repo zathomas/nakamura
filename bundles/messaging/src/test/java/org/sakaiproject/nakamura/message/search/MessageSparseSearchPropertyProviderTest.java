@@ -24,6 +24,7 @@ import static org.mockito.Mockito.withSettings;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.junit.Test;
@@ -67,6 +68,10 @@ public class MessageSparseSearchPropertyProviderTest {
     RequestParameter fromParam = mock(RequestParameter.class);
     when(fromParam.getString()).thenReturn("usera,userb");
     when(request.getRequestParameter("_from")).thenReturn(fromParam);
+
+    Resource mockResource = mock(Resource.class);
+    when(mockResource.getResourceType()).thenReturn("sakai/solr-search");
+    when(request.getResource()).thenReturn(mockResource);
 
     Map<String, String> pMap = new HashMap<String, String>();
 
