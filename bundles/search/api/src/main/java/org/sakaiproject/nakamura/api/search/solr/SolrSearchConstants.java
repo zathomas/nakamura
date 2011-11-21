@@ -80,6 +80,10 @@ public interface SolrSearchConstants {
    */
   public static final String SAKAI_QUERY_TEMPLATE_OPTIONS = "sakai:query-template-options";
   /**
+   * Property name of defaults to be applied to a query
+   */
+  public static final String SAKAI_QUERY_TEMPLATE_DEFAULTS = "sakai:query-template-defaults";
+  /**
    * Property that defines whether the results should have a limit on it.
    */
   public static final String SAKAI_LIMIT_RESULTS = "sakai:limit-results";

@@ -3,11 +3,13 @@
   "sakai:query-template-options": {
       "sort": "${sortOn} ${sortOrder}"
   },
-  "_mybookmarks": "",
-  "_tags": "",
-  "_usedin": "",
-  "sortOn": "score",
-  "sortOrder": "desc",
+  "sakai:query-template-defaults": {
+    "_mybookmarks": "",
+    "_tags": "",
+    "_usedin": "",
+    "sortOn": "score",
+    "sortOrder": "desc"
+  },
   "sling:resourceType": "sakai/solr-search",
   "sakai:batchresultprocessor": "Files",
   "sakai:propertyprovider": "Files",

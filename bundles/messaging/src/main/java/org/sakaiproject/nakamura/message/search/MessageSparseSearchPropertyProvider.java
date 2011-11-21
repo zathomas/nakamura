@@ -58,7 +58,7 @@ public class MessageSparseSearchPropertyProvider implements SolrSearchPropertyPr
       Map<String, String> propertiesMap) {
     String user = request.getRemoteUser();
     Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
-    final String resourceType = propertiesMap.get("sling:resourceType");
+    final String resourceType = request.getResource().getResourceType();
     final boolean solrSearchType = "sakai/solr-search".equals(resourceType);
     String fullPathToStore = ClientUtils.escapeQueryChars(messagingService
         .getFullPathToStore(user, session));

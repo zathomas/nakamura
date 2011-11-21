@@ -5,9 +5,11 @@
     "fq": ["type:g", "resourceType:authorizable"],
     "sort": "${sortOn} ${sortOrder}",
   },
-  "sortOn": "score",
-  "sortOrder": "desc",
-  "_groupQuery": "",
+  "sakai:query-template-defaults": {
+    "sortOn": "score",
+    "sortOrder": "desc",
+    "_groupQuery": ""
+  },
   "sakai:propertyprovider" : ["MyRelatedGroupsPropertyProvider"],
   "sakai:batchresultprocessor": "MyRelatedGroupsSearchBatchResultProcessor",
   "sakai:title": "My Related Groups",

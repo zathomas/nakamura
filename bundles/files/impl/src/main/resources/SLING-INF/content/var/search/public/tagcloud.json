@@ -6,9 +6,11 @@
       "facet.field": "tagname",
       "facet.mincount": 1
   },
-  "sortOn": "_lastModified",
-  "sortOrder": "desc",
-  "_groupReaderAnd": "",
+  "sakai:query-template-defaults": {
+    "sortOn": "_lastModified",
+    "sortOrder": "desc",
+    "_groupReaderAnd": ""
+  },
   "sling:resourceType": "sakai/solr-search",
   "sakai:propertyprovider": "GroupReader",
   "sakai:batchresultprocessor": "TagCloud",

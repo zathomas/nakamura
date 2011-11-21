@@ -4,8 +4,10 @@
       "fq": "resourceType:authorizable",
       "sort": "${sortOn} ${sortOrder}"
   },
-  "sortOn": "score",
-  "sortOrder": "desc",
+  "sakai:query-template-defaults": {
+    "sortOn": "score",
+    "sortOrder": "desc"
+  },
   "sling:resourceType": "sakai/solr-search",
   "sakai:title": "Group Members - All",
   "sakai:resultprocessor": "Profile",

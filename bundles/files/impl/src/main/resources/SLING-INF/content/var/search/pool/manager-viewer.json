@@ -6,9 +6,11 @@
       "facet.field" : "tagname",
       "facet.mincount" : 1
   },
-  "sortOn": "score",
-  "sortOrder": "desc",
-  "_q": "",
+  "sakai:query-template-defaults": {
+    "sortOn": "score",
+    "sortOrder": "desc",
+    "_q": ""
+  },
   "sling:resourceType": "sakai/solr-search",
   "sakai:propertyprovider" : ["MeManagerViewer", "MimeMatch"],
   "sakai:resultprocessor": "AllFiles",

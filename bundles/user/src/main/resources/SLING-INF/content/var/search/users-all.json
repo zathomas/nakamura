@@ -8,8 +8,10 @@
       "facet.field" : "tagname",
       "facet.mincount" : 1
   },
-  "sortOn": "score",
-  "sortOrder": "desc",
+  "sakai:query-template-defaults": {
+    "sortOn": "score",
+    "sortOrder": "desc"
+  },
   "sakai:batchresultprocessor": "ProfileContacts",
   "sakai:title": "Users - All",
   "sakai:shortDescription": "Get the profile of each user.",

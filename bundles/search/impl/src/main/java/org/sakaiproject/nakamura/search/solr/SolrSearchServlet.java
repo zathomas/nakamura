@@ -80,6 +80,7 @@ import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.PARA
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SAKAI_BATCHRESULTPROCESSOR;
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SAKAI_PROPERTY_PROVIDER;
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SAKAI_QUERY_TEMPLATE;
+import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SAKAI_QUERY_TEMPLATE_DEFAULTS;
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SAKAI_QUERY_TEMPLATE_OPTIONS;
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SAKAI_RESULTPROCESSOR;
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SAKAI_SEARCHRESPONSEDECORATOR;
@@ -341,8 +342,13 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
     if (queryNode.hasProperty(SAKAI_PROPERTY_PROVIDER)) {
       propertyProviderNames = getStringArrayProp(queryNode, SAKAI_PROPERTY_PROVIDER);
     }
-    Map<String, String> propertiesMap = loadProperties(request,
-        propertyProviderNames, queryNode.getProperties(), queryType);
+    PropertyIterator defaultValues = null;
+    if (queryNode.hasNode(SAKAI_QUERY_TEMPLATE_DEFAULTS)) {
+      Node defaults = queryNode.getNode(SAKAI_QUERY_TEMPLATE_DEFAULTS);
+      defaultValues = defaults.getProperties();
+    }
+    Map<String, String> propertiesMap = loadProperties(request, propertyProviderNames,
+        defaultValues, queryType);
 
     String queryTemplate = queryNode.getProperty(SAKAI_QUERY_TEMPLATE).getString();
 
@@ -471,7 +477,7 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
       while (defaultProps.hasNext()) {
         javax.jcr.Property prop = defaultProps.nextProperty();
         String key = prop.getName();
-        if (!propertiesMap.containsKey(key) && !prop.isMultiple()) {
+        if (!key.startsWith("jcr:") && !propertiesMap.containsKey(key) && !prop.isMultiple()) {
           String val = prop.getString();
           propertiesMap.put(key, val);
         }
