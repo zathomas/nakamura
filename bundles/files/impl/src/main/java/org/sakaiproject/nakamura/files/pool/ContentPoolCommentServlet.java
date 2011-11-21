@@ -27,7 +27,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
@@ -214,7 +213,7 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
   @Override
   protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
       throws ServletException, IOException {
-    // collect the items we'll store
+
     String user = request.getRemoteUser();
     String body = request.getParameter(COMMENT);
     int statusCode;
@@ -232,8 +231,10 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
     try {
       adminSession = repository.loginAdministrative();
       ContentManager contentManager = adminSession.getContentManager();
-      Content node = resource.adaptTo(Content.class);
-      String path = node.getPath() + "/" + COMMENTS;
+      AuthorizableManager authorizableManager = adminSession.getAuthorizableManager();
+      User currentUser = (User) authorizableManager.findAuthorizable(user);
+      Content poolContent = resource.adaptTo(Content.class);
+      String path = poolContent.getPath() + "/" + COMMENTS;
 
       Content comments = contentManager.get(path);
       if (comments == null) {
@@ -244,10 +245,18 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
       String commentId = request.getParameter("commentId");
       if (commentId != null) {
         // we're going to edit an existing comment
-        if (contentManager.get(commentId) == null) {
+        Content existingComment = contentManager.get(commentId);
+        if (existingComment == null) {
           response.sendError(HttpServletResponse.SC_BAD_REQUEST,
           "Attempting to update non-existent content: " + commentId);
+          return;
         }
+        if (!isManager(poolContent, currentUser, authorizableManager)
+          && !currentUser.getId().equals(existingComment.getProperty("author"))) {
+        response.sendError(HttpServletResponse.SC_FORBIDDEN,
+            "Must be a manager of the pooled content item or author of the comment to edit a comment.");
+        return;
+      }
         path = commentId;
         statusCode = HttpServletResponse.SC_OK;
       } else {
