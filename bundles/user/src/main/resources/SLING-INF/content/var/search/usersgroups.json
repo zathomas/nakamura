@@ -6,9 +6,11 @@
       "group": true,
       "group.field": "returnpath"
   },
-  "sortOn": "score",
-  "sortOrder": "desc",
-  "_categoryAnd": "",
+  "sakai:query-template-defaults": {
+    "sortOn": "score",
+    "sortOrder": "desc",
+    "_categoryAnd": ""
+  },
   "sakai:propertyprovider" : ["CategoryPropertyProvider"],
   "sakai:resultprocessor": "Profile",
   "sakai:title": "Users, Groups",

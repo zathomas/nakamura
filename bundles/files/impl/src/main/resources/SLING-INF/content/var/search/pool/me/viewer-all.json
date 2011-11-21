@@ -3,9 +3,11 @@
   "sakai:query-template-options": {
       "sort": "${sortOn} ${sortOrder}"
   },
-  "_meViewerGroups": "",
-  "sortOn": "score",
-  "sortOrder": "desc",
+  "sakai:query-template-defaults": {
+    "_meViewerGroups": "",
+    "sortOn": "score",
+    "sortOrder": "desc"
+  },
   "sling:resourceType": "sakai/solr-search",
   "sakai:propertyprovider" : ["PooledContent", "MimeMatch"],
   "sakai:title": "Pooled Content - Me - Viewer - All",

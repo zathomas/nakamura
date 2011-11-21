@@ -4,9 +4,11 @@
   "sakai:query-template-options": {
     "sort": "${sortOn} ${sortOrder}",
   },
-  "sortOn": "score",
-  "sortOrder": "desc",
-  "_contentQuery": "",
+  "sakai:query-template-defaults": {
+    "sortOn": "score",
+    "sortOrder": "desc",
+    "_contentQuery": ""
+  },
   "sakai:batchresultprocessor": "RelatedContentSearchBatchResultProcessor",
   "sakai:propertyprovider" : ["ContentLikeThisPropertyProvider"],
   "sakai:title": "Content like this",

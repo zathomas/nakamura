@@ -4,7 +4,9 @@
     "fq": "resourceType:sakai/pooled-content",
     "items": "${items}"
   },
-  "items": "4",
+  "sakai:query-template-defaults": {
+    "items": "4"
+  },
   "sling:resourceType": "sakai/solr-search",
   "sakai:propertyprovider" : "RandomContentSearchPropertyProvider",
   "sakai:batchresultprocessor": "RandomContent",

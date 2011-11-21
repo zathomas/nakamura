@@ -5,9 +5,11 @@
       "fq": ["resourceType:${_resourceType}", "${_type}", "${_category}"],
       "sort": "${sortOn} ${sortOrder}"
   },
-  "_category": "",
-  "sortOn": "score",
-  "sortOrder": "desc",
+  "sakai:query-template-defaults": {
+    "_category": "",
+    "sortOn": "score",
+    "sortOrder": "desc"
+  },
   "sakai:title": "By Tag",
   "sakai:propertyprovider": ["ByTag","CategoryPropertyProvider"],
   "sakai:batchresultprocessor": "GeneralFeed",

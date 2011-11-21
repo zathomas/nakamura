@@ -6,9 +6,11 @@
       "facet.field" : "tagname",
       "facet.mincount" : 1
   },
-  "sortOn": "score",
-  "sortOrder": "desc",
-  "_tags": "",
+  "sakai:query-template-defaults": {
+    "sortOn": "score",
+    "sortOrder": "desc",
+    "_tags": ""
+  },
   "sling:resourceType": "sakai/solr-search",
   "sakai:propertyprovider" : ["TagMatch", "MimeMatch"],
   "sakai:title": "Pooled Content - All",
