@@ -49,16 +49,13 @@ public class TagMatchSearchPropertyProvider implements SolrSearchPropertyProvide
    */
   public void loadUserProperties(SlingHttpServletRequest request,
       Map<String, String> propertiesMap) {
-    String tagClause = "";
     String q = request.getParameter("q");
+    if (!StringUtils.isBlank(q) && q.endsWith("*")) {
+      q = q.substring(0, q.length() - 1);
+    }
     if (!StringUtils.isBlank(q)) {
-      if (q.endsWith("*")) {
-        q = q.substring(0, q.length()-1);
-      }
-
-      tagClause = " OR tag:(" + SearchUtil.escapeString(q, SOLR) + ")";
+      String tagClause = " OR tag:(" + SearchUtil.escapeString(q, SOLR) + ")";
       propertiesMap.put("_tags", tagClause);
     }
-
   }
 }
