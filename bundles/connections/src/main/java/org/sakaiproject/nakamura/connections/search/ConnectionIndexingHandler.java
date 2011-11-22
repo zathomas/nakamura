@@ -39,8 +39,8 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
-import org.sakaiproject.nakamura.api.solr.ImmediateIndexingHandler;
 import org.sakaiproject.nakamura.api.solr.IndexingHandler;
+import org.sakaiproject.nakamura.api.solr.QoSIndexHandler;
 import org.sakaiproject.nakamura.api.solr.RepositorySession;
 import org.sakaiproject.nakamura.api.solr.ResourceIndexingService;
 import org.slf4j.Logger;
@@ -65,7 +65,7 @@ import java.util.Set;
  * </ul>
  */
 @Component(immediate = true)
-public class ConnectionIndexingHandler implements ImmediateIndexingHandler {
+public class ConnectionIndexingHandler implements IndexingHandler, QoSIndexHandler {
 
   private static final Logger logger = LoggerFactory
       .getLogger(ConnectionIndexingHandler.class);
@@ -83,15 +83,20 @@ public class ConnectionIndexingHandler implements ImmediateIndexingHandler {
   @Activate
   public void activate(Map<String, Object> properties) throws Exception {
     for (String type : CONTENT_TYPES) {
-      resourceIndexingService.addImmediateHandler(type, this);
+      resourceIndexingService.addHandler(type, this);
     }
   }
 
   @Deactivate
   public void deactivate(Map<String, Object> properties) {
     for (String type : CONTENT_TYPES) {
-      resourceIndexingService.removeImmediateHandler(type, this);
+      resourceIndexingService.removeHandler(type, this);
     }
+  }
+  
+  public int getTtl(Event event) {
+    // TODO do something useful with this Event
+    return 0;
   }
 
   /**
