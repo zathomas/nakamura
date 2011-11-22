@@ -94,8 +94,8 @@ public class PageIndexingUtil {
   private static Iterable<? extends String> getPageReferences(JSONObject pageStructure) throws PageIndexException {
     List<String> pageReferences = Lists.newArrayList();
     try {
-      for (Iterator iter = pageStructure.keys(); iter.hasNext(); ) {
-        String pageStructureKey = (String) iter.next();
+      for (Iterator<String> iter = pageStructure.keys(); iter.hasNext(); ) {
+        String pageStructureKey = iter.next();
         Object pageDescriptor = pageStructure.get(pageStructureKey);
         if (pageDescriptor instanceof JSONObject) {
           pageReferences.add(((JSONObject) pageDescriptor).getString("_ref"));
@@ -109,7 +109,7 @@ public class PageIndexingUtil {
 
   private static JSONObject getPageStructure(Content content) throws PageIndexException {
     try {
-      return new JSONObject((String) content.getProperty("structure0"));
+      return new JSONObject(content.getProperty("structure0").toString());
     } catch (JSONException e) {
       throw new PageIndexException("Could not create JSON object for the pages of document " + content.getPath(), e);
     }
