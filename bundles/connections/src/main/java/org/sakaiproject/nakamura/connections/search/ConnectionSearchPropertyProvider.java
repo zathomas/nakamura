@@ -32,7 +32,7 @@ import org.sakaiproject.nakamura.connections.ConnectionUtils;
 import java.util.Map;
 
 @Component(label = "ConnectionSearchPropertyProvider", description= "Provides properties to handle connection searches.")
-@Service({ SolrSearchPropertyProvider.class, ConnectionSearchPropertyProvider.class })
+@Service
 @Properties({
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = "sakai.search.provider", value="Connection")
@@ -48,8 +48,12 @@ public class ConnectionSearchPropertyProvider implements SolrSearchPropertyProvi
   public void loadUserProperties(SlingHttpServletRequest request,
       Map<String, String> propertiesMap) {
     // KERN-2350 allow requesters to search contacts that are not their own
-    String user = request.getParameter("user");
-    if (StringUtils.isBlank(user)) {
+    String user = request.getParameter("userid");
+    if (!StringUtils.isBlank(user)) {
+      // if searching other contacts, user should only see the accepted contacts
+      propertiesMap.put("state", "ACCEPTED");
+    } else {
+      // lookup contacts for the currently logged in user
       user = request.getRemoteUser();
     }
     String connectionPath = ClientUtils.escapeQueryChars(ConnectionUtils
