@@ -403,7 +403,7 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
             Set<String> processedVals = Sets.newHashSet();
             Value[] vals = prop.getValues();
             for (Value val : vals) {
-              String processedVal = processValue(key, val.toString(), propertiesMap,
+              String processedVal = processValue(key, val.getString(), propertiesMap,
                   queryType, missingTerms);
               processedVals.add(processedVal);
             }
