@@ -44,8 +44,8 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.lite.util.Iterables;
-import org.sakaiproject.nakamura.api.solr.ImmediateIndexingHandler;
 import org.sakaiproject.nakamura.api.solr.IndexingHandler;
+import org.sakaiproject.nakamura.api.solr.QoSIndexHandler;
 import org.sakaiproject.nakamura.api.solr.RepositorySession;
 import org.sakaiproject.nakamura.api.solr.ResourceIndexingService;
 import org.sakaiproject.nakamura.api.tika.TikaService;
@@ -66,7 +66,7 @@ import java.util.Set;
  * Indexes content with the property sling:resourceType = "sakai/pooled-content".
  */
 @Component(immediate = true)
-public class PoolContentResourceTypeHandler implements IndexingHandler, ImmediateIndexingHandler {
+public class PoolContentResourceTypeHandler implements IndexingHandler, QoSIndexHandler {
 
   private static final Set<String> IGNORE_NAMESPACES = ImmutableSet.of("jcr", "rep");
   private static final Set<String> IGNORE_PROPERTIES = ImmutableSet.of();
@@ -112,7 +112,6 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
   public void activate(Map<String, Object> properties) throws Exception {
     for (String type : CONTENT_TYPES) {
       resourceIndexingService.addHandler(type, this);
-      resourceIndexingService.addImmediateHandler(type, this);
     }
   }
 
@@ -120,8 +119,12 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
   public void deactivate(Map<String, Object> properties) {
     for (String type : CONTENT_TYPES) {
       resourceIndexingService.removeHandler(type, this);
-      resourceIndexingService.removeImmediateHandler(type, this);
     }
+  }
+  
+  public int getTtl(Event event) {
+    // TODO Do something useful with this Event
+    return 0;
   }
 
   // ---------- ImmediateIndexingHandler interface -----------------------------
