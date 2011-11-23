@@ -67,6 +67,7 @@ public class WorldCreationServlet extends SlingAllMethodsServlet {
     data,
     id,
     title,
+    titlePlural,
     tags,
     description,
     worldTemplate,

@@ -80,8 +80,11 @@ public interface UserConstants {
   public static final String PROP_MANAGED_GROUP = "sakai:managed-group";
   public static final String PROP_JOINABLE_GROUP = "sakai:group-joinable";
   public static final String PROP_PSEUDO_GROUP = "sakai:pseudoGroup";
-  public static final String PROP_PSEUDO_GROUP_PARENT = "sakai:pseudogroupparent";
-  
+  public static final String PROP_PARENT_GROUP_ID = "sakai:parent-group-id";
+  public static final String PROP_PARENT_GROUP_TITLE = "sakai:parent-group-title";
+  public static final String PROP_ROLE_TITLE = "sakai:role-title";
+  public static final String PROP_ROLE_TITLE_PLURAL = "sakai:role-title-plural";
+
   /**
    * Bare Authorizables have no /~ content and don't do any post processing.
    */
@@ -263,7 +266,6 @@ public interface UserConstants {
    * If present and true, the authorizable will not appear in the search index.
    */
   public static final String SAKAI_EXCLUDE = "sakai:excludeSearch";
-
 
   public static final String SAKAI_CATEGORY = "sakai:category";
 
