@@ -114,7 +114,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
       String name = (String)contentManager.get(poolId).getProperty(POOLED_CONTENT_FILENAME);
       Content content = createCourse(poolId, adminSession, fileInputStream, name, userId);
       if (content == null) {
-        LOGGER.debug("PoolID {} is not IMS_CP format, ignore ", poolId);
+        LOGGER.debug("PoolID {} is not IMS_CP format, ignore", poolId);
         return;
       }
       LOGGER.debug("Created IMS_CP {} ",content);
