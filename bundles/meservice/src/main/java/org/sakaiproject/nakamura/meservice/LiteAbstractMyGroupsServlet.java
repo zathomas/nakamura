@@ -234,13 +234,13 @@ public abstract class LiteAbstractMyGroupsServlet extends SlingSafeMethodsServle
 
   protected boolean isPseudoGroup(Group group) {
     return (Boolean.TRUE.equals(group.getProperty(UserConstants.PROP_PSEUDO_GROUP)) &&
-            group.getProperty(UserConstants.PROP_PSEUDO_GROUP_PARENT) != null);
+            group.getProperty(UserConstants.PROP_PARENT_GROUP_ID) != null);
   }
 
   protected boolean isManagerGroup(Group group, AuthorizableManager userManager)
     throws AccessDeniedException, StorageClientException {
     String groupId = group.getId();
-    String childGroupId = (String)group.getProperty(UserConstants.PROP_PSEUDO_GROUP_PARENT);    
+    String childGroupId = (String)group.getProperty(UserConstants.PROP_PARENT_GROUP_ID);    
 
     Authorizable childGroup = (Authorizable)userManager.findAuthorizable(childGroupId);
 
