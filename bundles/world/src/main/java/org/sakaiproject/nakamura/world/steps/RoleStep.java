@@ -84,12 +84,14 @@ public class RoleStep extends AbstractWorldCreationStep {
       // set basic data
       JSONObject subgroupJSON = new JSONObject();
       subgroupJSON.put(":name", subGroupID);
-      subgroupJSON.put("sakai:group-title", role.getString(WorldCreationServlet.PARAMS.title.toString()));
+      subgroupJSON.put("sakai:parent-group-id", mainGroupID);
+      subgroupJSON.put("sakai:parent-group-title", this.data.getString(WorldCreationServlet.PARAMS.title.toString()));
+      subgroupJSON.put("sakai:role-title", role.getString(WorldCreationServlet.PARAMS.title.toString()));
+      subgroupJSON.put("sakai:role-title-plural", role.getString(WorldCreationServlet.PARAMS.titlePlural.toString()));
       subgroupJSON.put("sakai:group-id", subGroupID);
       subgroupJSON.put("sakai:excludeSearch", true);
       subgroupJSON.put("sakai:pseudoGroup", true);
       subgroupJSON.put("sakai:pseudoGroup@TypeHint", "Boolean");
-      subgroupJSON.put("sakai:pseudogroupparent", mainGroupID);
 
       // set acls
       subgroupJSON.put("sakai:group-visible", visibility);

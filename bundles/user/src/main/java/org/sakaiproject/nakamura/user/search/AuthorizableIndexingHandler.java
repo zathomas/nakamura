@@ -102,7 +102,7 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
   private static final Set<String> BLACKLISTED_AUTHZ = ImmutableSet.of("admin",
     "g-contacts-admin", "anonymous", "owner");
 
-  private static final String SAKAI_PSEUDOGROUPPARENT_PROP = "sakai:pseudogroupparent";
+  private static final String SAKAI_PSEUDOGROUPPARENT_PROP = "sakai:parent-group-id";
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
