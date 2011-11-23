@@ -93,27 +93,31 @@ public class ConnectionIndexingHandler implements IndexingHandler, QoSIndexHandl
       resourceIndexingService.removeHandler(type, this);
     }
   }
-  
+
+  /**
+   * {@inheritDoc}
+   *
+   * @see org.sakaiproject.nakamura.api.solr.QoSIndexHandler#getTtl(org.osgi.service.event.Event)
+   */
   public int getTtl(Event event) {
-    // TODO do something useful with this Event
-    return 0;
+    // have to be > 0 based on the logic in ContentEventListener.
+    // see org.sakaiproject.nakamura.solr.Utils.defaultMax(int)
+    return 1;
   }
 
   /**
    * {@inheritDoc}
-   * 
-   * @see org.sakaiproject.nakamura.api.solr.ImmediateIndexingHandler#getImmediateDocuments(org.sakaiproject.nakamura.api.solr.RepositorySession,
-   *      org.osgi.service.event.Event)
+   *
+   * @see org.sakaiproject.nakamura.api.solr.IndexingHandler#getDocuments(org.sakaiproject.nakamura.api.solr.RepositorySession, org.osgi.service.event.Event)
    */
-  public Collection<SolrInputDocument> getImmediateDocuments(RepositorySession repositorySession,
-      Event event) {
+  public Collection<SolrInputDocument> getDocuments(RepositorySession repoSession, Event event) {
     String path = (String) event.getProperty(IndexingHandler.FIELD_PATH);
 
     logger.info("Indexing connections at path {}", path);
     List<SolrInputDocument> documents = Lists.newArrayList();
     if (!StringUtils.isBlank(path)) {
       try {
-        Session session = repositorySession.adaptTo(Session.class);
+        Session session = repoSession.adaptTo(Session.class);
         ContentManager cm = session.getContentManager();
         Content content = cm.get(path);
 
@@ -165,30 +169,10 @@ public class ConnectionIndexingHandler implements IndexingHandler, QoSIndexHandl
   /**
    * {@inheritDoc}
    *
-   * @see org.sakaiproject.nakamura.api.solr.IndexingHandler#getDocuments(org.sakaiproject.nakamura.api.solr.RepositorySession, org.osgi.service.event.Event)
-   */
-  public Collection<SolrInputDocument> getDocuments(RepositorySession repoSession, Event event) {
-    // return null for delayed indexing since everything is handled during immediate indexing
-    return null;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * @see org.sakaiproject.nakamura.api.solr.IndexingHandler#getDeleteQueries(org.sakaiproject.nakamura.api.solr.RepositorySession,
    *      org.osgi.service.event.Event)
    */
   public Collection<String> getDeleteQueries(RepositorySession repositorySession,
-      Event event) {
-    return null;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @see org.sakaiproject.nakamura.api.solr.ImmediateIndexingHandler#getImmediateDeleteQueries(org.sakaiproject.nakamura.api.solr.RepositorySession, org.osgi.service.event.Event)
-   */
-  public Collection<String> getImmediateDeleteQueries(RepositorySession repositorySession,
       Event event) {
     List<String> retval = Collections.emptyList();
     logger.debug("GetDelete for {} ", event);
