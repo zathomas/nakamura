@@ -44,8 +44,8 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.lite.util.Iterables;
-import org.sakaiproject.nakamura.api.solr.ImmediateIndexingHandler;
 import org.sakaiproject.nakamura.api.solr.IndexingHandler;
+import org.sakaiproject.nakamura.api.solr.QoSIndexHandler;
 import org.sakaiproject.nakamura.api.solr.RepositorySession;
 import org.sakaiproject.nakamura.api.solr.ResourceIndexingService;
 import org.sakaiproject.nakamura.api.tika.TikaService;
@@ -66,7 +66,7 @@ import java.util.Set;
  * Indexes content with the property sling:resourceType = "sakai/pooled-content".
  */
 @Component(immediate = true)
-public class PoolContentResourceTypeHandler implements IndexingHandler, ImmediateIndexingHandler {
+public class PoolContentResourceTypeHandler implements IndexingHandler, QoSIndexHandler {
 
   private static final Set<String> IGNORE_NAMESPACES = ImmutableSet.of("jcr", "rep");
   private static final Set<String> IGNORE_PROPERTIES = ImmutableSet.of();
@@ -112,7 +112,6 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
   public void activate(Map<String, Object> properties) throws Exception {
     for (String type : CONTENT_TYPES) {
       resourceIndexingService.addHandler(type, this);
-      resourceIndexingService.addImmediateHandler(type, this);
     }
   }
 
@@ -120,19 +119,18 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
   public void deactivate(Map<String, Object> properties) {
     for (String type : CONTENT_TYPES) {
       resourceIndexingService.removeHandler(type, this);
-      resourceIndexingService.removeImmediateHandler(type, this);
     }
   }
 
-  // ---------- ImmediateIndexingHandler interface -----------------------------
-  public Collection<SolrInputDocument> getImmediateDocuments(RepositorySession repositorySession,
-      Event event) {
-    return getDocuments(repositorySession, event, true);
-  }
-
-  public Collection<String> getImmediateDeleteQueries(RepositorySession repositorySession,
-      Event event) {
-    return Collections.emptyList();
+  /**
+   * {@inheritDoc}
+   *
+   * @see org.sakaiproject.nakamura.api.solr.QoSIndexHandler#getTtl(org.osgi.service.event.Event)
+   */
+  public int getTtl(Event event) {
+    // have to be > 0 based on the logic in ContentEventListener.
+    // see org.sakaiproject.nakamura.solr.Utils.defaultMax(int)
+    return 1;
   }
 
   // ---------- IndexingHandler interface --------------------------------------
@@ -144,11 +142,6 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
    */
   public Collection<SolrInputDocument> getDocuments(RepositorySession repositorySession,
       Event event) {
-    return getDocuments(repositorySession, event, false);
-  }
-
-  private Collection<SolrInputDocument> getDocuments(RepositorySession repositorySession,
-      Event event, boolean quickIndex) {
     LOGGER.debug("GetDocuments for {} ", event);
     String path = (String) event.getProperty("path");
     if (ignorePath(path)) {
@@ -193,24 +186,22 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, Immediat
                 }
               }
             }
-            if (!quickIndex) {
-              if (isPageContent) {
-                long startIndexing = System.currentTimeMillis();
-                PageIndexingUtil.indexAllPages(content, contentManager, doc, tika);
-                long finishIndexing = System.currentTimeMillis();
-                if (LOGGER.isDebugEnabled()) {
-                  LOGGER.debug("Indexing all pages of {} in {} milliseconds.", content.getPath(), finishIndexing - startIndexing);
+            if (isPageContent) {
+              long startIndexing = System.currentTimeMillis();
+              PageIndexingUtil.indexAllPages(content, contentManager, doc, tika);
+              long finishIndexing = System.currentTimeMillis();
+              if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Indexing all pages of {} in {} milliseconds.", content.getPath(), finishIndexing - startIndexing);
+              }
+            } else {
+              try {
+                InputStream contentStream = contentManager.getInputStream(path);
+                if (contentStream != null) {
+                  String extracted = tika.parseToString(contentManager.getInputStream(path));
+                  doc.addField("content", extracted);
                 }
-              } else {
-                try {
-                  InputStream contentStream = contentManager.getInputStream(path);
-                  if (contentStream != null) {
-                    String extracted = tika.parseToString(contentManager.getInputStream(path));
-                    doc.addField("content", extracted);
-                  }
-                } catch (TikaException e) {
-                  LOGGER.warn(e.getMessage(), e);
-                }
+              } catch (TikaException e) {
+                LOGGER.warn(e.getMessage(), e);
               }
             }
 

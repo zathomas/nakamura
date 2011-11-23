@@ -39,8 +39,8 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
-import org.sakaiproject.nakamura.api.solr.ImmediateIndexingHandler;
 import org.sakaiproject.nakamura.api.solr.IndexingHandler;
+import org.sakaiproject.nakamura.api.solr.QoSIndexHandler;
 import org.sakaiproject.nakamura.api.solr.RepositorySession;
 import org.sakaiproject.nakamura.api.solr.ResourceIndexingService;
 import org.slf4j.Logger;
@@ -65,7 +65,7 @@ import java.util.Set;
  * </ul>
  */
 @Component(immediate = true)
-public class ConnectionIndexingHandler implements ImmediateIndexingHandler {
+public class ConnectionIndexingHandler implements IndexingHandler, QoSIndexHandler {
 
   private static final Logger logger = LoggerFactory
       .getLogger(ConnectionIndexingHandler.class);
@@ -83,32 +83,41 @@ public class ConnectionIndexingHandler implements ImmediateIndexingHandler {
   @Activate
   public void activate(Map<String, Object> properties) throws Exception {
     for (String type : CONTENT_TYPES) {
-      resourceIndexingService.addImmediateHandler(type, this);
+      resourceIndexingService.addHandler(type, this);
     }
   }
 
   @Deactivate
   public void deactivate(Map<String, Object> properties) {
     for (String type : CONTENT_TYPES) {
-      resourceIndexingService.removeImmediateHandler(type, this);
+      resourceIndexingService.removeHandler(type, this);
     }
   }
 
   /**
    * {@inheritDoc}
-   * 
-   * @see org.sakaiproject.nakamura.api.solr.ImmediateIndexingHandler#getImmediateDocuments(org.sakaiproject.nakamura.api.solr.RepositorySession,
-   *      org.osgi.service.event.Event)
+   *
+   * @see org.sakaiproject.nakamura.api.solr.QoSIndexHandler#getTtl(org.osgi.service.event.Event)
    */
-  public Collection<SolrInputDocument> getImmediateDocuments(RepositorySession repositorySession,
-      Event event) {
+  public int getTtl(Event event) {
+    // have to be > 0 based on the logic in ContentEventListener.
+    // see org.sakaiproject.nakamura.solr.Utils.defaultMax(int)
+    return 1;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @see org.sakaiproject.nakamura.api.solr.IndexingHandler#getDocuments(org.sakaiproject.nakamura.api.solr.RepositorySession, org.osgi.service.event.Event)
+   */
+  public Collection<SolrInputDocument> getDocuments(RepositorySession repoSession, Event event) {
     String path = (String) event.getProperty(IndexingHandler.FIELD_PATH);
 
     logger.info("Indexing connections at path {}", path);
     List<SolrInputDocument> documents = Lists.newArrayList();
     if (!StringUtils.isBlank(path)) {
       try {
-        Session session = repositorySession.adaptTo(Session.class);
+        Session session = repoSession.adaptTo(Session.class);
         ContentManager cm = session.getContentManager();
         Content content = cm.get(path);
 
@@ -160,30 +169,10 @@ public class ConnectionIndexingHandler implements ImmediateIndexingHandler {
   /**
    * {@inheritDoc}
    *
-   * @see org.sakaiproject.nakamura.api.solr.IndexingHandler#getDocuments(org.sakaiproject.nakamura.api.solr.RepositorySession, org.osgi.service.event.Event)
-   */
-  public Collection<SolrInputDocument> getDocuments(RepositorySession repoSession, Event event) {
-    // return null for delayed indexing since everything is handled during immediate indexing
-    return null;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * @see org.sakaiproject.nakamura.api.solr.IndexingHandler#getDeleteQueries(org.sakaiproject.nakamura.api.solr.RepositorySession,
    *      org.osgi.service.event.Event)
    */
   public Collection<String> getDeleteQueries(RepositorySession repositorySession,
-      Event event) {
-    return null;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @see org.sakaiproject.nakamura.api.solr.ImmediateIndexingHandler#getImmediateDeleteQueries(org.sakaiproject.nakamura.api.solr.RepositorySession, org.osgi.service.event.Event)
-   */
-  public Collection<String> getImmediateDeleteQueries(RepositorySession repositorySession,
       Event event) {
     List<String> retval = Collections.emptyList();
     logger.debug("GetDelete for {} ", event);
