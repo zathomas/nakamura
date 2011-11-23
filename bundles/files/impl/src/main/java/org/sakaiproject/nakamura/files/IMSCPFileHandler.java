@@ -70,7 +70,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.activation.MimetypesFileTypeMap;
-import javax.servlet.ServletException;
 
 @Component(metatype = true)
 @Service
@@ -114,6 +113,10 @@ public class IMSCPFileHandler implements FileUploadHandler {
       }
       String name = (String)contentManager.get(poolId).getProperty(POOLED_CONTENT_FILENAME);
       Content content = createCourse(poolId, adminSession, fileInputStream, name, userId);
+      if (content == null) {
+        LOGGER.debug("PoolID {} is not IMS_CP format, ignore", poolId);
+        return;
+      }
       LOGGER.debug("Created IMS_CP {} ",content);
       results.put(name, ImmutableMap.of("poolId", (Object)poolId, "item", content.getProperties(), "type", "imscp"));
     } catch (StorageClientException e) {
@@ -122,15 +125,13 @@ public class IMSCPFileHandler implements FileUploadHandler {
       LOGGER.warn(e.getMessage(), e);
     } catch (JSONException e) {
       LOGGER.warn(e.getMessage(), e);
-    } catch (ServletException e) {
-      LOGGER.warn(e.getMessage(), e);
     } catch (ManifestErrorException e) {
       LOGGER.warn(e.getMessage(), e);
     }
   }
   
   private Content createCourse(String poolId, Session session, InputStream value, String name, String userId) throws IOException, AccessDeniedException,
-      StorageClientException, JSONException, ServletException, ManifestErrorException {
+      StorageClientException, JSONException, ManifestErrorException {
     ContentManager contentManager = session.getContentManager();
     
     final ZipInputStream zin = new ZipInputStream(value);
@@ -182,7 +183,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
     zin.closeEntry();
     zin.close();
     if (!manifestFlag) {
-      throw new ServletException("There is no manifest file in the course.", new Exception("There is no manifest file in the course."));
+      return null;
     }
     contentManager.writeBody(poolId + "/" + name, contentManager.getInputStream(poolId));
     //Replace relative file path to JCR path
