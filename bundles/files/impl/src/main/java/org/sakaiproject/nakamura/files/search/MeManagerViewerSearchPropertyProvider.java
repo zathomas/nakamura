@@ -126,10 +126,6 @@ public class MeManagerViewerSearchPropertyProvider implements SolrSearchProperty
       final AuthorizableManager authManager = session.getAuthorizableManager();
       final Authorizable anAuthorizable = authManager.findAuthorizable(authorizable);
       if (anAuthorizable != null) {
-        boolean isPseudoGroup = (anAuthorizable.hasProperty("sakai:pseudoGroup") && Boolean.valueOf((Boolean) anAuthorizable.getProperty("sakai:pseudoGroup")));
-        if (isPseudoGroup) {
-          levels++;
-        }
         if (levels > 0) {
           levels--;
           for (final String principal : anAuthorizable.getPrincipals()) {
@@ -138,9 +134,7 @@ public class MeManagerViewerSearchPropertyProvider implements SolrSearchProperty
             }
           }
         }
-        if (!isPseudoGroup) {
-          viewerAndManagerPrincipals.add(ClientUtils.escapeQueryChars(authorizable));
-        }
+        viewerAndManagerPrincipals.add(ClientUtils.escapeQueryChars(authorizable));
         viewerAndManagerPrincipals.remove(Group.EVERYONE);
       }
     } catch (StorageClientException e) {
