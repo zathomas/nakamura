@@ -136,8 +136,7 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
                   cm = adminSession.getContentManager();
               ImmutableMap.Builder<String, Object>
                   builder = ImmutableMap.builder();
-              String
-                  tag = tagContentPath.substring(6);
+              String tag = tagContentPath.substring("/tags/".length());
 
               //create tag
               builder.put("sakai:tag-name", tag);
