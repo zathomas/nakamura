@@ -149,12 +149,19 @@ public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler 
               doc.addField(WHITELISTED_PROPS.get(prop), value);
             }
           }
+
+          //index sender's first and last name
+          AuthorizableManager am = session.getAuthorizableManager();
+          String senderAuthId = (String)content.getProperty("sakai:from");
+          Authorizable senderAuth = am.findAuthorizable(senderAuthId);
+          doc.addField("firstName", senderAuth.getProperty("firstName"));
+          doc.addField("lastName", senderAuth.getProperty("lastName"));
+
           doc.addField(IndexingHandler._DOC_SOURCE_OBJECT, content);
           documents.add(doc);
 
           // index for user,group searching
           String authId = PathUtils.getAuthorizableId(content.getPath());
-          AuthorizableManager am = session.getAuthorizableManager();
           Authorizable auth = am.findAuthorizable(authId);
           if (auth == null) {
             LOGGER.warn("Unable to find auth (user,group) container for message [{}]; not indexing message for user,group searching", path);
@@ -168,6 +175,20 @@ public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler 
             } else {
               doc.setField("type", "u");
             }
+            doc.addField(IndexingHandler._DOC_SOURCE_OBJECT, content);
+
+            // set the path here so that it's the first path found when rendering to the
+            // client. the resource indexing service will add all nodes of the path and
+            // we want this one to return first in the result processor.
+            doc.setField(IndexingHandler.FIELD_PATH, authId);
+            doc.addField(IndexingHandler.FIELD_ID, path + AUTH_SUFFIX);
+
+            if (auth.isGroup()) {
+              doc.setField("type", "g");
+            } else {
+              doc.setField("type", "u");
+            }
+
             doc.addField(IndexingHandler._DOC_SOURCE_OBJECT, content);
 
             // set the path here so that it's the first path found when rendering to the
