@@ -145,7 +145,7 @@ public class CacheManagerServiceImpl implements CacheManagerService {
 			  }
 		  } else {
 			    LOGGER.info("Configuring Cache from Classpath Default {} ", CONFIG_PATH);
-			    InputStream in = processConfig(this.getClass().getClassLoader().getResourceAsStream(CONFIG_PATH), properties);
+			    InputStream in = processConfig(ResourceLoader.openResource(CONFIG_PATH, this.getClass().getClassLoader()), properties);
 			    if ( in == null ) {
 				throw new IOException("Unable to open config at classpath location "+CONFIG_PATH);
 			    }
