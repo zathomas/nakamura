@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.http.cache;
+package org.sakaiproject.nakamura.api.http.cache;
 
 import java.io.Serializable;
 
@@ -23,12 +23,12 @@ import java.io.Serializable;
 public class Operation implements  Serializable {
 
   /**
-   * 
+   *
    */
   private static final long serialVersionUID = -5070931567527463763L;
   private int op;
   private Object[] v;
-  
+
   public Operation(int op, Object ... values) {
     this.op = op;
     this.v = values;
