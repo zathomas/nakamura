@@ -37,6 +37,7 @@ import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Constants;
+import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
@@ -430,25 +431,36 @@ public class CasAuthenticationHandler implements AuthenticationHandler {
   }
 
   protected void savePgt(String username, String pgt, String pgtIou) {
-    // TODO Auto-generated method stub
     Map<String, Object> pgtId = new HashMap<String, Object>();
     pgtId.put("ticket", pgt);
-    String savePath = LitePersonalUtils.getPrivatePath(username) + "/cas";
+    Session session = null;
     try {
-      Session session = repo.loginAdministrative();
+      session = repo.loginAdministrative();
       ContentManager contentManager = session.getContentManager();
-      LOGGER.debug("Saving pgt '{}' to '{}'", pgtId, savePath);
-      Content storedTicket = new Content(savePath, pgtId);
-      contentManager.update(storedTicket);
-      session.logout();
+      if (contentManager.exists(LitePersonalUtils.getHomePath(username))) {
+        String savePath = LitePersonalUtils.getPrivatePath(username) + "/cas";
+        LOGGER.debug("Saving pgt '{}' to '{}'", pgtId, savePath);
+        Content storedTicket = new Content(savePath, pgtId);
+        contentManager.update(storedTicket);
+        // remove the pgtIOU from cache
+        pgts.remove(pgtIou);
+        pgtIOUs.remove(pgtIou);
+      } else {
+        LOGGER.debug("User {} has no content home, not saving pgt", username);
+      }
     } catch (StorageClientException e) {
       LOGGER.error("Couldn't save proxy granting ticket: ", e);
     } catch (AccessDeniedException e) {
       LOGGER.error("Permission error saving proxy granting ticket: ", e);
+    } finally {
+      if (session != null) {
+        try {
+          session.logout();
+        } catch (ClientPoolException e) {
+          throw new RuntimeException("Failed to logout session", e);
+        }
+      }
     }
-    // remove the pgtIOU from cache
-    pgts.remove(pgtIou);
-    pgtIOUs.remove(pgtIou);
   }
 
   static final class SsoPrincipal implements Principal {
