@@ -106,6 +106,7 @@ public class DocStep extends AbstractWorldCreationStep {
       createFileData.put("sakai:copyright", "creativecommons");
       createFileData.put("structure0", docContent.getJSONObject("structure0").toString());
       createFileData.put("mimeType", "x-sakai/document");
+      createFileData.put("sakai:excludeSearch", docContent.getBoolean("excludeSearch"));
 
       LOGGER.debug("Creating pooled content, data = " + createFileData.toString(2));
       SubRequest pooledContentRequest = new SubRequest("/system/pool/createfile", "POST", createFileData, request, response, write);
