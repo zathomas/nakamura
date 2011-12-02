@@ -298,7 +298,7 @@ def main(term_server)
     rescue Exception => msg
       # Output a timestamp + the error message whenever an exception is raised
       # and flag this file as failed for processing.
-      log "error generating preview/thumbnail (ID: #{id}): #{msg}", :warn
+      log "error generating preview/thumbnail (ID: #{id}): #{msg.inspect}\n#{msg.backtrace.join("\n")}", :warn
       @s.execute_post @s.url_for("p/#{id}"), {"sakai:processing_failed" => "true"}
     ensure
       # No matter what we flag the file as processed and delete the temp copied file.
