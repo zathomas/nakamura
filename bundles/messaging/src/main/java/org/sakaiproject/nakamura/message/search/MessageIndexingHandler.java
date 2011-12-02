@@ -175,27 +175,14 @@ public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler 
             } else {
               doc.setField("type", "u");
             }
-            doc.addField(IndexingHandler._DOC_SOURCE_OBJECT, content);
+
+            doc.setField(IndexingHandler._DOC_SOURCE_OBJECT, content);
 
             // set the path here so that it's the first path found when rendering to the
             // client. the resource indexing service will add all nodes of the path and
             // we want this one to return first in the result processor.
             doc.setField(IndexingHandler.FIELD_PATH, authId);
-            doc.addField(IndexingHandler.FIELD_ID, path + AUTH_SUFFIX);
-
-            if (auth.isGroup()) {
-              doc.setField("type", "g");
-            } else {
-              doc.setField("type", "u");
-            }
-
-            doc.addField(IndexingHandler._DOC_SOURCE_OBJECT, content);
-
-            // set the path here so that it's the first path found when rendering to the
-            // client. the resource indexing service will add all nodes of the path and
-            // we want this one to return first in the result processor.
-            doc.setField(IndexingHandler.FIELD_PATH, authId);
-            doc.addField(IndexingHandler.FIELD_ID, path + AUTH_SUFFIX);
+            doc.setField(IndexingHandler.FIELD_ID, path + AUTH_SUFFIX);
 
             // set the return to a single value field so we can group it
             doc.setField("returnpath", authId);

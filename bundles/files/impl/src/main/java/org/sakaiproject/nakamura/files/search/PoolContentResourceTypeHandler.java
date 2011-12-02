@@ -30,6 +30,7 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.tika.exception.TikaException;
@@ -70,7 +71,7 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, QoSIndex
 
   private static final Set<String> IGNORE_NAMESPACES = ImmutableSet.of("jcr", "rep");
   private static final Set<String> IGNORE_PROPERTIES = ImmutableSet.of();
-  private static final Map<String, String> INDEX_FIELD_MAP = getFieldMap();
+  private static final Map<String, Object> INDEX_FIELD_MAP = getFieldMap();
 
   private static final Logger LOGGER = LoggerFactory
       .getLogger(PoolContentResourceTypeHandler.class);
@@ -83,11 +84,11 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, QoSIndex
   @Reference
   private TikaService tika;
 
-  private static Map<String, String> getFieldMap() {
-    Builder<String, String> builder = ImmutableMap.builder();
+  private static Map<String, Object> getFieldMap() {
+    Builder<String, Object> builder = ImmutableMap.builder();
     builder.put(FilesConstants.POOLED_CONTENT_USER_MANAGER, "manager");
     builder.put(FilesConstants.POOLED_CONTENT_USER_VIEWER, "viewer");
-    builder.put(FilesConstants.POOLED_CONTENT_FILENAME, "filename");
+    builder.put(FilesConstants.POOLED_CONTENT_FILENAME, new String[] { "filename", "general_sort" });
     builder.put(FilesConstants.POOLED_NEEDS_PROCESSING, "needsprocessing");
     builder.put(FilesConstants.POOLED_CONTENT_MIMETYPE, "mimeType");
     builder.put(FilesConstants.SAKAI_FILE, "file");
@@ -179,10 +180,12 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, QoSIndex
                     path, event);
           } else {
             for (Entry<String, Object> p : properties.entrySet()) {
-              String indexName = index(p);
-              if (indexName != null) {
-                for (Object o : convertToIndex(p)) {
-                  doc.addField(indexName, o);
+              String[] indexNames = index(p);
+              if (indexNames != null) {
+                for (String indexName: indexNames) {
+                  for (Object o : convertToIndex(p)) {
+                    doc.addField(indexName, o);
+                  }
                 }
               }
             }
@@ -305,7 +308,7 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, QoSIndex
    * @return The name of the index to use for the given entry. null if the entry should
    *         not be indexed.
    */
-  protected String index(Entry<String, Object> e) {
+  protected String[] index(Entry<String, Object> e) {
     String name = e.getKey();
     if (!INDEX_FIELD_MAP.containsKey(name)) {
       String[] parts = StringUtils.split(name, ':');
@@ -316,7 +319,7 @@ public class PoolContentResourceTypeHandler implements IndexingHandler, QoSIndex
         return null;
       }
     }
-    String mappedName = INDEX_FIELD_MAP.get(name);
+    String[] mappedName = PropertiesUtil.toStringArray(INDEX_FIELD_MAP.get(name));
     // only fields in the map will be used, and those are in the schema.
     return mappedName;
   }
