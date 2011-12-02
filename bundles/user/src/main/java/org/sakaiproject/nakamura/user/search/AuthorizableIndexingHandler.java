@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.osgi.service.event.Event;
@@ -69,12 +70,12 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
 
 
   // list of properties to be indexed
-  private static final Map<String, String> USER_WHITELISTED_PROPS;
+  private static final Map<String, Object> USER_WHITELISTED_PROPS;
   static {
-    Builder<String, String> builder = ImmutableMap.builder();
+    Builder<String, Object> builder = ImmutableMap.builder();
     builder.put("name", "name");
     builder.put(UserConstants.USER_FIRSTNAME_PROPERTY, "firstName");
-    builder.put(UserConstants.USER_LASTNAME_PROPERTY, "lastName");
+    builder.put(UserConstants.USER_LASTNAME_PROPERTY, new String[] { "lastName", "general_sort" });
     builder.put(UserConstants.USER_EMAIL_PROPERTY, "email");
     builder.put("type", "type");
     builder.put("sakai:tags", "tag");
@@ -83,12 +84,12 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
     USER_WHITELISTED_PROPS = builder.build();
   }
 
-  private final static Map<String, String> GROUP_WHITELISTED_PROPS;
+  private final static Map<String, Object> GROUP_WHITELISTED_PROPS;
   static {
-    Builder<String, String> builder = ImmutableMap.builder();
+    Builder<String, Object> builder = ImmutableMap.builder();
     builder.put("name", "name");
     builder.put("type", "type");
-    builder.put(UserConstants.GROUP_TITLE_PROPERTY, "title");
+    builder.put(UserConstants.GROUP_TITLE_PROPERTY, new String[] { "title", "general_sort" });
     builder.put(UserConstants.GROUP_DESCRIPTION_PROPERTY, "description");
     builder.put("sakai:tags", "tag");
     builder.put("sakai:category", "category");
@@ -210,12 +211,15 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
     String authName = authorizable.getId();
 
     SolrInputDocument doc = new SolrInputDocument();
-    Map<String, String> fields = (authorizable.isGroup()) ? GROUP_WHITELISTED_PROPS : USER_WHITELISTED_PROPS;
+    Map<String, Object> fields = (authorizable.isGroup()) ? GROUP_WHITELISTED_PROPS : USER_WHITELISTED_PROPS;
 
     Map<String, Object> properties = authorizable.getSafeProperties();
     for (Entry<String, Object> p : properties.entrySet()) {
       if (fields.containsKey(p.getKey())) {
-        doc.addField(fields.get(p.getKey()), p.getValue());
+        String[] solrFields = PropertiesUtil.toStringArray(fields.get(p.getKey()));
+        for (String sf : solrFields) {
+          doc.addField(sf, p.getValue());
+        }
       }
     }
 
