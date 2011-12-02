@@ -38,6 +38,7 @@ import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceParameter;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.doc.ServiceSelector;
+import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
@@ -188,7 +189,20 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
         LOGGER.debug("Deleting {} ",authorizable.getId());
         authorizableEvents.put(authorizable.getId(), (authorizable instanceof Group));
         postProcessorService.process(authorizable, session, ModificationType.DELETE, request);
+        Session freshSession = null;
         authorizableManager.delete(authorizable.getId());
+        try {
+          freshSession = session.getRepository().loginAdministrative(session.getUserId());
+          freshSession.getAuthorizableManager().delete(authorizable.getId());
+        } finally {
+          if (freshSession != null) {
+            try {
+              freshSession.logout();
+            } catch (ClientPoolException e) {
+              LOGGER.error(e.getMessage());
+            }
+          }
+        }
       }
       // Launch an OSGi event for each authorizable.
       for (Entry<String, Boolean> entry : authorizableEvents.entrySet()) {
