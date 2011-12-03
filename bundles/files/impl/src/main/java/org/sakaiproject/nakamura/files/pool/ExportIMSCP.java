@@ -3,6 +3,7 @@ package org.sakaiproject.nakamura.files.pool;
 import org.apache.commons.io.FileUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
@@ -11,8 +12,11 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 
 import org.sakaiproject.nakamura.api.files.FilesConstants;
+import org.sakaiproject.nakamura.api.lite.ClientPoolException;
+import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
+import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
@@ -59,6 +63,9 @@ public class ExportIMSCP implements ResourceProvider {
   public static final String CONTENT_RESOURCE_PROVIDER = ExportIMSCP.class
       .getName();
   
+  @Reference
+  protected transient Repository repository;
+  
   public Resource getResource(ResourceResolver resourceResolver,
       HttpServletRequest request, String path) {
     LOGGER.debug("Got Resource URI [{}]  Path [{}] ", request.getRequestURI(), path);
@@ -68,12 +75,56 @@ public class ExportIMSCP implements ResourceProvider {
   public Resource getResource(ResourceResolver resourceResolver, String path) {
     if (path.length() <= 7 || path.indexOf("/imscp/") != 0)
       return null;
+    return resolveMappedResource(resourceResolver, path);
+  }
+  
+  private Resource resolveMappedResource(ResourceResolver resourceResolver, String path) {
+    String poolId = null;
+    SparseContentResource cpr = null;
+    Session session = null;
+    File zipFile = null;
+    ContentManager contentManager = null;
+    Content content = null;
     try {
-      return resolveMappedResource(resourceResolver, path);
+      session = repository.loginAdministrative();
+      contentManager = session.getContentManager();
+      
+      if (path.startsWith("/imscp/")) {
+        poolId = path.substring("/imscp/".length());
+      }
+      if (poolId != null && poolId.length() > 0) {
+        if (poolId.indexOf('/') > 0)
+          poolId = poolId.substring(0, poolId.indexOf('/'));
+        
+        content = contentManager.get(poolId);
+        if ( content != null ) {
+          String mimeType = (String)content.getProperty(Content.MIMETYPE_FIELD);
+          if ("x-sakai/document".equals(mimeType)) {
+            JSONObject structure = new JSONObject((String)content.getProperty("structure0"));
+            Manifest manifest = getManifest(structure, content);
+            zipFile = getZipFile(manifest, content, poolId, contentManager);
+            InputStream input = new FileInputStream(zipFile.getAbsolutePath());
+            String filename = (String)content.getProperty(FilesConstants.POOLED_CONTENT_FILENAME) + ".zip";
+            contentManager.writeBody(poolId + "/" + filename, input);
+            content = contentManager.get(poolId + "/" + filename);
+            content.setProperty(Content.MIMETYPE_FIELD, "application/zip");
+            contentManager.update(content);
+            Session userSession = JackrabbitSparseUtils.getSparseSession(resourceResolver
+                .adaptTo(javax.jcr.Session.class));
+            
+            cpr = new SparseContentResource(content, userSession,
+                resourceResolver, "/p/" + poolId + "/" + filename);
+            cpr.getResourceMetadata().put(CONTENT_RESOURCE_PROVIDER, this);
+            
+            LOGGER.debug("Resolved {} as {} ", path, cpr);
+          }
+        }
+      }
     } catch (RepositoryException e) {
       LOGGER.warn(e.getMessage(), e);
     } catch (StorageClientException e) {
       LOGGER.warn(e.getMessage(), e);
+      e.printStackTrace();
     } catch (AccessDeniedException e) {
       LOGGER.warn(e.getMessage());
       LOGGER.debug(e.getMessage(), e);
@@ -87,47 +138,19 @@ public class ExportIMSCP implements ResourceProvider {
       e.printStackTrace();
       LOGGER.warn(e.getMessage());
       LOGGER.debug(e.getMessage(), e);
-    }
-    return null;
-  }
-  
-  private Resource resolveMappedResource(ResourceResolver resourceResolver, String path)
-      throws StorageClientException, AccessDeniedException, RepositoryException, JSONException, IOException, Exception{
-    String poolId = null;
-    Session session = JackrabbitSparseUtils.getSparseSession(resourceResolver
-        .adaptTo(javax.jcr.Session.class));
-    ContentManager contentManager = session.getContentManager();
-    
-    if (path.startsWith("/imscp/")) {
-      poolId = path.substring("/imscp/".length());
-    }
-    if (poolId != null && poolId.length() > 0) {
-      if (poolId.indexOf('/') > 0)
-        poolId = poolId.substring(0, poolId.indexOf('/'));
-      
-      Content content = contentManager.get(poolId);
-      if ( content != null ) {
-        String mimeType = (String)content.getProperty(Content.MIMETYPE_FIELD);
-        if (!"x-sakai/document".equals(mimeType))
-          return null;
-        JSONObject structure = new JSONObject((String)content.getProperty("structure0"));
-        Manifest manifest = getManifest(structure, content);
-        File zipFile = getZipFile(manifest, content, poolId, contentManager);
-        InputStream input = new FileInputStream(zipFile.getAbsolutePath());
-        String filename = (String)content.getProperty(FilesConstants.POOLED_CONTENT_FILENAME) + ".zip";
-        contentManager.writeBody(poolId + "/" + filename, input);
-        content = contentManager.get(poolId + "/" + filename);
-        content.setProperty(Content.MIMETYPE_FIELD, "application/zip");
-        contentManager.update(content);
-        SparseContentResource cpr = new SparseContentResource(content, session,
-            resourceResolver, "/p/" + poolId + "/" + filename);
-        cpr.getResourceMetadata().put(CONTENT_RESOURCE_PROVIDER, this);
+    } finally {
+      if (session != null) {
+        try {
+          session.logout();
+        } catch (ClientPoolException e) {
+          LOGGER.warn("Failed to close admin session ",e);
+        }
+      }
+      if (zipFile!= null && zipFile.exists()) {
         FileUtils.deleteQuietly(zipFile);
-        LOGGER.debug("Resolved {} as {} ", path, cpr);
-        return cpr; 
       }
     }
-    return null;
+    return cpr;
   }
   
   private Manifest getManifest(JSONObject structure, Content content) throws JSONException, Exception {
@@ -202,7 +225,7 @@ public class ExportIMSCP implements ResourceProvider {
             org.sakaiproject.nakamura.cp.Resource resource = new org.sakaiproject.nakamura.cp.Resource();
             resource.setIdentifier(ref);
             resources.addResource(resource);
-            resource.setHref("resources/" + newItem.getTitle() + ".html");
+            resource.setHref("resources/" + ref + ".html");
             item.addItem(newItem);
           }
         }
@@ -243,9 +266,10 @@ public class ExportIMSCP implements ResourceProvider {
           items.addAll(i.getItems());
       }
       String title = resource.getIdentifier() + ".html";
+      String originTitle = title;
       if (item.getTitle() != null && item.getTitle().length() != 0) {
-        title = item.getTitle() + ".html";
-      }
+        originTitle = item.getTitle() + ".html";
+      } 
       
       String page = "";
       for (Content c : content.listChildren()) {
@@ -254,7 +278,7 @@ public class ExportIMSCP implements ResourceProvider {
           page = (String)c.getProperty("page");
       }
       page = handlePage(page, contentManager, poolId, zos);
-      page = "<html><head><title>" + title + "</title></head><body>" + page + "</body></html>";
+      page = "<html><head><title>" + originTitle + "</title></head><body>" + page + "</body></html>";
       InputStream input = new ByteArrayInputStream(page.getBytes());
       ZipEntry zae = new ZipEntry(resourcesDir + title);
       zos.putNextEntry(zae);
@@ -278,6 +302,8 @@ public class ExportIMSCP implements ResourceProvider {
   private String handlePage(String page, ContentManager contentManager, String poolId, ZipOutputStream zos) 
       throws StorageClientException, AccessDeniedException, IOException {
     int index = 0; 
+    if (page == null)
+      return "";
     while ((index = page.indexOf("<img id=\"widget_embedcontent_id", index)) >= 0) {
       String embedHtml = page.substring(index, page.indexOf(">", index) + 1);
       index = index + "<img id=\"widget_embedcontent_".length();
