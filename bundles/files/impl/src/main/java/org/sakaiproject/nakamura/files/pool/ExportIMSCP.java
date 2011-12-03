@@ -12,6 +12,7 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 
 import org.sakaiproject.nakamura.api.files.FilesConstants;
+import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
@@ -74,12 +75,56 @@ public class ExportIMSCP implements ResourceProvider {
   public Resource getResource(ResourceResolver resourceResolver, String path) {
     if (path.length() <= 7 || path.indexOf("/imscp/") != 0)
       return null;
+    return resolveMappedResource(resourceResolver, path);
+  }
+  
+  private Resource resolveMappedResource(ResourceResolver resourceResolver, String path) {
+    String poolId = null;
+    SparseContentResource cpr = null;
+    Session session = null;
+    File zipFile = null;
+    ContentManager contentManager = null;
+    Content content = null;
     try {
-      return resolveMappedResource(resourceResolver, path);
+      session = repository.loginAdministrative();
+      contentManager = session.getContentManager();
+      
+      if (path.startsWith("/imscp/")) {
+        poolId = path.substring("/imscp/".length());
+      }
+      if (poolId != null && poolId.length() > 0) {
+        if (poolId.indexOf('/') > 0)
+          poolId = poolId.substring(0, poolId.indexOf('/'));
+        
+        content = contentManager.get(poolId);
+        if ( content != null ) {
+          String mimeType = (String)content.getProperty(Content.MIMETYPE_FIELD);
+          if ("x-sakai/document".equals(mimeType)) {
+            JSONObject structure = new JSONObject((String)content.getProperty("structure0"));
+            Manifest manifest = getManifest(structure, content);
+            zipFile = getZipFile(manifest, content, poolId, contentManager);
+            InputStream input = new FileInputStream(zipFile.getAbsolutePath());
+            String filename = (String)content.getProperty(FilesConstants.POOLED_CONTENT_FILENAME) + ".zip";
+            contentManager.writeBody(poolId + "/" + filename, input);
+            content = contentManager.get(poolId + "/" + filename);
+            content.setProperty(Content.MIMETYPE_FIELD, "application/zip");
+            contentManager.update(content);
+            Session userSession = JackrabbitSparseUtils.getSparseSession(resourceResolver
+                .adaptTo(javax.jcr.Session.class));
+            
+            cpr = new SparseContentResource(content, userSession,
+                resourceResolver, "/p/" + poolId + "/" + filename);
+            cpr.getResourceMetadata().put(CONTENT_RESOURCE_PROVIDER, this);
+            
+            LOGGER.debug("Resolved {} as {} ", path, cpr);
+          }
+        }
+      }
     } catch (RepositoryException e) {
       LOGGER.warn(e.getMessage(), e);
     } catch (StorageClientException e) {
       LOGGER.warn(e.getMessage(), e);
+      e.printStackTrace();
     } catch (AccessDeniedException e) {
       LOGGER.warn(e.getMessage());
       LOGGER.debug(e.getMessage(), e);
@@ -93,46 +138,19 @@ public class ExportIMSCP implements ResourceProvider {
       e.printStackTrace();
       LOGGER.warn(e.getMessage());
       LOGGER.debug(e.getMessage(), e);
-    }
-    return null;
-  }
-  
-  private Resource resolveMappedResource(ResourceResolver resourceResolver, String path)
-      throws StorageClientException, AccessDeniedException, RepositoryException, JSONException, IOException, Exception{
-    String poolId = null;
-    Session session = repository.loginAdministrative();
-    ContentManager contentManager = session.getContentManager();
-    
-    if (path.startsWith("/imscp/")) {
-      poolId = path.substring("/imscp/".length());
-    }
-    if (poolId != null && poolId.length() > 0) {
-      if (poolId.indexOf('/') > 0)
-        poolId = poolId.substring(0, poolId.indexOf('/'));
-      
-      Content content = contentManager.get(poolId);
-      if ( content != null ) {
-        String mimeType = (String)content.getProperty(Content.MIMETYPE_FIELD);
-        if (!"x-sakai/document".equals(mimeType))
-          return null;
-        JSONObject structure = new JSONObject((String)content.getProperty("structure0"));
-        Manifest manifest = getManifest(structure, content);
-        File zipFile = getZipFile(manifest, content, poolId, contentManager);
-        InputStream input = new FileInputStream(zipFile.getAbsolutePath());
-        String filename = (String)content.getProperty(FilesConstants.POOLED_CONTENT_FILENAME) + ".zip";
-        contentManager.writeBody(poolId + "/" + filename, input);
-        content = contentManager.get(poolId + "/" + filename);
-        content.setProperty(Content.MIMETYPE_FIELD, "application/zip");
-        contentManager.update(content);
-        SparseContentResource cpr = new SparseContentResource(content, session,
-            resourceResolver, "/p/" + poolId + "/" + filename);
-        cpr.getResourceMetadata().put(CONTENT_RESOURCE_PROVIDER, this);
+    } finally {
+      if (session != null) {
+        try {
+          session.logout();
+        } catch (ClientPoolException e) {
+          LOGGER.warn("Failed to close admin session ",e);
+        }
+      }
+      if (zipFile!= null && zipFile.exists()) {
         FileUtils.deleteQuietly(zipFile);
-        LOGGER.debug("Resolved {} as {} ", path, cpr);
-        return cpr; 
       }
     }
-    return null;
+    return cpr;
   }
   
   private Manifest getManifest(JSONObject structure, Content content) throws JSONException, Exception {
