@@ -27,6 +27,7 @@ import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_NEEDS_PR
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -221,10 +222,11 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
           if (!p.isFormField()) {
             // This is a file upload.
             // Generate an ID and store it.
+            String fileName = FilenameUtils.getName(p.getFileName()); // IE still sends in an absolute path sometimes.
             if ( poolId == null ) {
               String createPoolId = generatePoolId();
               Content content = createFile(createPoolId, null, adminSession, p, au, true);
-              results.put(p.getFileName(), ImmutableMap.of("poolId", (Object)createPoolId, "item", content.getProperties()));
+              results.put(fileName, ImmutableMap.of("poolId", (Object)createPoolId, "item", content.getProperties()));
               statusCode = HttpServletResponse.SC_CREATED;
               fileUpload = true;
 
@@ -232,7 +234,7 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
             } else {
               // Add it to the map so we can output something to the UI.
               Content content = createFile(poolId, alternativeStream, session, p, au, false);
-              results.put(p.getFileName(), ImmutableMap.of("poolId", (Object)poolId, "item", content.getProperties()));
+              results.put(fileName, ImmutableMap.of("poolId", (Object)poolId, "item", content.getProperties()));
               statusCode = HttpServletResponse.SC_OK;
               fileUpload = true;
 
@@ -356,7 +358,7 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
       // Create a proper nt:file node in jcr with some properties on it to make it possible
       // to locate this pool file without having to use the path.
       Map<String, Object> contentProperties = new HashMap<String, Object>();
-      contentProperties.put(POOLED_CONTENT_FILENAME, value.getFileName());
+      contentProperties.put(POOLED_CONTENT_FILENAME, FilenameUtils.getName(value.getFileName()));
       contentProperties.put(SLING_RESOURCE_TYPE_PROPERTY, POOLED_CONTENT_RT);
       contentProperties.put(POOLED_CONTENT_CREATED_FOR, au.getId());
       contentProperties.put(POOLED_NEEDS_PROCESSING, "true");
