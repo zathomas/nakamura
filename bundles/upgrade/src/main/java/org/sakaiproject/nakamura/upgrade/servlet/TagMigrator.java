@@ -57,6 +57,8 @@ public class TagMigrator {
 
   private static final String SYSTEM_LOG_PATH = "system/v1.1.1-tagmigratorrunlog";
 
+  private static final int ROWS_PER_SEARCH = 5000;
+
   @Reference
   private SlingRepository slingRepository;
 
@@ -78,8 +80,7 @@ public class TagMigrator {
 
       if (needsMigration(sparseSession) || reindexAll) {
         SparseUpgradeServlet.writeToResponse("Migrating tags from JCR to Sparse...", response);
-        SolrDocumentList taggedDocuments = getTaggedDocuments();
-        Set<String> allTags = getUniqueTags(taggedDocuments);
+        Set<String> allTags = getUniqueTags();
         ensureTagsExistInJCR(allTags, jcrSession, dryRun);
         saveTagsInSparse(jcrSession, sparseSession, dryRun);
       } else {
@@ -102,31 +103,47 @@ public class TagMigrator {
     return !cm.exists(SYSTEM_LOG_PATH);
   }
 
-  private SolrDocumentList getTaggedDocuments() throws SolrServerException {
-    SolrQuery query = new SolrQuery("tag:*");
-    query.setFields("tag"); // we only need the tag field
-    // go direct to solr server so we can get all documents more easily
-    QueryResponse solrResponse = this.solrSearchService.getServer().query(query);
-    LOGGER.info("Looking up all tags, solrResponse is " + solrResponse);
-    LOGGER.info("Got " + solrResponse.getResults().getNumFound() + " tagged documents from solr index");
-    return solrResponse.getResults();
-  }
-
-  private Set<String> getUniqueTags(SolrDocumentList taggedDocuments) {
+  private Set<String> getUniqueTags() throws SolrServerException {
     Set<String> allTags = new HashSet<String>();
-    for (SolrDocument taggedDocument : taggedDocuments) {
-      Collection<Object> tags = taggedDocument.getFieldValues("tag");
-      if (tags != null) {
-        for (Object o : tags) {
-          if (o instanceof String) {
-            String tag = (String) o;
-            allTags.add(tag);
+    int start = 0;
+    int processedDocs = 0;
+
+    while (true) {
+      SolrDocumentList taggedDocuments = getMoreDocuments(start);
+      for (SolrDocument taggedDocument : taggedDocuments) {
+        processedDocs++;
+        Collection<Object> tags = taggedDocument.getFieldValues("tag");
+        if (tags != null) {
+          for (Object o : tags) {
+            if (o instanceof String) {
+              String tag = (String) o;
+              allTags.add(tag);
+            }
           }
         }
       }
+      if (taggedDocuments.getNumFound() > (taggedDocuments.getStart() + ROWS_PER_SEARCH)) {
+        start = start + ROWS_PER_SEARCH;
+      } else {
+        break;
+      }
     }
+
+    LOGGER.info("Processed " + processedDocs + " total documents for tags");
     LOGGER.info("We have " + allTags.size() + " unique tags represented in Solr indexes: " + allTags);
     return allTags;
+  }
+
+  private SolrDocumentList getMoreDocuments(int start) throws SolrServerException {
+    SolrQuery query = new SolrQuery("tag:*");
+    query.setFields("tag"); // we only need the tag field
+    query.setRows(ROWS_PER_SEARCH);
+    query.setStart(start);
+    // go direct to solr server so we can get all documents more easily
+    QueryResponse solrResponse = this.solrSearchService.getServer().query(query);
+    LOGGER.info("Got " + solrResponse.getResults().getNumFound() + " tagged documents from solr index; " +
+            "this batch starts at " + solrResponse.getResults().getStart());
+    return solrResponse.getResults();
   }
 
   private void ensureTagsExistInJCR(Set<String> allTags, Session session, boolean dryRun) throws RepositoryException {
