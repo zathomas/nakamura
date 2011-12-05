@@ -58,7 +58,7 @@ public interface QueryOutputService {
    * @param solrQuery
    * @return
    */
-  Map<String, String> collectOptions(HttpServletRequest req, SolrQuery solrQuery);
+  Map<String, Object> collectOptions(HttpServletRequest req, SolrQuery solrQuery);
 
   /**
    * Collect values sent in from the form to be repopulated in the response.
