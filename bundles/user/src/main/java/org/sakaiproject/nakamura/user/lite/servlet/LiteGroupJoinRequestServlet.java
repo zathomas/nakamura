@@ -170,7 +170,7 @@ public class LiteGroupJoinRequestServlet extends SlingAllMethodsServlet {
         break;
       case withauth:
         // check to see if this user is already there
-        if (contentManager.get(group.getPath() + "/joinrequests/"+userId)!=null && contentManager.exists(group.getPath() + "/joinrequests/"+userId)) {
+        if (contentManager.get(group.getPath() + "/joinrequests/"+userId) != null && contentManager.exists(group.getPath() + "/joinrequests/"+userId)) {
           // just update the date
           Content joinRequestUpdate = contentManager.get(group.getPath() + "/joinrequests/"+userId);
           joinRequestUpdate.setProperty("requested", Calendar.getInstance());
