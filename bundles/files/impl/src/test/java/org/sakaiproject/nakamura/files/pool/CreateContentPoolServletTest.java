@@ -122,6 +122,8 @@ public class CreateContentPoolServletTest {
   @Mock
   private RequestParameter requestParameter2;
   @Mock
+  private RequestParameter requestParameter3;
+  @Mock
   private RequestParameter requestParameterNot;
   @Mock
   private RequestPathInfo requestPathInfo;
@@ -159,7 +161,7 @@ public class CreateContentPoolServletTest {
     Map<String, RequestParameter[]> map = new HashMap<String, RequestParameter[]>();
 
     RequestParameter[] requestParameters = new RequestParameter[] {
-      requestParameter1, requestParameterNot, requestParameter2
+      requestParameter1, requestParameterNot, requestParameter2, requestParameter3
     };
     map.put("files", requestParameters);
 
@@ -177,6 +179,12 @@ public class CreateContentPoolServletTest {
     InputStream input2 = new ByteArrayInputStream(new byte[10]);
     when(requestParameter2.getInputStream()).thenReturn(input2);
 
+    when(requestParameter3.isFormField()).thenReturn(false);
+    when(requestParameter3.getContentType()).thenReturn("application/pdf");
+    when(requestParameter3.getFileName()).thenReturn("C:\\Users\\Nakamura User\\Documents\\testabspath.pdf");
+    InputStream input3 = new ByteArrayInputStream(new byte[10]);
+    when(requestParameter3.getInputStream()).thenReturn(input3);
+    
     when(requestParameterNot.isFormField()).thenReturn(true);
 
     // deep create
@@ -267,7 +275,8 @@ public class CreateContentPoolServletTest {
     JSONObject jsonObject = new JSONObject(stringWriter.toString());
     Assert.assertNotNull(jsonObject.getString("testfilename.pdf"));
     Assert.assertNotNull(jsonObject.getString("index.html"));
-    Assert.assertEquals(2, jsonObject.length());
+    Assert.assertNotNull(jsonObject.getString("testabspath.pdf")); // The servlet should scrub off the absolute path.
+    Assert.assertEquals(3, jsonObject.length());
   }
 
 
@@ -295,7 +304,7 @@ public class CreateContentPoolServletTest {
       });
 
     cp.doPost(request, response);
-    Assert.assertTrue(notifiedFiles.size () == 2);
+    Assert.assertTrue(notifiedFiles.size () == 3);
   }
 
 }
