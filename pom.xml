@@ -256,6 +256,35 @@
       <id>sakai-release</id>
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.7</version>
+            <executions>
+              <execution>
+                <id>process-sources</id>
+                <phase>process-sources</phase>
+                <configuration>
+                  <target>
+                    <echo message="Updating select config files..." />
+                    <replace dir="${project.basedir}" token="1.1-SNAPSHOT" value="1.1">
+                      <include name="tools/version" />
+                      <include name="tools/version.bat" />
+                      <include name="app/src/main/bundles/list.xml" />
+                    </replace>
+                    <exec executable="git">
+                        <arg value="commit"/>
+                        <arg value="-am"/>
+                        <arg value="'updating version number for release'"/>
+                    </exec>
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
           <!-- We want to sign the artifact, the POM, and all attached artifacts -->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
