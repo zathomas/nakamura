@@ -19,6 +19,7 @@ package org.sakaiproject.nakamura.files.search;
 
 import com.google.common.base.Joiner;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -178,7 +179,11 @@ public class RelatedContentSearchPropertyProvider extends
                 }
               }
               final String[] foundFileNames = REGEX_PATTERN.split(fileName);
-              allFileNames.addAll(Arrays.asList(foundFileNames));
+              for (String foundFileName : foundFileNames) {
+                if (!StringUtils.isBlank(foundFileName)) {
+                  allFileNames.add(foundFileName);
+                }
+              }
             }
 
             // grab all the unique tags
