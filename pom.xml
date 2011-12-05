@@ -316,6 +316,8 @@
             </configuration>
             <executions>
               <execution>
+                <id>sign-artifacts</id>
+                <phase>install</phase>
                 <goals>
                   <goal>sign</goal>
                 </goals>
