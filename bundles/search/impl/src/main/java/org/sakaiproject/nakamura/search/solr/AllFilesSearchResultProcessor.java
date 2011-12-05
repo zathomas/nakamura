@@ -36,6 +36,7 @@ import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultProcessor;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
+import org.sakaiproject.nakamura.api.search.solr.SolrSearchUtil;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,7 +97,8 @@ public class AllFilesSearchResultProcessor implements SolrSearchResultProcessor 
           }
         }
         write.value(canManage);
-        ExtendedJSONWriter.writeContentTreeToWriter(write, contentResult, true, -1);
+        int depth = SolrSearchUtil.getTraversalDepth(request);
+        ExtendedJSONWriter.writeContentTreeToWriter(write, contentResult, true, depth);
         write.endObject();
       }
     } catch (AccessDeniedException ade) {
