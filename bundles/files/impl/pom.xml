@@ -82,7 +82,7 @@
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.apache.sling.jcr.jackrabbit.server</artifactId>
-      <version>2.1.0-1.1-SNAPSHOT</version>
+      <version>2.1.0.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
@@ -174,7 +174,7 @@
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.activemq</artifactId>
-      <version>5.3.0-1.1-SNAPSHOT</version>
+      <version>5.3.0.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
@@ -231,7 +231,7 @@
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.tika</artifactId>
-      <version>0.9-1.1-SNAPSHOT</version>
+      <version>0.9.1.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

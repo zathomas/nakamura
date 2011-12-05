@@ -149,7 +149,7 @@
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.tika</artifactId>
-      <version>0.9-1.1-SNAPSHOT</version>
+      <version>0.9.1.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
