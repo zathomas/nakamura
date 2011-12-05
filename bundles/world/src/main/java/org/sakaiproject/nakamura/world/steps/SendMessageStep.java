@@ -45,6 +45,8 @@ public class SendMessageStep extends AbstractWorldCreationStep {
 
   private static final Pattern PATTERN_GROUPNAME = Pattern.compile("\\$\\{groupName\\}");
 
+  private static final Pattern PATTERN_LINK = Pattern.compile("\\$\\{link\\}");
+
   private static final String MESSAGE_MODE = "messageMode";
 
   public SendMessageStep(JSONObject data, JSONObject worldTemplate, SlingHttpServletRequest request, SlingHttpServletResponse response, JSONWriter write) {
@@ -114,6 +116,7 @@ public class SendMessageStep extends AbstractWorldCreationStep {
   private String replaceTokens(String input, JSONObject message, JSONObject recipient) throws JSONException {
     String s = PATTERN_CREATOR.matcher(input).replaceAll(message.getString("creatorName"));
     s = PATTERN_GROUPNAME.matcher(s).replaceAll(message.getString("groupName"));
+    s = PATTERN_LINK.matcher(s).replaceAll(message.getString("link"));
     s = PATTERN_ROLE.matcher(s).replaceAll(recipient.getString("role"));
     s = PATTERN_FIRSTNAME.matcher(s).replaceAll(recipient.getString("firstName"));
     return s;
