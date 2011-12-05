@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.sakaiproject.nakamura</groupId>
   <artifactId>base</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.1</version>
   <packaging>pom</packaging>
   <name>Sakai Nakamura Project</name>
   <description> Sakai Nakamura is an OSGi server built ontop of Apache Sling, supporting Sakai 3. </description>
@@ -260,6 +260,7 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
             <version>1.7</version>
+            <inherited>false</inherited>
             <executions>
               <execution>
                 <id>process-sources</id>
@@ -273,15 +274,15 @@
                       <include name="app/src/main/bundles/list.xml" />
                     </replace>
                     <exec executable="git">
-                        <arg value="add"/>
-                        <arg value="tools/version"/>
-                        <arg value="tools/version.bat"/>
-                        <arg value="app/src/main/bundles/list.xml"/>
+                        <arg value="add" />
+                        <arg value="tools/version" />
+                        <arg value="tools/version.bat" />
+                        <arg value="app/src/main/bundles/list.xml" />
                     </exec>
                     <exec executable="git">
-                        <arg value="commit"/>
-                        <arg value="-m"/>
-                        <arg value="updating version numbers for release"/>
+                        <arg value="commit" />
+                        <arg value="-m" />
+                        <arg value="updating version numbers for release" />
                     </exec>
                   </target>
                 </configuration>
@@ -301,15 +302,15 @@
                     </replace>
                     <replace file="${project.basedir}/app/src/main/bundles/list.xml" token="&gt;1.1&lt;" value="&gt;1.2-SNAPSHOT&lt;" />
                     <exec executable="git">
-                        <arg value="add"/>
-                        <arg value="tools/version"/>
-                        <arg value="tools/version.bat"/>
-                        <arg value="app/src/main/bundles/list.xml"/>
+                        <arg value="add" />
+                        <arg value="tools/version" />
+                        <arg value="tools/version.bat" />
+                        <arg value="app/src/main/bundles/list.xml" />
                     </exec>
                     <exec executable="git">
-                        <arg value="commit"/>
-                        <arg value="-m"/>
-                        <arg value="updating version numbers for development"/>
+                        <arg value="commit" />
+                        <arg value="-m" />
+                        <arg value="updating version numbers for development" />
                     </exec>
                   </target>
                 </configuration>
