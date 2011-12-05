@@ -55,8 +55,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Enumeration;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.jcr.Node;
@@ -295,18 +295,19 @@ public class QueryOutputServiceImpl implements QueryOutputService {
    * {@inheritDoc}
    * @see org.sakaiproject.nakamura.api.search.solr.QueryOutputService#collectOptions(javax.servlet.http.HttpServletRequest, org.apache.solr.client.solrj.SolrQuery)
    */
-  public Map<String, String> collectOptions(HttpServletRequest req, SolrQuery solrQuery) {
-    Map<String, String> opts = Maps.newHashMap();
+  public Map<String, Object> collectOptions(HttpServletRequest req, SolrQuery solrQuery) {
+    Map<String, Object> opts = Maps.newHashMap();
 
     @SuppressWarnings("unchecked")
-    Enumeration<String> paramNames = req.getParameterNames();
-    while (paramNames.hasMoreElements()) {
-      String paramName = paramNames.nextElement();
-      String paramVal = req.getParameter(paramName);
-      if (!StringUtils.isBlank(paramVal) && !IGNORE_PARAMS.contains(paramName)) {
-        opts.put(paramName, paramVal);
-        if (solrQuery != null) {
-          solrQuery.add(paramName, paramVal);
+    Map<String, String[]> paramMap = req.getParameterMap();
+    for (Entry<String, String[]> param : paramMap.entrySet()) {
+      String paramName = param.getKey();
+      String[] paramVals = param.getValue();
+      if (!IGNORE_PARAMS.contains(paramName)) {
+        if (paramVals.length == 1) {
+          opts.put(paramName, paramVals[0]);
+        } else {
+          opts.put(paramName, paramVals);
         }
       }
     }
