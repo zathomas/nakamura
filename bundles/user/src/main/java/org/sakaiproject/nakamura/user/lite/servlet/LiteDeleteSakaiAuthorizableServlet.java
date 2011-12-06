@@ -185,8 +185,10 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
     LOGGER.debug("Will delete {} ",authorizables);
     
     Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
+    Session adminSession = null;
     Map<String, Boolean> authorizableEvents = new HashMap<String, Boolean>();
     try {
+      adminSession = session.getRepository().loginAdministrative();
       if (!allowedToDelete(session, authorizables)) {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN, "Not allowed to delete one or more of the specified authorizables.");
         return;
@@ -198,17 +200,9 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
         LOGGER.debug("Deleting {} ",authorizable.getId());
         authorizableEvents.put(authorizable.getId(), (authorizable instanceof Group));
         postProcessorService.process(authorizable, session, ModificationType.DELETE, request);
-        Session freshSession = null;
-        try {
-          session.getAuthorizableManager().delete(authorizable.getId());
-          freshSession = session.getRepository().loginAdministrative();
-          if (freshSession.getAuthorizableManager().findAuthorizable(authorizable.getId()) != null) {
-            freshSession.getAuthorizableManager().delete(authorizable.getId());
-          }
-        } finally {
-          if (freshSession != null) {
-            freshSession.logout();
-          }
+        session.getAuthorizableManager().delete(authorizable.getId());
+        if (adminSession.getAuthorizableManager().findAuthorizable(authorizable.getId()) != null) {
+          adminSession.getAuthorizableManager().delete(authorizable.getId());
         }
       }
       // Launch an OSGi event for each authorizable.
@@ -243,6 +237,13 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
       if (session != null) {
         try {
           session.logout();
+        } catch (ClientPoolException e) {
+          LOGGER.error(e.getMessage());
+        }
+      }
+      if (adminSession != null) {
+        try {
+          adminSession.logout();
         } catch (ClientPoolException e) {
           LOGGER.error(e.getMessage());
         }
