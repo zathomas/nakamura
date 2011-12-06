@@ -91,22 +91,25 @@ public class LiteModifyUserAceServlet extends LiteAbstractUserPostServlet {
       authorizable = resource.adaptTo(Authorizable.class);
     }
 
-    // check that the group was located.
+    // check that the user was located.
     if (authorizable == null) {
       throw new ResourceNotFoundException(
               "User to update could not be determined");
     }
 
+    // get a session
     Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
     if (session == null) {
       throw new StorageClientException("Sparse Session not found");
     }
 
+    // get the principal that will get the specified privilege
     String principalId = request.getParameter("principalId");
     if (principalId == null) {
       throw new StorageClientException("principalId was not submitted.");
     }
 
+    // figure out the specified privilege
     Enumeration<?> parameterNames = request.getParameterNames();
     List<AclModification> aclModifications = Lists.newArrayList();
     while (parameterNames.hasMoreElements()) {
@@ -114,16 +117,16 @@ public class LiteModifyUserAceServlet extends LiteAbstractUserPostServlet {
       if (nextElement instanceof String) {
         String paramName = (String) nextElement;
         if (paramName.startsWith("privilege@")) {
-          String privilegeName = paramName.substring(10);
-          Permission permssion = getPermission(privilegeName);
+          String privilegeName = paramName.substring("privilege@".length());
+          Permission permission = getPermission(privilegeName);
           String parameterValue = request.getParameter(paramName);
           if (parameterValue != null && parameterValue.length() > 0) {
-            if ("granted".equals(parameterValue) && permssion != null) {
-              LOGGER.info("{}:{}:{}:{}", new Object[]{authorizable.getId(), principalId, "granted", permssion.getName()});
-              AclModification.addAcl(true, permssion, principalId, aclModifications);
-            } else if ("denied".equals(parameterValue) && permssion != null) {
-              LOGGER.info("{}:{}:{}:{}", new Object[]{authorizable.getId(), principalId, "denied", permssion.getName()});
-              AclModification.addAcl(false, permssion, principalId, aclModifications);
+            if ("granted".equals(parameterValue) && permission != null) {
+              LOGGER.info("{}:{}:{}:{}", new Object[]{authorizable.getId(), principalId, "granted", permission.getName()});
+              AclModification.addAcl(true, permission, principalId, aclModifications);
+            } else if ("denied".equals(parameterValue) && permission != null) {
+              LOGGER.info("{}:{}:{}:{}", new Object[]{authorizable.getId(), principalId, "denied", permission.getName()});
+              AclModification.addAcl(false, permission, principalId, aclModifications);
             } else if ("none".equals(parameterValue)) {
               LOGGER.info("{}:{}:{}:{}", new Object[]{authorizable.getId(), principalId, "cleared", "all"});
               AclModification.removeAcl(true, Permissions.ALL, principalId, aclModifications);
@@ -134,6 +137,7 @@ public class LiteModifyUserAceServlet extends LiteAbstractUserPostServlet {
       }
     }
 
+    // save the changes
     AccessControlManager accessControlManager = session.getAccessControlManager();
     accessControlManager.setAcl(Security.ZONE_AUTHORIZABLES, authorizable.getId(),
             aclModifications.toArray(new AclModification[aclModifications.size()]));
