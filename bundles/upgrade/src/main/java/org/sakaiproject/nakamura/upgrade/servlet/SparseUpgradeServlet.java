@@ -122,7 +122,7 @@ public class SparseUpgradeServlet extends SlingAllMethodsServlet {
       this.migrationService.migrate(dryRun, limit, reindexAll, getFeedback(response));
 
       // migrate tags from JCR to Sparse
-      this.tagMigrator.migrate(request, response, dryRun, reindexAll);
+      this.tagMigrator.migrate(response, dryRun, reindexAll);
 
       // reindex solr if necessary
       if (reindexAll && !dryRun) {
