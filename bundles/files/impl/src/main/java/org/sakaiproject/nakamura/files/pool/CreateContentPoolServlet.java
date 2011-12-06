@@ -386,11 +386,14 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
       String[] alternativeStreamParts = StringUtils.split(alternativeStream, ALTERNATIVE_STREAM_SELECTOR_SEPARATOR);
       String pageId = alternativeStreamParts[0];
       String previewSize = alternativeStreamParts[1];
-      Content alternativeContent = new Content(poolId+"/"+pageId,
-        ImmutableMap.of(Content.MIMETYPE_FIELD, (Object)contentType, SLING_RESOURCE_TYPE_PROPERTY, POOLED_CONTENT_RT));
+      Content alternativeContent = new Content(poolId+"/"+pageId, ImmutableMap.of(
+          Content.MIMETYPE_FIELD, (Object) contentType, SLING_RESOURCE_TYPE_PROPERTY,
+          POOLED_CONTENT_RT));
       contentManager.update(alternativeContent);
       contentManager.writeBody(alternativeContent.getPath(), value.getInputStream(), previewSize);
-      ActivityUtils.postActivity(eventAdmin, au.getId(), poolId, "Content", "default", "pooled content", "UPDATED_FILE", null);
+      ActivityUtils.postActivity(eventAdmin, au.getId(), poolId, "Content", "default",
+          "pooled content", "CREATED_ALT_FILE",
+          ImmutableMap.<String, Object> of("altPath", poolId + "/" + pageId));
     } else {
       Content content = contentManager.get(poolId);
       content.setProperty(StorageClientUtils.getAltField(Content.MIMETYPE_FIELD, alternativeStream), contentType);
