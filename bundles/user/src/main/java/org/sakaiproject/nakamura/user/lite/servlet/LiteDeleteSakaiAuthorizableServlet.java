@@ -40,8 +40,11 @@ import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.doc.ServiceSelector;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
@@ -182,26 +185,24 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
     LOGGER.debug("Will delete {} ",authorizables);
     
     Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
+    Session adminSession = null;
     Map<String, Boolean> authorizableEvents = new HashMap<String, Boolean>();
     try {
+      adminSession = session.getRepository().loginAdministrative();
+      if (!allowedToDelete(session, authorizables)) {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN, "Not allowed to delete one or more of the specified authorizables.");
+        return;
+      } else {
+        session = session.getRepository().loginAdministrative();
+      }
       AuthorizableManager authorizableManager = session.getAuthorizableManager();
       for ( Authorizable authorizable : authorizables) {
         LOGGER.debug("Deleting {} ",authorizable.getId());
         authorizableEvents.put(authorizable.getId(), (authorizable instanceof Group));
         postProcessorService.process(authorizable, session, ModificationType.DELETE, request);
-        Session freshSession = null;
-        authorizableManager.delete(authorizable.getId());
-        try {
-          freshSession = session.getRepository().loginAdministrative(session.getUserId());
-          freshSession.getAuthorizableManager().delete(authorizable.getId());
-        } finally {
-          if (freshSession != null) {
-            try {
-              freshSession.logout();
-            } catch (ClientPoolException e) {
-              LOGGER.error(e.getMessage());
-            }
-          }
+        session.getAuthorizableManager().delete(authorizable.getId());
+        if (adminSession.getAuthorizableManager().findAuthorizable(authorizable.getId()) != null) {
+          adminSession.getAuthorizableManager().delete(authorizable.getId());
         }
       }
       // Launch an OSGi event for each authorizable.
@@ -216,7 +217,7 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
           EventUtils.sendOsgiEvent(properties, topic, eventAdmin);
         } catch (Exception e) {
           // Trap all exception so we don't disrupt the normal behaviour.
-          LOGGER.error("Failed to launch an OSGi event for creating a user.", e);
+          LOGGER.error("Failed to launch an OSGi event for deleting an authorizable.", e);
         }
       }
     } catch ( AccessDeniedException e) {
@@ -232,7 +233,34 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
       LOGGER.warn(e.getMessage(),e);
       response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
       return;
+    } finally {
+      if (session != null) {
+        try {
+          session.logout();
+        } catch (ClientPoolException e) {
+          LOGGER.error(e.getMessage());
+        }
+      }
+      if (adminSession != null) {
+        try {
+          adminSession.logout();
+        } catch (ClientPoolException e) {
+          LOGGER.error(e.getMessage());
+        }
+      }
     }
+  }
+
+  private boolean allowedToDelete(Session session, Collection<Authorizable> authorizables) throws StorageClientException {
+    org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager accessControlManager = session.getAccessControlManager();
+    AuthorizableManager authorizableManager = session.getAuthorizableManager();
+    Authorizable thisUser = authorizableManager.getUser();
+    for (Authorizable authorizable : authorizables) {
+      if (!accessControlManager.can(thisUser, Security.ZONE_AUTHORIZABLES, authorizable.getId(), Permissions.CAN_DELETE)) {
+        return false;
+      }
+    }
+    return true;
   }
 
 
