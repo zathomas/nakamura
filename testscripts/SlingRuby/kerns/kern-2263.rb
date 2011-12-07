@@ -30,7 +30,8 @@ class TC_Kern2263 < Test::Unit::TestCase
       
       # delete the group
       @s.execute_post(@s.url_for("/system/userManager/group/#{group.name}.delete.html"), {
-        ":status" => "standard"
+        ":status" => "standard",
+        ":applyTo" => "#{group.name}"
       })
       
       # confirm that the group and the group home are gone
@@ -141,13 +142,9 @@ class TC_Kern2263 < Test::Unit::TestCase
     # check delete permission
     @s.switch_user(manager)
     res = @s.execute_post(@s.url_for("/system/userManager/group/#{manager_group.name}.delete.html"), {
-      ":status" => "standard"
-    })
-    assert_equal("200", res.code, "Should have been allowed to delete this group.")
-    
-    # check delete permission
-    res = @s.execute_post(@s.url_for("/system/userManager/group/#{manager_groupB.name}.delete.html"), {
-      ":status" => "standard"
+      ":status" => "standard",
+      ":applyTo" => "#{manager_group.name}",
+      ":applyTo" => "#{manager_groupB.name}"
     })
     assert_equal("200", res.code, "Should have been allowed to delete this group.")
     
