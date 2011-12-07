@@ -36,7 +36,26 @@ class TC_Kern2416 < Test::Unit::TestCase
   end
 
   def test_read_privilege
-    # give bob read access
+
+    # deny everyone read
+    @s.switch_user(@alice)
+    result = @s.execute_post(@ace_service, {
+        "principalId" => "everyone",
+        "privilege@jcr:read" => "denied"
+    })
+    assert_equal(200, result.code.to_i)
+    result = @s.execute_post(@ace_service, {
+        "principalId" => "anonymous",
+        "privilege@jcr:read" => "denied"
+    })
+    assert_equal(200, result.code.to_i)
+
+    # make sure bob cannot read
+    @s.switch_user(@bob)
+    result = @s.execute_get(@alice_authz_url)
+    assert_equal(404, result.code.to_i)
+
+    # give bob individual read access
     @s.switch_user(@alice)
     result = @s.execute_post(@ace_service, {
         "principalId" => @bob.name,
