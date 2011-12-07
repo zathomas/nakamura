@@ -260,10 +260,11 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
             <version>1.7</version>
+            <inherited>false</inherited>
             <executions>
               <execution>
-                <id>process-sources</id>
-                <phase>process-sources</phase>
+                <id>update-versions</id>
+                <phase>process-resources</phase>
                 <configuration>
                   <target>
                     <echo message="Updating select config files..." />
@@ -271,45 +272,21 @@
                       <include name="tools/version" />
                       <include name="tools/version.bat" />
                       <include name="app/src/main/bundles/list.xml" />
+                      <include name="webstart/src/main/jnlp/template.vm" />
                     </replace>
+                    <replace file="${project.basedir}/app/pom.xml" token="&lt;ux&gt;1.1-SNAPSHOT&lt;/ux&gt;" value="&lt;ux&gt;1.1&lt;/ux&gt;" />
                     <exec executable="git">
-                        <arg value="add"/>
-                        <arg value="tools/version"/>
-                        <arg value="tools/version.bat"/>
-                        <arg value="app/src/main/bundles/list.xml"/>
+                        <arg value="add" />
+                        <arg value="tools/version" />
+                        <arg value="tools/version.bat" />
+                        <arg value="app/src/main/bundles/list.xml" />
+                        <arg value="app/pom.xml" />
+                        <arg value="webstart/src/main/jnlp/template.vm" />
                     </exec>
                     <exec executable="git">
-                        <arg value="commit"/>
-                        <arg value="-m"/>
-                        <arg value="updating version numbers for release"/>
-                    </exec>
-                  </target>
-                </configuration>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-              </execution>
-              <execution>
-                <id>advance-version-number</id>
-                <phase>deploy</phase>
-                <configuration>
-                  <target>
-                    <echo message="Updating select config files..." />
-                    <replace dir="${project.basedir}" token="1.1" value="1.2-SNAPSHOT">
-                      <include name="tools/version" />
-                      <include name="tools/version.bat" />
-                    </replace>
-                    <replace file="${project.basedir}/app/src/main/bundles/list.xml" token="&gt;1.1&lt;" value="&gt;1.2-SNAPSHOT&lt;" />
-                    <exec executable="git">
-                        <arg value="add"/>
-                        <arg value="tools/version"/>
-                        <arg value="tools/version.bat"/>
-                        <arg value="app/src/main/bundles/list.xml"/>
-                    </exec>
-                    <exec executable="git">
-                        <arg value="commit"/>
-                        <arg value="-m"/>
-                        <arg value="updating version numbers for development"/>
+                        <arg value="commit" />
+                        <arg value="-m" />
+                        <arg value="updating version numbers for release" />
                     </exec>
                   </target>
                 </configuration>
