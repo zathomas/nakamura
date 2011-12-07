@@ -159,7 +159,7 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
   protected void handleOperation(SlingHttpServletRequest request, HtmlResponse response,
       List<Modification> changes)  {
 
-    Iterator<Resource> res = getApplyToResources(request);
+    Iterator<Authorizable> res = getApplyToResources(request);
     Collection<Authorizable> authorizables = new HashSet<Authorizable>();
 
     if (res == null) {
@@ -174,8 +174,7 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
         authorizables.add(item);
     } else {
         while (res.hasNext()) {
-            Resource resource = res.next();
-            Authorizable item = resource.adaptTo(Authorizable.class);
+            Authorizable item = res.next();
             if (item != null) {
               authorizables.add(item);
             }
@@ -277,7 +276,7 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
    * @return The iterator of resources listed in the parameter or
    *         <code>null</code> if the parameter is not set in the request.
    */
-  protected Iterator<Resource> getApplyToResources(
+  protected Iterator<Authorizable> getApplyToResources(
           SlingHttpServletRequest request) {
 
       String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
@@ -288,9 +287,11 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
       return new ApplyToIterator(request, applyTo);
   }
 
-  private static class ApplyToIterator implements Iterator<Resource> {
+  private static class ApplyToIterator implements Iterator<Authorizable> {
 
       private final ResourceResolver resolver;
+
+      private final Session session;
 
       private final Resource baseResource;
 
@@ -298,10 +299,11 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
 
       private int pathIndex;
 
-      private Resource nextResource;
+      private Authorizable nextResource;
 
       ApplyToIterator(SlingHttpServletRequest request, String[] paths) {
           this.resolver = request.getResourceResolver();
+          this.session = StorageClientUtils.adaptToSession(this.resolver.adaptTo(javax.jcr.Session.class));
           this.baseResource = request.getResource();
           this.paths = paths;
           this.pathIndex = 0;
@@ -313,28 +315,35 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
           return nextResource != null;
       }
 
-      public Resource next() {
+      public Authorizable next() {
           if (!hasNext()) {
               throw new NoSuchElementException();
           }
 
-          Resource result = nextResource;
+          Authorizable result = nextResource;
           nextResource = seek();
 
-          return result;
+        return result;
       }
 
       public void remove() {
           throw new UnsupportedOperationException();
       }
 
-      private Resource seek() {
+      private Authorizable seek() {
           while (pathIndex < paths.length) {
               String path = paths[pathIndex];
               pathIndex++;
 
-              Resource res = resolver.getResource(baseResource, path);
-              if (res != null) {
+            Authorizable res = null;
+            try {
+              res = session.getAuthorizableManager().findAuthorizable(path);
+            } catch (AccessDeniedException e) {
+              LOGGER.error(e.getMessage());
+            } catch (StorageClientException e) {
+              LOGGER.error(e.getMessage());
+            }
+            if (res != null) {
                   return res;
               }
           }
