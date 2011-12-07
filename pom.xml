@@ -256,46 +256,6 @@
       <id>sakai-release</id>
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <version>1.7</version>
-            <inherited>false</inherited>
-            <executions>
-              <execution>
-                <id>update-versions</id>
-                <phase>process-resources</phase>
-                <configuration>
-                  <target>
-                    <echo message="Updating select config files..." />
-                    <replace dir="${project.basedir}" token="1.1-SNAPSHOT" value="1.1">
-                      <include name="tools/version" />
-                      <include name="tools/version.bat" />
-                      <include name="app/src/main/bundles/list.xml" />
-                      <include name="webstart/src/main/jnlp/template.vm" />
-                    </replace>
-                    <replace file="${project.basedir}/app/pom.xml" token="&lt;ux&gt;1.1-SNAPSHOT&lt;/ux&gt;" value="&lt;ux&gt;1.1&lt;/ux&gt;" />
-                    <exec executable="git">
-                        <arg value="add" />
-                        <arg value="tools/version" />
-                        <arg value="tools/version.bat" />
-                        <arg value="app/src/main/bundles/list.xml" />
-                        <arg value="app/pom.xml" />
-                        <arg value="webstart/src/main/jnlp/template.vm" />
-                    </exec>
-                    <exec executable="git">
-                        <arg value="commit" />
-                        <arg value="-m" />
-                        <arg value="updating version numbers for release" />
-                    </exec>
-                  </target>
-                </configuration>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
           <!-- We want to sign the artifact, the POM, and all attached artifacts -->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>

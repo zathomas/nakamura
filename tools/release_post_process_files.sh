@@ -19,8 +19,14 @@ function ux_tag_replace {
     restore $1
 }
 
+function snapshot_to_snapshot {
+    sed "s/\>$cversion-SNAPSHOT\</\>$nversion-SNAPSHOT\</" $1 > $1.new
+    restore $1
+}
+
 function restore {
     mv $1.new $1
+    git add $1
 }
 
 echo "Moving from $cversion to $nversion-SNAPSHOT"
@@ -28,13 +34,16 @@ simple_replace tools/version
 simple_replace tools/version.bat
 simple_replace webstart/src/main/jnlp/template.vm
 
+otherpoms=`find . -name "pom.xml" -path "./sandbox/*" -or -path "./contrib/*" -name "pom.xml"`
+for file in $otherpoms
+  do
+    snapshot_to_snapshot $file
+  done
+  
 tag_replace app/src/main/bundles/list.xml
+tag_replace webstart/pom.xml
+tag_replace modelling/pom.xml
+
 ux_tag_replace app/pom.xml
 
-git add tools/version                      \
-        tools/version.bat                  \
-        webstart/src/main/jnlp/template.vm \
-        app/src/main/bundles/list.xml      \
-        app/pom.xml
-
-git commit -m "advancing version number in select config files"
+git commit -m "switching from version to next SNAPSHOT in config files"
