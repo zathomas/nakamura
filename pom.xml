@@ -354,6 +354,7 @@
          <groupId>org.codehaus.mojo</groupId>
          <artifactId>ianal-maven-plugin</artifactId>
          <version>1.0-alpha-1</version>
+         <inherited>false</inherited>
          <executions>
             <execution>
                <goals>
