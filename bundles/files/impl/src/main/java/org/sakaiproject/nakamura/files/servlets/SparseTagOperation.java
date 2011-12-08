@@ -80,7 +80,7 @@ import javax.servlet.http.HttpServletResponse;
   @Property(name = "sling.post.operation", value = "tag"),
   @Property(name = "service.description", value = "Associates one or more tags with a piece of content."),
   @Property(name = "service.vendor", value = "The Sakai Foundation") })
-@ServiceDocumentation(name = "SparseTagOperation", okForVersion = "0.11",
+@ServiceDocumentation(name = "SparseTagOperation", okForVersion = "1.1",
   shortDescription = "Tag a node",
   description = "Add a tag to a node.",
   bindings = {
