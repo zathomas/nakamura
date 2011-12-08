@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-
 package org.sakaiproject.nakamura.message.internal;
 
 import com.google.common.collect.ImmutableMap;
@@ -49,7 +48,6 @@ import org.sakaiproject.nakamura.api.message.LiteMessagingService;
 import org.sakaiproject.nakamura.api.message.MessageConstants;
 import org.sakaiproject.nakamura.api.message.MessageRoute;
 import org.sakaiproject.nakamura.api.message.MessageRoutes;
-import org.sakaiproject.nakamura.api.message.MessageTransport;
 import org.sakaiproject.nakamura.api.message.MessagingException;
 import org.sakaiproject.nakamura.api.presence.PresenceService;
 import org.sakaiproject.nakamura.api.presence.PresenceUtils;
@@ -114,7 +112,7 @@ public class LiteInternalMessageHandler implements LiteMessageTransport,
       List<String> recipients = new ArrayList<String>();
       AuthorizableManager authorizableManager = session.getAuthorizableManager();
       for (MessageRoute route : routes) {
-        if (MessageTransport.INTERNAL_TRANSPORT.equals(route.getTransport())) {
+        if (LiteMessageTransport.INTERNAL_TRANSPORT.equals(route.getTransport())) {
           String recipient = route.getRcpt();
           LOG.info("Started handling a message for delivery to {} ", recipient );
           // the path were we want to save messages in.
@@ -261,10 +259,6 @@ public class LiteInternalMessageHandler implements LiteMessageTransport,
           // Pass in the presence.
           PresenceUtils.makePresenceJSON(write, au.getId(), presenceService, true);
         }
-      } else {
-        // No idea what this recipient is.
-        // Just output it.
-        write.value(recipient);
       }
     } catch (JSONException e) {
       LOG.error(e.getMessage(), e);

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -94,7 +94,7 @@ public class FormLoginServlet extends SlingAllMethodsServlet {
    *
    */
   private static final long serialVersionUID = -6303432993222973296L;
-  private static final String PARAM_DESTINATION = "d";
+  private static final String PARAM_DESTINATION = "url";
   public static final String TRY_LOGIN = "sakaiauth:login";
   public static final String USERNAME = "sakaiauth:un";
   public static final String PASSWORD = "sakaiauth:pw";

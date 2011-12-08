@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -56,8 +56,8 @@ public class PresenceServiceImplTest {
   @Before
   public void setUp() throws Exception {
 
-    presenceLocationCache = new MapCacheImpl<Object>();
-    presenceStatusCache = new MapCacheImpl<Object>();
+    presenceLocationCache = new MapCacheImpl<Object>("testlocation", CacheScope.INSTANCE);
+    presenceStatusCache = new MapCacheImpl<Object>("teststatus", CacheScope.INSTANCE);
 
     cacheManagerService = createMock(CacheManagerService.class);
     expect(

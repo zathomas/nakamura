@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-
 package org.sakaiproject.nakamura.discussion;
 
 import org.apache.felix.scr.annotations.Component;
@@ -54,7 +53,7 @@ public class LiteDiscussionRouter implements LiteMessageRouter {
   @Reference
   protected Repository contentRepository;
 
-  private static final Logger LOG = LoggerFactory.getLogger(DiscussionRouter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LiteDiscussionRouter.class);
 
   @Property(value = "The Sakai Foundation")
   static final String SERVICE_VENDOR = "service.vendor";

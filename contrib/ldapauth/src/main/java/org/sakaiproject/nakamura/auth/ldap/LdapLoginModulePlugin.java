@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -23,7 +23,7 @@ import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.jackrabbit.server.security.AuthenticationPlugin;
 import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
 
@@ -72,7 +72,7 @@ public class LdapLoginModulePlugin implements LoginModulePlugin {
   }
 
   protected void init(Map<?, ?> props) {
-    userFilter = OsgiUtil.toString(props.get(USER_FILTER), USER_FILTER_DEFAULT);
+    userFilter = PropertiesUtil.toString(props.get(USER_FILTER), USER_FILTER_DEFAULT);
   }
 
   /**

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,18 @@
  */
 package org.sakaiproject.nakamura.email.outgoing;
 
+import com.google.common.collect.Lists;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.MultiPartEmail;
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -37,15 +42,18 @@ import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
+import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.message.MessageConstants;
+import org.sakaiproject.nakamura.api.profile.ProfileService;
 import org.sakaiproject.nakamura.api.templates.TemplateService;
-import org.sakaiproject.nakamura.api.user.UserConstants;
+import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -66,20 +74,35 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Queue;
 import javax.jms.Session;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 
 @Component(immediate = true, metatype = true)
 public class LiteOutgoingEmailMessageListener implements MessageListener {
   private static final Logger LOGGER = LoggerFactory
       .getLogger(LiteOutgoingEmailMessageListener.class);
 
+
   @Property(value = "localhost")
   private static final String SMTP_SERVER = "sakai.smtp.server";
-  @Property(intValue = 25, label = "%sakai.smtp.port.name")
+  @Property(intValue = 25)
   private static final String SMTP_PORT = "sakai.smtp.port";
+  @Property(boolValue = false)
+  private static final String SMTP_USE_TLS = "sakai.smtp.tls";
+  @Property(boolValue = false)
+  private static final String SMTP_USE_SSL = "sakai.smtp.ssl";
+  @Property
+  private static final String SMTP_AUTH_USER = "sakai.smtp.auth.user";
+  @Property
+  private static final String SMTP_AUTH_PASS = "sakai.smtp.auth.pass";
   @Property(intValue = 240)
   private static final String MAX_RETRIES = "sakai.email.maxRetries";
   @Property(intValue = 30)
   private static final String RETRY_INTERVAL = "sakai.email.retryIntervalMinutes";
+  @Property(value = "no-reply@example.com")
+  private static final String REPLY_AS_ADDRESS = "sakai.email.replyAsAddress";
+  @Property(value = "Sakai OAE")
+  private static final String REPLY_AS_NAME = "sakai.email.replyAsName";
 
   protected static final String QUEUE_NAME = "org/sakaiproject/nakamura/message/email/outgoing";
 
@@ -93,6 +116,10 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
   protected ConnectionFactoryService connFactoryService;
   @Reference
   protected TemplateService templateService;
+  @Reference
+  protected BasicUserInfoService basicUserInfo;
+  @Reference
+  protected ProfileService profileService;
 
   /**
    * If present points to a node
@@ -106,11 +133,17 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
   public static final String RECIPIENTS = "recipients";
 
   private Connection connection = null;
-  private Integer maxRetries;
-  private Integer smtpPort;
   private String smtpServer;
-
+  private Integer smtpPort;
+  private boolean useTls;
+  private boolean useSsl;
+  private String authUser;
+  private String authPass;
+  private Integer maxRetries;
   private Integer retryInterval;
+  private String replyAsAddress;
+  private String replyAsName;
+
 
   public LiteOutgoingEmailMessageListener() {
   }
@@ -168,8 +201,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
                     email = constructMessage(messageContent, recipients, adminSession,
                         sparseSession);
 
-                    email.setSmtpPort(smtpPort);
-                    email.setHostName(smtpServer);
+                    setOptions(email);
 
                     email.send();
                   } catch (EmailException e) {
@@ -252,63 +284,79 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     }
   }
 
+  /**
+   * Set transfer options on the email based on configuration of this service.
+   *
+   * @param email The email where to set options.
+   */
+  private void setOptions(MultiPartEmail email) {
+    email.setHostName(smtpServer);
+    email.setTLS(useTls);
+    email.setSSL(useSsl);
+    if (useSsl) {
+      email.setSslSmtpPort(Integer.toString(smtpPort));
+    } else {
+      email.setSmtpPort(smtpPort);
+    }
+
+    if (!StringUtils.isBlank(authUser) && !StringUtils.isBlank(authPass)) {
+      email.setAuthentication(authUser, authPass);
+    }
+  }
+
   private MultiPartEmail constructMessage(Content contentNode, List<String> recipients,
       javax.jcr.Session session, org.sakaiproject.nakamura.api.lite.Session sparseSession)
       throws EmailDeliveryException, StorageClientException, AccessDeniedException,
       PathNotFoundException, RepositoryException {
     MultiPartEmail email = new MultiPartEmail();
-    // TODO: the SAKAI_TO may make no sense in an email context
-    // and there does not appear to be any distinction between Bcc and To in java mail.
+
 
     Set<String> toRecipients = new HashSet<String>();
-    Set<String> bccRecipients = new HashSet<String>();
-    for (String r : recipients) {
-      bccRecipients.add(convertToEmail(r.trim(), sparseSession));
+
+    toRecipients = setRecipients(recipients, sparseSession);
+
+    String to = null;
+    try {
+      // set from: to the reply as address
+      email.setFrom(replyAsAddress, replyAsName);
+
+      if (toRecipients.size() == 1) {
+        // set to: to the rcpt if sending to just one person
+        to = convertToEmail(toRecipients.iterator().next(), sparseSession);
+
+        email.setTo(Lists.newArrayList(new InternetAddress(to)));
+      } else {
+        // set to: to 'undisclosed recipients' when sending to a group of recipients
+        // this mirrors what shows up in RFC's and most major MTAs
+        // http://www.postfix.org/postconf.5.html#undisclosed_recipients_header
+        email.addHeader("To", "undisclosed-recipients:;");
+      }
+    } catch (EmailException e) {
+      LOGGER.error("Cannot send email. From: address as configured is not valid: {}", replyAsAddress);
+    } catch (AddressException e) {
+      LOGGER.error("Cannot send email. To: address is not valid: {}", to);
     }
 
-    if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_TO)) {
-      String[] tor = StringUtils.split(
-          (String) contentNode.getProperty(MessageConstants.PROP_SAKAI_TO), ',');
-      for (String r : tor) {
-        r = convertToEmail(r.trim(), sparseSession);
-        if (bccRecipients.contains(r)) {
-          toRecipients.add(r);
-          bccRecipients.remove(r);
+    // if we're dealing with a group of recipients, add them to bcc: to hide email
+    // addresses from the other recipients
+    if (toRecipients.size() > 1) {
+      for (String r : toRecipients) {
+        try {
+          // we don't need to copy the sender on the message
+          if (r.equals(contentNode.getProperty(MessageConstants.PROP_SAKAI_FROM))) {
+            continue;
+          }
+          email.addBcc(convertToEmail(r, sparseSession));
+        } catch (EmailException e) {
+          throw new EmailDeliveryException("Invalid To Address [" + r
+              + "], message is being dropped :" + e.getMessage(), e);
         }
       }
     }
-    for (String r : toRecipients) {
-      try {
-        email.addTo(convertToEmail(r, sparseSession));
-      } catch (EmailException e) {
-        throw new EmailDeliveryException("Invalid To Address [" + r
-            + "], message is being dropped :" + e.getMessage(), e);
-      }
-    }
-    for (String r : bccRecipients) {
-      try {
-        email.addBcc(convertToEmail(r, sparseSession));
-      } catch (EmailException e) {
-        throw new EmailDeliveryException("Invalid Bcc Address [" + r
-            + "], message is being dropped :" + e.getMessage(), e);
-      }
-    }
-
-    if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_FROM)) {
-      String from = (String) contentNode.getProperty(MessageConstants.PROP_SAKAI_FROM);
-      try {
-        email.setFrom(convertToEmail(from, sparseSession));
-      } catch (EmailException e) {
-        throw new EmailDeliveryException("Invalid From Address [" + from
-            + "], message is being dropped :" + e.getMessage(), e);
-      }
-    } else {
-      throw new EmailDeliveryException("Must provide a 'from' address.");
-    }
 
     if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_BODY)) {
-      String messageBody = (String) contentNode
-          .getProperty(MessageConstants.PROP_SAKAI_BODY);
+      String messageBody = String.valueOf(contentNode
+          .getProperty(MessageConstants.PROP_SAKAI_BODY));
       // if this message has a template, use it
       LOGGER
           .debug("Checking for sakai:templatePath and sakai:templateParams properties on the outgoing message's node.");
@@ -372,25 +420,54 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     Map<String, String> rv = new HashMap<String, String>();
     String[] values = templateParameter.split("\\|");
     for (String value : values) {
-      String[] keyValuePair = value.split("=");
+      String[] keyValuePair = value.split("=", 2);
       rv.put(keyValuePair[0], keyValuePair[1]);
     }
     return rv;
   }
 
+  private Set<String> setRecipients(List<String> recipients,
+      org.sakaiproject.nakamura.api.lite.Session session
+      ) throws StorageClientException,
+      AccessDeniedException {
+    return setRecipients(recipients, session, new HashSet<String>(), new HashSet<String>());
+  }
+
+  private Set<String> setRecipients(List<String> recipients,
+      org.sakaiproject.nakamura.api.lite.Session session,
+      Set<String> newRecipients,
+      Set<String> groupsAlreadyProcessed) throws StorageClientException,
+      AccessDeniedException {
+    for (String recipient : recipients) {
+      LOGGER.debug("Checking recipient: " + recipient);
+      Authorizable au = session.getAuthorizableManager().findAuthorizable(recipient);
+      if (au != null && au instanceof Group) {
+        // Prevent infinite recursion in cyclic group references
+        if (!groupsAlreadyProcessed.contains(recipient)) {
+          Group group = (Group) au;
+          groupsAlreadyProcessed.add(recipient);
+          // Recurse with the group members
+          setRecipients(Arrays.asList(group.getMembers()),
+              session,
+              newRecipients,
+              groupsAlreadyProcessed);
+          }
+      } else if (!newRecipients.contains(recipient)) {
+        LOGGER.debug("Adding recipient to message delivery: " + recipient);
+        newRecipients.add(recipient);
+      }
+    }
+    return newRecipients;
+  }
+
   private String convertToEmail(String address,
       org.sakaiproject.nakamura.api.lite.Session session) throws StorageClientException,
-      AccessDeniedException {
+      AccessDeniedException, RepositoryException {
     if (address.indexOf('@') < 0) {
-      String emailAddress = null;
-
       Authorizable user = session.getAuthorizableManager().findAuthorizable(address);
-      if (user != null) {
-        if ( user.hasProperty(UserConstants.USER_EMAIL_PROPERTY)) {
-          emailAddress = (String) user.getProperty(UserConstants.USER_EMAIL_PROPERTY);
-        }
-      }
-      if (emailAddress != null && emailAddress.trim().length() > 0) {
+      String emailAddress = OutgoingEmailUtils.getEmailAddress(user, session, basicUserInfo, profileService, repository);
+
+      if (!StringUtils.isBlank(emailAddress)) {
         address = emailAddress;
       } else {
         address = address + "@" + smtpServer;
@@ -416,7 +493,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
             Properties eventProps = new Properties();
             eventProps.put(NODE_PATH_PROPERTY, config.get(NODE_PATH_PROPERTY));
 
-            Event retryEvent = new Event(QUEUE_NAME, eventProps);
+            Event retryEvent = new Event(QUEUE_NAME, (Map) eventProps);
             eventAdmin.postEvent(retryEvent);
 
           }
@@ -441,11 +518,13 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     }
   }
 
+  @Activate
+  @Modified
   protected void activate(ComponentContext ctx) {
     @SuppressWarnings("rawtypes")
     Dictionary props = ctx.getProperties();
 
-    Integer _maxRetries = OsgiUtil.toInteger(props.get(MAX_RETRIES), -1);
+    Integer _maxRetries = PropertiesUtil.toInteger(props.get(MAX_RETRIES), -1);
     if (_maxRetries > -1 ) {
       if (diff(maxRetries, _maxRetries)) {
         maxRetries = _maxRetries;
@@ -454,7 +533,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
       LOGGER.error("Maximum times to retry messages not set.");
     }
 
-    Integer _retryInterval = OsgiUtil.toInteger(props.get(RETRY_INTERVAL), -1);
+    Integer _retryInterval = PropertiesUtil.toInteger(props.get(RETRY_INTERVAL), -1);
     if (_retryInterval > -1 ) {
       if (diff(_retryInterval, retryInterval)) {
         retryInterval = _retryInterval;
@@ -467,7 +546,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
       LOGGER.warn("SMTP retry window is very short.");
     }
 
-    Integer _smtpPort = OsgiUtil.toInteger(props.get(SMTP_PORT), -1);
+    Integer _smtpPort = PropertiesUtil.toInteger(props.get(SMTP_PORT), -1);
     boolean validPort = _smtpPort != null && _smtpPort >= 0 && _smtpPort <= 65535;
     if (validPort) {
       if (diff(smtpPort, _smtpPort)) {
@@ -477,15 +556,37 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
       LOGGER.error("Invalid port set for SMTP");
     }
 
-    String _smtpServer = OsgiUtil.toString(props.get(SMTP_SERVER), "");
-    boolean smtpServerEmpty = _smtpServer == null || _smtpServer.trim().length() == 0;
-    if (!smtpServerEmpty) {
+    String _smtpServer = PropertiesUtil.toString(props.get(SMTP_SERVER), "");
+    if (!StringUtils.isBlank(_smtpServer)) {
       if (diff(smtpServer, _smtpServer)) {
         smtpServer = _smtpServer;
       }
     } else {
       LOGGER.error("No SMTP server set");
     }
+
+    String _replyAsAddress = PropertiesUtil.toString(props.get(REPLY_AS_ADDRESS), "");
+    if (!StringUtils.isBlank(_replyAsAddress)) {
+      if (diff(replyAsAddress, _replyAsAddress)) {
+        replyAsAddress = _replyAsAddress;
+      }
+    } else {
+      LOGGER.error("No reply-as email address set");
+    }
+
+    String _replyAsName = PropertiesUtil.toString(props.get(REPLY_AS_NAME), "");
+    if (!StringUtils.isBlank(_replyAsName)) {
+      if (diff(replyAsName, _replyAsName)) {
+        replyAsName = _replyAsName;
+      }
+    } else {
+      LOGGER.error("No reply-as email name set");
+    }
+
+    useTls = PropertiesUtil.toBoolean(props.get(SMTP_USE_TLS), false);
+    useSsl = PropertiesUtil.toBoolean(props.get(SMTP_USE_SSL), false);
+    authUser = PropertiesUtil.toString(props.get(SMTP_AUTH_USER), "");
+    authPass = PropertiesUtil.toString(props.get(SMTP_AUTH_PASS), "");
 
     try {
       connection = connFactoryService.getDefaultConnectionFactory().createConnection();
@@ -505,6 +606,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     }
   }
 
+  @Deactivate
   protected void deactivate(ComponentContext ctx) {
     if (connection != null) {
       try {

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -48,12 +48,6 @@ public class CasLoginModulePluginTest {
 
     credentials = new SimpleCredentials("someUser", new char[0]);
     credentials.setAttribute(SsoPrincipal.class.getName(), new SsoPrincipal("someUser"));
-  }
-
-  @Test
-  public void coverageBooster() throws Exception {
-    plugin.addPrincipals(null);
-    plugin.doInit(null, null, null);
   }
 
   @Test

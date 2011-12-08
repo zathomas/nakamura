@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-
 package org.sakaiproject.nakamura.persistence.dynamic.xstream;
 
 import com.google.common.collect.ImmutableSet;
@@ -30,7 +29,7 @@ import java.util.Set;
 
 public class PropertyConverter implements Converter {
 
-  private static final Set<String> filter = ImmutableSet.of("eclipselink.jdbc.url","eclipselink.jdbc.driver",
+  private static final Set<String> filter = ImmutableSet.copyOf("eclipselink.jdbc.url","eclipselink.jdbc.driver",
       "eclipselink.jdbc.user", "eclipselink.jdbc.password", "eclipselink.target-server",
       "eclipselink.jdbc.write-connections.min", "eclipselink.jdbc.read-connections.min",
       "eclipselink.logging.level", "eclipselink.logging.timestamp",

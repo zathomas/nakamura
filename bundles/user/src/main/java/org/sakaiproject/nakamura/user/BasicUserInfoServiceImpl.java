@@ -1,3 +1,20 @@
+/**
+ * Licensed to the Sakai Foundation (SF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The SF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package org.sakaiproject.nakamura.user;
 
 import static org.sakaiproject.nakamura.api.user.UserConstants.CONTACTS_PROP;
@@ -15,11 +32,17 @@ import static org.sakaiproject.nakamura.api.user.UserConstants.USER_DATEOFBIRTH;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_DEPARTMENT;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_EMAIL_PROPERTY;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_FIRSTNAME_PROPERTY;
+import static org.sakaiproject.nakamura.api.user.UserConstants.USER_HOME_PATH;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_LASTNAME_PROPERTY;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_PICTURE;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_ROLE;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_TAGS;
 import static org.sakaiproject.nakamura.api.user.UserConstants.COUNTS_LAST_UPDATE_PROP;
+import static org.sakaiproject.nakamura.api.user.UserConstants.PROP_PARENT_GROUP_ID;
+import static org.sakaiproject.nakamura.api.user.UserConstants.PROP_PARENT_GROUP_TITLE;
+import static org.sakaiproject.nakamura.api.user.UserConstants.PROP_PSEUDO_GROUP;
+import static org.sakaiproject.nakamura.api.user.UserConstants.PROP_ROLE_TITLE;
+import static org.sakaiproject.nakamura.api.user.UserConstants.PROP_ROLE_TITLE_PLURAL;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -31,7 +54,7 @@ import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
@@ -39,6 +62,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.user.counts.CountProvider;
+import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +99,7 @@ public class BasicUserInfoServiceImpl implements BasicUserInfoService {
 
   @Modified
   protected void modified(Map<String, Object> properties ) {
-    basicUserInfoElements = OsgiUtil.toStringArray(properties.get(BASIC_PROFILE_ELEMENTS), DEFAULT_BASIC_USER_INFO_ELEMENTS);
+    basicUserInfoElements = PropertiesUtil.toStringArray(properties.get(BASIC_PROFILE_ELEMENTS), DEFAULT_BASIC_USER_INFO_ELEMENTS);
   }
 
   
@@ -90,6 +114,7 @@ public class BasicUserInfoServiceImpl implements BasicUserInfoService {
     Map<String, Object> basicUserInfo = Maps.newHashMap();
     basicUserInfo.put(USER_BASIC, basicProfileMapForAuthorizable(authorizable));
     basicUserInfo.put(COUNTS_PROP, countsMapforAuthorizable(authorizable));
+    basicUserInfo.put(USER_HOME_PATH, LitePersonalUtils.getHomeResourcePath(authorizable.getId()));
     if ( authorizable.hasProperty(UserConstants.SAKAI_EXCLUDE)) {
       basicUserInfo.put(UserConstants.SAKAI_EXCLUDE, authorizable.getProperty(UserConstants.SAKAI_EXCLUDE));
     } else {
@@ -142,6 +167,16 @@ public class BasicUserInfoServiceImpl implements BasicUserInfoService {
     basicInfo.put("lastModified", group.getProperty("lastModified"));
     basicInfo.put("createdBy", group.getProperty("createdBy"));
     basicInfo.put("lastModifiedBy", group.getProperty("lastModifiedBy"));
+    basicInfo.put("sakai:group-joinable", group.getProperty("sakai:group-joinable"));
+
+    // Add some extra fields if it is a pseudo-group
+    if (group.hasProperty(PROP_PSEUDO_GROUP)) {
+      basicInfo.put(PROP_PSEUDO_GROUP, group.getProperty(PROP_PSEUDO_GROUP));
+      basicInfo.put(PROP_PARENT_GROUP_ID, group.getProperty(PROP_PARENT_GROUP_ID));
+      basicInfo.put(PROP_PARENT_GROUP_TITLE, group.getProperty(PROP_PARENT_GROUP_TITLE));
+      basicInfo.put(PROP_ROLE_TITLE, group.getProperty(PROP_ROLE_TITLE));
+      basicInfo.put(PROP_ROLE_TITLE_PLURAL, group.getProperty(PROP_ROLE_TITLE_PLURAL));
+    }
   }
 
   private  Map<String, Object> basicProfileMapForAuthorizable(Authorizable authorizable) {

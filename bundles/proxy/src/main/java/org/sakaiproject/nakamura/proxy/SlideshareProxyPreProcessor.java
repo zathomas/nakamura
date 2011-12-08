@@ -1,3 +1,20 @@
+/**
+ * Licensed to the Sakai Foundation (SF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The SF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package org.sakaiproject.nakamura.proxy;
 
 import org.apache.felix.scr.annotations.Component;
@@ -5,7 +22,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.component.ComponentContext;
 import org.sakaiproject.nakamura.api.proxy.ProxyPreProcessor;
 import org.sakaiproject.nakamura.util.StringUtils;
@@ -59,7 +76,7 @@ public class SlideshareProxyPreProcessor implements ProxyPreProcessor {
     @SuppressWarnings("rawtypes")
     Dictionary props = context.getProperties();
 
-    String _apiKey = OsgiUtil.toString(props.get(slideshareApiKey), null);
+    String _apiKey = PropertiesUtil.toString(props.get(slideshareApiKey), null);
     if (_apiKey != null) {
       if (diff(APIKEY, _apiKey)) {
         APIKEY = _apiKey;
@@ -68,7 +85,7 @@ public class SlideshareProxyPreProcessor implements ProxyPreProcessor {
       LOGGER.error("Slideshare API key not set.");
     }
 
-    String _sharedSecret = OsgiUtil.toString(props.get(slideshareSharedSecret), null);
+    String _sharedSecret = PropertiesUtil.toString(props.get(slideshareSharedSecret), null);
     if (_sharedSecret != null) {
       if (diff(SHAREDSECRET, _sharedSecret)) {
         SHAREDSECRET = _sharedSecret;

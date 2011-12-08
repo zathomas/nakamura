@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -437,4 +437,9 @@ public class JcrUtils {
       node.setProperty(propertyName, valueList.toArray(new Value[0]));
     }
   }
+
+  public static boolean isJCRProperty(String key) {
+    return key != null && key.startsWith("jcr:");
+  }
+
 }

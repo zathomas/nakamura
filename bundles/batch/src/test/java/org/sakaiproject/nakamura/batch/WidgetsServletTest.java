@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -34,7 +34,6 @@ import org.sakaiproject.nakamura.api.memory.Cache;
 import org.sakaiproject.nakamura.api.memory.CacheScope;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,7 +47,7 @@ public class WidgetsServletTest extends AbstractWidgetServletTest {
   private WidgetsServlet servlet;
 
   @Before
-  public void setUp() throws IOException, URISyntaxException {
+  public void setUp() throws Exception {
     super.setUp();
 
     servlet = new WidgetsServlet();

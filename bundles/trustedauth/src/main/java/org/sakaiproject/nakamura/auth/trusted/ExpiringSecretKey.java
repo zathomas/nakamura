@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations under the License.
  */
 package org.sakaiproject.nakamura.auth.trusted;
+
+import org.sakaiproject.nakamura.api.auth.trusted.ExpiringSecretKeyData;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;

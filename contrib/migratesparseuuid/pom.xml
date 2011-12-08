@@ -16,11 +16,10 @@
   <parent>
     <groupId>org.sakaiproject.nakamura</groupId>
     <artifactId>base</artifactId>
-    <version>0.11-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
   </parent>
   <artifactId>org.sakaiproject.nakamura.migratesparseuuid</artifactId>
   <packaging>bundle</packaging>
-  <version>0.11-SNAPSHOT</version>
   <name>Sakai Nakamura: Migrate Sparse UUID</name>
   <description>Converts content with an _id property to a _sparseID property.</description>
   <build>
@@ -46,17 +45,18 @@
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.core</artifactId>
-      <version>1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.solr</artifactId>
-      <version>1.0-SNAPSHOT</version>
+<<<<<<< HEAD
+=======
     </dependency>
     <dependency>
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-core</artifactId>
       <version>4.0.1040465</version>
+>>>>>>> af3a239063d29d8cecf04b8e15c421889d5c39b9
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

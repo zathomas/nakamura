@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -135,5 +135,24 @@ public class EventUtils {
       return newMap.build();
     }
     return null;
+  }
+
+  public static String safeTopicElement(String topic ) {
+	  return safeTopic(topic, "-_");
+  }
+
+  public static String safeTopic(String topic ) {
+	  return safeTopic(topic, "/-_");
+  }
+
+  private static String safeTopic(String topic, String extra ) {
+	  char[] tc = topic.toCharArray();
+	  for ( int i = 0; i < tc.length; i++ ) {
+		  // topics can only contain ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_- and /
+		  if (!Character.isLetterOrDigit(tc[i]) && (extra.indexOf(tc[i]) < 0 )) {
+			  tc[i] = '_';
+		  }
+	  }
+	  return new String(tc);
   }
 }

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -114,7 +114,7 @@ public class CreateTreeOperation extends AbstractSlingPostOperation {
       while (keys.hasNext()) {
 
         String key = keys.next();
-        if (!key.startsWith("jcr:")) {
+        if (!JcrUtils.isJCRProperty(key)) {
           Object obj = json.get(key);
 
           if (obj instanceof JSONObject) {

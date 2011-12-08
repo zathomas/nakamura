@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations under the License.
  */
 
-
 package org.sakaiproject.nakamura.rules;
 
 import org.sakaiproject.nakamura.api.rules.RulePackageLoader;
@@ -26,7 +25,7 @@ import java.io.InputStream;
 public class BundleLoaderRuleSet implements RulePackageLoader{
 
   public InputStream getPackageInputStream() {
-   return  this.getClass().getResourceAsStream("/SLING-INF/content/var/rules/org.sakaiproject.nakamura.rules/org.sakaiproject.nakamura.rules.example/0.11-SNAPSHOT/org.sakaiproject.nakamura.rules.example-0.7-SNAPSHOT.pkg");
+   return  this.getClass().getResourceAsStream("/SLING-INF/content/var/rules/org.sakaiproject.nakamura.rules/org.sakaiproject.nakamura.rules.example/1.0/org.sakaiproject.nakamura.rules.example-1.0.pkg");
   }
 
   public ClassLoader getPackageClassLoader() {

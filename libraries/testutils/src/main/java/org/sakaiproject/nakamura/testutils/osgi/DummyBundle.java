@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -15,13 +15,13 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-
 package org.sakaiproject.nakamura.testutils.osgi;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 import org.sakaiproject.nakamura.util.UrlEnumeration;
 
 import java.io.IOException;
@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Map;
 
 public class DummyBundle implements Bundle {
 
@@ -129,6 +130,16 @@ public class DummyBundle implements Bundle {
   }
 
   public void update(InputStream arg0) throws BundleException {
+  }
+
+  @Override
+  public Map getSignerCertificates(int arg0) {
+    return null;
+  }
+
+  @Override
+  public Version getVersion() {
+    return null;
   }
 
 }

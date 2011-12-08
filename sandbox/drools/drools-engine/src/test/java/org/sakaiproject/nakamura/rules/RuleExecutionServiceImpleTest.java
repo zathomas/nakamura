@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -152,7 +152,7 @@ public class RuleExecutionServiceImpleTest {
     Mockito.when(binary.getStream()).thenAnswer(new Answer<InputStream>() {
 
       public InputStream answer(InvocationOnMock invocation) throws Throwable {
-        return  this.getClass().getResourceAsStream("/SLING-INF/content/var/rules/org.sakaiproject.nakamura.rules/org.sakaiproject.nakamura.rules.example/0.11-SNAPSHOT/org.sakaiproject.nakamura.rules.example-0.7-SNAPSHOT.pkg");
+        return  this.getClass().getResourceAsStream("/SLING-INF/content/var/rules/org.sakaiproject.nakamura.rules/org.sakaiproject.nakamura.rules.example/1.0/org.sakaiproject.nakamura.rules.example-1.0.pkg");
       }
     });
 
@@ -337,7 +337,7 @@ public class RuleExecutionServiceImpleTest {
     Mockito.when(binary.getStream()).thenAnswer(new Answer<InputStream>() {
 
       public InputStream answer(InvocationOnMock invocation) throws Throwable {
-        return  this.getClass().getResourceAsStream("/SLING-INF/content/var/rules/org.sakaiproject.nakamura.rules/org.sakaiproject.nakamura.rules.example/0.11-SNAPSHOT/org.sakaiproject.nakamura.rules.example-0.7-SNAPSHOT.pkg");
+        return  this.getClass().getResourceAsStream("/SLING-INF/content/var/rules/org.sakaiproject.nakamura.rules/org.sakaiproject.nakamura.rules.example/1.0/org.sakaiproject.nakamura.rules.example-1.0.pkg");
       }
     });
 

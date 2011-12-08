@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -82,7 +82,9 @@ public class LiteDiscussionManagerImpl implements LiteDiscussionManager {
       props.put("sakai:marker", marker);
 
       path = expandHomeDirectory(path);
-
+      if (path.startsWith("/p/")) {
+        path = path.substring("/p/".length());
+      }
       Iterator<Content> foundContent = cm.find(props).iterator();
 
       while (foundContent.hasNext()) {

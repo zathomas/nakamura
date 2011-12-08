@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -61,10 +61,10 @@ public class LiteAllActivitiesResultProcessor implements SolrSearchResultProcess
       .getLogger(LiteAllActivitiesResultProcessor.class);
 
   @Reference
-  private SolrSearchServiceFactory searchServiceFactory;
+  protected SolrSearchServiceFactory searchServiceFactory;
 
   @Reference
-  private BasicUserInfoService basicUserInfoService;
+  protected BasicUserInfoService basicUserInfoService;
 
   public void writeResult(SlingHttpServletRequest request, JSONWriter write, Result result)
       throws JSONException {
@@ -85,10 +85,8 @@ public class LiteAllActivitiesResultProcessor implements SolrSearchResultProcess
           LOGGER.debug(e.getMessage(),e);
         }
         write.object();
-        Map<String, Object> contentProperties = null;
         if ( contentNode != null ) {
-          contentProperties = contentNode.getProperties();
-          ExtendedJSONWriter.writeValueMapInternals(write, contentProperties);
+          ExtendedJSONWriter.writeValueMapInternals(write, contentNode.getProperties());
           ExtendedJSONWriter.writeValueMapInternals(write, StorageClientUtils.getFilterMap(
               activityNode.getProperties(), null, null, contentNode.getProperties().keySet(), true));
         } else {
@@ -103,21 +101,23 @@ public class LiteAllActivitiesResultProcessor implements SolrSearchResultProcess
               .getProperties(authorizableManager.findAuthorizable((String) activityNode
                   .getProperty(ActivityConstants.PARAM_ACTOR_ID))));
         } catch (AccessDeniedException e) {
-          LOGGER.warn(e.getMessage(), e);
-        } catch (StorageClientException e) {
-          LOGGER.warn(e.getMessage(), e);
+          LOGGER.debug(e.getMessage(), e);
         }
         write.endObject();
-        if ( contentNode != null ) {
+        if (contentNode != null) {
           // KERN-1867 Activity feed should return more data about a group
           if ("sakai/group-home".equals(contentNode.getProperty("sling:resourceType"))) {
-            final Authorizable group = authorizableManager.findAuthorizable(PathUtils
-                .getAuthorizableId(contentNode.getPath()));
-            final Map<String, Object> basicUserInfo = basicUserInfoService
-                .getProperties(group);
-            if (basicUserInfo != null) {
-              write.key("profile");
-              ExtendedJSONWriter.writeValueMap(write, basicUserInfo);
+            try {
+              final Authorizable group = authorizableManager.findAuthorizable(PathUtils
+                      .getAuthorizableId(contentNode.getPath()));
+              final Map<String, Object> basicUserInfo = basicUserInfoService
+                      .getProperties(group);
+              if (basicUserInfo != null) {
+                write.key("profile");
+                ExtendedJSONWriter.writeValueMap(write, basicUserInfo);
+              }
+            } catch (AccessDeniedException e) {
+              LOGGER.debug(e.getMessage(), e);
             }
           }
           // KERN-1864 Return comment in activity feed

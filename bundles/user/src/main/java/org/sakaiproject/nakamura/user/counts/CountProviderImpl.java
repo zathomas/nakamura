@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -23,7 +23,7 @@ import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
@@ -103,7 +103,7 @@ public class CountProviderImpl implements CountProvider {
       if (LOG.isDebugEnabled())
         LOG.debug("update authorizable: {} with {}={}", new Object[] {
             authorizable.getId(), UserConstants.COUNTS_LAST_UPDATE_PROP, lastUpdate});      
-      authorizableManager.updateAuthorizable(authorizable);
+      authorizableManager.updateAuthorizable(authorizable, false);
     } else {
       LOG.warn("update could not get authorizable: {} from session",
           new Object[] { authorizable.getId() });
@@ -144,7 +144,7 @@ public class CountProviderImpl implements CountProvider {
   @Modified
   public void modify(Map<String, Object> properties) throws StorageClientException,
       AccessDeniedException {
-    updateIntervalMinutes = OsgiUtil.toLong(properties.get(UPDATE_INTERVAL_MINUTES), 30) * 60 * 1000;
+    updateIntervalMinutes = PropertiesUtil.toLong(properties.get(UPDATE_INTERVAL_MINUTES), 30);
   }
 
 

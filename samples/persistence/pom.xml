@@ -22,11 +22,10 @@
   <parent>
     <groupId>org.sakaiproject.nakamura</groupId>
     <artifactId>base</artifactId>
-    <version>0.11-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
   </parent>
   <artifactId>org.sakaiproject.nakamura.persistence</artifactId>
   <packaging>bundle</packaging>
-  <version>0.11-SNAPSHOT</version>
   <name>Sakai Nakamura :: Database Bundle</name>
   <description>Adds database support, JPA implementation clearance, JTA support and Datasources</description>
   <repositories>
@@ -132,19 +131,19 @@ xstream
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.memory</artifactId>
-      <version>0.11-SNAPSHOT</version>
+      <version>1.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.configuration</artifactId>
-      <version>0.11-SNAPSHOT</version>
+      <version>1.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.testutils</artifactId>
-      <version>0.11-SNAPSHOT</version>
+      <version>1.1-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>    
     <dependency>
@@ -165,11 +164,10 @@ xstream
       <version>1.1.0</version>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>com.google.collections</groupId>
-      <artifactId>google-collections</artifactId>
-      <scope>provided</scope>
-    </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+      </dependency>
     <dependency>
       <groupId>commons-dbcp</groupId>
       <artifactId>commons-dbcp</artifactId>

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -167,7 +167,7 @@ public class LiteMyGroupsServlet extends LiteAbstractMyGroupsServlet {
 
       if (isPseudoGroup((Group)group) && !isManagerGroup((Group)group, userManager)) {
         // The group we want is the child of the pseudo group
-        group = userManager.findAuthorizable((String) group.getProperty(UserConstants.PROP_PSEUDO_GROUP_PARENT));
+        group = userManager.findAuthorizable((String) group.getProperty(UserConstants.PROP_PARENT_GROUP_ID));
       }
 
       // KERN-1600 Group's without a title should only be system groups for things like

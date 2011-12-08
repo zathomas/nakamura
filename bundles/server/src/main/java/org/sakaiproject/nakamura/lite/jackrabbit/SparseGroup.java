@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -204,6 +204,19 @@ public class SparseGroup extends SparseAuthorizable implements Group {
   @Override
   public boolean isGroup() {
     return true;
+  }
+
+  //@Override // will be needed in 2.2.5
+  public boolean isDeclaredMember(Authorizable authorizable) throws RepositoryException {
+    String id = authorizable.getID();
+    Iterator<Authorizable> decMembers = getDeclaredMembers(); 
+    while (decMembers.hasNext()) {
+      Authorizable decMember = decMembers.next();
+      if (id.equals(decMember.getID())) {
+        return true;
+      }
+    }
+    return false;
   }
 
 }

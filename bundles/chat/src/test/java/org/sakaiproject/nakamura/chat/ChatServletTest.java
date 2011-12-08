@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -59,7 +59,7 @@ public class ChatServletTest {
    */
   @Before
   public void setUp() throws Exception {
-    chatCache = new MapCacheImpl<Object>();
+    chatCache = new MapCacheImpl<Object>("chattest", CacheScope.INSTANCE);
     cacheManagerService = createMock(CacheManagerService.class);
     expect(cacheManagerService.getCache("chat", CacheScope.CLUSTERREPLICATED))
         .andReturn(chatCache).anyTimes();

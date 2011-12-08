@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -95,9 +95,9 @@ public class ConnectionFinderSearchResultProcessor implements SolrSearchResultPr
       }
     } catch (StorageClientException e) {
       throw new RuntimeException(e.getMessage(), e);
-    } catch (AccessDeniedException e) {
-      throw new RuntimeException(e.getMessage(), e);
-    } 
+    } catch (AccessDeniedException ignored) {
+      // user can't read the contact's profile, that's ok, just skip
+    }
   }
   /**
    * {@inheritDoc}

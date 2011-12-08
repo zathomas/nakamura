@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -119,7 +119,7 @@ public class LiteDiscussionCreateMessagePreProcessorTest {
 
     when(request.getParameter(PROP_MARKER)).thenReturn(marker);
     when(request.getParameter(PROP_REPLY_ON)).thenReturn(messageId);
-    when(discussionManager.findMessage(messageId, marker, session, "/_user/message"))
+    when(discussionManager.findMessage(messageId, marker, null, "/_user/message"))
         .thenReturn(null);
 
     try {

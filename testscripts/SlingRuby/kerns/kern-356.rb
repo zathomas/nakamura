@@ -1,11 +1,9 @@
 #!/usr/bin/env ruby
 
-# Add all files in testscripts\SlingRuby\lib directory to ruby "require" search path
-require './ruby-lib-dir.rb'
 
-require 'sling/sling'
-require 'sling/test'
-require 'sling/authz'
+require 'nakamura'
+require 'nakamura/test'
+require 'nakamura/authz'
 require 'test/unit.rb'
 include SlingInterface
 include SlingUsers
@@ -87,7 +85,7 @@ class Kern356Test < Test::Unit::TestCase
 		end 
 		assert_equal("200",res.code,"Should have been able to write to the node as "+user.to_s()+because)
 	else
-		assert_equal("500",res.code," Expected to get write denied for "+user.to_s()+because)
+		assert_equal("405",res.code," Expected to get write denied for "+user.to_s()+because)
 	end
   end
 

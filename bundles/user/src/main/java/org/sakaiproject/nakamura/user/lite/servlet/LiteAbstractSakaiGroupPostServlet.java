@@ -1,18 +1,19 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/**
+ * Licensed to the Sakai Foundation (SF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The SF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package org.sakaiproject.nakamura.user.lite.servlet;
 
@@ -29,6 +30,8 @@ import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
@@ -138,7 +141,8 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
           if (memberAuthorizable != null) {
             if(!User.ADMIN_USER.equals(session.getUserId()) && !UserConstants.ANON_USERID.equals(session.getUserId())
                 && Joinable.yes.equals(groupJoin)
-                && memberAuthorizable.getId().equals(session.getUserId())){
+                && memberAuthorizable.getId().equals(session.getUserId())
+                && !hasWriteAccess(memberAuthorizable, authorizable, session)){
               LOGGER.debug("Is Joinable {} {} ",groupJoin,session.getUserId());
               //we can grab admin session since group allows all users to join
               Session adminSession = getSession();
@@ -170,7 +174,7 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
               changed = true;
             }
             if (peerGroup != null && peerGroup.getId() != group.getId()) {
-              Set<String> members = ImmutableSet.of(peerGroup.getMembers());
+              Set<String> members = ImmutableSet.copyOf(peerGroup.getMembers());
               if (members.contains(memberAuthorizable.getId())) {
                 membersToRemoveFromPeer.add(memberAuthorizable);
               }
@@ -202,7 +206,11 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
     }
   }
 
-  private String getAuthIdFromParameter(String member) {
+    private boolean hasWriteAccess(Authorizable actor, Authorizable target, Session session) throws StorageClientException {
+        return session.getAccessControlManager().can(actor, Security.ZONE_AUTHORIZABLES, target.getId(), Permissions.CAN_WRITE);
+    }
+
+    private String getAuthIdFromParameter(String member) {
     //we might be sent a parameter that looks like a full path
     //we only want the id at the end
     return member.substring(member.lastIndexOf("/") + 1);
