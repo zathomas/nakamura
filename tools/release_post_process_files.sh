@@ -21,20 +21,21 @@ function ux_tag_replace {
 
 function restore {
     mv $1.new $1
+    git add $1
 }
 
 echo "Moving from $cversion to $nversion-SNAPSHOT"
+ux_tag_replace app/pom.xml
 simple_replace tools/version
 simple_replace tools/version.bat
 simple_replace webstart/src/main/jnlp/template.vm
-
 tag_replace app/src/main/bundles/list.xml
-ux_tag_replace app/pom.xml
 
-git add tools/version                      \
-        tools/version.bat                  \
-        webstart/src/main/jnlp/template.vm \
-        app/src/main/bundles/list.xml      \
-        app/pom.xml
+otherpoms=`find . -path "./contrib/*pom.xml" -o -path "./samples/*pom.xml" -o -path "./sandbox/*pom.xml" -o -path "./webstart/*pom.xml" -o -path "./modelling/*pom.xml"`
+for file in $otherpoms
+  do
+    tag_replace $file
+  done
 
-git commit -m "advancing version number in select config files"
+
+git commit -m "switching from version to next SNAPSHOT in config files"
