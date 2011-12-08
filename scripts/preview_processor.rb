@@ -242,7 +242,7 @@ def main(term_server)
               admin_id = "admin"
               origin_file_name = meta["sakai:pooled-content-file-name"]
               if postData != nil && postData.length > 0
-                msg_body = "We have automatically added the following tags for #{origin_file_name}:\n\n #{tags}.\n\nThis will allow you to find it back more easily and will help other people in finding your content, in case your content is public.\n\nRegards, \nThe Sakai Team"
+                msg_body = "We have automatically added the following tags for #{origin_file_name}:\n\n #{tags}\n\nThese tags were created to aid in the discoverability of your content.\n\nRegards, \nThe Sakai Team"
                 @s.execute_post(@s.url_for("~#{admin_id}/message.create.html"), {
                   "sakai:type" => "internal",
                   "sakai:sendstate" => "pending",
