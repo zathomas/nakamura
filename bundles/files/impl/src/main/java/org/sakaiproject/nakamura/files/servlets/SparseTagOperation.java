@@ -154,8 +154,8 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
                 Security.ZONE_CONTENT,
                 tagContentPath,
                   new AclModification[] {
-                      new AclModification(AclModification.denyKey(User.ANON_USER),
-                          Permissions.ALL.getPermission(), AclModification.Operation.OP_REPLACE),
+                      new AclModification(AclModification.grantKey(User.ANON_USER),
+                          Permissions.CAN_READ.getPermission(), AclModification.Operation.OP_REPLACE),
                       new AclModification(AclModification.grantKey(Group.EVERYONE),
                           Permissions.CAN_READ.getPermission(), AclModification.Operation.OP_REPLACE),
                       new AclModification(AclModification.grantKey(Group.ADMINISTRATORS_GROUP),
