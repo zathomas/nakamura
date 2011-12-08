@@ -3,6 +3,7 @@ set -o nounset
 set -o errexit
 cversion=$1
 
+
 function simple_replace {
     sed "s/$cversion-SNAPSHOT/$cversion/" $1 > $1.new
     restore $1
@@ -29,10 +30,8 @@ simple_replace tools/version
 simple_replace tools/version.bat
 simple_replace webstart/src/main/jnlp/template.vm
 tag_replace app/src/main/bundles/list.xml
-tag_replace webstart/pom.xml
-tag_replace modelling/pom.xml
 
-otherpoms=`find . -name "pom.xml" -path "./sandbox/*" -or -path "./contrib/*" -name "pom.xml"`
+otherpoms=`find . -path "./contrib/*pom.xml" -o -path "./samples/*pom.xml" -o -path "./sandbox/*pom.xml" -o -path "./webstart/*pom.xml" -o -path "./modelling/*pom.xml"`
 for file in $otherpoms
   do
     tag_replace $file
