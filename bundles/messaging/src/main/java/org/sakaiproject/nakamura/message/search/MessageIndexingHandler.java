@@ -207,11 +207,6 @@ public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler 
    */
   public Collection<String> getDeleteQueries(RepositorySession repositorySession,
       Event event) {
-    return null;
-  }
-
-  public Collection<String> getImmediateDeleteQueries(RepositorySession repositorySession,
-      Event event) {
     List<String> retval = Collections.emptyList();
     logger.debug("GetDelete for {} ", event);
     String path = (String) event.getProperty(IndexingHandler.FIELD_PATH);
