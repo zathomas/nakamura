@@ -112,9 +112,10 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
   private static final String TAGS_BASE = "/tags/";
 
   /**
-   * We assume that a tag should be created the first time it is used. So if the tag does not exist this method
-   * creates the tag. ACLs are set to allow CAN_READ by all identified users, and ALL by admins
-   *
+   * We assume that a tag should be created the first time it is used. So if the tag does
+   * not exist this method creates the tag. ACLs are set to allow CAN_READ by all
+   * identified users, and ALL by admins
+   * 
    * @param resolver
    * @param tagContentPath
    * @return
@@ -135,77 +136,73 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
 
     if (tagResource == null) {
       LOGGER.info("tag {} is being created", tagContentPath);
-      Session session = StorageClientUtils.adaptToSession(resolver.adaptTo(javax.jcr.Session.class));
+      Session session = StorageClientUtils.adaptToSession(resolver
+          .adaptTo(javax.jcr.Session.class));
       Session adminSession = session.getRepository().loginAdministrative();
 
-          //wrap in a try so we can ensure logout in finally
-          try
-          {
-              ContentManager
-                  cm = adminSession.getContentManager();
-              ImmutableMap.Builder<String, Object>
-                  builder = ImmutableMap.builder();
-              String tag = tagContentPath.substring("/tags/".length());
+      // wrap in a try so we can ensure logout in finally
+      try {
+        ContentManager cm = adminSession.getContentManager();
+        ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+        String tag = tagContentPath.substring("/tags/".length());
 
-              //create tag
-              builder.put("sakai:tag-name", tag);
-              builder.put("sling:resourceType", "sakai/tag");
+        // create tag
+        builder.put("sakai:tag-name", tag);
+        builder.put("sling:resourceType", "sakai/tag");
 
-              tagContent = new Content(tagContentPath, builder.build());
+        tagContent = new Content(tagContentPath, builder.build());
 
-              cm.update(tagContent);
+        cm.update(tagContent);
 
-              //set ACLs
-              adminSession.getAccessControlManager().setAcl(
+        // set ACLs
+        adminSession.getAccessControlManager()
+            .setAcl(
                 Security.ZONE_CONTENT,
                 tagContentPath,
-                  new AclModification[] {
-                      new AclModification(AclModification.grantKey(User.ANON_USER),
-                          Permissions.CAN_READ.getPermission(), AclModification.Operation.OP_REPLACE),
-                      new AclModification(AclModification.grantKey(Group.EVERYONE),
-                          Permissions.CAN_READ.getPermission(), AclModification.Operation.OP_REPLACE),
-                      new AclModification(AclModification.grantKey(Group.ADMINISTRATORS_GROUP),
-                          Permissions.ALL.getPermission(), AclModification.Operation.OP_REPLACE) });
+                new AclModification[] {
+                    new AclModification(AclModification.grantKey(User.ANON_USER),
+                        Permissions.CAN_READ.getPermission(),
+                        AclModification.Operation.OP_REPLACE),
+                    new AclModification(AclModification.grantKey(Group.EVERYONE),
+                        Permissions.CAN_READ.getPermission(),
+                        AclModification.Operation.OP_REPLACE),
+                    new AclModification(AclModification
+                        .grantKey(Group.ADMINISTRATORS_GROUP), Permissions.ALL
+                        .getPermission(), AclModification.Operation.OP_REPLACE) });
+      } catch (Exception e) {
+        LOGGER.error("error creating tag {}", tagContentPath, e);
+      } finally {
+        if (adminSession != null) {
+          try {
+            adminSession.logout();
+          } catch (Exception e) {// noop - this was just a failsafe}
           }
-          catch (Exception e)
-          {
-              LOGGER.error ("error creating tag {}", tagContentPath, e);
-          }
-          finally
-          {
-              if (adminSession != null)
-              {
-                  try
-                  {
-                    adminSession.logout();
-                  }
-                  catch(Exception e) {//noop - this was just a failsafe}
-                  }
-              }
-          }
+        }
       }
-      else
-      {
-        LOGGER.info ("retrieved existing tag at {}" , tagContentPath);
-        tagContent = tagResource.adaptTo(Content.class);
-      }
+    } else {
+      LOGGER.info("retrieved existing tag at {}", tagContentPath);
+      tagContent = tagResource.adaptTo(Content.class);
+    }
 
-      return tagContent;
+    return tagContent;
   }
 
   /**
    * {@inheritDoc}
+   * 
    * @throws AccessDeniedException
-   * @throws StorageClientException 
-   *
+   * @throws StorageClientException
+   * 
    * @see org.apache.sling.servlets.post.AbstractSlingPostOperation#doRun(org.apache.sling.api.SlingHttpServletRequest,
    *      org.apache.sling.api.servlets.HtmlResponse, java.util.List)
    */
   @Override
   protected void doRun(SlingHttpServletRequest request, HtmlResponse response,
-      ContentManager contentManager, List<Modification> changes, String contentPath) throws StorageClientException, AccessDeniedException {
+      ContentManager contentManager, List<Modification> changes, String contentPath)
+      throws StorageClientException, AccessDeniedException {
 
-    Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
+    Session session = StorageClientUtils.adaptToSession(request.getResourceResolver()
+        .adaptTo(javax.jcr.Session.class));
     AuthorizableManager authManager = session.getAuthorizableManager();
 
     // Check if the user has the required minimum privilege.
@@ -221,7 +218,7 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
     Content content = resource.adaptTo(Content.class);
     ResourceResolver resourceResolver = request.getResourceResolver();
 
-    if ( content == null) {
+    if (content == null) {
       LOGGER.info("Missing Resource  {} ", resource.getPath());
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST,
           "A tag operation must be performed on an actual resource");
@@ -229,13 +226,13 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
     }
 
     String resourceType = (String) content.getProperty("sling:resourceType");
-    boolean isProfile = "sakai/user-profile".equals(resourceType) || "sakai/group-profile".equals(resourceType);
+    boolean isProfile = "sakai/user-profile".equals(resourceType)
+        || "sakai/group-profile".equals(resourceType);
 
     // Check if the uuid is in the request.
     String[] keys = request.getParameterValues("key");
     if (keys == null || keys.length == 0) {
-      response.setStatus(HttpServletResponse.SC_BAD_REQUEST,
-          "Missing parameter: key");
+      response.setStatus(HttpServletResponse.SC_BAD_REQUEST, "Missing parameter: key");
       return;
     }
 
@@ -243,21 +240,22 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
       String tagName = "";
       try {
 
-        Content
-            tagResource = getOrCreateTag(resourceResolver, key);
+        Content tagResource = getOrCreateTag(resourceResolver, key);
 
         if (tagResource == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND, "No tag exists at path " + key);
-            return;
+          response.setStatus(HttpServletResponse.SC_NOT_FOUND, "No tag exists at path "
+              + key);
+          return;
         }
 
         tagName = tagContentWithContentTag(contentManager, content, tagResource);
 
       } catch (Exception e) {
-        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getLocalizedMessage());
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+            e.getLocalizedMessage());
         return;
       }
-    
+
       // If we're tagging an authorizable, add the property here
       if (isProfile) {
         final String azId = PathUtils.getAuthorizableId(content.getPath());
@@ -269,7 +267,7 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
           tagNameSet.add(tagName);
           authorizable.setProperty(SAKAI_TAGS,
               tagNameSet.toArray(new String[tagNameSet.size()]));
-        
+
           authManager.updateAuthorizable(authorizable);
         }
       } else {
@@ -306,20 +304,22 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
     }
   }
 
-  private String tagContentWithContentTag(ContentManager contentManager, Content content, Content contentTag) throws Exception {
+  private String tagContentWithContentTag(ContentManager contentManager, Content content,
+      Content contentTag) throws Exception {
     String tagName = "";
     try {
-      checkForTagResourceType((String)contentTag.getProperty(SLING_RESOURCE_TYPE_PROPERTY));
+      checkForTagResourceType((String) contentTag
+          .getProperty(SLING_RESOURCE_TYPE_PROPERTY));
       TagUtils.addTag(contentManager, content, contentTag);
       if (contentTag.hasProperty(SAKAI_TAG_NAME)) {
-        tagName = (String)contentTag.getProperty(SAKAI_TAG_NAME);
+        tagName = (String) contentTag.getProperty(SAKAI_TAG_NAME);
       }
     } catch (Exception e) {
       throw new Exception(e.getLocalizedMessage(), e);
     }
     return tagName;
   }
-  
+
   private void checkForTagResourceType(String type) throws Exception {
     if (!RT_SAKAI_TAG.equals(type)) {
       throw new Exception("Provided key doesn't point to a tag.");

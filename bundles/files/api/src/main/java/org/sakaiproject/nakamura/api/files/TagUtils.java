@@ -62,9 +62,7 @@ public class TagUtils {
   }
 
   public static boolean addTag(ContentManager contentManager, Content contentNode,
-      Content tagNode)
-      throws org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException,
-      StorageClientException, RepositoryException {
+      Content tagNode) throws AccessDeniedException, StorageClientException {
     if (contentNode == null) {
       throw new RuntimeException(
           "Cant tag non existant nodes, sorry, both must exist prior to tagging. File:"
@@ -75,8 +73,7 @@ public class TagUtils {
   }
 
   private static boolean addTag(ContentManager contentManager, Content content, String tag)
-      throws org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException,
-      StorageClientException {
+      throws AccessDeniedException, StorageClientException {
     boolean sendEvent = false;
     if (tag != null) {
       Map<String, Object> properties = content.getProperties();
@@ -97,9 +94,7 @@ public class TagUtils {
   }
 
   public static boolean deleteTag(ContentManager contentManager, Content content,
-      String tag)
-      throws org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException,
-      StorageClientException {
+      String tag) throws AccessDeniedException, StorageClientException {
 
       if (StringUtils.isBlank(tag))
         return false;
@@ -140,7 +135,8 @@ public class TagUtils {
     return "".equals(parentPath) || "/".equals(parentPath);
   }
 
-  public static boolean alreadyTaggedBelowThisLevel(Content tagNode, String[] tagNames, ContentManager cm) throws StorageClientException {
+  public static boolean alreadyTaggedBelowThisLevel(Content tagNode, String[] tagNames,
+      ContentManager cm) throws StorageClientException {
     List<String> tagNamesList = Arrays.asList(tagNames);
     Iterator<Content> childNodes = cm.listChildren(tagNode.getPath());
     while(childNodes.hasNext()){
