@@ -91,7 +91,7 @@ import javax.servlet.http.HttpServletResponse;
       },
       parameters = {
         @ServiceParameter(name = ":operation", description = "(required) The value HAS TO BE <i>tag</i>."),
-        @ServiceParameter(name = "key", description = "(required) Can be either 1) A fully qualified path, 2) UUID, or 3) a content poolId.")
+        @ServiceParameter(name = "key", description = "(required, multiple) Can be either 1) A fully qualified path, 2) UUID, or 3) a content poolId. Accepts single or multiple values on this key.")
       },
       response = {
         @ServiceResponse(code = 201, description = "The tag was added to the content node."),
