@@ -108,8 +108,10 @@ public class AllFilesSearchResultProcessor implements SolrSearchResultProcessor 
     ContentManager contentManager = session.getContentManager();
     Content comments = contentManager.get(contentResult.getPath() + "/" + "comments");
     long commentCount = 0;
-    for (Content comment : comments.listChildren()) {
-      commentCount++;
+    if (comments != null) {
+      for (Content comment : comments.listChildren()) {
+        commentCount++;
+      }
     }
     write.key("commentCount");
     write.value(commentCount);
