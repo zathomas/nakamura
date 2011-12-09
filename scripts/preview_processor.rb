@@ -213,7 +213,7 @@ def main(term_server)
               raise "Failed to get user: #{uid}"
             end
             user = JSON.parse(user_file.body)
-            if user["user"]["properties"]["isAutoTagging"] && user["user"]["properties"]["isAutoTagging"] != "false"
+            if user["user"]["properties"]["isAutoTagging"] != "false"
               # Get text from the document
               Docsplit.extract_text filename, :ocr => false
               text_content = IO.read(id + ".txt")
@@ -227,15 +227,8 @@ def main(term_server)
                   tags += "- " + postData[i] + "\n"
                 end
               end
-              # Add old tags to new tags
-              origin_tags = meta["sakai:tags"]
-              if origin_tags != nil && origin_tags.length > 0
-                for tag in origin_tags
-                  postData << tag
-                end
-              end
               # Generate tags for document
-              @s.execute_post @s.url_for("p/#{id}"), {"sakai:tags" => postData}
+              @s.execute_post @s.url_for("p/#{id}"), {':operation' => 'tag', 'key' => postData}
               log "Generate tags for #{id}, #{postData}"
               FileUtils.rm id + ".txt"
               admin_id = "admin"
