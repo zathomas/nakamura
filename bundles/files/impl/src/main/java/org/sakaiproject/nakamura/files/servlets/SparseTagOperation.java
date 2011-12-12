@@ -103,13 +103,13 @@ import javax.servlet.http.HttpServletResponse;
   })
 public class SparseTagOperation extends AbstractSparsePostOperation {
 
-
   @Reference
   protected transient EventAdmin eventAdmin;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SparseTagOperation.class);
 
   private static final long serialVersionUID = -7724827744698056843L;
+  private static final String TAGS_BASE = "/tags/";
 
   /**
    * We assume that a tag should be created the first time it is used. So if the tag does not exist this method
@@ -123,6 +123,13 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
    */
   protected Content getOrCreateTag(ResourceResolver resolver, String tagContentPath)
       throws AccessDeniedException, StorageClientException {
+    // all tags live under /tags. Make sure the requestor is trying to use a tag from
+    // there, does not provide an empty path and the path has more than the base path
+    if (tagContentPath == null || tagContentPath.length() <= TAGS_BASE.length()
+        || !tagContentPath.startsWith(TAGS_BASE)) {
+      return null;
+    }
+
     Resource tagResource = resolver.getResource(tagContentPath);
     Content tagContent = null;
 
