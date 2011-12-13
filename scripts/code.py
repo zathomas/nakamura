@@ -31,9 +31,9 @@ class terms:
         list.remove(list[i])
       else:
         # prepend /tags/ to match expected input on server
-        list[i] = '/tags/' + str(list[i][0])
+        list[i] = list[i][0].strip()
     callback = input.callback
-    pattern = r'[^a-zA-Z0-9]'
+    pattern = r'[^a-zA-Z0-9 ]'
     for i in range(len(list)-1, -1, -1):
       if re.search(pattern, list[i]):
         list.remove(list[i])
