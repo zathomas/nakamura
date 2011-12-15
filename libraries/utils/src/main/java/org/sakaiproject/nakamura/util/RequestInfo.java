@@ -129,7 +129,7 @@ public class RequestInfo {
    * @throws MalformedURLException
    */
   public void setUrl(String url) throws MalformedURLException {
-    if (!StringUtils.isValidUrl(url)) {
+    if (!StringUtils.containsOnlySafeChars(url)) {
       throw new MalformedURLException("Invalid Character in URL request "+url);
     };
     this.url = url;

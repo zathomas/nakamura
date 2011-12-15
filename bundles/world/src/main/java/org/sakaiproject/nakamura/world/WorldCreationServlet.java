@@ -51,7 +51,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -176,7 +175,7 @@ public class WorldCreationServlet extends SlingAllMethodsServlet {
   }
 
   private boolean invalidGroupId(String groupId) {
-    return !StringUtils.isValidUrl(groupId);
+    return !StringUtils.containsOnlySafeChars(groupId);
   }
 
   private boolean groupExists(String groupID) throws StorageClientException, AccessDeniedException {

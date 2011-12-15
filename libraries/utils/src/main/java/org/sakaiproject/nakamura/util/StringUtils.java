@@ -298,8 +298,8 @@ public class StringUtils {
     return sb.toString();
   }
 
-  public static boolean isValidUrl(String url) {
-    for( char c : url.toCharArray()) {
+  public static boolean containsOnlySafeChars(String string) {
+    for( char c : string.toCharArray()) {
       if ( !Character.isLetterOrDigit(c)) {
         if ( ALLOWED_URL_CHARS.indexOf(c) < 0 ) {
           return false;
