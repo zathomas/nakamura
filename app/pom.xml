@@ -27,7 +27,7 @@
     <description> Standalone Launchpad Java Application. Everything needed to run the Launchpad is
     included in a single JAR file. </description>
     <properties>
-      <ux>1.1-SNAPSHOT</ux>
+      <ux>1.1</ux>
     </properties>
 
     <build>
@@ -48,7 +48,7 @@
                             <jarWebSupport>
                                  <groupId>org.sakaiproject.nakamura</groupId>
                                  <artifactId>org.sakaiproject.nakamura.jetty-config</artifactId>
-                                 <version>1.1-SNAPSHOT</version>
+                                 <version>1.1</version>
                                  <startLevel>5</startLevel>
                            </jarWebSupport>
                            <additionalBundles>
