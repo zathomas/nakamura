@@ -90,13 +90,13 @@ public class LiteAuthorizablePostProcessServiceImpl extends AbstractOrderedServi
     Modification modification = new Modification(change, pathPrefix + authorizable.getId(), null);
 
     if (change != ModificationType.DELETE) {
-      defaultPostProcessor.process(request, authorizable, session, modification, parameters);
+      defaultPostProcessor.process(authorizable, session, modification, parameters);
     }
     for ( LiteAuthorizablePostProcessor processor : orderedServices ) {
-      processor.process(request, authorizable, session, modification, parameters);
+      processor.process(authorizable, session, modification, parameters);
     }
     if (change == ModificationType.DELETE) {
-      defaultPostProcessor.process(request, authorizable, session, modification, parameters);
+      defaultPostProcessor.process(authorizable, session, modification, parameters);
     }
   }
 
