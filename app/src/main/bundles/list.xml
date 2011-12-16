@@ -512,7 +512,12 @@ KERN-1187
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.tika</artifactId>
-      <version>0.9.1.2-SNAPSHOT</version>
+      <version>1.0.1.2-SNAPSHOT</version>
+    </bundle>
+    <bundle>
+      <groupId>org.apache.tika</groupId>
+      <artifactId>tika-bundle</artifactId>
+      <version>1.0</version>
     </bundle>
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
