@@ -84,14 +84,6 @@ public class ContentPoolSparseSearchPropertyProvider implements SolrSearchProper
       StringBuilder managers = new StringBuilder("AND manager:(").append(userId);
       StringBuilder viewers = new StringBuilder("AND viewer:(").append(userId);
 
-      // add groups to the parameters
-      String[] groups = auth.getPrincipals();
-      for (String group : groups) {
-        String groupId = ClientUtils.escapeQueryChars(group);
-        managers.append(" OR ").append(groupId);
-        viewers.append(" OR ").append(groupId);
-      }
-
       // cap off the parameters
       managers.append(")");
       viewers.append(")");
