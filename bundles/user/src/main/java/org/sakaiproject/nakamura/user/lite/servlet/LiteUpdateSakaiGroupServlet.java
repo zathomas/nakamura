@@ -58,6 +58,7 @@ import org.sakaiproject.nakamura.api.user.LiteAuthorizablePostProcessService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.user.lite.resource.LiteAuthorizableResourceProvider;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
+import org.sakaiproject.nakamura.util.parameters.ParameterMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -201,7 +202,7 @@ public class LiteUpdateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
    * @throws StorageClientException 
    * @throws AccessDeniedException 
    *
-   * @see org.apache.sling.jackrabbit.usermanager.post.CreateUserServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest,
+   * @see org.apache.sling.jackrabbit.usermanager.impl.post.CreateUserServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest,
    *      org.apache.sling.api.servlets.HtmlResponse, java.util.List)
    */
   @Override
@@ -323,7 +324,7 @@ public class LiteUpdateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
       saveAll(session, toSave);
 
       try {
-        postProcessorService.process(authorizable, session, ModificationType.MODIFY, request);
+        postProcessorService.process(authorizable, session, ModificationType.MODIFY, ParameterMap.extractParameters(request));
       } catch (Exception e) {
         LOGGER.warn(e.getMessage(), e);
 
@@ -361,7 +362,7 @@ public class LiteUpdateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
   }
 
   /**
-   * @param slingRepository
+   * @param repository
    */
   protected void bindRepository(Repository repository) {
     this.repository = repository;
@@ -369,7 +370,7 @@ public class LiteUpdateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
   }
 
   /**
-   * @param slingRepository
+   * @param repository
    */
   protected void unbindRepository(Repository repository) {
     this.repository = null;

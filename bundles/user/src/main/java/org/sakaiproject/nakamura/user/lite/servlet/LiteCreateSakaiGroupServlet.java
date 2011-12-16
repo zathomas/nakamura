@@ -64,6 +64,7 @@ import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.user.lite.resource.LiteAuthorizableResourceProvider;
 import org.sakaiproject.nakamura.user.lite.resource.LiteNameSanitizer;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
+import org.sakaiproject.nakamura.util.parameters.ParameterMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -291,7 +292,7 @@ public class LiteCreateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
 
                 saveAll(session, toSave);
                 try {
-                  postProcessorService.process(group, session, ModificationType.CREATE, request);
+                  postProcessorService.process(group, session, ModificationType.CREATE, ParameterMap.extractParameters(request));
                 } catch (Exception e) {
                   LOGGER.warn(e.getMessage(), e);
                   response

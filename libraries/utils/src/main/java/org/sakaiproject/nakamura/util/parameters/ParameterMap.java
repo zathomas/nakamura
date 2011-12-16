@@ -18,9 +18,12 @@
 package org.sakaiproject.nakamura.util.parameters;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
 
@@ -29,6 +32,22 @@ import org.apache.sling.api.request.RequestParameterMap;
  */
 public class ParameterMap extends LinkedHashMap<String, RequestParameter[]> implements
         RequestParameterMap {
+  
+  public static Map<String, Object[]> extractParameters(SlingHttpServletRequest request) {
+    Map<String, Object[]> parameters = new HashMap<String, Object[]>();
+    if (request != null) {
+      RequestParameterMap requestParameterMap = request.getRequestParameterMap();
+      for (String originalParameterName : requestParameterMap.keySet()) {
+        RequestParameter[] values = requestParameterMap.getValues(originalParameterName);
+        String[] stringValues = new String[values.length];
+        for (int i = 0; i < values.length; i++) {
+          stringValues[i] = values[i].getString();
+        }
+        parameters.put(originalParameterName, stringValues);
+      }
+    }
+    return parameters;
+  }
 
     /**
    * 

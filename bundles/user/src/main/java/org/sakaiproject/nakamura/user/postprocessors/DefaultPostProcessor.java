@@ -144,10 +144,6 @@ import java.util.Set;
 @Properties(value = { @Property(name = "default", value = "true") })
 public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
 
-  private static final String PAGES_FOLDER = "/pages";
-
-  private static final String PAGES_DEFAULT_FILE = "/pages/index.html";
-
   private static final String CONTACTS_FOLDER = "/contacts";
 
   private static final String CALENDAR_FOLDER = "/calendar";
@@ -184,11 +180,6 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
   public static final String VISIBILITY_PUBLIC = "public";
 
   public static final String PROFILE_JSON_IMPORT_PARAMETER = ":sakai:profile-import";
-  /**
-   * Optional parameter containing the path of a Pages source that should be used instead
-   * of the default template.
-   */
-  public static final String PAGES_TEMPLATE_PARAMETER = ":sakai:pages-template";
 
   public static final String PARAM_ADD_TO_MANAGERS_GROUP = ":sakai:manager";
   public static final String PARAM_REMOVE_FROM_MANAGERS_GROUP = PARAM_ADD_TO_MANAGERS_GROUP
@@ -305,16 +296,7 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
       AccessControlManager accessControlManager = session.getAccessControlManager();
       AuthorizableManager authorizableManager = session.getAuthorizableManager();
       adminSession = session.getRepository().loginAdministrative();
-      AuthorizableManager adminAuthorizableManager = adminSession.getAuthorizableManager();
       boolean isGroup = authorizable instanceof Group;
-
-  //    if (ModificationType.DELETE.equals(change.getType())) {
-  //      LOGGER.debug("Performing delete operation on {} ", authorizable.getId());
-  //      if (isGroup) {
-  //        deleteManagersGroup(authorizable, authorizableManager);
-  //      }
-  //      return; // do not
-  //    }
 
       // WARNING: Creation and Update requests are more disjunct than is usual.
       //
@@ -511,33 +493,6 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
 
         accessControlManager.setAcl(Security.ZONE_AUTHORIZABLES, authorizable.getId(),
             aclModifications.toArray(new AclModification[aclModifications.size()]));
-
-        // FIXME BL120 this is another hackaround for KERN-1584.
-        // authprofile missing sakai:group-joinable and sakai:group-visible.
-        if (parameters != null) {
-          final Content authprofile = contentManager.get(LitePersonalUtils
-              .getPublicPath(authId) + PROFILE_FOLDER);
-          if (authprofile != null) {
-            boolean modified = false;
-            for (final Entry<String, Object[]> entry : parameters.entrySet()) {
-              final String key = entry.getKey();
-              if ("sakai:group-joinable".equals(key)
-                  || "sakai:group-visible".equals(key)
-                  || "sakai:pages-visible".equals(key)) {
-                authprofile.setProperty(entry.getKey(), entry.getValue()[0]);
-                modified = true;
-              }
-            }
-            if (modified) {
-              contentManager.update(authprofile);
-            }
-          } else {
-            IllegalStateException e = new IllegalStateException(
-                "Could not locate group profile");
-            LOGGER.error(e.getLocalizedMessage(), e);
-          }
-        }
-        // end KERN-1584 hackaround
       }
     } finally {
       if (adminSession != null) {
