@@ -98,7 +98,6 @@ public class LiteUpdateSakaiGroupServletTest  {
     servlet = new LiteUpdateSakaiGroupServlet();
     
     LiteAuthorizablePostProcessServiceImpl authorizablePostProcessService = new LiteAuthorizablePostProcessServiceImpl();
-    authorizablePostProcessService.repository = repository;
     ComponentContext componentContext = Mockito.mock(ComponentContext.class);
     when(componentContext.getProperties()).thenReturn(new Hashtable<String, Object>());
     authorizablePostProcessService.defaultPostProcessor = new DefaultPostProcessor();

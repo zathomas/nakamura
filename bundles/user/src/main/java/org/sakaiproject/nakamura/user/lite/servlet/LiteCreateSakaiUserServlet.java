@@ -62,6 +62,7 @@ import org.sakaiproject.nakamura.api.user.UserFinder;
 import org.sakaiproject.nakamura.user.lite.resource.LiteAuthorizableResourceProvider;
 import org.sakaiproject.nakamura.user.lite.resource.LiteNameSanitizer;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
+import org.sakaiproject.nakamura.util.parameters.ParameterMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -349,8 +350,7 @@ public class LiteCreateSakaiUserServlet extends LiteAbstractUserPostServlet {
 
             saveAll(selfRegSession, toSave);
             try {
-              postProcessorService.process(user, selfRegSession, ModificationType.CREATE,
-                  request);
+              postProcessorService.process(user, selfRegSession, ModificationType.CREATE, ParameterMap.extractParameters(request));
             } catch (Exception e) {
               log.warn(e.getMessage(), e);
               response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,

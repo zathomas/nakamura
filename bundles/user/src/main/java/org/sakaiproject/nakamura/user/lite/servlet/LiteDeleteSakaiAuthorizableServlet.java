@@ -51,6 +51,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.user.LiteAuthorizablePostProcessService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
+import org.sakaiproject.nakamura.util.parameters.ParameterMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,7 +154,7 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
 
   /**
    * {@inheritDoc}
-   * @see org.apache.sling.jackrabbit.usermanager.post.CreateUserServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
+   * @see org.apache.sling.jackrabbit.usermanager.impl.post.CreateUserServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
    */
   @Override
   protected void handleOperation(SlingHttpServletRequest request, HtmlResponse response,
@@ -198,7 +199,7 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
       for ( Authorizable authorizable : authorizables) {
         LOGGER.debug("Deleting {} ",authorizable.getId());
         authorizableEvents.put(authorizable.getId(), (authorizable instanceof Group));
-        postProcessorService.process(authorizable, session, ModificationType.DELETE, request);
+        postProcessorService.process(authorizable, session, ModificationType.DELETE, ParameterMap.extractParameters(request));
         session.getAuthorizableManager().delete(authorizable.getId());
         if (adminSession.getAuthorizableManager().findAuthorizable(authorizable.getId()) != null) {
           adminSession.getAuthorizableManager().delete(authorizable.getId());

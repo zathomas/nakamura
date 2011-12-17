@@ -34,7 +34,6 @@ public interface LiteAuthorizablePostProcessor {
   /**
    * Method which will be called after a Sakai user or group has been created or modified,
    * and before the Sakai user or group is deleted.
-   * @param request 
    *
    * @param authorizable
    * @param session
@@ -43,7 +42,7 @@ public interface LiteAuthorizablePostProcessor {
    *        the processing service sees fit
    * @throws Exception
    */
-  void process(SlingHttpServletRequest request, Authorizable authorizable, Session session, Modification change, Map<String, Object[]> parameters)
+  void process(Authorizable authorizable, Session session, Modification change, Map<String, Object[]> parameters)
       throws Exception;
 
 }
