@@ -72,8 +72,7 @@ public class UnBundleStaticContent {
 			throw new IOException(
 					"Unable to create working space at "
 							+ tempFolder.getAbsolutePath()
-							+ " (deleted a temp file but failed to recreate it as a directory, " +
-									"please report at https://github.com/ieb/sparsemapcontent )");
+							+ " (deleted a temp file but failed to recreate it as a directory)");
 		}
 		try {
 			List<File> unpackedBundles = unpackJarContents(
