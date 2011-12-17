@@ -36,7 +36,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 
@@ -70,19 +72,41 @@ public class TagUtilsTest {
     otherTagNode = createTagNode("/tags/atag/othertag", "Other Tag", null);
     lastTagNode = createTagNode("/tags/atag/othertag/lasttag", "Last Tag", null);
 
-    when(cm.get("/tags")).thenReturn(tagsNode);
-    when(cm.get("/tags/atag")).thenReturn(aTagNode);
-    when(cm.get("/tags/atag/othertag")).thenReturn(otherTagNode);
-    when(cm.get("/tags/atag/othertag/lasttag")).thenReturn(lastTagNode);
+    when(cm.get(tagsNode.getPath())).thenReturn(tagsNode);
+    when(cm.get(aTagNode.getPath())).thenReturn(aTagNode);
+    when(cm.get(otherTagNode.getPath())).thenReturn(otherTagNode);
+    when(cm.get(lastTagNode.getPath())).thenReturn(lastTagNode);
 
-    when(cm.listChildren(tagsNode.getPath())).thenReturn(
-        Lists.newArrayList(aTagNode).iterator());
-    when(cm.listChildren(aTagNode.getPath())).thenReturn(
-        Lists.newArrayList(dummyTagNode, otherTagNode).iterator());
-    when(cm.listChildren(otherTagNode.getPath())).thenReturn(
-        Lists.newArrayList(lastTagNode).iterator());
-    when(cm.listChildren(lastTagNode.getPath())).thenReturn(
-        Iterators.<Content> emptyIterator());
+    when(cm.listChildren(tagsNode.getPath())).thenAnswer(new Answer<Iterator<Content>>() {
+      @Override
+      public Iterator<Content> answer(InvocationOnMock invocation) throws Throwable {
+        return Lists.newArrayList(aTagNode).iterator();
+      }
+    });
+    when(cm.listChildren(aTagNode.getPath())).thenAnswer(new Answer<Iterator<Content>>() {
+      @Override
+      public Iterator<Content> answer(InvocationOnMock invocation) throws Throwable {
+        return Lists.newArrayList(dummyTagNode, otherTagNode).iterator();
+      }
+    });
+    when(cm.listChildren(otherTagNode.getPath())).thenAnswer(new Answer<Iterator<Content>>() {
+      @Override
+      public Iterator<Content> answer(InvocationOnMock invocation) throws Throwable {
+        return Lists.newArrayList(lastTagNode).iterator();
+      }
+    });
+    when(cm.listChildren(dummyTagNode.getPath())).thenAnswer(new Answer<Iterator<Content>>() {
+      @Override
+      public Iterator<Content> answer(InvocationOnMock invocation) throws Throwable {
+        return Iterators.<Content> emptyIterator();
+      }
+    });
+    when(cm.listChildren(lastTagNode.getPath())).thenAnswer(new Answer<Iterator<Content>>() {
+      @Override
+      public Iterator<Content> answer(InvocationOnMock invocation) throws Throwable {
+        return Iterators.<Content> emptyIterator();
+      }
+    });
   }
 
   @Test
@@ -217,6 +241,11 @@ public class TagUtilsTest {
         false, cm);
     assertEquals(2, PropertiesUtil.toInteger(
         lastTagNode.getProperty(FilesConstants.SAKAI_TAG_COUNT), 0));
+    assertEquals("Expect 0 since 'Last Tag' is already tagged (short circuit before 'Other Tag'.",
+        0, PropertiesUtil.toInteger(otherTagNode.getProperty(FilesConstants.SAKAI_TAG_COUNT), 0));
+
+    TagUtils.bumpTagCounts(otherTagNode, new String[] { "Other Tag" }, true,
+        false, cm);
     assertEquals(1, PropertiesUtil.toInteger(
         otherTagNode.getProperty(FilesConstants.SAKAI_TAG_COUNT), 0));
   }
