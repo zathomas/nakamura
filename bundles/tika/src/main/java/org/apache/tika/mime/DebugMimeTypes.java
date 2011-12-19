@@ -67,7 +67,7 @@ public final class DebugMimeTypes implements Detector {
     public final static String PLAIN_TEXT = "text/plain";
     
     /**
-     * Name of the {@link #xml xml} type, application/xml.
+     * Name of the {@link #xmlMimeType xml} type, application/xml.
      */
     public final static String XML = "application/xml";
 
