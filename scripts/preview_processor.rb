@@ -68,6 +68,11 @@ def process_as_image?(extension)
   ['.png', '.jpg', '.gif', '.psd', '.jpeg'].include? extension
 end
 
+# HTML pages only need the first "page"
+def only_first_page?(extension)
+  ['.htm', '.html', '.xhtml'].include? extension
+end
+
 # Ignore the file types in the ignore.types file
 def ignore_processing?(mimetype)
   File.open("../ignore.types", "r") do |f|
@@ -255,7 +260,11 @@ def main(term_server)
           end
 
           # Generating image previews of the document.
-          Docsplit.extract_images filename, :size => '1000x', :format => :jpg
+          if only_first_page? extension
+            Docsplit.extract_images filename, :size => '1000x', :format => :jpg, :pages => 1
+          else
+            Docsplit.extract_images filename, :size => '1000x', :format => :jpg
+          end
 
           # Skip documents with a page count of 0, just to be sure.
           next if Dir[id + '_*'].size == 0
