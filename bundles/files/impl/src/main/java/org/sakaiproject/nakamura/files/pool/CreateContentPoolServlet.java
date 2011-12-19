@@ -68,6 +68,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.lite.jackrabbit.JackrabbitSparseUtils;
+import org.sakaiproject.nakamura.api.user.AuthorizableCountChanger;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ActivityUtils;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
@@ -136,6 +137,9 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
 
   @Reference
   protected EventAdmin eventAdmin;
+
+  @Reference
+  protected transient AuthorizableCountChanger authorizableCountChanger;
 
   private static final long serialVersionUID = -5099697955361286370L;
 
@@ -255,6 +259,7 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
         }
       }
 
+      this.authorizableCountChanger.notify(UserConstants.CONTENT_ITEMS_PROP, userId);
 
       // Make sure we're outputting proper json.
       if ( statusCode == HttpServletResponse.SC_BAD_REQUEST ) {
