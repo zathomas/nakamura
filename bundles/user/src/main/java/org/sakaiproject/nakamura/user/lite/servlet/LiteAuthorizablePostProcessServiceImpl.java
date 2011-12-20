@@ -19,6 +19,9 @@ package org.sakaiproject.nakamura.user.lite.servlet;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.ReferenceStrategy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.ServiceUtil;
 import org.apache.sling.servlets.post.Modification;
@@ -44,9 +47,22 @@ import java.util.Map;
 
 @Component(immediate=true, metatype=true)
 @Service(value=LiteAuthorizablePostProcessService.class)
+@Reference(name="authorizablePostProcessor",
+		cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
+		policy=ReferencePolicy.DYNAMIC,
+		strategy=ReferenceStrategy.EVENT,
+		referenceInterface=LiteAuthorizablePostProcessor.class,
+		bind="bindAuthorizablePostProcessor",
+		unbind="unbindAuthorizablePostProcessor")
 public class LiteAuthorizablePostProcessServiceImpl extends AbstractOrderedService<LiteAuthorizablePostProcessor> implements LiteAuthorizablePostProcessService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LiteAuthorizablePostProcessServiceImpl.class);
+
+  @Reference
+  protected Repository repository;
+
+  @Reference
+  protected EventAdmin eventAdmin;
 
   @Reference(target="(default=true)")
   protected LiteAuthorizablePostProcessor defaultPostProcessor;
@@ -93,6 +109,11 @@ public class LiteAuthorizablePostProcessServiceImpl extends AbstractOrderedServi
   }
 
   protected void bindAuthorizablePostProcessor(LiteAuthorizablePostProcessor service, Map<String, Object> properties) {
+    if (service.equals (defaultPostProcessor))
+    {
+        LOGGER.debug("skipping re-registration of default LiteAuthorizablePostProcessor, {}", service);
+        return;
+    }
     LOGGER.debug("About to add service " + service);
     addService(service, properties);
   }
