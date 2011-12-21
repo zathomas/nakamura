@@ -48,6 +48,7 @@ import java.util.Map;
 @Component(immediate=true, metatype=true)
 @Service(value=LiteAuthorizablePostProcessService.class)
 @Reference(name="authorizablePostProcessor",
+    target="(!default=true)",
 		cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
 		policy=ReferencePolicy.DYNAMIC,
 		strategy=ReferenceStrategy.EVENT,
@@ -64,7 +65,7 @@ public class LiteAuthorizablePostProcessServiceImpl extends AbstractOrderedServi
   @Reference
   protected EventAdmin eventAdmin;
 
-  @Reference(target="(!default=true)")
+  @Reference(target="(default=true)")
   protected LiteAuthorizablePostProcessor defaultPostProcessor;
 
   private LiteAuthorizablePostProcessor[] orderedServices = new LiteAuthorizablePostProcessor[0];
