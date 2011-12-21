@@ -17,6 +17,7 @@
  */
 package org.sakaiproject.nakamura.files.pool;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -29,11 +30,13 @@ import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
+import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchPropertyProvider;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.Map;
 
 @Component
@@ -78,11 +81,30 @@ public class ContentPoolSparseSearchPropertyProvider implements SolrSearchProper
     try {
       AuthorizableManager authMgr = session.getAuthorizableManager();
       Authorizable auth = authMgr.findAuthorizable(sessionUserId);
-
+      
       // create the manager and viewer query parameters
       String userId = ClientUtils.escapeQueryChars(sessionUserId);
       StringBuilder managers = new StringBuilder("AND manager:(").append(userId);
       StringBuilder viewers = new StringBuilder("AND viewer:(").append(userId);
+     
+      //Filter the list to determine the absolute group
+      for (Iterator<Group> memberOf = auth.memberOf(authMgr); memberOf.hasNext();) {
+    	  Authorizable group = memberOf.next();
+    	  if (group == null || !(group instanceof Group)
+    	            // don't count if the group is to be excluded
+    	            || Boolean.parseBoolean(String.valueOf(group.getProperty("sakai:excludeSearch")))
+    	            // don't count if the group lacks a title
+    	            || group.getProperty("sakai:group-title") == null
+    	            || StringUtils.isEmpty(String.valueOf(group.getProperty("sakai:group-title")))
+    	            // don't count the special "contacts" group
+    	            || group.getId().startsWith("g-contacts-")
+    		        // we don't want to count the everyone groups
+			        || group.getId().equals("everyone")){
+    	          continue;
+    	        }
+    	  managers.append(" OR " + group.getId());
+    	  viewers.append(" OR " + group.getId());
+      }
 
       // cap off the parameters
       managers.append(")");
