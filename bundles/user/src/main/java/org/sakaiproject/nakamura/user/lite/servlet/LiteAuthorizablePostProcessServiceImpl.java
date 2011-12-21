@@ -64,7 +64,7 @@ public class LiteAuthorizablePostProcessServiceImpl extends AbstractOrderedServi
   @Reference
   protected EventAdmin eventAdmin;
 
-  @Reference(target="(default=true)")
+  @Reference(target="(!default=true)")
   protected LiteAuthorizablePostProcessor defaultPostProcessor;
 
   private LiteAuthorizablePostProcessor[] orderedServices = new LiteAuthorizablePostProcessor[0];
@@ -109,16 +109,12 @@ public class LiteAuthorizablePostProcessServiceImpl extends AbstractOrderedServi
   }
 
   protected void bindAuthorizablePostProcessor(LiteAuthorizablePostProcessor service, Map<String, Object> properties) {
-    if (service.equals (defaultPostProcessor))
-    {
-        LOGGER.debug("skipping re-registration of default LiteAuthorizablePostProcessor, {}", service);
-        return;
-    }
-    LOGGER.debug("About to add service " + service);
+    LOGGER.debug("Adding service: {}", service);
     addService(service, properties);
   }
 
   protected void unbindAuthorizablePostProcessor(LiteAuthorizablePostProcessor service, Map<String, Object> properties) {
+    LOGGER.debug("Removing service: {}", service);
     removeService(service, properties);
   }
 
