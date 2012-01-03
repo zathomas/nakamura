@@ -17,6 +17,25 @@
  */
 package org.sakaiproject.nakamura.user.search;
 
+import static org.sakaiproject.nakamura.api.lite.StoreListener.ADDED_TOPIC;
+import static org.sakaiproject.nakamura.api.lite.StoreListener.DELETE_TOPIC;
+import static org.sakaiproject.nakamura.api.lite.StoreListener.TOPIC_BASE;
+import static org.sakaiproject.nakamura.api.lite.StoreListener.UPDATED_TOPIC;
+import static org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions.CAN_READ;
+import static org.sakaiproject.nakamura.api.lite.accesscontrol.Security.ZONE_AUTHORIZABLES;
+import static org.sakaiproject.nakamura.api.lite.authorizable.Authorizable.LASTMODIFIED_FIELD;
+import static org.sakaiproject.nakamura.api.lite.authorizable.Authorizable.NAME_FIELD;
+import static org.sakaiproject.nakamura.api.user.UserConstants.COUNTS_LAST_UPDATE_PROP;
+import static org.sakaiproject.nakamura.api.user.UserConstants.GROUP_DESCRIPTION_PROPERTY;
+import static org.sakaiproject.nakamura.api.user.UserConstants.GROUP_TITLE_PROPERTY;
+import static org.sakaiproject.nakamura.api.user.UserConstants.PROP_GROUP_MANAGERS;
+import static org.sakaiproject.nakamura.api.user.UserConstants.PROP_MANAGED_GROUP;
+import static org.sakaiproject.nakamura.api.user.UserConstants.SAKAI_CATEGORY;
+import static org.sakaiproject.nakamura.api.user.UserConstants.SAKAI_EXCLUDE;
+import static org.sakaiproject.nakamura.api.user.UserConstants.USER_EMAIL_PROPERTY;
+import static org.sakaiproject.nakamura.api.user.UserConstants.USER_FIRSTNAME_PROPERTY;
+import static org.sakaiproject.nakamura.api.user.UserConstants.USER_LASTNAME_PROPERTY;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -28,17 +47,13 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.osgi.service.event.Event;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
-import org.sakaiproject.nakamura.api.lite.StoreListener;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
-import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
-import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
@@ -46,7 +61,7 @@ import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.solr.IndexingHandler;
 import org.sakaiproject.nakamura.api.solr.RepositorySession;
 import org.sakaiproject.nakamura.api.solr.TopicIndexer;
-import org.sakaiproject.nakamura.api.user.UserConstants;
+import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,38 +79,38 @@ import java.util.Set;
 @Component(immediate = true)
 public class AuthorizableIndexingHandler implements IndexingHandler {
   private static final String[] DEFAULT_TOPICS = {
-      StoreListener.TOPIC_BASE + "authorizables/" + StoreListener.ADDED_TOPIC,
-      StoreListener.TOPIC_BASE + "authorizables/" + StoreListener.DELETE_TOPIC,
-      StoreListener.TOPIC_BASE + "authorizables/" + StoreListener.UPDATED_TOPIC };
+      TOPIC_BASE + "authorizables/" + ADDED_TOPIC,
+      TOPIC_BASE + "authorizables/" + DELETE_TOPIC,
+      TOPIC_BASE + "authorizables/" + UPDATED_TOPIC };
 
 
   // list of properties to be indexed
-  private static final Map<String, Object> USER_WHITELISTED_PROPS;
+  private static final Map<String, String> USER_WHITELISTED_PROPS;
   static {
-    Builder<String, Object> builder = ImmutableMap.builder();
-    builder.put("name", "name");
-    builder.put(UserConstants.USER_FIRSTNAME_PROPERTY, "firstName");
-    builder.put(UserConstants.USER_LASTNAME_PROPERTY, new String[] { "lastName", "general_sort" });
-    builder.put(UserConstants.USER_EMAIL_PROPERTY, "email");
+    Builder<String, String> builder = ImmutableMap.builder();
+    builder.put(NAME_FIELD, NAME_FIELD);
+    builder.put(USER_FIRSTNAME_PROPERTY, "firstName");
+    builder.put(USER_LASTNAME_PROPERTY, "lastName");
+    builder.put(USER_EMAIL_PROPERTY, "email");
     builder.put("type", "type");
     builder.put("sakai:tags", "tag");
-    builder.put(Authorizable.LASTMODIFIED_FIELD, Content.LASTMODIFIED_FIELD);
-    builder.put(UserConstants.COUNTS_LAST_UPDATE_PROP, "countLastUpdate");
+    builder.put(LASTMODIFIED_FIELD, Content.LASTMODIFIED_FIELD);
+    builder.put(COUNTS_LAST_UPDATE_PROP, "countLastUpdate");
     USER_WHITELISTED_PROPS = builder.build();
   }
 
-  private final static Map<String, Object> GROUP_WHITELISTED_PROPS;
+  private final static Map<String, String> GROUP_WHITELISTED_PROPS;
   static {
-    Builder<String, Object> builder = ImmutableMap.builder();
-    builder.put("name", "name");
+    Builder<String, String> builder = ImmutableMap.builder();
+    builder.put(NAME_FIELD, NAME_FIELD);
     builder.put("type", "type");
-    builder.put(UserConstants.GROUP_TITLE_PROPERTY, new String[] { "title", "general_sort" });
-    builder.put(UserConstants.GROUP_DESCRIPTION_PROPERTY, "description");
+    builder.put(GROUP_TITLE_PROPERTY, "title");
+    builder.put(GROUP_DESCRIPTION_PROPERTY, "description");
     builder.put("sakai:tags", "tag");
-    builder.put("sakai:category", "category");
-    builder.put(Authorizable.LASTMODIFIED_FIELD, Content.LASTMODIFIED_FIELD);    
-    builder.put(UserConstants.COUNTS_LAST_UPDATE_PROP, "countLastUpdate");
-    builder.put(UserConstants.PROP_GROUP_MANAGERS, "manager");
+    builder.put(SAKAI_CATEGORY, "category");
+    builder.put(LASTMODIFIED_FIELD, Content.LASTMODIFIED_FIELD);    
+    builder.put(COUNTS_LAST_UPDATE_PROP, "countLastUpdate");
+    builder.put(PROP_GROUP_MANAGERS, "manager");
     GROUP_WHITELISTED_PROPS = builder.build();
   }
 
@@ -109,6 +124,9 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
 
   @Reference
   protected TopicIndexer topicIndexer;
+
+  @Reference
+  protected BasicUserInfoService basicInfo;
 
   // ---------- SCR integration ------------------------------------------------
   @Activate
@@ -145,13 +163,13 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
     List<SolrInputDocument> documents = Lists.newArrayList();
     String topic = PathUtils.lastElement(event.getTopic());
 
-    if (StoreListener.UPDATED_TOPIC.equals(topic) || StoreListener.ADDED_TOPIC.equals(topic)) {
+    if (UPDATED_TOPIC.equals(topic) || ADDED_TOPIC.equals(topic)) {
       // get the name of the authorizable (user,group)
       String authName = String.valueOf(event.getProperty(FIELD_PATH));
       Authorizable authorizable = getAuthorizable(authName, repositorySession);
       if (authorizable != null) {
         // KERN-1822 check if the authorizable is marked to be excluded from searches
-        if (Boolean.parseBoolean(String.valueOf(authorizable.getProperty(UserConstants.SAKAI_EXCLUDE)))) {
+        if (Boolean.parseBoolean(String.valueOf(authorizable.getProperty(SAKAI_EXCLUDE)))) {
           return documents;
         }
 
@@ -178,14 +196,14 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
     Collection<String> retval = Collections.emptyList();
     String topic = event.getTopic();
     String authName = String.valueOf(event.getProperty(FIELD_PATH));
-    if (topic.endsWith(StoreListener.DELETE_TOPIC)) {
+    if (topic.endsWith(DELETE_TOPIC)) {
       logger.debug("GetDelete for {} ", event);
       retval = ImmutableList.of("id:" + ClientUtils.escapeQueryChars(authName));
     } else {
       // KERN-1822 check if the authorizable is marked to be excluded from searches
       Authorizable authorizable = getAuthorizable(authName, repositorySession);
       if (authorizable != null
-          && Boolean.parseBoolean(String.valueOf(authorizable.getProperty(UserConstants.SAKAI_EXCLUDE)))) {
+          && Boolean.parseBoolean(String.valueOf(authorizable.getProperty(SAKAI_EXCLUDE)))) {
         retval = ImmutableList.of("id:" + ClientUtils.escapeQueryChars(authName));
       }
     }
@@ -211,16 +229,35 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
     String authName = authorizable.getId();
 
     SolrInputDocument doc = new SolrInputDocument();
-    Map<String, Object> fields = (authorizable.isGroup()) ? GROUP_WHITELISTED_PROPS : USER_WHITELISTED_PROPS;
+    Map<String, String> fields = (authorizable.isGroup()) ? GROUP_WHITELISTED_PROPS : USER_WHITELISTED_PROPS;
 
+    // collect specific fields separately
     Map<String, Object> properties = authorizable.getSafeProperties();
     for (Entry<String, Object> p : properties.entrySet()) {
       if (fields.containsKey(p.getKey())) {
-        String[] solrFields = PropertiesUtil.toStringArray(fields.get(p.getKey()));
-        for (String sf : solrFields) {
-          doc.addField(sf, p.getValue());
+        String solrField = fields.get(p.getKey());
+        doc.addField(solrField, p.getValue());
+      }
+    }
+
+    if (!authorizable.isGroup()) {
+      // add 'basic info' fields as profile data for users
+      String[] basicFields = basicInfo.getBasicProfileElements();
+      for (String basicField : basicFields) {
+        Object prop = authorizable.getProperty(basicField);
+        if (prop != null) {
+          doc.addField("profile", prop);
         }
       }
+      doc.setField("general_sort", authorizable.getProperty(USER_LASTNAME_PROPERTY));
+    } else {
+      // add users to the group doc so we can find the group by its member users
+      // (and recommend similar groups based on group membership too)
+      Group group = (Group) authorizable;
+      for (String member : group.getMembers()) {
+        doc.addField(FIELD_READERS, member);
+      }
+      doc.setField("general_sort", authorizable.getProperty(GROUP_TITLE_PROPERTY));
     }
 
     // add groups to the auth doc so we can find the auth as a group member
@@ -234,22 +271,12 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
       }
     }
 
-    // add users to the group doc so we can find the group by its member users
-    // (and recommend similar groups based on group membership too)
-    if (authorizable.isGroup()) {
-      Group group = (Group) authorizable;
-      for (String member : group.getMembers()) {
-        doc.addField(FIELD_READERS, member);
-      }
-    }
-
     // add readers
     try {
       Session session = repositorySession.adaptTo(Session.class);
       AccessControlManager accessControlManager = session.getAccessControlManager();
-      String[] principals = accessControlManager.findPrincipals(
-          Security.ZONE_AUTHORIZABLES, authName, Permissions.CAN_READ.getPermission(),
-          true);
+      String[] principals = accessControlManager.findPrincipals(ZONE_AUTHORIZABLES,
+          authName, CAN_READ.getPermission(), true);
       for (String principal : principals) {
         doc.addField(FIELD_READERS, principal);
       }
@@ -285,9 +312,9 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
     }
 
     boolean isBlacklisted = BLACKLISTED_AUTHZ.contains(auth.getId());
-    boolean isNotManagingGroup = !auth.hasProperty(UserConstants.PROP_MANAGED_GROUP);
-    boolean hasTitleAndNotBlank = auth.hasProperty("sakai:group-title")
-        && !StringUtils.isBlank(String.valueOf(auth.getProperty("sakai:group-title")));
+    boolean isNotManagingGroup = !auth.hasProperty(PROP_MANAGED_GROUP);
+    boolean hasTitleAndNotBlank = auth.hasProperty(GROUP_TITLE_PROPERTY)
+        && !StringUtils.isBlank(String.valueOf(auth.getProperty(GROUP_TITLE_PROPERTY)));
 
     return !isBlacklisted && (!auth.isGroup() || (isNotManagingGroup && hasTitleAndNotBlank));
   }
