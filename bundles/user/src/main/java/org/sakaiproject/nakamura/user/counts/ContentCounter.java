@@ -38,10 +38,13 @@ public class ContentCounter {
   private static final Logger LOGGER = LoggerFactory.getLogger(ContentCounter.class);
 
   public int countExact(Authorizable au, SolrServerService solrSearchService) {
-    if ( au != null && !CountProvider.IGNORE_AUTHIDS.contains(au.getId())) {
-      // find the content where the user has been made either a viewer or a manager
+    if (au != null && !CountProvider.IGNORE_AUTHIDS.contains(au.getId())) {
+      // find docs where the authz is a direct viewer or manager
       String userID = ClientUtils.escapeQueryChars(au.getId());
-      String readers = userID;
+      StringBuilder queryString = new StringBuilder("resourceType:sakai/pooled-content");
+      queryString.append("AND ((manager:(").append(userID).append(") OR viewer:(").append(userID).append("))");
+
+      // for users, include indirectly managed or viewed documents whose showalways field is true
       if (!au.isGroup()) {
         // pooled-content-manager, pooled-content-viewer
         List<String> principals = Lists.newArrayList(userID);
@@ -51,19 +54,20 @@ public class ContentCounter {
           }
         }
         principals.remove(Group.EVERYONE);
-        readers = StringUtils.join(principals, " OR ");
+        String readers = StringUtils.join(principals, " OR ");
+        queryString.append("OR (showalways:true AND (manager:(").append(readers).append(") OR viewer:( ").append
+            (readers).append(")))");
       }
 
-      String queryString = "resourceType:sakai/pooled-content AND (manager:(" + readers
-          + ") OR viewer:(" + readers + "))";
-      return getCount(queryString, solrSearchService); 
+      queryString.append(")");
+      return getCount(queryString.toString(), solrSearchService);
     }
     return 0;
   }
-  
+
   /**
    * @param queryString
-   * @param solrSearchService 
+   * @param solrSearchService
    * @return the count of results, we assume if they are returned the user can read them
    *         and we do not iterate through the entire set to check.
    */
