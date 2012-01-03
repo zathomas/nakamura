@@ -35,6 +35,14 @@ public interface ActivityRouterManager {
    */
   List<ActivityRoute> getActivityRoutes(Node activity);
 
+  /**
+   * Get all the activity routes where an activity should be delivered.
+   * 
+   * @param activity
+   *          The node that represents the activity.
+   * @param adminSession
+   *          Administrative session to the content store.
+   * @return Gets all the {@link ActivityRoute} for a specific activity.
+   */
   List<ActivityRoute> getActivityRoutes(Content activity, Session adminSession);
-
 }

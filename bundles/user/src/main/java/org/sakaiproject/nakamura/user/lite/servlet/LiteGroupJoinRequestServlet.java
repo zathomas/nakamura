@@ -32,6 +32,7 @@ import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
+import org.sakaiproject.nakamura.api.activity.ActivityUtils;
 import org.sakaiproject.nakamura.api.doc.BindingType;
 import org.sakaiproject.nakamura.api.doc.ServiceBinding;
 import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
@@ -49,7 +50,6 @@ import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
-import org.sakaiproject.nakamura.util.ActivityUtils;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.sakaiproject.nakamura.util.PathUtils;
 
