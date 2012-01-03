@@ -17,7 +17,9 @@
  */
 package org.sakaiproject.nakamura.activity;
 
+import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 import static org.sakaiproject.nakamura.api.activity.ActivityConstants.ACTIVITY_STORE_NAME;
+import static org.sakaiproject.nakamura.api.activity.ActivityConstants.ACTIVITY_STORE_RESOURCE_TYPE;
 import static org.sakaiproject.nakamura.api.activity.ActivityConstants.LITE_EVENT_TOPIC;
 import static org.sakaiproject.nakamura.api.activity.ActivityConstants.PARAM_ACTOR_ID;
 
@@ -69,9 +71,8 @@ public class ActivityServiceImpl implements ActivityService {
     // create activityStore if it does not exist
     String path = StorageClientUtils.newPath(targetLocation.getPath(), ACTIVITY_STORE_NAME);
     if (!contentManager.exists(path)) {
-      contentManager.update(new Content(path, ImmutableMap.of(
-          JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY,
-          (Object) ActivityConstants.ACTIVITY_STORE_RESOURCE_TYPE)));
+      contentManager.update(new Content(path, ImmutableMap.<String, Object> of(
+          SLING_RESOURCE_TYPE_PROPERTY, ACTIVITY_STORE_RESOURCE_TYPE)));
       // set ACLs so that everyone can add activities; anonymous = none.
       session.getAccessControlManager().setAcl(
           Security.ZONE_CONTENT,

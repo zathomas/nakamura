@@ -60,7 +60,8 @@
         <module>bundles/activation-mail</module>
         <module>bundles/email-outgoing</module>
         <module>bundles/activemq</module>
-        <module>bundles/activity</module>
+        <module>bundles/activity/api</module>
+        <module>bundles/activity/impl</module>
         <module>bundles/cluster</module>
         <module>bundles/chat</module>
         <module>bundles/doc</module>
