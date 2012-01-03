@@ -65,7 +65,6 @@ import java.util.Set;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.jcr.Node;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -103,25 +102,8 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
   private static final String HMAC_SHA512 = "HmacSHA512";
   private static final String HMAC_PARAM = ":hmac";
   private static final String[] DEFAULT_TRUSTED_HOSTS = { "localhost:8080 = http://localhost:8082" };
-  private static final String[] DEFAULT_TRUSTED_PATHS = { "/dev", "/devwidgets", "/system", "/logout" };
-  private static final String[] DEFAULT_TRUSTED_EXACT_PATHS = { "/", 
-    "/index.html", 
-    "/index",
-    "/403", 
-    "/404", 
-    "/500", 
-    "/acknowledgements", 
-    "/categories", 
-    "/category", 
-    "/content",
-    "/favicon.ico",
-    "/logout",
-    "/me.html",
-    "/me",
-    "/register",
-    "/s2site",
-    "/search/sakai2",
-    "/search"  };
+  private static final String[] DEFAULT_TRUSTED_PATHS = { "/dev", "/devwidgets", "/system", "/logout", "/var" };
+  private static final String[] DEFAULT_TRUSTED_EXACT_PATHS = { };
   private static final String DEFAULT_TRUSTED_SECRET_VALUE = "This Must Be set in production";
   private static final String[] DEFAULT_WHITELIST_POST_PATHS = {"/system/console"};
   private static final String[] DEFAULT_ANON_WHITELIST_POST_PATHS = {"/system/userManager/user.create"};
@@ -130,21 +112,7 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
   private static final String DISABLE_XSS_PROTECTION_FOR_UI_DEV = "disable.protection.for.dev.mode";
   @Property(value = { "/dev", "/devwidgets", "/system", "/logout" })
   private static final String TRUSTED_PATHS_CONF = "trusted.paths";
-  @Property(value = { "/", 
-      "/index.html", 
-      "/403", 
-      "/404", 
-      "/500", 
-      "/acknowledgements", 
-      "/categories", 
-      "/category", 
-      "/content",
-      "/favicon.ico",
-      "/logout",
-      "/me",
-      "/register",
-      "/search/sakai2",
-      "/search"  })
+  @Property(value = { })
   private static final String TRUSTED_EXACT_PATHS_CONF = "trusted.exact.paths";
   @Property(value = { "localhost:8080 = http://localhost:8082" }, cardinality = 9999999)
   protected static final String TRUSTED_HOSTS_CONF = "trusted.hosts";
@@ -385,43 +353,33 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
         // this is going to stream
         String path = srequest.getRequestURI();
         LOGGER.debug("Checking [{}] RequestPathInfo {}", path, requestPathInfo);
-        safeToStream = safeToStreamExactPaths.contains(path);
+        safeToStream = isMatchToSafePath(path);
         if (!safeToStream) {
-          LOGGER.debug("Checking [{}] looks like not safe to stream ", path );
-          for (String safePath : safeToStreamPaths) {
-            if (path.startsWith(safePath)) {
-              safeToStream = true;
-              LOGGER.debug("Safe To stream becuase starts with {} ",safePath);
-              break;
+          Resource resource = srequest.getResource();
+          if ( resource != null ) {
+            if ("sling:nonexisting".equals(resource.getResourceType())) {
+              // Trust a "GET" of non-existing content so that the 404 comes from
+              // the right port (KERN-2001)
+              LOGGER.debug("Non existing resource {}", resource.getPath());
+              return true;
             }
-          }
-          if (!safeToStream) {
-            Resource resource = srequest.getResource();
-            if ( resource != null ) {
-              Node node = resource.adaptTo(Node.class);
-              if (node != null || "sling:nonexisting".equals(resource.getResourceType())) {
-                // JCR content is trusted, as users dont have write to the JCR, lets hope thats true!
-                // KERN-1930 and list discussion.
-                // Also trust a "GET" of non-existing content so that the 404 comes from
-                // the right port (KERN-2001)
-                LOGGER.debug("Node not null  or non existing {} {} ",node, resource.getResourceType());
-                return true;
-              }
-              String resourcePath = resource.getPath();
-              LOGGER.debug("Checking Resource Path [{}]",resourcePath);
-              if (!safeToStream) {
-                for (ServerProtectionValidator serverProtectionValidator : serverProtectionValidators) {
-                  if ( serverProtectionValidator.safeToStream(srequest, resource)) {
-                    LOGGER.debug(" {} said this {} is safe to stream ",serverProtectionValidator,resourcePath);
-                    safeToStream = true;
-                    break;
-                  }
+            // The original unrecognized URI might be a mapping to a trusted resource.
+            // Check again now that any aliases have been resolved.
+            String resourcePath = resource.getPath();
+            LOGGER.debug("Checking Resource Path [{}]",resourcePath);
+            safeToStream = isMatchToSafePath(resourcePath);
+            if (!safeToStream) {
+              for (ServerProtectionValidator serverProtectionValidator : serverProtectionValidators) {
+                if ( serverProtectionValidator.safeToStream(srequest, resource)) {
+                  LOGGER.debug(" {} said this {} is safe to stream ",serverProtectionValidator,resourcePath);
+                  safeToStream = true;
+                  break;
                 }
               }
             }
-          } else {
-              LOGGER.debug("Content was safe to stream ");
           }
+        } else {
+          LOGGER.debug("Content was safe to stream ");
         }
       } else {
         safeToStream = true;
@@ -443,6 +401,21 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
       LOGGER.debug("Request will be sent from this host, no redirect {}", srequest.getRequestURL().toString());
     }
     return true;
+  }
+
+  private boolean isMatchToSafePath(String path) {
+    boolean safeToStream = safeToStreamExactPaths.contains(path);
+    if (!safeToStream) {
+      LOGGER.debug("Checking [{}] looks like not safe to stream ", path );
+      for (String safePath : safeToStreamPaths) {
+        if (path.startsWith(safePath)) {
+          safeToStream = true;
+          LOGGER.debug("Safe To stream becuase starts with {} ",safePath);
+          break;
+        }
+      }
+    }
+    return safeToStream;
   }
 
   private void redirectToContent(HttpServletRequest request, HttpServletResponse response)
