@@ -36,6 +36,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
+import org.sakaiproject.nakamura.api.user.AuthorizableCountChanger;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.api.user.UserConstants.Joinable;
 import org.sakaiproject.nakamura.user.lite.resource.LiteAuthorizableResourceProvider;
@@ -70,6 +71,9 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
   @Reference
   protected transient Repository repository;
 
+  @Reference
+  protected transient AuthorizableCountChanger authorizableCountChanger;
+
   private static final Logger LOGGER = LoggerFactory
       .getLogger(LiteAbstractSakaiGroupPostServlet.class);
 
@@ -91,6 +95,7 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
         SlingPostConstants.RP_PREFIX + "member", changes, toSave);
   }
 
+  @SuppressWarnings("unchecked")
   protected void updateGroupMembership(SlingHttpServletRequest request, Session session,
       Authorizable authorizable, String paramName, List<Modification> changes, Map<String, Object> toSave) throws AccessDeniedException, StorageClientException  {
     if (authorizable instanceof Group) {
@@ -103,11 +108,21 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
       AuthorizableManager authorizableManager = session.getAuthorizableManager();
       Joinable groupJoin = getJoinable(group);
 
+      // the group's count of members changed
+      this.authorizableCountChanger.notify(UserConstants.GROUP_MEMBERS_PROP, group.getId());
+
+      // if this is a special contacts group, then change the contact count for the user it points at
+      if (group.getId().startsWith("g-contacts-")) {
+        String userId = group.getId().substring("g-contacts-".length());
+        this.authorizableCountChanger.notify(UserConstants.CONTACTS_PROP, userId);
+      }
+
       // first remove any members posted as ":member@Delete"
       String[] membersToDelete = request.getParameterValues(paramName + SlingPostConstants.SUFFIX_DELETE);
       if (membersToDelete != null) {
         toSave.put(group.getId(), group);
         LOGGER.info("Members to delete {} ",membersToDelete);
+        this.authorizableCountChanger.notify(UserConstants.GROUP_MEMBERSHIPS_PROP, Arrays.asList(membersToDelete));
         for (String member : membersToDelete) {
           String memberId = getAuthIdFromParameter(member);
           group.removeMember(memberId);
@@ -130,6 +145,7 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
       String[] membersToAdd = request.getParameterValues(paramName);
       if (membersToAdd != null) {
         LOGGER.info("Members to add {} ",membersToAdd);
+        this.authorizableCountChanger.notify(UserConstants.GROUP_MEMBERSHIPS_PROP, Arrays.asList(membersToAdd));
         Group peerGroup = getPeerGroupOf(group, authorizableManager, toSave);
         List<Authorizable> membersToRemoveFromPeer = new ArrayList<Authorizable>();
         for (String member : membersToAdd) {

@@ -59,6 +59,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.profile.ProfileService;
+import org.sakaiproject.nakamura.api.user.AuthorizableCountChanger;
 import org.sakaiproject.nakamura.lite.BaseMemoryRepository;
 
 import java.io.IOException;
@@ -110,6 +111,8 @@ public class ManageMembersContentPoolServletTest {
   private ProfileService profileService;
   @Mock
   Iterator iterator;
+  @Mock
+  private AuthorizableCountChanger authorizableCountChanger;
 
   private ManageMembersContentPoolServlet servlet;
   private PrintWriter printWriter;
@@ -170,6 +173,7 @@ public class ManageMembersContentPoolServletTest {
     // class as well as the internals of the MeServlet class. Mocking it would
     // reduce the cost of test maintenance.
     servlet.profileService = profileService;
+    servlet.authorizableCountChanger = authorizableCountChanger;
     when(resource.getResourceResolver()).thenReturn(resourceResolver);
     when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
 
