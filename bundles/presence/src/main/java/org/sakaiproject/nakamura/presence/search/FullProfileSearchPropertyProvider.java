@@ -49,7 +49,7 @@ public class FullProfileSearchPropertyProvider implements SolrSearchPropertyProv
       // Since the request parameters are collected before property providers are
       // processed, we can get the query from the properties maps.
       String q = propertiesMap.get("q");
-      val = "profile:(" + q + ")");
+      val = "profile:(" + q + ")";
       valOr = " OR " + val;
       valAnd = " AND " + val;
     }
