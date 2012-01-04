@@ -115,7 +115,7 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
 
   @Property(boolValue=false)
   private static final String DISABLE_XSS_PROTECTION_FOR_UI_DEV = "disable.protection.for.dev.mode";
-  @Property(value = { "/dev", "/devwidgets", "/system", "/logout" })
+  @Property(value = { "/dev", "/devwidgets", "/system", "/logout", "/var" })
   private static final String TRUSTED_PATHS_CONF = "trusted.paths";
   @Property(value = { })
   private static final String TRUSTED_EXACT_PATHS_CONF = "trusted.exact.paths";
