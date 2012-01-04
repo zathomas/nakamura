@@ -21,7 +21,6 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.sakaiproject.nakamura</groupId>
   <artifactId>org.sakaiproject.nakamura.calendar</artifactId>
   <name>Sakai Nakamura :: Calendar based events bundle</name>
   <packaging>bundle</packaging>

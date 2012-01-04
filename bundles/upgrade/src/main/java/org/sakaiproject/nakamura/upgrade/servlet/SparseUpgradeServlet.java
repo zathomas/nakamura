@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
@@ -73,6 +74,8 @@ import javax.servlet.http.HttpServletResponse;
         ))
 @SlingServlet(paths = {"/system/sparseupgrade"}, generateComponent = true, generateService = true, methods = {"POST"})
 public class SparseUpgradeServlet extends SlingAllMethodsServlet {
+
+  private static final long serialVersionUID = 5989265499956848433L;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SparseUpgradeServlet.class);
 

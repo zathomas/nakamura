@@ -18,7 +18,6 @@
 package org.sakaiproject.nakamura.util;
 
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 

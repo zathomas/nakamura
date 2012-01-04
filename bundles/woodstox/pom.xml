@@ -17,7 +17,6 @@
 		<version>1.2-SNAPSHOT</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
-	<groupId>org.sakaiproject.nakamura</groupId>
 	<artifactId>org.sakaiproject.nakamura.woodstox</artifactId>
 	<version>4.0.7.1.2-SNAPSHOT</version>
 	<packaging>bundle</packaging>
