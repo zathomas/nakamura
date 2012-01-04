@@ -2,18 +2,18 @@
 
 
 require 'nakamura.rb'
-require 'test/unit.rb'
-require 'logger'
+require 'nakamura/test'
 include SlingInterface
 include SlingUsers
 
 class TC_MyTest < Test::Unit::TestCase
+  include SlingTest
 
   def setup
     @s = Sling.new()
     @um = UserManager.new(@s)
     #@s.debug = true
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     @test_node = "some_test_node"+m
     @s.delete_node(@test_node)
     @log = Logger.new(STDOUT)

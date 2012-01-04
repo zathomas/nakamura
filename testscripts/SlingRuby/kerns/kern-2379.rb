@@ -10,7 +10,7 @@ class TC_Kern2282 < Test::Unit::TestCase
   include SlingTest
 
   def test_migrate_pseudo_group_parent
-    m = Time.now.to_nsec
+    m = uniqueness()
     
     group = Group.new("g-test-#{m}")
     @s.switch_user(User.admin_user())

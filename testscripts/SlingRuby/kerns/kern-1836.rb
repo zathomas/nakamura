@@ -18,7 +18,7 @@ class TC_Kern1836Test < Test::Unit::TestCase
   end
 
   def test_delete_operation_recurses
-    m = Time.now.to_nsec
+    m = uniqueness()
     @s.switch_user(User.admin_user())
     homefolder = User.admin_user().home_path_for(@s)
 

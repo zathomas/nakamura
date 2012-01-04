@@ -10,7 +10,7 @@ class TC_Kern857 < Test::Unit::TestCase
   include SlingTest
 
   def test_widgetlisting
-    m = Time.now.to_i.to_s
+    m = uniqueness()
 
     # Store the original widget settings somewhere.
     @widget_options = getWidgetServiceConfiguration()

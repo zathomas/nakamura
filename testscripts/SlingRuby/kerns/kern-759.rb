@@ -16,7 +16,7 @@ class TC_Kern759Test < Test::Unit::TestCase
 
   def test_private_group
     # Create a couple of user who are connected
-    m = Time.now.to_i.to_s
+    m = uniqueness()
 
     manager = create_user("user-manager-#{m}")
     viewer = create_user("user-viewer-#{m}")

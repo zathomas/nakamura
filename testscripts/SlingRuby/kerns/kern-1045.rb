@@ -20,7 +20,7 @@ class TC_Kern1045 < Test::Unit::TestCase
 
 
   def test_search_me
-    m = Time.now.to_i.to_s
+    m = uniqueness()
 
     # Create some users
     owner = create_user("creator2-#{m}")
@@ -28,7 +28,7 @@ class TC_Kern1045 < Test::Unit::TestCase
     groupuser = create_user("groupuser2-#{m}")
 
     @s.switch_user(owner)
-    content = Time.now.to_f
+    content = uniqueness()
     name = "random-#{content}.txt"
     fileBody = "Add the time to make it sort of random #{Time.now.to_f}."
     res = @fm.upload_pooled_file(name, fileBody, 'text/plain')

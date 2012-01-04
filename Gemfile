@@ -1,5 +1,5 @@
 source :rubygems
-gem "nakamura", ">= 0.2"
+gem "nakamura", ">= 0.4"
 gem "curb"
 gem "json"
 

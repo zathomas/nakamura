@@ -23,7 +23,7 @@ class TC_Kern455Test < Test::Unit::TestCase
   end
 
   def test_save_uploaded_file
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     dummyuser = create_user("dummyuser"+m)
     dummyHome = dummyuser.home_path_for(@s)
 

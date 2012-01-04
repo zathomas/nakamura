@@ -32,7 +32,7 @@ class TC_KernMeTest < Test::Unit::TestCase
   
   
   def test_me_service
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     userid = "testuser-#{m}"
     user = create_user(userid)
     

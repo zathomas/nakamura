@@ -11,7 +11,7 @@ class ContactCollisionTest < Test::Unit::TestCase
   include SlingTest
 
   def test_create_collision 
-    users = (0..1).collect {|i| create_user("my_test_user" + i.to_s + Time.now.to_i.to_s)}
+    users = (0..1).collect {|i| create_user("my_test_user" + i.to_s + uniqueness())}
     others = {}
     users.each do |u|
       others[u.name] = []
@@ -40,7 +40,7 @@ class ContactCollisionTest < Test::Unit::TestCase
   end
 
   def test_create_no_collision 
-    users = (0..2).collect {|i| create_user(i.to_s + "my_test_user" + Time.now.to_i.to_s)}
+    users = (0..2).collect {|i| create_user(i.to_s + "my_test_user" + uniqueness())}
     threads = []
     results = []
     trials = [ [ users[0], users[1] ],

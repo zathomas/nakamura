@@ -16,7 +16,7 @@ class TC_Kern2027Test < Test::Unit::TestCase
     @s.switch_user(u1)
 
     # have user1 create a group
-    m = Time.now.to_nsec
+    m = uniqueness()
     groupid = "testgroup-#{m}"
     group = create_group(groupid)
 

@@ -5,31 +5,30 @@ require 'nakamura/test'
 require 'nakamura/file'
 require 'nakamura/users'
 require 'nakamura/contacts'
-require 'test/unit.rb'
 include SlingUsers
 include SlingFile
 include SlingContacts
 
 class TC_Kern1874Test < Test::Unit::TestCase
   include SlingTest
-  TEST_SAKAI_DOC_NAME = "test-sakai-doc-" + Time.now.to_i.to_s
   TEST_SAKAI_DOC_MIME_TYPE = "x-sakai/document"
   
   @created_doc_path = nil
   def setup
     super
     @s.log.level = Logger::INFO
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     @test_user1 = create_user "test-user1-#{m}", "Test", "User1"
+    @test_sakai_doc_name = "test-sakai-doc-" + uniqueness()
   end
   
   
   def test_create_find_delete_sakai_doc
     # create a sakai doc with custom mimetype
     post_params = {}
-    post_params["sakai:pooled-content-file-name"] = TEST_SAKAI_DOC_NAME
+    post_params["sakai:pooled-content-file-name"] = @test_sakai_doc_name
     post_params["mimeType"] = TEST_SAKAI_DOC_MIME_TYPE
-    post_params["sakai:description"] = TEST_SAKAI_DOC_NAME + "description"
+    post_params["sakai:description"] = @test_sakai_doc_name + "description"
     post_params["sakai:permissions"] = "public"
     post_params["sakai:copyright"] = "creativecommons"
     post_params["_charset_"] = "utf-8"
@@ -43,7 +42,7 @@ class TC_Kern1874Test < Test::Unit::TestCase
     mime_type = content_item["item"]["_mimeType"]
     assert_equal(TEST_SAKAI_DOC_MIME_TYPE, mime_type, "Expecting valid mime type from response")
     doc_name = content_item["item"]["sakai:pooled-content-file-name"]
-    assert_equal(TEST_SAKAI_DOC_NAME, doc_name, "Expecting valid file name from response")
+    assert_equal(@test_sakai_doc_name, doc_name, "Expecting valid file name from response")
     @created_doc_path = "/p/" + content_item["poolId"]
     assert_not_nil(@created_doc_path, "Expecting valid doc path from response")
     
@@ -82,17 +81,20 @@ class TC_Kern1874Test < Test::Unit::TestCase
     doc_found = false;
     results.each do |result|
       test_doc_name = result["sakai:pooled-content-file-name"]
-      if (TEST_SAKAI_DOC_NAME.eql? test_doc_name)
+      if (@test_sakai_doc_name.eql? test_doc_name)
         doc_found = true
       end
     end
     assert_equal(false, doc_found, "Expecting not to find deleted doc")
   end
-  
+
+  # This method will only work reliably on an empty repository.
+  # If there are more than 10 publicly accessible documents, it will
+  # likely report failure.
   def find_and_evaluate_doc(query_params)
     @log.info("finding doc with query params: #{query_params.inspect}")
     res = @s.execute_get(@s.url_for("/var/search/pool/all.infinity.json"), query_params)
-    @log.info("response from finding doc: #{res.inspect}")
+    @log.info("response from finding doc: #{res.inspect}, #{res.body}")
     json = JSON.parse(res.body)
     assert_not_nil(json, "Expecting valid json from doc retrieval")
     results = json["results"]
@@ -102,7 +104,7 @@ class TC_Kern1874Test < Test::Unit::TestCase
     doc_mime_type = nil
     results.each do |result|
       test_doc_name = result["sakai:pooled-content-file-name"]
-      if (TEST_SAKAI_DOC_NAME.eql? test_doc_name)
+      if (@test_sakai_doc_name.eql? test_doc_name)
            doc_name = test_doc_name
            doc_found = true
            doc_mime_type = result["_mimeType"]
@@ -110,7 +112,7 @@ class TC_Kern1874Test < Test::Unit::TestCase
       end
     end
     assert_equal(true, doc_found, "Expecting to find created doc with query: #{query_params.inspect}")
-    assert_equal(TEST_SAKAI_DOC_NAME, doc_name, "Expecting to find created doc name from query response")
+    assert_equal(@test_sakai_doc_name, doc_name, "Expecting to find created doc name from query response")
     assert_equal(TEST_SAKAI_DOC_MIME_TYPE, doc_mime_type, "Expecting to find doc mimetype from query response")
     assert_equal(1, doc_count, "Expecting to find just one created doc")
   end

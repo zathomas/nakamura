@@ -9,7 +9,7 @@ class TC_Kern1887Test < Test::Unit::TestCase
 
   def setup
     super
-    m = Time.now.to_nsec
+    m = uniqueness()
     @user = create_user("user-#{m}")
     @home = @user.home_path_for(@s)
 

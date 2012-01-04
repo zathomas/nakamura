@@ -16,7 +16,7 @@ class TC_Kern2211 < Test::Unit::TestCase
   end
   
   def test_user_not_exist
-    m = Time.now.to_f.to_s.gsub('.', '')
+    m = uniqueness()
     data = {}
     userid = "lower_case_user.#{m}"
     data["userid"] = userid
@@ -26,7 +26,7 @@ class TC_Kern2211 < Test::Unit::TestCase
   end
     
   def test_create_user_and_user_exists  
-    m = Time.now.to_f.to_s.gsub('.', '')
+    m = uniqueness()
     lower_case_user_name = "lower_case_user.#{m}"
     data = {}
     data[":name"] = lower_case_user_name

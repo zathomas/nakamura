@@ -10,7 +10,7 @@ class TC_Kern2243 < Test::Unit::TestCase
 
   def setup
     super
-    @m = Time.now.to_f.to_s.gsub('.', '')
+    @m = uniqueness()
 
     @shared_props = {
         "booleanProp"=> true,

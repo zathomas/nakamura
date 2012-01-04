@@ -8,7 +8,7 @@ class TC_Kern1057Test < Test::Unit::TestCase
   include SlingTest
 
   def test_update_managers_group_directly
-    m = Time.now.to_nsec
+    m = uniqueness()
     manager = create_user("user-manager-#{m}")
     other = create_user("user-other-#{m}")
     group = Group.new("g-test-#{m}")

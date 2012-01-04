@@ -11,7 +11,7 @@ class TC_Kern289Test < Test::Unit::TestCase
   include SlingTest
 
   def test_connection_details
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     u1 = create_user("testuser#{m}")
     u2 = create_user("otheruser#{m}")
     

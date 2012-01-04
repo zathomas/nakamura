@@ -13,7 +13,7 @@ class TC_Kern909Test < Test::Unit::TestCase
   #
 
   def test_normal
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     user1 = create_user("user1-"+m)
 
     @s.switch_user(user1)

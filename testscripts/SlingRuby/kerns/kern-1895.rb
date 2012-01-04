@@ -12,7 +12,7 @@ class TC_Kern1895Test < Test::Unit::TestCase
 
   def test_delete_pool_property
     @fm = FileManager.new(@s)
-    m = Time.now.to_nsec
+    m = uniqueness()
     manager = create_user("user-manager-#{m}")
     @s.switch_user(manager)
     res = @fm.upload_pooled_file("random-#{m}.txt", "Plain content", "text/plain")

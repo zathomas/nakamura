@@ -19,7 +19,7 @@ class TC_IMSCPFileHandlerTest < Test::Unit::TestCase
   end
 
   def test_import_course
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     @user = create_user("test_user" + m)
     @s.switch_user(@user)
     content = open('../dataload/content-packaging.zip', 'rb') { |f| f.read }

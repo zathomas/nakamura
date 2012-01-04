@@ -20,7 +20,7 @@ class TC_Kern2205Test < Test::Unit::TestCase
   end
   
   def test_add_pseudo_group_to_itself
-    m = Time.now.to_f.to_s.gsub('.', '')
+    m = uniqueness()
     user = create_user "testuser-#{m}"
     
     group = @um.create_full_group user.name, "testgroup-#{m}"

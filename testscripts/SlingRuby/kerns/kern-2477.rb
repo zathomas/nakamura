@@ -12,7 +12,7 @@ class TC_Kern2477 < Test::Unit::TestCase
   def test_migrate_old_worlds
     @s.switch_user(User.admin_user())
 
-    m = Time.now.to_nsec
+    m = uniqueness()
 
     parentgroup = Group.new("g-test-#{m}")
     res = @s.execute_post(@s.url_for("#{$GROUP_URI}"), {

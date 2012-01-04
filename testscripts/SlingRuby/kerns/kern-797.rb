@@ -20,7 +20,7 @@ class TC_MyFileTest_797 < Test::Unit::TestCase
   end
 
   def test_canModify
-    m = Time.now.to_nsec
+    m = uniqueness()
     @siteid = "creator#{m}";
     creator = create_user("#{@siteid}")
 

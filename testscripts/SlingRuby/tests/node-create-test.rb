@@ -76,7 +76,7 @@ class TC_NodeCreateTest < Test::Unit::TestCase
 
   def test_create_node_and_get_version_history
     @log.info("test_create_node_and_get_version_history---------------------------START")
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     version_content = { "jcr:rootVersion" => nil }
 	nodepath = "test/nodepath/node" + m
     res = @s.execute_post(@s.url_for(nodepath), "testproperty" => "version1" )

@@ -25,7 +25,7 @@ class TC_Kern307Test < Test::Unit::TestCase
   end
 
   def test_dirty_acl_cache
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     #@s.log = true
     randomuser = create_user("randomuser#{m}")
 
@@ -37,7 +37,7 @@ class TC_Kern307Test < Test::Unit::TestCase
   end
 
   def test_clean_acl_cache
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     #@s.log = true
     randomuser = create_user("randomuser#{m}")
 

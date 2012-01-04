@@ -13,7 +13,7 @@ class TC_Kern330Test < Test::Unit::TestCase
   #
 
   def test_normal
-    m = Time.now.to_f.to_s.gsub('.', '_')
+    m = uniqueness()
     user1 = create_user("user1-"+m)
 
     @s.switch_user(user1)
@@ -80,7 +80,7 @@ class TC_Kern330Test < Test::Unit::TestCase
 
   def test_accessdenied
 
-    m = Time.now.to_f.to_s.gsub('.', '_')
+    m = uniqueness()
     user2 = create_user("user12-"+m)
     adminUser = SlingUsers::User.admin_user()
 
@@ -127,7 +127,7 @@ class TC_Kern330Test < Test::Unit::TestCase
   end
 
   def test_values
-    m = Time.now.to_f.to_s.gsub('.', '_')
+    m = uniqueness()
     user3 = create_user("user3-"+m)
 
     homefolder = user3.home_path_for(@s)
@@ -184,7 +184,7 @@ class TC_Kern330Test < Test::Unit::TestCase
     # Sling sends a 404 on the initial requests, instead of the wrapped one.
     #
 
-    m = Time.now.to_f.to_s.gsub('.', '_')
+    m = uniqueness()
     user3 = create_user("user3-"+m)
     homefolder = user3.home_path_for(@s)
 
@@ -212,7 +212,7 @@ class TC_Kern330Test < Test::Unit::TestCase
   end
 
   def test_no_properties
-    m = Time.now.to_f.to_s.gsub('.', '_')
+    m = uniqueness()
     user = create_user("user-"+m)
     userHome = user.home_path_for(@s)
     @s.switch_user(user)

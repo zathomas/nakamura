@@ -22,7 +22,7 @@ class TC_Kern2122 < Test::Unit::TestCase
   end
 
   def test_add_and_remove_viewers
-    m = Time.now.to_i.to_s
+    m = uniqueness()
 
     # Create some users
     # manager = create_user("manager-#{m}")
@@ -30,12 +30,11 @@ class TC_Kern2122 < Test::Unit::TestCase
     viewer2 = create_user("viewer2-#{m}")
 
     @s.switch_user(viewer1)
-    ticks = Time.now.to_f
 
     managed_group = @full_group_creator.create_full_group viewer1.name, "group-#{m}", "kern-2122 int test group", "kern-2122 int test group description"
     assert_not_nil(managed_group, "expected managed group to be created")
 
-    file_name = "random-#{ticks}.txt"
+    file_name = "random-#{uniqueness()}.txt"
     file_body = "Add the time to make it sort of random #{Time.now.to_f}."
     upload_res = @fm.upload_pooled_file(file_name, file_body, 'text/plain')
     assert_equal("201",upload_res.code,"should have succeeded in uploading file #{file_name}")

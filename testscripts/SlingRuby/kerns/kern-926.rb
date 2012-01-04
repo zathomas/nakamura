@@ -24,7 +24,7 @@ class TC_Kern926Test < Test::Unit::TestCase
   end
 
   def test_manager_users
-    m = Time.now.to_nsec
+    m = uniqueness()
 
     # Create some users
     creator = create_user("creator-#{m}")
@@ -89,7 +89,7 @@ class TC_Kern926Test < Test::Unit::TestCase
 
 
   def test_search_me
-    m = Time.now.to_nsec
+    m = uniqueness()
 
     # Create some users
     owner = create_user("creator2-#{m}")
@@ -97,7 +97,7 @@ class TC_Kern926Test < Test::Unit::TestCase
     groupuser = create_user("groupuser2-#{m}")
 
     @s.switch_user(owner)
-    content = Time.now.to_f
+    content = uniqueness()
     name = "random-#{content}.txt"
     res = @fm.upload_pooled_file(name, "Add the time to make it sort of random #{Time.now.to_f}.", 'text/plain')
     json = JSON.parse(res.body)
