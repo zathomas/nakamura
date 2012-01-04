@@ -95,6 +95,11 @@ import javax.servlet.http.HttpServletResponse;
  * anything under /dev, /devwidgets, /index.html, all other GET operations are assumed to
  * be raw user content.
  * </p>
+ * <p>
+ * There is a distinct difference in what is required when calling each of the
+ * <pre>is*Safe</pre> methods. Please check the javadoc on each method to see what
+ * resource expectations there are.
+ * </p>
  */
 @Component(immediate = true, metatype = true)
 @Service(value = ServerProtectionService.class)
@@ -176,7 +181,7 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
     Dictionary<String, Object> properties = componentContext.getProperties();
     disableProtectionForDevMode = PropertiesUtil.toBoolean(properties.get(DISABLE_XSS_PROTECTION_FOR_UI_DEV), false);
     if ( disableProtectionForDevMode ) {
-      LOGGER.warn("XSS Protection is disabled");
+      LOGGER.warn("XSS Protection is disabled [modified]");
       return;
     }
     String[] trustedHosts = PropertiesUtil.toStringArray(
@@ -303,7 +308,7 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
   @Deactivate
   public void destroy(ComponentContext c) {
     if ( disableProtectionForDevMode ) {
-      LOGGER.warn("XSS Protection is disabled");
+      LOGGER.warn("XSS Protection is disabled [destroy]");
       return;
     }
     BundleContext bc = c.getBundleContext();
@@ -315,11 +320,21 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
     serverProtectionValidators = null;
   }
 
+  /**
+   * {@inheritDoc}
+   * 
+   * This method requires a resource to operate successfully and is best used by a Sling
+   * Filter rather than a Servlet Filter, so that Sling will have made the appropriate
+   * resource resolution.
+   *
+   * @see org.sakaiproject.nakamura.api.http.usercontent.ServerProtectionService#isRequestSafe(org.apache.sling.api.SlingHttpServletRequest,
+   *      org.apache.sling.api.SlingHttpServletResponse)
+   */
   public boolean isRequestSafe(SlingHttpServletRequest srequest,
       SlingHttpServletResponse sresponse) throws UnsupportedEncodingException,
       IOException {
     if ( disableProtectionForDevMode ) {
-      LOGGER.warn("XSS Protection is disabled");
+      LOGGER.warn("XSS Protection is disabled [isRequestSafe]");
       return true;
     }
     // if the method is not safe, the request can't be safe.
@@ -512,7 +527,7 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
   public String getTransferUserId(HttpServletRequest request) {
     // only ever get a user ID in this way on a non trusted safe host.
     if ( disableProtectionForDevMode ) {
-      LOGGER.warn("XSS Protection is disabled");
+      LOGGER.warn("XSS Protection is disabled [getTransferUserId]");
       return null;
     }
     // the host must not be safe to decode the user transfer UserID, and the method must be a GET or HEAD
@@ -564,10 +579,19 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   * 
+   * This method has no resource requirements to operate successfully allowing for it to
+   * be called by a filter without any cost to resource resolution.
+   * 
+   * @see org.sakaiproject.nakamura.api.http.usercontent.ServerProtectionService#isMethodSafe(javax.servlet.http.HttpServletRequest,
+   *      javax.servlet.http.HttpServletResponse)
+   */
   public boolean isMethodSafe(HttpServletRequest hrequest, HttpServletResponse hresponse)
       throws IOException {
     if ( disableProtectionForDevMode ) {
-      LOGGER.warn("XSS Protection is disabled");
+      LOGGER.warn("XSS Protection is disabled [isMethodSafe]");
       return true;
     }
     String method = hrequest.getMethod();
@@ -632,9 +656,17 @@ public class ServerProtectionServiceImpl implements ServerProtectionService {
     return true;
   }
 
+  /**
+   * {@inheritDoc}
+   * 
+   * This method has no resource requirements to operate successfully allowing for it to
+   * be called by a filter without any cost to resource resolution.
+   * 
+   * @see org.sakaiproject.nakamura.api.http.usercontent.ServerProtectionService#isSafeHost(javax.servlet.http.HttpServletRequest)
+   */
   public boolean isSafeHost(HttpServletRequest hrequest) {
     if ( disableProtectionForDevMode ) {
-      LOGGER.warn("XSS Protection is disabled");
+      LOGGER.warn("XSS Protection is disabled [isSafeHost]");
       return true;
     }    
     return applicationReferrerHeaders.containsKey(buildTrustedHostHeader(hrequest));
