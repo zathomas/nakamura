@@ -323,8 +323,8 @@ def main(term_server)
 end
 
 def usage
-  puts "usage: #{$0} [-h|--help] [-s|--server] <server> [-p|--password] <adminpassword> [-t|--term] <term-extraction address> [-i|--interval] [interval]"
-  puts "example: #{$0} http://localhost:8080/ admin http://localhost:8085/ 20"
+  puts "usage: #{$0} [-h|--help] [-s|--server] <server> [-p|--password] <adminpassword> [-t|--term] <term-extraction address> [-i|--interval] [interval] [-n|--count] [count]"
+  puts "example: #{$0} -s http://localhost:8080/ -p admin -t http://localhost:8085/ -i 20"
 end
 
 ## Parse command line opts and call main ##
