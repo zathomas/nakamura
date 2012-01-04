@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
+require 'rubygems'
 require 'fileutils'
 require 'nakamura'
 include SlingInterface
 require 'nakamura/users'
 include SlingUsers
-require 'rubygems'
 require 'docsplit'
 RMAGICK_BYPASS_VERSION_TEST = true
 require 'RMagick'
@@ -337,7 +337,7 @@ opt = Getopt::Long.getopts(
   ["--count", "-n", Getopt::REQUIRED]
 )
 
-if opt['help'] || not(opt['server'] && opt['password'] && opt['term'])
+if opt['help'] || ( not(opt['server'] && opt['password'] && opt['term']) )
   usage()
 else
   setup(opt['server'], opt['password'])
