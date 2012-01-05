@@ -77,10 +77,6 @@ public class SparseListVersionsServletHandler extends AbstractSafeMethodsServlet
   */
   public static final String PARAMS_PAGE = "page";
 
-  /**
-   *
-   */
-  private static final long serialVersionUID = 764192946800357626L;
   private static final Logger LOGGER = LoggerFactory.getLogger(SparseListVersionsServletHandler.class);
 
   public void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)

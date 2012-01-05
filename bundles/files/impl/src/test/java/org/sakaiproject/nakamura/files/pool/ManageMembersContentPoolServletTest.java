@@ -46,7 +46,6 @@ import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
@@ -67,7 +66,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.security.Principal;
 import java.util.Arrays;
-import java.util.Iterator;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -109,8 +107,6 @@ public class ManageMembersContentPoolServletTest {
   private ResourceResolver resourceResolver;
   @Mock
   private ProfileService profileService;
-  @Mock
-  Iterator iterator;
   @Mock
   private AuthorizableCountChanger authorizableCountChanger;
 

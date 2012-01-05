@@ -65,6 +65,7 @@ public class ProfileContactsSearchResultProcessor extends ProfileNodeSearchResul
   public void writeResults(SlingHttpServletRequest request, JSONWriter write,
       Iterator<Result> results) throws JSONException {
 
+    LOGGER.trace("writeResults called");
     // write out the profile information for each result
     while (results.hasNext()) {
       Result result = results.next();
