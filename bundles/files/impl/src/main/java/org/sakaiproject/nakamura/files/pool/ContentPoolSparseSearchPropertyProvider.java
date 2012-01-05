@@ -17,7 +17,6 @@
  */
 package org.sakaiproject.nakamura.files.pool;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -30,14 +29,12 @@ import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
-import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchPropertyProvider;
 import org.sakaiproject.nakamura.api.user.AuthorizableUtil;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -83,7 +80,7 @@ public class ContentPoolSparseSearchPropertyProvider implements SolrSearchProper
     try {
       AuthorizableManager authMgr = session.getAuthorizableManager();
       Authorizable auth = authMgr.findAuthorizable(sessionUserId);
-      
+
       // create the manager and viewer query parameters
       String userId = ClientUtils.escapeQueryChars(sessionUserId);
       StringBuilder managers = new StringBuilder("AND manager:(").append(userId);
