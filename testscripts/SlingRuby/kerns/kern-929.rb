@@ -9,7 +9,7 @@ class TC_Kern929Test < Test::Unit::TestCase
 
   def test_import_content_from_json_to_profile
     # create a new user
-    m = Time.now.to_nsec
+    m = uniqueness()
     userid = "testuser-#{m}"
     password = "testuser"
     @s.switch_user(User.admin_user())

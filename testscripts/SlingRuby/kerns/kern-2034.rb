@@ -11,7 +11,7 @@ class TC_Kern2034Test < Test::Unit::TestCase
   include SlingTest
 
   def test_explict_anonymous_viewer
-    m = Time.now.to_nsec
+    m = uniqueness()
     @s.switch_user(User.admin_user)
     groupid = "testgroup-#{m}"
     group = create_group(groupid)

@@ -30,7 +30,7 @@ class TC_MyAuthZTest < Test::Unit::TestCase
 # It does not test if user1 and user2 have permissions granted or denied.
 #
   def test_authz
-    m = Time.now.to_i.to_s
+    m = uniqueness()
 	@authz = SlingAuthz::Authz.new(@s)
 	user1 = "user1-"+m
 	user2 = "user2-"+m
@@ -63,7 +63,7 @@ class TC_MyAuthZTest < Test::Unit::TestCase
   
   def test_NodeAuthZ
   
-	m = Time.now.to_i.to_s
+	m = uniqueness()
 	@authz = SlingAuthz::Authz.new(@s)
 	user1 = "user1-"+m
 	user2 = "user2-"+m
@@ -139,7 +139,7 @@ class TC_MyAuthZTest < Test::Unit::TestCase
 
   def test_NodeAuthZChild
   
-	m = Time.now.to_i.to_s
+	m = uniqueness()
 	@authz = SlingAuthz::Authz.new(@s)
 	user1 = "user1-"+m
 	user2 = "user2-"+m
@@ -211,7 +211,7 @@ class TC_MyAuthZTest < Test::Unit::TestCase
   
 def test_NodeAuthZChildPrivate
   
-	m = Time.now.to_i.to_s
+	m = uniqueness()
 	@authz = SlingAuthz::Authz.new(@s)
 	user1 = "user1-"+m
 	user2 = "user2-"+m

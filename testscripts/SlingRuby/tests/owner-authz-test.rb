@@ -24,7 +24,7 @@ class TC_OwnerAuthZTest < Test::Unit::TestCase
     @log.info("This Test is ignored since we no longer have the concept of owner")
     if ( false )
         @delete = false
-	m = Time.now.to_i.to_s
+	m = uniqueness()
 	@authz = SlingAuthz::Authz.new(@s)
 	path = "test/authztest/node"+m
 	user1 = "user1-"+m

@@ -10,7 +10,7 @@ class TC_Kern2274 < Test::Unit::TestCase
 
   def setup
     super
-    @m = Time.now.to_f.to_s.gsub('.', '')
+    @m = uniqueness()
 
     @u = create_test_user("kern2274")
 

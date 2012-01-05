@@ -15,7 +15,7 @@ class TC_Kern2078Test < Test::Unit::TestCase
   def test_get_redirected_content
     @s.log.level = Logger::INFO
     @fm = FileManager.new(@s)
-    m = Time.now.to_nsec
+    m = uniqueness()
 
     u1 = create_user("testuser-#{m}", "The", "Author")
     @s.switch_user(u1)

@@ -12,7 +12,7 @@ class TC_LoginStability < Test::Unit::TestCase
 
   def check_user_valid(u,iterations)
     @log.error("Thread Starting for #{u.name} ")
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     s = SlingInterface::Sling.new()
     s.trustedauth = true
     s.switch_user(u)
@@ -45,7 +45,7 @@ class TC_LoginStability < Test::Unit::TestCase
 
 
 
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     threads = Array.new 
 
     i=0

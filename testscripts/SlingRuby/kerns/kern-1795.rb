@@ -18,7 +18,7 @@ class TC_Kern1795Test < Test::Unit::TestCase
     @fm = FileManager.new(@s)
     @um = UserManager.new(@s)
     @cm = ContactManager.new(@s)
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     @test_user1 = create_user "test_user1_#{m}", "Test", "User1"
     @test_user2 = create_user "test_user2_#{m}", "Test", "User2"
     @test_group = create_group "g-test_group_#{m}", "Test Group"

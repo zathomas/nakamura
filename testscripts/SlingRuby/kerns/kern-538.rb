@@ -13,7 +13,7 @@ class TC_Kern538Test < Test::Unit::TestCase
   #
 
   def test_normal
-    m = Time.now.to_nsec
+    m = uniqueness()
     treeuser = create_user("treeuser1#{m}")
     @s.switch_user(treeuser)
 
@@ -25,7 +25,7 @@ class TC_Kern538Test < Test::Unit::TestCase
   end
 
   def test_with_jcr_in_property
-    m = Time.now.to_nsec
+    m = uniqueness()
     treeuser = create_user("treeuser2#{m}")
     @s.switch_user(treeuser)
 
@@ -39,7 +39,7 @@ class TC_Kern538Test < Test::Unit::TestCase
   end
 
   def test_noneExistingResource
-    m = Time.now.to_nsec
+    m = uniqueness()
     treeuser = create_user("treeuser3#{m}")
     @s.switch_user(treeuser)
 
@@ -51,7 +51,7 @@ class TC_Kern538Test < Test::Unit::TestCase
   end
 
   def test_accessdenied
-    m = Time.now.to_nsec
+    m = uniqueness()
     treeuser = create_user("treeuser4#{m}")
     @s.switch_user(treeuser)
 
@@ -72,7 +72,7 @@ class TC_Kern538Test < Test::Unit::TestCase
   end
 
   def test_withdelete
-    m = Time.now.to_nsec
+    m = uniqueness()
     treeuser = create_user("treeuser5#{m}")
     @s.switch_user(treeuser)
 

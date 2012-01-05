@@ -23,7 +23,7 @@ class TC_Kern989Test < Test::Unit::TestCase
   end
 
   def test_manager_users
-    m = Time.now.to_i.to_s
+    m = uniqueness()
 
     # Create some users
     creator = create_user("creator-#{m}")

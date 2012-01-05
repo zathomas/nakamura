@@ -20,7 +20,7 @@ class TC_MyFileTest_891 < Test::Unit::TestCase
   end
 
   def test_upload_file
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     @log.info("Creating user simon"+m)
     simon = create_user("simon"+m)
 

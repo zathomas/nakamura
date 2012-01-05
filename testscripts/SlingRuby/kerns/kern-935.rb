@@ -13,7 +13,7 @@ class TC_Kern935Test < Test::Unit::TestCase
   include SlingTest
 
   def test_private_group_anon
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     member = create_user("user-member-#{m}")
     viewer = create_user("user-viewer-#{m}")
     @s.switch_user(User.admin_user())

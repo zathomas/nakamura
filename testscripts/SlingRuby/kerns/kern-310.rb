@@ -21,7 +21,7 @@ class TC_Kern310Test < Test::Unit::TestCase
   end  
 
   def test_discovery_in_15_seconds
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     #@s.log = true
     n = create_node("blarg/mynode#{m}", { "sling:resourceType" => "foo/bar",
                                             "title" => "some title" })

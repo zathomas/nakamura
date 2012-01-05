@@ -14,7 +14,7 @@ class TC_Kern458Test < Test::Unit::TestCase
   
   def test_getdev
     # We create a test site.
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     res = @s.execute_get(@s.url_for("/dev/"))
     assert_equal("text/html",res.content_type())
   end

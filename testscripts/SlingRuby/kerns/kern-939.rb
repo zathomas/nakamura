@@ -14,7 +14,7 @@ class TC_Kern939Test < Test::Unit::TestCase
 
   # This test depends on knowledge about the default user pages.
   def test_default_user_pages
-    m = Time.now.to_nsec
+    m = uniqueness()
     @s.switch_user(User.admin_user())
     user = create_user("testuser-#{m}")
     @s.switch_user(user)
@@ -27,7 +27,7 @@ class TC_Kern939Test < Test::Unit::TestCase
 
   # This test depends on knowledge about the default group pages.
   def test_default_group_pages
-    m = Time.now.to_nsec
+    m = uniqueness()
     @s.switch_user(User.admin_user())
     group = create_group("g-testgroup-#{m}")
     path = "#{group.home_path_for(@s)}/pages"
@@ -38,7 +38,7 @@ class TC_Kern939Test < Test::Unit::TestCase
   end
 
   def test_override_default_template
-    m = Time.now.to_nsec
+    m = uniqueness()
     @s.switch_user(User.admin_user())
     templatepath = "/test/template-#{m}"
     res = @s.execute_post(@s.url_for(templatepath), {
@@ -74,7 +74,7 @@ class TC_Kern939Test < Test::Unit::TestCase
   end
 
   def test_default_user_access
-    m = Time.now.to_nsec
+    m = uniqueness()
     @s.switch_user(User.admin_user())
     user = create_user("testuser-#{m}")
     @s.switch_user(user)
@@ -94,7 +94,7 @@ class TC_Kern939Test < Test::Unit::TestCase
   end
 
   def test_default_group_access
-    m = Time.now.to_nsec
+    m = uniqueness()
     @s.switch_user(User.admin_user())
     manager = create_user("manager-#{m}")
     member = create_user("member-#{m}")

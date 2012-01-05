@@ -15,7 +15,7 @@ class TC_MySearchTest < Test::Unit::TestCase
   end
 
   def test_node_search
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     nodelocation = "some/test/location#{m}"
     create_node(nodelocation, { "a" => "anunusualstring", "b" => "bar" })
     result = @sm.search_for("anunusualstring")
@@ -26,7 +26,7 @@ class TC_MySearchTest < Test::Unit::TestCase
   end
 
   def test_user_search
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     username = "unusualuser#{m}"
     create_user(username, "#{username}-firstname", "#{username}-lastname")
 

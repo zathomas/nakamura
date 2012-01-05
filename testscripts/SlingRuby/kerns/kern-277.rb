@@ -12,7 +12,7 @@ class TC_Kern277Test < Test::Unit::TestCase
   def setup
     super
     @authz = SlingAuthz::Authz.new(@s)
-    @m = Time.now.to_i.to_s
+    @m = uniqueness()
   end
 
   def test_group_deny

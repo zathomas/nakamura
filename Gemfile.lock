@@ -6,7 +6,7 @@ GEM
     docsplit (0.6.0)
     getopt (1.4.1)
     json (1.6.3)
-    nakamura (0.2)
+    nakamura (0.4)
     rmagick (2.13.1)
 
 PLATFORMS
@@ -18,5 +18,5 @@ DEPENDENCIES
   docsplit
   getopt
   json
-  nakamura (>= 0.2)
+  nakamura (>= 0.4)
   rmagick

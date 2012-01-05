@@ -10,7 +10,7 @@ class TC_Kern296Test < Test::Unit::TestCase
   include SlingTest
 
   def test_move
-    m = Time.now.to_i.to_s
+    m = uniqueness()
     u1 = create_user("testuser#{m}")
     assert_not_nil(u1,"Expected User to be created ")
     g1 = create_group("g-testgroup#{m}")
