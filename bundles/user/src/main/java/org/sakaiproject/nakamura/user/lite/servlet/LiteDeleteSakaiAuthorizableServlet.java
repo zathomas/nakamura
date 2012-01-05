@@ -55,6 +55,7 @@ import org.sakaiproject.nakamura.util.parameters.ParameterMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -156,6 +157,7 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
    * {@inheritDoc}
    * @see org.apache.sling.jackrabbit.usermanager.impl.post.CreateUserServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
    */
+  @SuppressWarnings("unchecked")
   @Override
   protected void handleOperation(SlingHttpServletRequest request, HtmlResponse response,
       List<Modification> changes)  {
@@ -199,6 +201,10 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
       for ( Authorizable authorizable : authorizables) {
         LOGGER.debug("Deleting {} ",authorizable.getId());
         authorizableEvents.put(authorizable.getId(), (authorizable instanceof Group));
+        if ( authorizable instanceof Group ) {
+          Group g = (Group) authorizable;
+          this.authorizableCountChanger.notify(UserConstants.GROUP_MEMBERSHIPS_PROP, Arrays.asList(g.getMembers()));
+        }
         postProcessorService.process(authorizable, session, ModificationType.DELETE, ParameterMap.extractParameters(request));
         session.getAuthorizableManager().delete(authorizable.getId());
         if (adminSession.getAuthorizableManager().findAuthorizable(authorizable.getId()) != null) {

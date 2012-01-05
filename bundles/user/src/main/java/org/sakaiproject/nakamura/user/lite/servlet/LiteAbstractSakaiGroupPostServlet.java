@@ -71,9 +71,6 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
   @Reference
   protected transient Repository repository;
 
-  @Reference
-  protected transient AuthorizableCountChanger authorizableCountChanger;
-
   private static final Logger LOGGER = LoggerFactory
       .getLogger(LiteAbstractSakaiGroupPostServlet.class);
 
