@@ -19,6 +19,7 @@ package org.sakaiproject.nakamura.user.lite.servlet;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -45,6 +46,7 @@ import org.sakaiproject.nakamura.api.resource.JSONResponse;
 import org.sakaiproject.nakamura.api.resource.RequestProperty;
 import org.sakaiproject.nakamura.api.resource.lite.SparsePropertyValueHandler;
 import org.sakaiproject.nakamura.api.resource.lite.SparseType;
+import org.sakaiproject.nakamura.api.user.AuthorizableCountChanger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,6 +84,9 @@ public abstract class LiteAbstractAuthorizablePostServlet extends
     private static final Logger LOGGER = LoggerFactory.getLogger(LiteAbstractAuthorizablePostServlet.class);
 
     private DateParser dateParser;
+
+    @Reference
+    protected transient AuthorizableCountChanger authorizableCountChanger;
 
     // ---------- SCR Integration ----------------------------------------------
 
