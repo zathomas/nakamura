@@ -89,7 +89,7 @@ public class ProfileIndexingHandler implements IndexingHandler {
 
     // don't index basic info as a separate profile document since that info is included
     // in the authorizable document
-    if ("basic".equals(pathParts[3])) {
+    if (pathParts.length == 4 && "basic".equals(pathParts[3])) {
       return null;
     }
 
