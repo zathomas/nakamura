@@ -33,7 +33,7 @@ import java.util.Set;
 public class GroupMembersCounter {
 
   private static final Logger LOGGER = LoggerFactory
-      .getLogger(GroupMembersCountChangeListener.class);
+      .getLogger(GroupMembersCounter.class);
 
   /**
    * @param group

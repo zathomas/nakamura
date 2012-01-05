@@ -19,6 +19,7 @@ package org.sakaiproject.nakamura.files.pool;
 
 import static org.apache.jackrabbit.JcrConstants.JCR_CONTENT;
 import static org.apache.jackrabbit.JcrConstants.NT_RESOURCE;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_MEMBERS_NODE;
 
@@ -53,6 +54,7 @@ import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
+import org.sakaiproject.nakamura.api.user.AuthorizableCountChanger;
 import org.sakaiproject.nakamura.lite.BaseMemoryRepository;
 import org.sakaiproject.nakamura.lite.RepositoryImpl;
 import org.sakaiproject.nakamura.lite.jackrabbit.SparseMapUserManager;
@@ -133,6 +135,8 @@ public class CreateContentPoolServletTest {
   private SparseMapUserManager sparseMapUserManager;
   @Mock
   private EventAdmin eventAdmin;
+  @Mock
+  private AuthorizableCountChanger authorizableCountChanger;
   private RepositoryImpl repository;
 
   CreateContentPoolServlet cp;
@@ -247,6 +251,7 @@ public class CreateContentPoolServletTest {
     cp.eventAdmin = eventAdmin;
     cp.clusterTrackingService = clusterTrackingService;
     cp.sparseRepository = repository;
+    cp.authorizableCountChanger = authorizableCountChanger;
   }
 
 
