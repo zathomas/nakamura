@@ -19,7 +19,6 @@ package org.sakaiproject.nakamura.api.resource.lite;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.commons.json.JSONArray;

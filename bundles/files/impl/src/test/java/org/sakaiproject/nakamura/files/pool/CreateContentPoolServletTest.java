@@ -19,11 +19,8 @@ package org.sakaiproject.nakamura.files.pool;
 
 import static org.apache.jackrabbit.JcrConstants.JCR_CONTENT;
 import static org.apache.jackrabbit.JcrConstants.NT_RESOURCE;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_MEMBERS_NODE;
-
-import org.sakaiproject.nakamura.api.files.FileUploadHandler;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -49,6 +46,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.osgi.service.event.EventAdmin;
 import org.sakaiproject.nakamura.api.cluster.ClusterTrackingService;
+import org.sakaiproject.nakamura.api.files.FileUploadHandler;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
@@ -63,7 +61,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.IOException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -300,7 +297,7 @@ public class CreateContentPoolServletTest {
         }
       });
 
-    final ArrayList notifiedFiles = new ArrayList();
+    final ArrayList<String> notifiedFiles = new ArrayList<String>();
     cp.bindFileUploadHandler(new FileUploadHandler() {
         public void handleFile(Map<String, Object> results, String poolId, InputStream fileInputStream,
                                String userId, boolean isNew) throws IOException {

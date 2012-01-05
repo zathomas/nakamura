@@ -56,6 +56,8 @@ import javax.xml.namespace.QName;
 // Also exclude org.apache.tika.mime.MimeTypes from the unpack in the pom.xml
 public final class DebugMimeTypes implements Detector {
 
+  private static final long serialVersionUID = 241604393463822716L;
+
     /**
      * Name of the {@link #rootMimeType root} type, application/octet-stream.
      */

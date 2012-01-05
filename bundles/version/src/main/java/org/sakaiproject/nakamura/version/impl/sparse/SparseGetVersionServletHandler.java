@@ -54,10 +54,6 @@ import javax.servlet.http.HttpServletResponse;
 public class SparseGetVersionServletHandler extends AbstractSafeMethodsServletResourceHandler {
 
   public static final Logger LOG = LoggerFactory.getLogger(SparseGetVersionServletHandler.class);
-  /**
-*
-*/
-  private static final long serialVersionUID = -4838347347796204151L;
 
   /**
    * {@inheritDoc}

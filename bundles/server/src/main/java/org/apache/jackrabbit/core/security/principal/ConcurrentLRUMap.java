@@ -49,7 +49,6 @@ public class ConcurrentLRUMap<K, V> implements Map<K, V> {
   /**
    * 
    */
-  private static final long serialVersionUID = 6397790801684912025L;
   private Map<K, Holder<V>> delegate = new ConcurrentHashMap<K, Holder<V>>();
   private int maxSize = 100;
 
