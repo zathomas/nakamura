@@ -32,11 +32,13 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchPropertyProvider;
+import org.sakaiproject.nakamura.api.user.AuthorizableUtil;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -87,23 +89,11 @@ public class ContentPoolSparseSearchPropertyProvider implements SolrSearchProper
       StringBuilder managers = new StringBuilder("AND manager:(").append(userId);
       StringBuilder viewers = new StringBuilder("AND viewer:(").append(userId);
      
-      //Filter the list to determine the absolute group
-      for (Iterator<Group> memberOf = auth.memberOf(authMgr); memberOf.hasNext();) {
-    	  Authorizable group = memberOf.next();
-    	  if (group == null || !(group instanceof Group)
-    	            // don't count if the group is to be excluded
-    	            || Boolean.parseBoolean(String.valueOf(group.getProperty("sakai:excludeSearch")))
-    	            // don't count if the group lacks a title
-    	            || group.getProperty("sakai:group-title") == null
-    	            || StringUtils.isEmpty(String.valueOf(group.getProperty("sakai:group-title")))
-    	            // don't count the special "contacts" group
-    	            || group.getId().startsWith("g-contacts-")
-    		        // we don't want to count the everyone groups
-			        || group.getId().equals("everyone")){
-    	          continue;
-    	        }
-    	  managers.append(" OR " + group.getId());
-    	  viewers.append(" OR " + group.getId());
+      //add groups
+      List<Authorizable> groups = AuthorizableUtil.getRealGroups(auth,authMgr);
+      for (Authorizable group : groups){
+        managers.append(" OR " + group.getId());
+        viewers.append(" OR " + group.getId());
       }
 
       // cap off the parameters
