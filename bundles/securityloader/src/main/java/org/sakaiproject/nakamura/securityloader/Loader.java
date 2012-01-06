@@ -669,9 +669,6 @@ LOGGER.info("Got Target Node as "+targetNode);
       updateGroupMembership(userManager, group, principal.getJSONArray(MEMBERS), changes);
 
       jcrContentHelper.fireEvent(Operation.create, session, group, changes); // create
-    } else {
-      // update
-      // ignore.
     }
   }
 

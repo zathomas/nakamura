@@ -148,10 +148,7 @@ public class LiteBasicLTIPostOperation extends AbstractSparsePostOperation {
           continue;
         }
         final RequestParameter[] requestParameterArray = entry.getValue();
-        if (requestParameterArray == null || requestParameterArray.length == 0) {
-          // maybe this should be removed if not needed or breaks contract
-          // removeProperty(node, key);
-        } else {
+        if (requestParameterArray != null && requestParameterArray.length != 0) {
           if (requestParameterArray.length > 1) {
             throw new ServletException("Multi-valued parameters are not supported");
           } else {
