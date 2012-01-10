@@ -44,15 +44,15 @@ class TC_MyFileTest_891 < Test::Unit::TestCase
     betaID = beta['poolId']
 
     # Create a tag.
-    res = @ff.createTag("foobar", "#{publicSimon}/tags/footag")
+    res = @ff.createTag("foobar", "/tags/footag#{m}")
     assert_equal(201, res.code.to_i(), "Expected to be able to create a tag.")
     # Get tag info
-    res = @s.execute_get(@s.url_for("#{publicSimon}/tags/footag.json"))
+    res = @s.execute_get(@s.url_for("/tags/footag#{m}.json"))
     tag = JSON.parse(res.body)
     assert_not_nil(tag, "No response when creating a tag.")
 
     # Tag the alfa file.
-    res = @ff.tag("/p/#{alphaID}", "#{publicSimon}/tags/footag")
+    res = @ff.tag("/p/#{alphaID}", "/tags/footag#{m}")
     assert_equal(200, res.code.to_i(), "Expected to be able to tag an uploaded file.")
 
     # Tag a file with a non-existing tag.
