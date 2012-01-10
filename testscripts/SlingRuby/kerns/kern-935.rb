@@ -20,6 +20,8 @@ class TC_Kern935Test < Test::Unit::TestCase
     privategroup = create_group("g-test-group-#{m}")
     privategroup.add_member(@s, member.name, "user")
     privategroup.add_viewer(@s, viewer.name)
+    privategroup.remove_viewer(@s, "everyone")
+    privategroup.remove_viewer(@s, "anonymous")
     @s.switch_user(member)
     res = @s.execute_get(@s.url_for(Group.url_for(privategroup.name) + ".json"))
     assert_equal("404",res.code, res.body)
