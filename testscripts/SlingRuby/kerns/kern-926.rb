@@ -132,13 +132,15 @@ class TC_Kern926Test < Test::Unit::TestCase
     assert_equal(0, files["total"], "Expected 0 files.")
 
 
-    @s.switch_user(owner)
+    @s.switch_user(User.admin_user())
     # Create a group, add the group user and give the group viewing rights.
     # This should then popup in that user's list of files he/she can view.
     group = @um.create_group("g-testgroup-#{m}")
     assert_not_nil(group, "Expected to be able to create a group.")
     group.add_members(@s, [groupuser.name])
+    @s.switch_user(owner)
     res = @fm.manage_members(id, group.name, nil, nil, nil)
+    res = @fm.manage_members(id, groupuser.name, nil, nil, nil)
     assert_equal("200",res.code)
     res = @s.execute_get("#{url}.tidy.10.json")
     @log.info("Got File at #{url} as #{res.body}")
@@ -146,7 +148,7 @@ class TC_Kern926Test < Test::Unit::TestCase
     props  = @um.get_group_props(group.name)
     members = props["members"]
     assert_not_nil(members)
-    assert_equal(members.include?(groupuser.name),true)
+    assert_equal(members.include?(groupuser.name),true, "Expected #{members} to include #{groupuser.name}")
 
     @log.info("Got Group Props for #{group.name} as #{props["members"]} which contains #{groupuser.name}")
 
