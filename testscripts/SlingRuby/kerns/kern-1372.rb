@@ -43,7 +43,6 @@ class TC_Kern1372Test < Test::Unit::TestCase
   end
 
   def test_get_related_content
-    @log.level = Logger::INFO
     @fm = FileManager.new(@s)
     m = uniqueness()
     user = create_user("user-#{m}")
@@ -142,7 +141,6 @@ class TC_Kern1372Test < Test::Unit::TestCase
   end
 
   def test_related_by_directory
-    @log.level = Logger::DEBUG
     @fm = FileManager.new(@s)
     m = uniqueness()
     user = create_user("user-#{m}")

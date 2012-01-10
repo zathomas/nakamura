@@ -16,7 +16,6 @@ class TC_Kern1874Test < Test::Unit::TestCase
   @created_doc_path = nil
   def setup
     super
-    @s.log.level = Logger::INFO
     m = uniqueness()
     @test_user1 = create_user "test-user1-#{m}", "Test", "User1"
     @test_sakai_doc_name = "test-sakai-doc-" + uniqueness()

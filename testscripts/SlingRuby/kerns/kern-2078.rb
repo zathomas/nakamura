@@ -13,7 +13,6 @@ class TC_Kern2078Test < Test::Unit::TestCase
   include SlingTest
 
   def test_get_redirected_content
-    @s.log.level = Logger::INFO
     @fm = FileManager.new(@s)
     m = uniqueness()
 

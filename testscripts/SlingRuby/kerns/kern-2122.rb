@@ -18,7 +18,7 @@ class TC_Kern2122 < Test::Unit::TestCase
     @fm = FileManager.new(@s)
     @um = UserManager.new(@s)
     @full_group_creator = SlingUsers::FullGroupCreator.new @s
-    @full_group_creator.log.level = Logger::INFO
+    @full_group_creator.log.level = @log.level
   end
 
   def test_add_and_remove_viewers
