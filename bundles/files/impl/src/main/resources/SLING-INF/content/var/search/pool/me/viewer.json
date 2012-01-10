@@ -1,6 +1,9 @@
 {
-  "sakai:query-template": "resourceType:sakai/pooled-content AND ((content:(${q}) OR filename:(${q}) OR tag:(${q}) OR description:(${q}) OR ngram:(${q}) OR edgengram:(${q}))${_meViewerGroups})${_mimetype}",
+  "sakai:query-template": "((content:(${q}) OR filename:(${q}) OR tag:(${q}) OR description:(${q}) OR ngram:(${q}) OR edgengram:(${q}) OR widgetdata(${q}))${_meViewerGroups})${_mimetype}",
   "sakai:query-template-options": {
+      "fq": "resourceType:(sakai/pooled-content OR sakai/widget-data)",
+      "group": true,
+      "group.field": "returnpath",
       "sort": "${sortOn} ${sortOrder}",
       "facet" : true,
       "facet.field" : "tagname",
