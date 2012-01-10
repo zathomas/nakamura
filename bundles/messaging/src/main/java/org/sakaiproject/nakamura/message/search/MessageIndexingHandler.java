@@ -154,8 +154,10 @@ public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler 
           AuthorizableManager am = session.getAuthorizableManager();
           String senderAuthId = (String)content.getProperty("sakai:from");
           Authorizable senderAuth = am.findAuthorizable(senderAuthId);
-          doc.addField("firstName", senderAuth.getProperty("firstName"));
-          doc.addField("lastName", senderAuth.getProperty("lastName"));
+          if (senderAuth != null) {
+            doc.addField("firstName", senderAuth.getProperty("firstName"));
+            doc.addField("lastName", senderAuth.getProperty("lastName"));
+          }
 
           doc.addField(IndexingHandler._DOC_SOURCE_OBJECT, content);
           documents.add(doc);
