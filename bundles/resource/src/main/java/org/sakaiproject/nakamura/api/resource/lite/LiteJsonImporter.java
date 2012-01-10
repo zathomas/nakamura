@@ -69,7 +69,7 @@ public class LiteJsonImporter {
   
   public void importContent(ContentManager contentManager, JSONObject json,
       String path, boolean continueIfExists, boolean replaceProperties, boolean removeTree, AccessControlManager accessControlManager) throws JSONException, StorageClientException, AccessDeniedException  {
-    if ( !continueIfExists && contentManager.exists(path)) {
+    if ( !continueIfExists && contentManager.get(path) != null) {
       LOGGER.debug("replace=false and path exists, so discontinuing JSON import: " + path);
       return;
     }
