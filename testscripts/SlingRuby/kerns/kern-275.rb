@@ -156,7 +156,7 @@ class CropitTest < Test::Unit::TestCase
     #@s.debug = true
     res = @s.execute_post(@s.url_for("var/image/cropit"), cropreq)
     #@s.debug = false
-    assert_equal("200", res.code, "Expected crop to succeed")
+    assert_equal("200", res.code, "Expected crop to succeed\n#{res.body}")
     result = JSON.parse(res.body) 
     assert_equal(2, result["files"].size, "Expected two files back")
     result["files"].each do |file|
