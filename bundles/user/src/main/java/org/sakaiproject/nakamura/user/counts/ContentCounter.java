@@ -42,7 +42,7 @@ public class ContentCounter {
       // find docs where the authz is a direct viewer or manager
       String userID = ClientUtils.escapeQueryChars(au.getId());
       StringBuilder queryString = new StringBuilder("resourceType:sakai/pooled-content");
-      queryString.append("AND ((manager:(").append(userID).append(") OR viewer:(").append(userID).append("))");
+      queryString.append(" AND ((manager:(").append(userID).append(") OR viewer:(").append(userID).append("))");
 
       // for users, include indirectly managed or viewed documents whose showalways field is true
       if (!au.isGroup()) {

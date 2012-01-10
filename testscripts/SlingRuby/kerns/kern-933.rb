@@ -22,7 +22,7 @@ class TC_Kern993Test < Test::Unit::TestCase
       "lastName" => lastname,
       "_charset_" => "UTF-8"
     })
-    assert_equal("200", res.code, "Should have created user as admin")
+    assert_equal("201", res.code, "Should have created user as admin")
     testuser = User.new(userid)
     public = testuser.public_path_for(@s)
     path = "#{public}/authprofile"

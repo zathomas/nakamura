@@ -44,7 +44,7 @@ class TC_MyFileTest_891 < Test::Unit::TestCase
     betaID = beta['poolId']
 
     # Tag the alfa file.
-    res = @ff.tag("/p/#{alphaID}", "#{publicSimon}/tags/footag")
+    res = @ff.tag("/p/#{alphaID}", "/tags/footag#{m}")
     assert_equal(200, res.code.to_i(), "Expected to be able to tag an uploaded file.")
 
     # Get tag info

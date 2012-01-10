@@ -329,7 +329,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       while (resultIterator.hasNext()) {
         Result contact = resultIterator.next();
         if (contact.getProperties().containsKey("state")) {
-          String state = (String) contact.getProperties().get("state").iterator().next();
+          String state = ((String) contact.getProperties().get("state").iterator().next()).toLowerCase();
           int count = 0;
           if (contacts.containsKey(state)) {
             count = contacts.get(state);
