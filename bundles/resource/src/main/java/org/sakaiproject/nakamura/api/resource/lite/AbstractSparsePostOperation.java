@@ -351,7 +351,7 @@ public abstract class AbstractSparsePostOperation implements SparsePostOperation
         ApplyToIterator(SlingHttpServletRequest request, String[] paths) {
             this.resolver = request.getResourceResolver();
             this.baseResource = request.getResource();
-            this.paths = paths;
+            this.paths = paths.clone();
             this.pathIndex = 0;
 
             nextResource = seek();

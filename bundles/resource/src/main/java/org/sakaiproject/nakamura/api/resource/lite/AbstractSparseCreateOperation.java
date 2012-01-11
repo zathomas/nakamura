@@ -50,7 +50,7 @@ public abstract class AbstractSparseCreateOperation extends AbstractSparsePostOp
   }
 
   public void setExtraNodeNameGenerators(NodeNameGenerator[] extraNodeNameGenerators) {
-    this.extraNodeNameGenerators = extraNodeNameGenerators;
+    this.extraNodeNameGenerators = extraNodeNameGenerators.clone();
   }
 
 
