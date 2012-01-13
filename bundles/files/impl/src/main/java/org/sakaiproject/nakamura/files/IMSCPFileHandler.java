@@ -190,12 +190,14 @@ public class IMSCPFileHandler implements FileUploadHandler {
     for (String key : fileContent.keySet()) {
       String htmlContent = fileContent.get(key);
       String prefix = "";
-      if (key.lastIndexOf('/') > 0)
+      if (key.lastIndexOf('/') > 0) {
         prefix = key.substring(0, key.lastIndexOf('/') + 1);
+      }
       if (filePaths != null && filePaths.size() > 0) {
         for (String s : filePaths) {
-          if (s.length() <= prefix.length() || s.indexOf(prefix) < 0)
+          if (s.length() <= prefix.length() || s.indexOf(prefix) < 0) {
             continue;
+          }
           s = s.substring(prefix.length());
           htmlContent = htmlContent.replaceAll("\"" + s + "\"", "\"" + "p/" + poolId + "/" + prefix + s + "\"");
         }
@@ -213,10 +215,11 @@ public class IMSCPFileHandler implements FileUploadHandler {
     JSONObject pageSetJSON;
     if (isHier != null && (isHier.equals("1") || isHier.equals("true"))) {
       pageSetJSON = manifestToPageSet(manifest, poolId, fileContent, true);
-    } else if (isHier != null)
+    } else if (isHier != null) {
       pageSetJSON = manifestToPageSet(manifest, poolId, fileContent, false);
-    else
+    } else {
       pageSetJSON = manifestToPageSet(manifest, poolId, fileContent, isHierarchical);
+    }
     
     Iterator<String> keys = pageSetJSON.keys();
     while (keys.hasNext()) {
@@ -272,8 +275,9 @@ public class IMSCPFileHandler implements FileUploadHandler {
           if (general.getKeyword() != null && general.getKeyword().size() != 0) {
             List<Keyword> keys = manifest.getMetadata().getLom().getGeneral().getKeyword();
               for (int i = 0; i < keys.size(); i++) {
-                if ( i > 0)
+              if (i > 0) {
                   keywords += ",";
+              }
                 keywords += keys.get(i).getLangString().getString();
               }
           }
@@ -284,10 +288,12 @@ public class IMSCPFileHandler implements FileUploadHandler {
       }
     }
     pages.put(SAKAI_DESCRIPTION, description);
-    if (!"".equals(courseName))
+    if (!"".equals(courseName)) {
       pages.put(POOLED_CONTENT_FILENAME, courseName);
-    if (keywords.length() != 0)
+    }
+    if (keywords.length() != 0) {
       pages.put(SAKAI_TAGS, keywords);
+    }
     
     JSONArray allResources = new JSONArray();
     HashMap<String, JSONObject> resourceJSON = new HashMap<String, JSONObject> ();
@@ -295,12 +301,13 @@ public class IMSCPFileHandler implements FileUploadHandler {
       Set<String> keys = fileContent.keySet();
       int i = 0;
       for (String key : keys) {
-        for (Resource res : manifest.getResources().getResources())
+        for (Resource res : manifest.getResources().getResources()) {
           if (res.getHref().equals(key)) {
             JSONObject resJSON = resourceToJson(res, poolId, i++, fileContent);
             resourceJSON.put(res.getIdentifier(), resJSON);
             allResources.put(resJSON);
           }
+        }
       }
     }
     pages.put("resources", allResources);
@@ -309,12 +316,13 @@ public class IMSCPFileHandler implements FileUploadHandler {
     if (orgs != null && orgs.size() != 0) {
       int orgIndex = 0;
       for (int i = 0; i < orgs.size(); i++) {
-        if (!orgs.get(i).hasSubItems())
+        if (!orgs.get(i).hasSubItems()) {
           continue;
+        }
         List<HasItem> items = new ArrayList<HasItem>();
-        if (isHierarchical)
+        if (isHierarchical) {
           items.add(orgs.get(i));
-        else {
+        } else {
           List<Item> li = getLeafItems(orgs.get(i));
           items.addAll(li);
         }
@@ -392,8 +400,9 @@ public class IMSCPFileHandler implements FileUploadHandler {
     resourceJSON.put("_id", resID);
     resourceJSON.put("_path", poolId + "/" + res.getHref());       
     String contentType = mimeTypesMap.getContentType(res.getHref());
-    if (contentType == null)
+    if (contentType == null) {
       contentType = "application/octet-stream";
+    }
     resourceJSON.put("_mimeType", contentType);
     JSONArray fileArray = new JSONArray();
     if (res.getFiles() != null) {
@@ -411,8 +420,9 @@ public class IMSCPFileHandler implements FileUploadHandler {
     List<Item> result = new ArrayList<Item>();
     if (org.getType() == ITEMTYPE.ITEM ) {
       Item item = (Item)org;
-      if (item.getIdentifierRef() != null && item.getIdentifierRef().trim().length() > 0)
+      if (item.getIdentifierRef() != null && item.getIdentifierRef().trim().length() > 0) {
         result.add(item);
+      }
     }
     if (org.hasSubItems()) {
       for (int i = 0; i < org.getItems().size(); i++) {

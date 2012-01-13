@@ -10,13 +10,11 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-
 import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
-import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
@@ -73,8 +71,9 @@ public class ExportIMSCP implements ResourceProvider {
   }
   
   public Resource getResource(ResourceResolver resourceResolver, String path) {
-    if (path.length() <= 7 || path.indexOf("/imscp/") != 0)
+    if (path.length() <= 7 || path.indexOf("/imscp/") != 0) {
       return null;
+    }
     return resolveMappedResource(resourceResolver, path);
   }
   
@@ -93,8 +92,9 @@ public class ExportIMSCP implements ResourceProvider {
         poolId = path.substring("/imscp/".length());
       }
       if (poolId != null && poolId.length() > 0) {
-        if (poolId.indexOf('/') > 0)
+        if (poolId.indexOf('/') > 0) {
           poolId = poolId.substring(0, poolId.indexOf('/'));
+        }
         
         content = contentManager.get(poolId);
         if ( content != null ) {
@@ -204,15 +204,17 @@ public class ExportIMSCP implements ResourceProvider {
     String key;
     while (keys.hasNext()) {
       key = keys.next();
-      if (key.length() == 0 || key.indexOf("_") == 0)
+      if (key.length() == 0 || key.indexOf('_') == 0) {
         continue;
+      }
       JSONObject itemJson = structure.getJSONObject(key);
       Item newItem = new Item();
       newItem.setIdentifier(key);
       newItem.setTitle(itemJson.optString("_title"));
       
-      if (newItem.getTitle() == null || newItem.getTitle().length() == 0)
+      if (newItem.getTitle() == null || newItem.getTitle().length() == 0) {
         continue;
+      }
       String ref = itemJson.optString("_ref");
       int childCount = itemJson.optInt("_childCount");
       if (childCount > 1) {
@@ -244,26 +246,27 @@ public class ExportIMSCP implements ResourceProvider {
       filename = filename + "1";
       f = new File (filename + ".zip");
     }
-    if (!f.exists())
+    if (!f.exists()) {
       f.createNewFile();
+    }
     ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(f));
     List<org.sakaiproject.nakamura.cp.Resource> resources = manifest.getResources().getResources();
-    if (resources == null)
+    if (resources == null) {
       return null;
+    }
     for (org.sakaiproject.nakamura.cp.Resource resource : resources) {
       Item item = new Item();
       Queue<Item> items = new LinkedList<Item>();
       items.addAll(manifest.getOrganizations().getOrganizations().get(0).getItems());
       while (!items.isEmpty()) {
         Item i = items.poll();
-        if (i.getIdentifierRef() != null) {
-          if (i.getIdentifierRef().equals(resource.getIdentifier())) {
-            item = i;
-            break;
-          }
+        if (i.getIdentifierRef() != null && i.getIdentifierRef().equals(resource.getIdentifier())) {
+          item = i;
+          break;
         }
-        if (i.hasSubItems())
+        if (i.hasSubItems()) {
           items.addAll(i.getItems());
+        }
       }
       String title = resource.getIdentifier() + ".html";
       String originTitle = title;
@@ -274,8 +277,9 @@ public class ExportIMSCP implements ResourceProvider {
       String page = "";
       for (Content c : content.listChildren()) {
         String s = (String)c.getProperty("_path");
-        if (s.endsWith(resource.getIdentifier()))
+        if (s.endsWith(resource.getIdentifier())) {
           page = (String)c.getProperty("page");
+        }
       }
       page = handlePage(page, contentManager, poolId, zos);
       page = "<html><head><title>" + originTitle + "</title></head><body>" + page + "</body></html>";
@@ -302,26 +306,32 @@ public class ExportIMSCP implements ResourceProvider {
   private String handlePage(String page, ContentManager contentManager, String poolId, ZipOutputStream zos) 
       throws StorageClientException, AccessDeniedException, IOException {
     int index = 0; 
-    if (page == null)
+    if (page == null) {
       return "";
+    }
     while ((index = page.indexOf("<img id=\"widget_embedcontent_id", index)) >= 0) {
-      String embedHtml = page.substring(index, page.indexOf(">", index) + 1);
+      String embedHtml = page.substring(index, page.indexOf('>', index) + 1);
       index = index + "<img id=\"widget_embedcontent_".length();
       String embedId = page.substring(index, page.indexOf("\"", index));
       Content c = contentManager.get(poolId + "/" + embedId + "/embedcontent/items");
-      if (c == null)
+      if (c == null) {
         continue;
+      }
       String resourcePath = (String)c.getProperty("__array__0__");
-      if (resourcePath == null || resourcePath.length() == 0)
+      if (resourcePath == null || resourcePath.length() == 0) {
         continue;
-      if (resourcePath.indexOf("/p/") >= 0)
+      }
+      if (resourcePath.indexOf("/p/") >= 0) {
         resourcePath = resourcePath.substring(resourcePath.indexOf("/p/") + 3);
+      }
       Content content = contentManager.get(resourcePath);
-      if (content == null)
+      if (content == null) {
         continue;
+      }
       String mimeType = (String)content.getProperty(Content.MIMETYPE_FIELD);
-      if (mimeType == null || mimeType.length() == 0)
+      if (mimeType == null || mimeType.length() == 0) {
         continue;
+      }
       if ("x-sakai/document".equals(mimeType)) {
         continue;
       }

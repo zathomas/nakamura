@@ -24,14 +24,8 @@ import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAGS;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_COUNT;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_NAME;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.jcr.RepositoryException;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -42,8 +36,14 @@ import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.util.PathUtils;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
 
 public class TagUtils {
   /**
@@ -55,12 +55,10 @@ public class TagUtils {
    * @throws RepositoryException
    */
   public static boolean isTag(Content node) {
-    if (node != null && node.hasProperty(SLING_RESOURCE_TYPE_PROPERTY)
+    return (node != null && node.hasProperty(SLING_RESOURCE_TYPE_PROPERTY)
         && node.hasProperty(SAKAI_TAG_NAME)
-        && RT_SAKAI_TAG.equals(node.getProperty(SLING_RESOURCE_TYPE_PROPERTY))) {
-      return true;
-    }
-    return false;
+ && RT_SAKAI_TAG.equals(node
+        .getProperty(SLING_RESOURCE_TYPE_PROPERTY)));
   }
 
   /**
@@ -104,8 +102,9 @@ public class TagUtils {
           + ", contentManager:" + contentManager);
     }
 
-    if (StringUtils.isBlank(tag))
+    if (StringUtils.isBlank(tag)) {
       return false;
+    }
 
     boolean updated = false;
     String[] tagNames = PropertiesUtil.toStringArray(content.getProperty(SAKAI_TAGS), new String[0]);
