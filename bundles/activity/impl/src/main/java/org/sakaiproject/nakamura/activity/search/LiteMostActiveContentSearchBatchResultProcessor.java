@@ -200,20 +200,26 @@ public class LiteMostActiveContentSearchBatchResultProcessor implements
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (!(obj instanceof ResourceActivity))
+      }
+      if (!(obj instanceof ResourceActivity)) {
         return false;
+      }
       ResourceActivity other = (ResourceActivity) obj;
-      if (!getOuterType().equals(other.getOuterType()))
+      if (!getOuterType().equals(other.getOuterType())) {
         return false;
+      }
       if (id == null) {
-        if (other.id != null)
+        if (other.id != null) {
           return false;
-      } else if (!id.equals(other.id))
+        }
+      } else if (!id.equals(other.id)) {
         return false;
+      }
       return true;
     }
 

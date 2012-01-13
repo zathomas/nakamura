@@ -556,8 +556,9 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     Map<String, Object> result = new HashMap<String, Object>();
     if (authorizable != null) {
       for (String propName : authorizable.getSafeProperties().keySet()) {
-        if (propName.startsWith("rep:"))
+        if (propName.startsWith("rep:")) {
           continue;
+        }
         Object o = authorizable.getProperty(propName);
         if ( o instanceof Object[] ) {
           Object[] values = (Object[]) o;
