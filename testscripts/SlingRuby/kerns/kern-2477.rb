@@ -43,7 +43,9 @@ class TC_Kern2477 < Test::Unit::TestCase
         "sakai:pseudoGroup" => "true",
         "sakai:pseudogroupparent" => "#{parentgroup.name}"
     })
-    res = @s.execute_get(@s.url_for("/system/userManager/group/#{pseudogroup.name}.tidy.json"))
+    assert_equal('200', res.code, res.body)
+    url = @s.url_for("/system/userManager/group/#{pseudogroup.name}.tidy.json")
+    res = @s.execute_get(url)
     json = JSON.parse(res.body)
     assert_equal("true", json['properties']['sakai:pseudoGroup'])
 
