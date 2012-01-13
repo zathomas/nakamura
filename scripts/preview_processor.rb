@@ -10,6 +10,7 @@ RMAGICK_BYPASS_VERSION_TEST = true
 require 'RMagick'
 require "getopt/long"
 require "cgi"
+require 'term-extract'
 
 Dir.chdir(File.dirname(__FILE__))
 MAIN_DIR = Dir.getwd
@@ -141,8 +142,70 @@ def setup(server, admin_password)
   @s.do_login
 end
 
+def extract_terms(content, max_terms = 5)
+  # replace quotes
+  content = content.gsub(/\u201c/, '"').gsub(/\u201d/, '"')
+  # replace apostrophes
+  content = content.gsub(/\u2018/, "'").gsub(/\u2019/, "'")
+  # remove ellipses (…)
+  content = content.gsub(/\u2026/, "")
+
+  # extract the terms
+  pre_terms = TermExtract.extract(content.downcase, :min_occurance => 1)
+
+  # process the terms to collect only the ones that meet our conditions
+  terms = {}
+  pre_terms.each do |term, occurences|
+    # replace non-breaking spaces
+    key = term.gsub(/\xC2\xA0/, ' ').strip
+
+    # don't collect terms that have:
+    #  * any characters that aren't alphabetic or a space
+    #  * length == 1
+    #  * more than 2 words
+    #  * contain 'http'
+    non_alpha = key =~ /[^[[:alpha:]] ]/
+    one_char = key.length == 1
+    contains_http = key.include?('http')
+    more_than_two_words = key.split(/ /).length > 2
+
+    terms[key] = occurences unless non_alpha or one_char or contains_http or more_than_two_words
+  end
+
+  if terms.length > max_terms
+    # sort the terms by strength and occurences
+    # this gives an array of [key, value] from a hash of key => value
+    terms = terms.sort do |t0, t1|
+      # strength == word count
+      t0_strength = t0[0].split(/ /).length
+      t1_strength = t1[0].split(/ /).length
+      t0_occurences = t0[1]
+      t1_occurences = t1[1]
+
+      if t1_occurences + t1_strength * 2 > t0_occurences + t0_strength * 2
+        1
+      elsif t1_occurences == t0_occurences and t1_strength == t0_strength
+        0
+      else
+        -1
+      end
+    end
+
+    # take the max requested
+    terms = terms.take(max_terms)
+    # and trim it down to just the term without the occurences
+    terms.each_with_index do |term, i|
+      terms[i] = term[0]
+    end
+  else
+    terms = terms.keys
+  end
+
+  terms
+end
+
 # This is the main method we call at the end of the script.
-def main(term_server)
+def main()
   res = @s.execute_get(@s.url_for("var/search/needsprocessing.json"))
   unless res.code == '200'
     raise "Failed to retrieve list to process [#{res.code}]"
@@ -223,24 +286,19 @@ def main(term_server)
               # Get text from the document
               Docsplit.extract_text filename, :ocr => false
               text_content = IO.read(id + ".txt")
-              postData = Net::HTTP.post_form(URI.parse(term_server), {'context' => text_content})
-              if postData != nil
-                postData = JSON.parse postData.body
-              end
+              terms = extract_terms(text_content)
               tags = ""
-              if postData != nil
-                for i in (0..postData.length - 1)
-                  tags += "- " + postData[i] + "\n"
-                  postData[i] = "/tags/#{postData[i]}"
-                end
+              terms.each_with_index do |t, i|
+                tags += "- #{t}\n"
+                terms[i] = "/tags/#{t}"
               end
               # Generate tags for document
-              @s.execute_post @s.url_for("p/#{id}"), {':operation' => 'tag', 'key' => postData}
-              log "Generate tags for #{id}, #{postData}"
+              @s.execute_post @s.url_for("p/#{id}"), {':operation' => 'tag', 'key' => terms}
+              log "Generate tags for #{id}, #{terms}"
               FileUtils.rm id + ".txt"
               admin_id = "admin"
               origin_file_name = meta["sakai:pooled-content-file-name"]
-              if postData != nil && postData.length > 0 && user["user"]["properties"]["sendTagMsg"] && user["user"]["properties"]["sendTagMsg"] != "false"
+              if not terms.nil? and terms.length > 0 and user["user"]["properties"]["sendTagMsg"] and user["user"]["properties"]["sendTagMsg"] != "false"
                 msg_body = "We have automatically added the following tags for #{origin_file_name}:\n\n #{tags}\n\nThese tags were created to aid in the discoverability of your content.\n\nRegards, \nThe Sakai Team"
                 @s.execute_post(@s.url_for("~#{admin_id}/message.create.html"), {
                   "sakai:type" => "internal",
@@ -324,8 +382,8 @@ def main(term_server)
 end
 
 def usage
-  puts "usage: #{$0} [-h|--help] [-s|--server] <server> [-p|--password] <adminpassword> [-t|--term] <term-extraction address> [-i|--interval] [interval] [-n|--count] [count]"
-  puts "example: #{$0} -s http://localhost:8080/ -p admin -t http://localhost:8085/ -i 20"
+  puts "usage: #{$0} [-h|--help] [-s|--server] <server> [-p|--password] <adminpassword> [-i|--interval] [interval] [-n|--count] [count]"
+  puts "example: #{$0} -s http://localhost:8080/ -p admin -i 20"
 end
 
 ## Parse command line opts and call main ##
@@ -333,12 +391,11 @@ opt = Getopt::Long.getopts(
   ["--help", "-h", Getopt::BOOLEAN],
   ["--server", "-s", Getopt::REQUIRED],
   ["--password", "-p", Getopt::REQUIRED],
-  ["--term", "-t", Getopt::REQUIRED],
   ["--interval", "-i", Getopt::REQUIRED],
   ["--count", "-n", Getopt::REQUIRED]
 )
 
-if opt['help'] || ( not(opt['server'] && opt['password'] && opt['term']) )
+if opt['help'] || ( not(opt['server'] && opt['password']) )
   usage()
 else
   setup(opt['server'], opt['password'])
@@ -348,7 +405,7 @@ else
   count = opt['count'] || 0
   count = Integer(count)
   begin
-    main(opt['term'])
+    main()
     if opt['count']
       if count > 1
         count -= 1
