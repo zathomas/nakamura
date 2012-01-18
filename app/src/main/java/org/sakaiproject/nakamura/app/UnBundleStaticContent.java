@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -64,7 +65,7 @@ public class UnBundleStaticContent {
 	 */
 	public void extract(Class<?> markerClass, String bundlePath,
 			String[] source, String[] dest) throws MalformedURLException,
-			IOException {
+			URISyntaxException, IOException {
 		File tempFolder = File.createTempFile("unpack", "bundles");
 
 		tempFolder.delete();
@@ -148,15 +149,14 @@ public class UnBundleStaticContent {
 	}
 
 	private File getContainingJarFile(Class<?> clazz)
-			throws MalformedURLException {
+			throws MalformedURLException, URISyntaxException {
 		String resource = clazz.getName().replace('.', '/') + ".class";
 		URL u = clazz.getClassLoader().getResource(resource);
 		String jarFilePath = u.getFile();
 		jarFilePath = jarFilePath.substring(0,
 				jarFilePath.length() - resource.length() - 2);
 		u = new URL(jarFilePath);
-		jarFilePath = u.getFile();
-		return new File(jarFilePath);
+		return new File(u.toURI());
 	}
 
 }
