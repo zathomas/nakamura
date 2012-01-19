@@ -153,8 +153,8 @@ public class PageServlet extends SlingSafeMethodsServlet {
 
     if (pageContent != null) {
       // Add to list only if content is a page
-      String resourceType = (String) pageContent.getProperty("sling:resourceType");
-      if (resourceType != null && resourceType.equals("sakai/page")) {
+      String resourceType = String.valueOf(pageContent.getProperty("sling:resourceType"));
+      if ("sakai/page".equals(resourceType))  {
         contentList.add(pageContent);
       }
       for (Content page : pageContent.listChildren()) {
