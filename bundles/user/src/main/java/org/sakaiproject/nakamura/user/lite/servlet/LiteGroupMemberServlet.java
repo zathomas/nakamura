@@ -267,12 +267,10 @@ public class LiteGroupMemberServlet extends SlingSafeMethodsServlet {
         // that's normal, and we'll just skip over it. (KERN-2302)
         continue;
       }
-      if (member != null) {
-        // filter this out if it is a manager member
-        if (!managers.contains(memberName)) {
-          String name = getName(member);
-          map.put(name, member);
-        }
+      // filter this out if it is a manager member
+      if (member != null && !managers.contains(memberName)) {
+        String name = getName(member);
+        map.put(name, member);
       }
     }
     return map;
