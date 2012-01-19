@@ -321,11 +321,6 @@ public class MediaRangeList extends TreeSet<MediaRangeList.MediaRange> {
         public boolean equals(String s) {
             return (this.supertype + "/" + this.subtype).equals(s);
         }
-        
-        @Override
-        public int hashCode() {
-          return this.subtype.length() + this.supertype.length();
-        }
 
         @Override
         public String toString() {
