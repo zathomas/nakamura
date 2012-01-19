@@ -27,6 +27,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -45,7 +46,7 @@ public class NakamuraMain {
   private static String slingHome;
   private static Map<String, String> parsedArgs;
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws Exception {
     if (checkLaunchDate(args)) {
       // new jar check for new content
       UnBundleStaticContent unBundleStaticContent = new UnBundleStaticContent(
@@ -97,8 +98,7 @@ public class NakamuraMain {
       jarFilePath = jarFilePath.substring(0, jarFilePath.length()
           - resource.length() - 2);
       u = new URL(jarFilePath);
-      jarFilePath = u.getFile();
-      File jarFile = new File(jarFilePath);
+      File jarFile = new File(u.toURI());
       info("Loading from " + jarFile, null);
       long lastModified = jarFile.lastModified();
 
@@ -152,7 +152,9 @@ public class NakamuraMain {
             null);
       }
     } catch (MalformedURLException e) {
-      info("Not launching from a jar ", null);
+      info("Not launching from a jar (malformed url)", null);
+    } catch (URISyntaxException e) {
+      info("Not launching from a jar (uri syntax)", null);
     }
     return false;
 

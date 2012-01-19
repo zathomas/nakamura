@@ -329,7 +329,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       while (resultIterator.hasNext()) {
         Result contact = resultIterator.next();
         if (contact.getProperties().containsKey("state")) {
-          String state = (String) contact.getProperties().get("state").iterator().next();
+          String state = ((String) contact.getProperties().get("state").iterator().next()).toLowerCase();
           int count = 0;
           if (contacts.containsKey(state)) {
             count = contacts.get(state);
@@ -556,8 +556,9 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     Map<String, Object> result = new HashMap<String, Object>();
     if (authorizable != null) {
       for (String propName : authorizable.getSafeProperties().keySet()) {
-        if (propName.startsWith("rep:"))
+        if (propName.startsWith("rep:")) {
           continue;
+        }
         Object o = authorizable.getProperty(propName);
         if ( o instanceof Object[] ) {
           Object[] values = (Object[]) o;

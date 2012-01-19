@@ -16,7 +16,6 @@ class TC_Kern1874Test < Test::Unit::TestCase
   @created_doc_path = nil
   def setup
     super
-    @s.log.level = Logger::INFO
     m = uniqueness()
     @test_user1 = create_user "test-user1-#{m}", "Test", "User1"
     @test_sakai_doc_name = "test-sakai-doc-" + uniqueness()
@@ -111,7 +110,7 @@ class TC_Kern1874Test < Test::Unit::TestCase
            doc_count = doc_count +1
       end
     end
-    assert_equal(true, doc_found, "Expecting to find created doc with query: #{query_params.inspect}")
+    assert_equal(true, doc_found, "Expecting to find #{@test_sakai_doc_name} with query: #{query_params.inspect}")
     assert_equal(@test_sakai_doc_name, doc_name, "Expecting to find created doc name from query response")
     assert_equal(TEST_SAKAI_DOC_MIME_TYPE, doc_mime_type, "Expecting to find doc mimetype from query response")
     assert_equal(1, doc_count, "Expecting to find just one created doc")

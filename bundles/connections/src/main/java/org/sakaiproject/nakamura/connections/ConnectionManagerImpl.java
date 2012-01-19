@@ -354,7 +354,9 @@ public class ConnectionManagerImpl implements ConnectionManager {
       AuthorizableManager authorizableManager = session.getAuthorizableManager();
       Group g = (Group) authorizableManager.findAuthorizable("g-contacts-" + thisAu.getId());
       g.removeMember(otherAu.getId());
+      thisAu.removeProperty("contactsCount");
       authorizableManager.updateAuthorizable(g);
+      authorizableManager.updateAuthorizable(thisAu);
     }
   }
 
@@ -374,7 +376,9 @@ public class ConnectionManagerImpl implements ConnectionManager {
     AuthorizableManager authorizableManager = session.getAuthorizableManager();
     Group g = (Group) authorizableManager.findAuthorizable("g-contacts-" + thisAu.getId());
     g.addMember(otherAu.getId());
+    thisAu.removeProperty("contactsCount");
     authorizableManager.updateAuthorizable(g);
+    authorizableManager.updateAuthorizable(thisAu);
   }
 
   /**

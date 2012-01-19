@@ -312,7 +312,7 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
           this.resolver = request.getResourceResolver();
           this.session = StorageClientUtils.adaptToSession(this.resolver.adaptTo(javax.jcr.Session.class));
           this.baseResource = request.getResource();
-          this.paths = paths;
+          this.paths = paths.clone();
           this.pathIndex = 0;
 
           nextResource = seek();

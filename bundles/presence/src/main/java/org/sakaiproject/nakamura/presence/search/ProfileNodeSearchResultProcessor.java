@@ -127,10 +127,10 @@ public class ProfileNodeSearchResultProcessor implements SolrSearchResultProcess
       String authorizableId = (String) result.getFirstValue("path");
       Authorizable auth = authMgr.findAuthorizable(authorizableId);
 
-      if (!objectInProgress) {
-        write.object();
-      }
       if (auth != null) {
+        if (!objectInProgress) {
+          write.object();
+        }
         Map<String,Object> map = basicUserInfoService.getProperties(auth);
 
         ExtendedJSONWriter.writeValueMapInternals(write, map);
@@ -141,9 +141,9 @@ public class ProfileNodeSearchResultProcessor implements SolrSearchResultProcess
           // add contact information if appropriate
           connMgr.writeConnectionInfo(exWriter, session, currUser, authorizableId);
         }
-      }
-      if (!objectInProgress) {
-        write.endObject();
+        if (!objectInProgress) {
+          write.endObject();
+        }
       }
     } catch (StorageClientException e) {
       LOGGER.error(e.getMessage(), e);

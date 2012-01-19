@@ -303,8 +303,9 @@ public class ResourceProxyServlet extends SlingAllMethodsServlet implements Opti
       if (node.hasProperty(ProxyPostProcessor.SAKAI_POSTPROCESSOR)) {
         String postProcessorName = node.getProperty(
             ProxyPostProcessor.SAKAI_POSTPROCESSOR).getString();
-        if (postProcessors.containsKey(postProcessorName))
+        if (postProcessors.containsKey(postProcessorName)) {
           postProcessor = postProcessors.get(postProcessorName);
+        }
         if (postProcessor == null) {
           LOGGER.warn("Unable to find post processor of name {} for node {} ",
               postProcessorName, node.getPath());

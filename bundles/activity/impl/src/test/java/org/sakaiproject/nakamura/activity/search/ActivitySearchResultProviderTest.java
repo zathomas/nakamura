@@ -19,7 +19,6 @@ package org.sakaiproject.nakamura.activity.search;
 
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -29,7 +28,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.junit.Test;
 import org.sakaiproject.nakamura.api.activity.ActivityConstants;
-import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.testutils.easymock.AbstractEasyMockTest;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 

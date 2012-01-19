@@ -44,6 +44,11 @@ public class ConcurrentLRUMap<K, V> implements Map<K, V> {
       }
     }
 
+    @Override
+    public int hashCode() {
+      return value.hashCode();
+    }
+
   }
 
   /**

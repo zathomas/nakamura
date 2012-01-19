@@ -150,7 +150,7 @@ class TC_BasicLTI < Test::Unit::TestCase
     if @creator == nil then
       hackzzz();
     end
-
+  
     # verify anonymous user cannot read /var/basiclti
     @s.switch_user(@anonymous);
     resp = @s.execute_get(@s.url_for("/var.json"));
@@ -229,7 +229,7 @@ class TC_BasicLTI < Test::Unit::TestCase
     assert_equal(true, props["release_names"]);
     assert_equal(true, props["release_principal_name"]);
     assert_equal(true, props["release_email"]);
-
+  
     # expect normal launch from user
     launch = @s.execute_get(@s.url_for("#{@saveUrl}.launch.html"));
     assert_equal(200, launch.code.to_i, "200 Expected on launch.");
@@ -239,7 +239,7 @@ class TC_BasicLTI < Test::Unit::TestCase
     # verify user cannot access data contained in sensitive node
     sensitive = @s.execute_get(@s.url_for("#{@saveUrl}/ltiKeys.json"));
     assert_equal(404, sensitive.code.to_i, "404 Expected on sensitive node.");
-
+  
     # switch to admin user
     @s.switch_user(@admin);
     resp = @s.execute_get(@s.url_for("#{@saveUrl}"));
@@ -252,11 +252,11 @@ class TC_BasicLTI < Test::Unit::TestCase
     assert_equal(true, props["release_names"]);
     assert_equal(true, props["release_principal_name"]);
     assert_equal(true, props["release_email"]);
-
+  
     # verify 404 on sensitive node
     sensitive = @s.execute_get(@s.url_for("#{@saveUrl}/ltiKeys.json"));
     assert_equal(404, sensitive.code.to_i, "There should be no sensitive node for a virtual tool.");
-
+  
     # expect normal launch from admin
     launch = @s.execute_get(@s.url_for("#{@saveUrl}.launch.html"));
     assert_equal(200, launch.code.to_i, "200 Expected on launch.");
@@ -270,7 +270,7 @@ class TC_BasicLTI < Test::Unit::TestCase
     if @creator == nil then
       hackzzz();
     end
-
+  
     prepare_group()
     @ltiurl = "http://dr-chuck.com/ims/php-simple/tool.php";
     @ltikey = "12345";
@@ -315,7 +315,7 @@ class TC_BasicLTI < Test::Unit::TestCase
     assert_equal(false, launch.body.empty?);
     validateHtml(launch.body, @groupJcrPath);
   end
-
+  
   def validateHtml(html, context_id)
     listener = Listener.new;
     parser = Parsers::StreamParser.new(html, listener);
@@ -348,13 +348,17 @@ class TC_BasicLTI < Test::Unit::TestCase
     @groupname = "Basic LTI Test Group #{now}"
     @s.switch_user(@creator)
     assert_not_nil(@creator, "FIXME TODO Why is @creator nil *only* when run in the test suite?");
-    group = create_group("g-basiclti-testgroup-#{now}")
+    group = create_group(@groupid)
     assert_not_nil(group);
+    @s.switch_user(@admin)
     @s.execute_post(@s.url_for("#{group.home_path_for(@s)}/public/authprofile"), {
       "sakai:group-id" => @groupid,
       "sakai:group-title" => @groupname,
       "_charset_" => "UTF-8"
     })
+    
+    @s.execute_post("#{@s.url_for(Group.url_for(group.name))}-manager.update.html", {":member" => @creator.name})
+    @s.switch_user(@creator)
     groupJcrRelativePath = group.details(@s)["profile"]
     groupJcrRelativePath = groupJcrRelativePath[0, groupJcrRelativePath.index('/')];
     @groupJcrPath = "#{groupJcrRelativePath}"
