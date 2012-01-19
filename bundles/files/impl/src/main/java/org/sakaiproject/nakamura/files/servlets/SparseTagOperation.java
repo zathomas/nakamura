@@ -55,6 +55,7 @@ import org.sakaiproject.nakamura.api.doc.ServiceParameter;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.files.TagUtils;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
+import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
@@ -107,6 +108,9 @@ import javax.servlet.http.HttpServletResponse;
       })
   })
 public class SparseTagOperation extends AbstractSparsePostOperation {
+
+  @Reference
+  private Repository repository;
 
   @Reference
   protected transient EventAdmin eventAdmin;
