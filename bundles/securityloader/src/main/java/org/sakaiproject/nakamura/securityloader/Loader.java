@@ -878,7 +878,7 @@ LOGGER.info("Got Target Node as "+targetNode);
       }
     }
     values.add(session.getValueFactory().createValue(value));
-    parent.setProperty(name, values.toArray(new Value[0]));
+    parent.setProperty(name, values.toArray(new Value[values.size()]));
     changes.add(Modification.onModified(parentPath + "/" + name));
 
   }
