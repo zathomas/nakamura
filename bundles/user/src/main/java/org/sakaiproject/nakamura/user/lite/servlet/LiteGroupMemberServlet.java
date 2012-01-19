@@ -333,6 +333,10 @@ public class LiteGroupMemberServlet extends SlingSafeMethodsServlet {
    * @throws RepositoryException
    */
   private String getName(Authorizable member)  {
+    logger.debug("getName(Authorizable {})", member);
+    if (member == null) {
+      throw new IllegalArgumentException("Authorizable member == null");
+    }
     String name = member.getId();
     if (member instanceof Group) {
       name = (String) member.getProperty("sakai:group-title");
