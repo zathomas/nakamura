@@ -41,9 +41,11 @@ import static org.sakaiproject.nakamura.api.user.UserConstants.USER_LASTNAME_PRO
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_PICTURE;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_ROLE;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_TAGS;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Maps;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Modified;
@@ -67,6 +69,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Map.Entry;
 
 @Component(immediate=true, metatype=true)
 @Service(value=BasicUserInfoService.class)
@@ -232,8 +235,8 @@ public class BasicUserInfoServiceImpl implements BasicUserInfoService {
   private  Map<String, Object> basicInfo(Map<String, Object> elementsMap) {
     Map<String, Object> basic = Maps.newHashMap();
     Map<String, Object> elements = Maps.newHashMap();
-    for (String key : elementsMap.keySet()) {
-      elements.put(key, ImmutableMap.of("value", (Object) elementsMap.get(key)));
+    for (Entry<String, Object> entry : elementsMap.entrySet()) {
+      elements.put(entry.getKey(), ImmutableMap.of("value", entry.getValue()));
     }
     basic.put("elements", elements);
     return basic;

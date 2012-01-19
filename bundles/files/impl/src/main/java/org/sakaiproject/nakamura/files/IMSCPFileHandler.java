@@ -65,6 +65,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -187,8 +188,9 @@ public class IMSCPFileHandler implements FileUploadHandler {
     }
     contentManager.writeBody(poolId + "/" + name, contentManager.getInputStream(poolId));
     //Replace relative file path to JCR path
-    for (String key : fileContent.keySet()) {
-      String htmlContent = fileContent.get(key);
+    for (Entry<String, String> fileContentEntry : fileContent.entrySet()) {
+      String htmlContent = fileContentEntry.getValue();
+      String key = fileContentEntry.getKey();
       String prefix = "";
       if (key.lastIndexOf('/') > 0) {
         prefix = key.substring(0, key.lastIndexOf('/') + 1);

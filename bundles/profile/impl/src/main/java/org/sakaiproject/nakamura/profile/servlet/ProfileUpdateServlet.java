@@ -66,6 +66,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletException;
@@ -174,8 +175,8 @@ public class ProfileUpdateServlet extends SlingAllMethodsServlet {
           String authId = PathUtils.getAuthorizableId(targetContent.getPath());
           AuthorizableManager am = session.getAuthorizableManager();
           Authorizable au = am.findAuthorizable(authId);
-          for (String key : authzProperties.keySet()) {
-            au.setProperty(key, authzProperties.get(key));
+          for (Entry<String, String> authzProp : authzProperties.entrySet()) {
+            au.setProperty(authzProp.getKey(), authzProp.getValue());
           }
           am.updateAuthorizable(au);
         }

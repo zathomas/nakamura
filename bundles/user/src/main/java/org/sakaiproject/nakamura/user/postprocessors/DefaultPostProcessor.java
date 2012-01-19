@@ -442,10 +442,12 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
             authorizable, parameters);
           createPath(authId, LitePersonalUtils.getProfilePath(authId) + PROFILE_BASIC,
               "nt:unstructured", false, contentManager, accessControlManager, null);
-          for (String propName : profileProperties.keySet()) {
+          for (Entry<String, Object> property : profileProperties.entrySet()) {
+            String propName = property.getKey();
             createPath(authId, LitePersonalUtils.getProfilePath(authId) + PROFILE_BASIC + "/" + propName,
-                "nt:unstructured", false, contentManager, accessControlManager, ImmutableMap.of("value", profileProperties.get(propName)));
-            authorizable.setProperty(propName, profileProperties.get(propName));
+ "nt:unstructured", false, contentManager,
+                accessControlManager, ImmutableMap.of("value", property.getValue()));
+            authorizable.setProperty(propName, property.getValue());
           }
           authorizableManager.updateAuthorizable(authorizable);
           if ( isCreate ) {
