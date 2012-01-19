@@ -1,0 +1,8 @@
+HTTP/1.1 200 OK
+Expires: Thu, 01-Jan-1970 00:00:00 GMT
+Set-Cookie: SAKAI-TRACKING=71576-Zachs-Mac-590bfc8c6c88e4e6c73d36dc671f64f3ad9cdb88;Path=/;HttpOnly
+Cache-Control: no-cache="set-cookie"
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+X-Frame-Option: DENY
+Content-Length: 0
+Server: Jetty(1.2-SNAPSHOT)
