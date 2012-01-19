@@ -71,7 +71,7 @@ public class CapturingHttpServletResponse extends HttpServletResponseWrapper {
       try {
         retval = baos.toString("UTF-8");
       } catch (UnsupportedEncodingException e) {
-        // let retval be null
+        retval = "unsupported encoding: UTF-8";
       }
     } else if (caw.size() > 0) {
       retval = caw.toString();

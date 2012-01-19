@@ -160,6 +160,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
         manifestFlag = true;
         LOGGER.debug(" Saving Manifest file {} ",baseDir+"/"+filename);
         contentManager.writeBody(baseDir + "/" + filename, new ByteArrayInputStream(builder.toString().getBytes()));
+        reader.close();
         continue;
       }
       
@@ -175,6 +176,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
         fileContent.put(entry.getName(), builder.toString());
         LOGGER.debug(" Saving Text file {} ",baseDir+"/"+entry.getName());
         contentManager.writeBody(baseDir + "/" + entry.getName(), new ByteArrayInputStream(builder.toString().getBytes()));
+        reader.close();
         continue;
       }
       LOGGER.debug(" Saving file {} ",baseDir+"/"+entry.getName());
@@ -260,7 +262,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
     List<Organization> orgs = manifest.getOrganizations().getOrganizations();
     String description = "";
     
-    String keywords = "";
+    StringBuffer keywords = new StringBuffer();
     String courseName = "";
     if (manifest.getMetadata() != null) {
       if (manifest.getMetadata().getLom() != null) {
@@ -273,8 +275,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
             List<Keyword> keys = manifest.getMetadata().getLom().getGeneral().getKeyword();
               for (int i = 0; i < keys.size(); i++) {
                 if ( i > 0)
-                  keywords += ",";
-                keywords += keys.get(i).getLangString().getString();
+                  keywords.append(",").append(keys.get(i).getLangString().getString());
               }
           }
           if (general.getTitle() != null) {
@@ -287,7 +288,7 @@ public class IMSCPFileHandler implements FileUploadHandler {
     if (!"".equals(courseName))
       pages.put(POOLED_CONTENT_FILENAME, courseName);
     if (keywords.length() != 0)
-      pages.put(SAKAI_TAGS, keywords);
+      pages.put(SAKAI_TAGS, keywords.toString());
     
     JSONArray allResources = new JSONArray();
     HashMap<String, JSONObject> resourceJSON = new HashMap<String, JSONObject> ();
