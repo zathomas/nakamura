@@ -9,6 +9,7 @@ require 'docsplit'
 RMAGICK_BYPASS_VERSION_TEST = true
 require 'RMagick'
 require "getopt/long"
+require "cgi"
 
 Dir.chdir(File.dirname(__FILE__))
 MAIN_DIR = Dir.getwd
@@ -29,13 +30,13 @@ module Net::HTTPHeader
   end
   def encode_kvpair(k, vs)
     if vs.nil? or vs == '' then
-      "#{urlencode(k)}="
+      "#{CGI::escape(k)}="
     elsif vs.kind_of?(Array)
       # In Ruby 1.8.7, Array(string-with-newlines) will split the string
       # after each embedded newline.
-      Array(vs).map {|v| "#{urlencode(k)}=#{urlencode(v.to_s)}" }
+      Array(vs).map {|v| "#{CGI::escape(k)}=#{CGI::escape(v.to_s)}" }
     else
-      "#{urlencode(k)}=#{urlencode(vs.to_s)}"
+      "#{CGI::escape(k)}=#{CGI::escape(vs.to_s)}"
     end
   end
 end
