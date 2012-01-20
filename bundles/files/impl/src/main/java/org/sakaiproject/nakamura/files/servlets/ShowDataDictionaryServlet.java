@@ -56,7 +56,9 @@ public class ShowDataDictionaryServlet extends SlingSafeMethodsServlet {
     IOException {
     LOG.info("Starting data dictionary generation...");
     final Map<String, Set<String>> contentDictionary = Maps.newHashMap();
+    final Map<String, Long> contentTypeCounts = Maps.newHashMap();
     final Map<String, Set<String>> authorizableDictionary = Maps.newHashMap();
+    final Map<String, Long> authTypeCounts = Maps.newHashMap();
     Session adminSession = null;
     try {
       adminSession = sparseRepository.loginAdministrative();
@@ -65,7 +67,7 @@ public class ShowDataDictionaryServlet extends SlingSafeMethodsServlet {
 
       adminAuthManager.invokeWithEveryAuthorizable(new AuthorizableAction() {
         public void doIt(Authorizable authorizable) {
-          Map<String, Object> properties = authorizable.getProperties();
+          Map<String, Object> properties = authorizable.getPropertiesForUpdate();
           String type;
           if (properties.containsKey("type")) {
             type = (String)properties.get("type");
@@ -75,8 +77,11 @@ public class ShowDataDictionaryServlet extends SlingSafeMethodsServlet {
           Set<String> authPropertyKeys;
           if(authorizableDictionary.containsKey(type)) {
             authPropertyKeys = authorizableDictionary.get(type);
+            long currentCount = authTypeCounts.get(type).longValue();
+            authTypeCounts.put(type, ++currentCount);
           } else {
             authPropertyKeys = Sets.newHashSet();
+            authTypeCounts.put(type, Long.valueOf(1));
           }
           for (String propertyKey : properties.keySet()) {
             authPropertyKeys.add(propertyKey);
@@ -87,7 +92,7 @@ public class ShowDataDictionaryServlet extends SlingSafeMethodsServlet {
 
       adminContentManager.invokeWithEveryContent(new ContentAction() {
         public void doIt(Content content) {
-          Map<String, Object> properties = content.getProperties();
+          Map<String, Object> properties = content.getPropertiesForUpdate();
           String type;
           if (properties.containsKey("sling:resourceType")) {
             type = (String)properties.get("sling:resourceType");
@@ -97,8 +102,11 @@ public class ShowDataDictionaryServlet extends SlingSafeMethodsServlet {
           Set<String> contentPropertyKeys;
           if (contentDictionary.containsKey(type)) {
             contentPropertyKeys = contentDictionary.get(type);
+            long currentCount = contentTypeCounts.get(type).longValue();
+            contentTypeCounts.put(type, ++currentCount);
           } else {
             contentPropertyKeys = Sets.newHashSet();
+            contentTypeCounts.put(type, Long.valueOf(1));
           }
           for (String propertyKey : properties.keySet()) {
             contentPropertyKeys.add(propertyKey);
@@ -108,7 +116,7 @@ public class ShowDataDictionaryServlet extends SlingSafeMethodsServlet {
       });
       LOG.info("AUTHORIZABLES");
       for (String authType : authorizableDictionary.keySet()) {
-        LOG.info(authType);
+        LOG.info("{} ({})", authType, authTypeCounts.get(authType));
         for (String property : authorizableDictionary.get(authType)) {
           LOG.info("    " + property);
         }
@@ -116,7 +124,7 @@ public class ShowDataDictionaryServlet extends SlingSafeMethodsServlet {
 
       LOG.info("CONTENT");
       for (String contentType : contentDictionary.keySet()) {
-        LOG.info(contentType);
+        LOG.info("{} ({})", contentType, contentTypeCounts.get(contentType));
         for (String property : contentDictionary.get(contentType)) {
           LOG.info("    " + property);
         }
