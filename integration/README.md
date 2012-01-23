@@ -11,7 +11,7 @@ These are the steps it will follow:
 3. Wait for startup to complete, then run all the integration tests.
 4. Shutdown nakamura, again using the `antrun` plugin.
 
-Each of these steps is controlled by boolean parameter. If the parameter is true, that step runs. Each parameter has a default value which can be overridden at the command line. Here are the four parameter along with their default values:
+Each of these steps is controlled by a boolean parameter. If the parameter is true, that step runs. Each parameter has a default value which can be overridden at the command line. Here are the four parameters along with their default values:
 
 1. `-Dsling.clean=false`
 2. `-Dsling.start=true`
@@ -21,7 +21,7 @@ Each of these steps is controlled by boolean parameter. If the parameter is true
 ## Other considerations
 The testing task is designed to allow all the tests to finish running, but if any single test fails or throws an error, the task returns an error code, and maven is instructed to fail the build in that case.
 
-The script used to wait for startup is not very smart. It just greps the standard log and waits for the message from the World bundle that it has started. The World bundle just happens to be the last bundle to start in our current configuration. If that ever changes, the script will need to be updated.
+The script we use to wait for startup is not very smart. It just greps the standard log and waits for the message from the World bundle that it has started. The World bundle just happens to be the last bundle to start in our current configuration. If that ever changes, the script will need to be updated.
 
 The wait script also has a timeout, set at around five minutes. If nakamura hasn't started by then, something is wrong and it probably never will. In this case, the script will exit with an error code and maven will fail the build.
 
