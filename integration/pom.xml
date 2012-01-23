@@ -77,8 +77,21 @@
             <configuration>
               <target name="sling-stop" if="sling.stop">
                 <java classname="org.sakaiproject.nakamura.app.NakamuraMain" fork="true" classpathref="maven.runtime.classpath">
+                  <sysproperty key="sling.home" value="sakai/sling"/>
                   <arg value="stop"/>
                 </java>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>clean-sling</id>
+            <phase>clean</phase>
+            <configuration>
+              <target name="sling-clean" if="sling.clean">
+                <delete dir="sakai" />
               </target>
             </configuration>
             <goals>
