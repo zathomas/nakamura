@@ -56,6 +56,7 @@ import org.sakaiproject.nakamura.api.search.solr.Result;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
+import org.sakaiproject.nakamura.api.user.AuthorizableUtil;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
@@ -265,9 +266,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
 //      for(String principal : principals) {
 //        Authorizable group = authorizableManager.findAuthorizable(principal);
         Authorizable group = memberOf.next();
-        if (group == null
-            || !(group instanceof Group)
-            || Group.EVERYONE.equals(group.getId())) {
+        if (!AuthorizableUtil.isRealGroup(group)) {
           // we don't want the "everyone" group in this feed
           continue;
         }
