@@ -6,7 +6,10 @@ GEM
     getopt (1.4.1)
     json (1.6.3)
     nakamura (0.6)
+    rbtagger (0.4.7)
     rmagick (2.13.1)
+    term-extract (0.5.2)
+    rbtagger (~> 0.4.7)
 
 PLATFORMS
   ruby
@@ -18,3 +21,4 @@ DEPENDENCIES
   json
   nakamura (>= 0.6)
   rmagick
+  term-extract
