@@ -117,6 +117,7 @@ public class ExportIMSCP implements ResourceProvider {
             cpr.getResourceMetadata().put(CONTENT_RESOURCE_PROVIDER, this);
             
             LOGGER.debug("Resolved {} as {} ", path, cpr);
+            input.close();
           }
         }
       }
