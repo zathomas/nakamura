@@ -9,7 +9,7 @@ GEM
     rbtagger (0.4.7)
     rmagick (2.13.1)
     term-extract (0.5.2)
-    rbtagger (~> 0.4.7)
+      rbtagger (~> 0.4.7)
 
 PLATFORMS
   ruby
