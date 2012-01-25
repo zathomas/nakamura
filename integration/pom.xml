@@ -36,50 +36,39 @@
         <version>1.7</version>
         <executions>
           <execution>
-            <id>start-sling</id>
-            <phase>test</phase>
-            <configuration>
-              <target name="sling-start" if="sling.start">
-                <mkdir dir="sakai"/>
-                <delete file="sakai/sling/logs/error.log"/>
-                <java classname="org.sakaiproject.nakamura.app.NakamuraMain" fork="true" spawn="true" dir="sakai" classpathref="maven.runtime.classpath">
-                  <jvmarg value="-Xms512m"/>
-                  <jvmarg value="-Xmx1024m"/>
-                  <jvmarg value="-XX:MaxPermSize=256m"/>
-                  <arg value="-p"/>
-                  <arg value="8080"/>
-                  <arg value="start"/>
-                </java>
-                <echo message="Server is starting; log at sakai/sling/logs/error.log"/>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-          <execution>
             <id>run-tests</id>
-            <phase>test</phase>
+            <phase>integration-test</phase>
             <configuration>
-              <target name="run-tests" if="sling.test">
-                  <exec executable="./tools/wait_for_startup_then_test.sh" dir=".." failonerror="true">
+              <target name="run-tests">
+                  <fail message="Port 8080 is already in use. Can't continue startup.">
+                    <condition>
+                      <socket server="localhost" port="8080"/>
+                    </condition>
+                  </fail>
+                  <mkdir dir="sakai"/>
+                  <delete file="sakai/sling/logs/error.log"/>
+                  <java classname="org.sakaiproject.nakamura.app.NakamuraMain" fork="true" spawn="true" dir="sakai" classpathref="maven.runtime.classpath">
+                    <jvmarg value="-Xms512m"/>
+                    <jvmarg value="-Xmx1024m"/>
+                    <jvmarg value="-XX:MaxPermSize=256m"/>
+                    <arg value="-p"/>
+                    <arg value="8080"/>
+                    <arg value="start"/>
+                  </java>
+                  <echo message="Server is starting; log at sakai/sling/logs/error.log"/>
+                  <exec executable="./tools/wait_for_startup_then_test.sh" dir=".." resultproperty="exitcode">
                     <arg value="./integration/sakai/sling/logs/error.log"/>
                   </exec>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>stop-sling</id>
-            <phase>test</phase>
-            <configuration>
-              <target name="sling-stop" if="sling.stop">
-                <java classname="org.sakaiproject.nakamura.app.NakamuraMain" fork="true" classpathref="maven.runtime.classpath">
-                  <sysproperty key="sling.home" value="sakai/sling"/>
-                  <arg value="stop"/>
-                </java>
+                  <condition property="failure">
+                    <not>
+                      <equals arg1="${exitcode}" arg2="0" />
+                    </not>
+                  </condition>
+                  <java classname="org.sakaiproject.nakamura.app.NakamuraMain" fork="true" classpathref="maven.runtime.classpath">
+                    <sysproperty key="sling.home" value="sakai/sling"/>
+                    <arg value="stop"/>
+                  </java>
+                  <fail if="failure">One or more tests failed or encountered an error.</fail>
               </target>
             </configuration>
             <goals>

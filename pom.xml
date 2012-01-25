@@ -141,11 +141,6 @@
        <modules>
         <module>integration</module>
        </modules>
-       <properties>
-         <sling.start>true</sling.start>
-         <sling.test>true</sling.test>
-         <sling.stop>true</sling.stop>
-       </properties>
     </profile>
     <profile>
       <id>redeploy</id>
