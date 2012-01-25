@@ -266,8 +266,9 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
 //      for(String principal : principals) {
 //        Authorizable group = authorizableManager.findAuthorizable(principal);
         Authorizable group = memberOf.next();
-        if (!AuthorizableUtil.isRealGroup(group)) {
-          // we don't want the "everyone" group in this feed
+        if (AuthorizableUtil.isContactGroup(group)
+            || Group.EVERYONE.equals(group.getId())) {
+          // we don't want the "everyone" group or contact groups in this feed
           continue;
         }
         if (group.hasProperty(UserConstants.PROP_MANAGED_GROUP)) {
