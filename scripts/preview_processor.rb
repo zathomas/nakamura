@@ -112,7 +112,7 @@ def determine_file_extension_with_mime_type(mimetype, given_extension)
       if line[0] != "#" && line.include?(mimetype) then
         # use to_s since that will always give us a sensible String and not nil
         # nil.to_s == ''
-        if line.include? given_extension.to_s
+        if given_extension && !given_extension.empty? && line.include? given_extension
           return ".#{given_extension}"
         else
           return ".#{line.split(' ')[1]}"
