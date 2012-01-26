@@ -231,7 +231,7 @@ def main()
   log "Starts a new batch of queued files: #{queued_files.join(', ')}"
 
   Dir['*'].each do |id|
-    FileUtils.rm id
+    FileUtils.rm_f id
     log "processing #{id}"
 
     begin
@@ -272,7 +272,7 @@ def main()
           content = resize_and_write_file filename, filename_thumb, 180, 225
           post_file_to_server id, content, :small, page_count
 
-          FileUtils.rm DOCS_DIR + "/#{filename_thumb}"
+          FileUtils.rm_f DOCS_DIR + "/#{filename_thumb}"
         else
           begin
             # Check if user wants autotagging
@@ -295,7 +295,7 @@ def main()
               # Generate tags for document
               @s.execute_post @s.url_for("p/#{id}"), {':operation' => 'tag', 'key' => terms}
               log "Generate tags for #{id}, #{terms}"
-              FileUtils.rm id + ".txt"
+              FileUtils.rm_f "#{id}.txt"
               admin_id = "admin"
               origin_file_name = meta["sakai:pooled-content-file-name"]
               if not terms.nil? and terms.length > 0 and user["user"]["properties"]["sendTagMsg"] and user["user"]["properties"]["sendTagMsg"] != "false"
