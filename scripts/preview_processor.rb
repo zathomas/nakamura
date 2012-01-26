@@ -94,16 +94,25 @@ end
 # this mimetype, return it, otherwise just grab the first extension from the
 # mimetype entry in mime.types and use it for the extension to create a preview
 def determine_file_extension_with_mime_type(mimetype, given_extension)
+  # return if either argument is nil
+  return '' if mimetype.nil?
+
   # strip off the leading . in the given extension
   if given_extension && given_extension.match(/^\./)
     given_extension = given_extension[1..-1]
   end
+
+  # look through the known mimetypes to see if we handle this mimetype
+  #   note: have to check 1 dir higher because of a Dir.chdir that happens
+  #   before this is called
   File.open("../mime.types", "r") do |f|
     while (line = f.gets)
       line.chomp!
       # ignore any commented lines and check for the mimetype in the line
       if line[0] != "#" && line.include?(mimetype) then
-        if line.include? given_extension
+        # use to_s since that will always give us a sensible String and not nil
+        # nil.to_s == ''
+        if line.include? given_extension.to_s
           return ".#{given_extension}"
         else
           return ".#{line.split(' ')[1]}"
