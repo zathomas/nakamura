@@ -148,16 +148,18 @@ def extract_terms(content, max_terms = 5)
   # replace apostrophes
   content = content.gsub(/\u2018/, "'").gsub(/\u2019/, "'")
   # remove ellipses (…)
-  content = content.gsub(/\u2026/, "")
+  content = content.gsub(/\u2026/, '')
+  # replace non-breaking spaces with a space char
+  content = content.gsub(/\u00a0/, ' ')
 
   # extract the terms
-  pre_terms = TermExtract.extract(content.downcase, :min_occurance => 1)
+  pre_terms = TermExtract.extract(content, :min_occurance => 1)
 
   # process the terms to collect only the ones that meet our conditions
   terms = {}
   pre_terms.each do |term, occurences|
-    # replace non-breaking spaces
-    key = term.gsub(/\xC2\xA0/, ' ').strip
+    # clean the term of extra spaces and downcase it
+    key = term.strip.downcase
 
     # don't collect terms that have:
     #  * any characters that aren't alphabetic or a space
@@ -167,7 +169,7 @@ def extract_terms(content, max_terms = 5)
     non_alpha = key =~ /[^[[:alpha:]] ]/
     one_char = key.length == 1
     contains_http = key.include?('http')
-    more_than_two_words = key.split(/ /).length > 2
+    more_than_two_words = key.split(' ', 3).length > 2
 
     terms[key] = occurences unless non_alpha or one_char or contains_http or more_than_two_words
   end
