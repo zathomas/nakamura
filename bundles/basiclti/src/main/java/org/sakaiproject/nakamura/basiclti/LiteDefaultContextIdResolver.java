@@ -27,12 +27,12 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.component.ComponentContext;
 import org.sakaiproject.nakamura.api.basiclti.LiteBasicLTIContextIdResolver;
 import org.sakaiproject.nakamura.api.basiclti.VirtualToolDataProvider;
-import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
-import org.sakaiproject.nakamura.api.lite.authorizable.Group;
-import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
+import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
+import org.sakaiproject.nakamura.api.lite.authorizable.Group;
+import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,8 +76,6 @@ public class LiteDefaultContextIdResolver implements LiteBasicLTIContextIdResolv
     }
     
     final AuthorizableManager authManager = session.getAuthorizableManager();
-    final org.sakaiproject.nakamura.api.lite.authorizable.Authorizable az = authManager
-        .findAuthorizable(session.getUserId());
 
     String contextId = null;
     if (groupId != null) {

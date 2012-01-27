@@ -20,7 +20,9 @@ package org.sakaiproject.nakamura.api.files;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.REQUIRED_MIXIN;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.RT_SAKAI_LINK;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_LINK;
+
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -47,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import java.security.AccessControlException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -107,7 +110,9 @@ public class FileUtils {
           adminSession.save();
         }
       } finally {
-        adminSession.logout();
+        if (adminSession != null) {
+          adminSession.logout();
+        }
       }
     }
 

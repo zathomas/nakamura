@@ -66,7 +66,7 @@ public class CapturingHttpServletResponse extends HttpServletResponseWrapper {
 
   @Override
   public String toString() {
-    String retval = null;
+    String retval = "";
     if (baos.size() > 0) {
       try {
         retval = baos.toString("UTF-8");

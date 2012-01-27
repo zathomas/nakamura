@@ -277,7 +277,7 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
       // KERN-1536 allow arbitrary properties to be stored on a comment
       for (String parameterName : request.getRequestParameterMap().keySet()) {
         // commentId is not meant to be stored
-        if ("commentId" == parameterName) {
+        if ("commentId".equals(parameterName)) {
           continue;
         }
         String[] parameterValues = request.getParameterValues(parameterName);
@@ -315,7 +315,9 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
       throw new ServletException(e.getMessage(), e);
     } finally {
       try {
-        adminSession.logout();
+        if (adminSession != null) {
+          adminSession.logout();
+        }
       } catch (ClientPoolException e) {
         LOGGER.warn(e.getMessage(), e);
       }

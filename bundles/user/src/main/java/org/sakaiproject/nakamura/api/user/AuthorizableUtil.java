@@ -18,10 +18,7 @@
  */
 package org.sakaiproject.nakamura.api.user;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import com.google.common.collect.ImmutableSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
@@ -31,7 +28,10 @@ import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 
-import com.google.common.collect.ImmutableSet;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 public class AuthorizableUtil {
 
@@ -88,11 +88,11 @@ public class AuthorizableUtil {
    * @return
    */
   public static Boolean isContactGroup(Authorizable group) {
-    String title = String.valueOf(group.getProperty("sakai:group-title"));
-    if (group != null && group.isGroup() && title.startsWith("g-contacts-")) {
-      return true;
-    } else {
-      return false;
+    Boolean result = false;
+    if (group != null) {
+      String title = String.valueOf(group.getProperty("sakai:group-title"));
+      result = (group.isGroup() && title.startsWith("g-contacts-"));
     }
+    return result;
   }
 }

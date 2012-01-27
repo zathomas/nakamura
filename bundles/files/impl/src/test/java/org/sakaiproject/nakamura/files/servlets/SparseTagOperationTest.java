@@ -29,6 +29,7 @@ import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_NAME;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_PROFILE_RESOURCE_TYPE;
 
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -199,7 +200,7 @@ public class SparseTagOperationTest {
         Resource resource = mock(Resource.class);
         when(resource.getPath()).thenReturn("/bla/bla");
 
-        ImmutableMap.Builder
+    ImmutableMap.Builder<String, Object>
             builder = ImmutableMap.builder();
 
         builder.put("sakai:tag-name", "oldtag");
@@ -277,7 +278,7 @@ public class SparseTagOperationTest {
     assertEquals(404, response.getStatusCode());
 
     Content tagResult = contentManager.get("/tags/foo");
-    Content result = contentManager.get("/bla/bla");
+    contentManager.get("/bla/bla");
 
     assertNull(tagResult);
   }

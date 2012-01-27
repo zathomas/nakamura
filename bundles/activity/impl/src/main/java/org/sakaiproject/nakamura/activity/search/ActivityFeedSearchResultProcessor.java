@@ -90,20 +90,24 @@ public class ActivityFeedSearchResultProcessor implements SolrSearchResultProces
       write.object();
       if (contentResult != null) {
         ExtendedJSONWriter.writeContentTreeToWriter(write, contentResult, true, -1);
-      }
-      String actor = String.valueOf(contentResult.getProperty(ActivityConstants.PARAM_ACTOR_ID));
-      if (!StringUtils.isBlank(actor)) {
-        Authorizable actorAuth = session.getAuthorizableManager().findAuthorizable(actor);
-        if (actorAuth != null) {
-          ValueMap profile = new ValueMapDecorator(basicUserInfoService.getProperties(actorAuth));
-          ExtendedJSONWriter.writeValueMapInternals(write, profile);
+
+        String actor = String.valueOf(contentResult
+            .getProperty(ActivityConstants.PARAM_ACTOR_ID));
+        if (!StringUtils.isBlank(actor)) {
+          Authorizable actorAuth = session.getAuthorizableManager().findAuthorizable(
+              actor);
+          if (actorAuth != null) {
+            ValueMap profile = new ValueMapDecorator(
+                basicUserInfoService.getProperties(actorAuth));
+            ExtendedJSONWriter.writeValueMapInternals(write, profile);
+          } else {
+            LOGGER.warn("Unable to find actor for activity [{}]", contentPath);
+          }
         } else {
-          LOGGER.warn("Unable to find actor for activity [{}]", contentPath);
+          LOGGER.warn("Unable to find actor in activity [{}]", contentPath);
         }
-      } else {
-        LOGGER.warn("Unable to find actor in activity [{}]", contentPath);
+        write.endObject();
       }
-      write.endObject();
     } catch (Exception e) {
       throw new JSONException(e);
     }
