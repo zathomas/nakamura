@@ -242,8 +242,8 @@ public class LiteClusterUserServlet extends SlingSafeMethodsServlet {
           // work out the remote server and try there.
           ClusterServer clusterServer = clusterTrackingService.getServer(trackingCookie);
           if (clusterServer == null
-              || clusterServer.getServerId() == clusterTrackingService
-                  .getCurrentServerId()) {
+              || clusterServer.getServerId().equals(
+                  clusterTrackingService.getCurrentServerId())) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND,
                 "Cookie could not be found");
             return;
