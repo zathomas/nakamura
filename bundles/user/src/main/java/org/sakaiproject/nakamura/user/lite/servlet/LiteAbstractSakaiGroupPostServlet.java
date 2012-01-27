@@ -36,7 +36,6 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
-import org.sakaiproject.nakamura.api.user.AuthorizableCountChanger;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.api.user.UserConstants.Joinable;
 import org.sakaiproject.nakamura.user.lite.resource.LiteAuthorizableResourceProvider;
@@ -186,7 +185,7 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
               }
               changed = true;
             }
-            if (peerGroup != null && peerGroup.getId() != group.getId()) {
+            if (peerGroup != null && peerGroup.getId().equals(group.getId())) {
               Set<String> members = ImmutableSet.copyOf(peerGroup.getMembers());
               if (members.contains(memberAuthorizable.getId())) {
                 membersToRemoveFromPeer.add(memberAuthorizable);
