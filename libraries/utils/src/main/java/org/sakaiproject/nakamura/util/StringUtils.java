@@ -155,9 +155,7 @@ public class StringUtils {
       }
     }
     String[] na = new String[a.length + 1];
-    for (int i = 0; i < a.length; i++) {
-      na[i] = a[i];
-    }
+    System.arraycopy(a, 0, na, 0, a.length);
     na[na.length - 1] = v;
     return na;
   }

@@ -116,10 +116,12 @@ public class WidgetDataIndexingHandler implements IndexingHandler {
 
         // concatenate the fields requested to be indexed.
         StringBuilder sb = new StringBuilder();
-        for (String uniqField : uniqFields) {
-          Object propVal = content.getProperty(uniqField);
-          if (propVal != null) {
-            sb.append(propVal).append(' ');
+        if (uniqFields != null) {
+          for (String uniqField : uniqFields) {
+            Object propVal = content.getProperty(uniqField);
+            if (propVal != null) {
+              sb.append(propVal).append(' ');
+            }
           }
         }
 

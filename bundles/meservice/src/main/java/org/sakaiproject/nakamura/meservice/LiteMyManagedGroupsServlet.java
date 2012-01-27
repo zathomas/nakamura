@@ -53,7 +53,6 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.profile.ProfileService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 
-import java.util.Iterator;
 import java.util.TreeMap;
 
 @ServiceDocumentation(
@@ -133,7 +132,6 @@ public class LiteMyManagedGroupsServlet extends LiteAbstractMyGroupsServlet {
       AuthorizableManager userManager, SlingHttpServletRequest request)
       throws StorageClientException, AccessDeniedException {
     TreeMap<String, Group> managedGroups = new TreeMap<String, Group>();
-    Iterator<Group> allGroupsIter = member.memberOf(userManager);
     for (String principal : member.getPrincipals()) {
       Group group = (Group)userManager.findAuthorizable(principal);
       if (group != null && !group.getId().equals(Group.EVERYONE)) {

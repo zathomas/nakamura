@@ -35,13 +35,17 @@ public class ConcurrentLRUMap<K, V> implements Map<K, V> {
 
     @Override
     public boolean equals(Object obj) {
-      try {
-        @SuppressWarnings("unchecked")
-        Holder<T> t = (Holder<T>) obj;
-        return value.equals(t.value);
-      } catch (ClassCastException e) {
-        return false;
+      boolean eq = false;
+      if (obj != null) {
+        try {
+          @SuppressWarnings("unchecked")
+          Holder<T> t = (Holder<T>) obj;
+          eq = value.equals(t.value);
+        } catch (ClassCastException e) {
+          eq = false;
+        }
       }
+      return eq;
     }
 
     @Override

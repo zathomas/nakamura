@@ -19,16 +19,11 @@ package org.sakaiproject.nakamura.files.servlets;
 
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.RT_SAKAI_TAG;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_NAME;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAGS;
+import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_TAG_NAME;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.TOPIC_FILES_TAG;
 import static org.sakaiproject.nakamura.api.user.UserConstants.GROUP_PROFILE_RESOURCE_TYPE;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_PROFILE_RESOURCE_TYPE;
-
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -55,7 +50,6 @@ import org.sakaiproject.nakamura.api.doc.ServiceParameter;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.files.TagUtils;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
-import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
@@ -76,6 +70,11 @@ import org.sakaiproject.nakamura.util.PathUtils;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -110,14 +109,10 @@ import javax.servlet.http.HttpServletResponse;
 public class SparseTagOperation extends AbstractSparsePostOperation {
 
   @Reference
-  private Repository repository;
-
-  @Reference
   protected transient EventAdmin eventAdmin;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SparseTagOperation.class);
 
-  private static final long serialVersionUID = -7724827744698056843L;
   private static final String TAGS_BASE = "/tags/";
 
   /**
@@ -133,7 +128,7 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
    */
   protected Content getOrCreateTag(ResourceResolver resolver, String tagContentPath)
       throws AccessDeniedException, StorageClientException {
-    // all tags live under /tags. Make sure the requestor is trying to use a tag from
+    // all tags live under /tags. Make sure the requester is trying to use a tag from
     // there, does not provide an empty path and the path has more than the base path
     if (tagContentPath == null || tagContentPath.length() <= TAGS_BASE.length()
         || !tagContentPath.startsWith(TAGS_BASE)) {

@@ -197,7 +197,6 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
       } else {
         session = session.getRepository().loginAdministrative();
       }
-      AuthorizableManager authorizableManager = session.getAuthorizableManager();
       for ( Authorizable authorizable : authorizables) {
         LOGGER.debug("Deleting {} ",authorizable.getId());
         authorizableEvents.put(authorizable.getId(), (authorizable instanceof Group));
@@ -300,8 +299,6 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
 
       private final Session session;
 
-      private final Resource baseResource;
-
       private final String[] paths;
 
       private int pathIndex;
@@ -311,7 +308,6 @@ public class LiteDeleteSakaiAuthorizableServlet extends LiteAbstractAuthorizable
       ApplyToIterator(SlingHttpServletRequest request, String[] paths) {
           this.resolver = request.getResourceResolver();
           this.session = StorageClientUtils.adaptToSession(this.resolver.adaptTo(javax.jcr.Session.class));
-          this.baseResource = request.getResource();
           this.paths = paths.clone();
           this.pathIndex = 0;
 

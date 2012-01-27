@@ -282,7 +282,9 @@ public class RSSProxyPostProcessor implements ProxyPostProcessor {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
           "General exception caught.");
     } finally {
-      if (out != null) out.close();
+      if (out != null) {
+        out.close();
+      }
       reader.close();
       try {
         if (writer != null) writer.close();

@@ -19,7 +19,6 @@ package org.sakaiproject.nakamura.connections;
 
 import static org.sakaiproject.nakamura.api.connections.ConnectionConstants.SAKAI_CONNECTION_STATE;
 import static org.sakaiproject.nakamura.api.connections.ConnectionConstants.SAKAI_CONNECTION_TYPES;
-
 import static org.sakaiproject.nakamura.api.connections.ConnectionOperation.accept;
 import static org.sakaiproject.nakamura.api.connections.ConnectionOperation.block;
 import static org.sakaiproject.nakamura.api.connections.ConnectionOperation.cancel;
@@ -452,21 +451,23 @@ public class ConnectionManagerImpl implements ConnectionManager {
     Set<String> toRelationships = new HashSet<String>();
     Set<String> fromRelationships = new HashSet<String>();
     Map<String, Object> sharedProperties = new HashMap<String, Object>();
-    for (Entry<String, String[]> rp : requestProperties.entrySet()) {
-      String key = rp.getKey();
-      String[] values = rp.getValue();
-      if (ConnectionConstants.PARAM_FROM_RELATIONSHIPS.equals(key)) {
-        fromRelationships.addAll(Arrays.asList(values));
-      } else if (ConnectionConstants.PARAM_TO_RELATIONSHIPS.equals(key)) {
-        toRelationships.addAll(Arrays.asList(values));
-      } else if (ConnectionConstants.SAKAI_CONNECTION_TYPES.equals(key)) {
-        fromRelationships.addAll(Arrays.asList(values));
-        toRelationships.addAll(Arrays.asList(values));
-      } else {
-        if ( values.length == 1 ) {
-          sharedProperties.put(key, values[0]);
-        } else if ( values.length > 1 ) {
-          sharedProperties.put(key, values);
+    if (requestProperties != null) {
+      for (Entry<String, String[]> rp : requestProperties.entrySet()) {
+        String key = rp.getKey();
+        String[] values = rp.getValue();
+        if (ConnectionConstants.PARAM_FROM_RELATIONSHIPS.equals(key)) {
+          fromRelationships.addAll(Arrays.asList(values));
+        } else if (ConnectionConstants.PARAM_TO_RELATIONSHIPS.equals(key)) {
+          toRelationships.addAll(Arrays.asList(values));
+        } else if (ConnectionConstants.SAKAI_CONNECTION_TYPES.equals(key)) {
+          fromRelationships.addAll(Arrays.asList(values));
+          toRelationships.addAll(Arrays.asList(values));
+        } else {
+          if (values.length == 1) {
+            sharedProperties.put(key, values[0]);
+          } else if (values.length > 1) {
+            sharedProperties.put(key, values);
+          }
         }
       }
     }

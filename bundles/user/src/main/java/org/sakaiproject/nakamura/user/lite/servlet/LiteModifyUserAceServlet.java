@@ -19,6 +19,7 @@
 package org.sakaiproject.nakamura.user.lite.servlet;
 
 import com.google.common.collect.Lists;
+
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
@@ -76,6 +77,8 @@ import java.util.List;
         ))
 @SlingServlet(resourceTypes = {"sparse/user"}, methods = {"POST"}, selectors = {"modifyAce"})
 public class LiteModifyUserAceServlet extends LiteAbstractUserPostServlet {
+
+  private static final long serialVersionUID = 9154151078639439773L;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LiteModifyUserAceServlet.class);
 

@@ -80,7 +80,6 @@ import javax.servlet.http.HttpServletResponse;
 public class LinkOperation extends AbstractSlingPostOperation {
 
   public static final Logger log = LoggerFactory.getLogger(LinkOperation.class);
-  private static final long serialVersionUID = -6206802633585722105L;
   private static final String LINK_PARAM = "link";
 
   @Reference

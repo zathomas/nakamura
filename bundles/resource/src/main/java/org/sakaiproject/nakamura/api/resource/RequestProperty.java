@@ -176,6 +176,8 @@ public class RequestProperty {
         if (stringValues == null) {
             if (values == null && useDefaultWhenMissing) {
                 stringValues = new String[] { defaultValues[0].getString() };
+            } else if (values == null) {
+              return null;
             } else if (values.length > 1) {
                 // TODO: how the default values work for MV props is not very
                 // clear

@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.jcr.Session;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
@@ -121,7 +120,6 @@ public class LiteUserExistsServlet extends SlingSafeMethodsServlet {
       throws ServletException, IOException {
     long start = System.currentTimeMillis();
     try {
-      Session session = request.getResourceResolver().adaptTo(Session.class);
       RequestParameter idParam = request.getRequestParameter("userid");
       if (idParam == null) {
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, "This request must have a 'userid' parameter.");

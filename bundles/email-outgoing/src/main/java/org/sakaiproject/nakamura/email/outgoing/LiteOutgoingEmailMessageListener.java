@@ -493,7 +493,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
             Properties eventProps = new Properties();
             eventProps.put(NODE_PATH_PROPERTY, config.get(NODE_PATH_PROPERTY));
 
-            Event retryEvent = new Event(QUEUE_NAME, (Map) eventProps);
+            Event retryEvent = new Event(QUEUE_NAME, (Map<Object, Object>) eventProps);
             eventAdmin.postEvent(retryEvent);
 
           }
