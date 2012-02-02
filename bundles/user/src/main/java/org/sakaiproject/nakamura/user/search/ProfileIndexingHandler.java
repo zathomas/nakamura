@@ -34,6 +34,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.osgi.service.event.Event;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.solr.IndexingHandler;
@@ -113,6 +114,8 @@ public class ProfileIndexingHandler implements IndexingHandler {
       }
     } catch (StorageClientException e) {
       LOGGER.warn(e.getMessage(), e);
+    } catch (AccessDeniedException e) {
+      LOGGER.warn(e.getMessage(), e);
     }
     return docs;
   }
@@ -141,7 +144,7 @@ public class ProfileIndexingHandler implements IndexingHandler {
    * @throws StorageClientException
    */
   private SolrInputDocument processSection(String sectionPath, String authId,
-      ContentManager cm) throws StorageClientException {
+      ContentManager cm) throws StorageClientException, AccessDeniedException {
     Iterator<Content> sections = cm.listChildren(sectionPath + "/elements");
     SolrInputDocument doc = new SolrInputDocument();
     doc.setField("id", sectionPath);
@@ -149,6 +152,9 @@ public class ProfileIndexingHandler implements IndexingHandler {
     doc.setField("path", authId);
     // add the indexed section as the second path
     doc.addField("path", sectionPath);
+    // we have to set the _source field so default fields are added automatically.
+    // it only matters that we set a Content object to _source
+    doc.setField("_source", cm.get(sectionPath));
     doc.setField("type", "u");
     doc.setField("resourceType", "profile");
     while (sections.hasNext()) {
@@ -156,9 +162,6 @@ public class ProfileIndexingHandler implements IndexingHandler {
       Object value = section.getProperty("value");
       if (value != null) {
         doc.addField("profile", value);
-        // we have to set the _source field so default fields are added automatically.
-        // it only matters that we set a Content object to _source
-        doc.setField("_source", section);
       }
     }
     return doc;
