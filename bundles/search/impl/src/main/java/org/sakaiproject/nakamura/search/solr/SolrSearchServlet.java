@@ -48,10 +48,8 @@ import org.apache.sling.api.request.RequestParameterMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.util.ClientUtils;
-import org.osgi.service.component.ComponentContext;
 import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
 import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceParameter;
@@ -137,8 +135,8 @@ import javax.servlet.http.HttpServletResponse;
 @SlingServlet(extensions = { "json" }, methods = { "GET" }, resourceTypes = { "sakai/solr-search", "sakai/sparse-search" })
 @Properties(value = {
     @Property(name = "service.description", value = { "Performs searches based on the associated node." }),
-    @Property(name = "service.vendor", value = { "The Sakai Foundation" }),
-    @Property(name = "maximumResults", longValue = 2500L) })
+    @Property(name = "service.vendor", value = { "The Sakai Foundation" })
+})
 public class SolrSearchServlet extends SlingSafeMethodsServlet {
 
   private static final long serialVersionUID = 4130126304725079596L;
@@ -156,7 +154,6 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
   @Reference
   private SearchResponseDecoratorTracker searchResponseDecoratorTracker;
 
-  protected long maximumResults = 100;
 
   // Default processors
   /**
@@ -522,10 +519,6 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
     }
 
     return propertiesMap;
-  }
-
-  protected void activate(ComponentContext componentContext) {
-    maximumResults = PropertiesUtil.toLong(componentContext.getProperties().get("maximumResults"), 100);
   }
 
   /**
