@@ -34,7 +34,6 @@ import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.CommonParams;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -78,8 +77,6 @@ public class SolrResultSetFactory implements ResultSetFactory {
   private static final String SLOW_QUERY_TIME = "slowQueryTime";
   @Property(intValue = 100)
   private static final String DEFAULT_MAX_RESULTS = "defaultMaxResults";
-  @Property(intValue = 10 * 1000)
-  private static final String SO_TIMEOUT = "soTimeout";
   @Property(value = "POST")
   private static final String HTTP_METHOD = "httpMethod";
 
@@ -98,7 +95,6 @@ public class SolrResultSetFactory implements ResultSetFactory {
   private int defaultMaxResults = 100; // set to 100 to allow testing
   private long slowQueryThreshold;
   private long verySlowQueryThreshold;
-  private int soTimeout;
   private METHOD queryMethod;
 
   @Activate
@@ -107,7 +103,6 @@ public class SolrResultSetFactory implements ResultSetFactory {
         defaultMaxResults);
     slowQueryThreshold = PropertiesUtil.toLong(props.get(SLOW_QUERY_TIME), 10L);
     verySlowQueryThreshold = PropertiesUtil.toLong(props.get(VERY_SLOW_QUERY_TIME), 100L);
-    soTimeout = PropertiesUtil.toInteger(props.get(SO_TIMEOUT), 10 * 1000);
     queryMethod = METHOD.valueOf(PropertiesUtil.toString(props.get(HTTP_METHOD), "POST"));
   }
 
@@ -181,9 +176,6 @@ public class SolrResultSetFactory implements ResultSetFactory {
       SolrQuery solrQuery = buildQuery(request, query.getQueryString(), queryOptions);
 
       SolrServer solrServer = solrSearchService.getServer();
-      if (solrServer instanceof CommonsHttpSolrServer) {
-        ((CommonsHttpSolrServer) solrServer).setSoTimeout(soTimeout);
-      }
       if ( LOGGER.isDebugEnabled()) {
         try {
           LOGGER.debug("Performing Query {} ", URLDecoder.decode(solrQuery.toString(),"UTF-8"));
