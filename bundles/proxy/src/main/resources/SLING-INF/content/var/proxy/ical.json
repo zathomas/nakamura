@@ -1,0 +1,17 @@
+{
+    "sling:resourceType": "sakai/proxy",
+    "sakai:request-proxy-endpoint": "${feedurl}",
+    "sakai:request-proxy-method": "GET",
+    "sakai:postprocessor": "iCal",
+    "sakai:title": "iCalendar Proxy",
+    "sakai:shortDescription": "Get the content of a remote iCalendar feed and convert it to JSON.",
+    "sakai:parameters" : [
+        "{\"name\" : \"feedurl\", \"description\" : \"The URL of the iCalendar feed to retrieve.\"}"
+    ],
+    "sakai:description": [
+        "Will retrieve an iCalendar feed from a remote URL and return it converted into a JSON document."
+    ],
+    "sakai:response": [
+        "Example: GET: http://localhost:8080/var/proxy/ical.json?feedurl=http://talks.cam.ac.uk/show/ics/5606",
+    ],
+}
