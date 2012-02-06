@@ -146,7 +146,7 @@ public class TagUtils {
 
   public static boolean isChildOfRoot(Content node) {
     if (node == null) {
-      throw new IllegalArgumentException("Missing a required argument:: node:" + node);
+      throw new IllegalArgumentException("Missing a required argument:: node");
     }
 
     String parentPath = PathUtils.getParentReference(node.getPath());
