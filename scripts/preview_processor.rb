@@ -257,7 +257,7 @@ def main()
       else
         # Making a local copy of the file.
         content_file = @s.execute_get @s.url_for("p/#{id}")
-        unless content_file.code == '200'
+        unless ['200', '204'].include? content_file.code
           raise "Failed to process file: #{id}, status: #{content_file.code}"
         end
         File.open(filename, 'wb') { |f| f.write content_file.body }
