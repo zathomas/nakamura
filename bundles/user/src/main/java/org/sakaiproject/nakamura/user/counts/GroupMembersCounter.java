@@ -58,7 +58,7 @@ public class GroupMembersCounter {
       try {
         Authorizable auth = authMgr.findAuthorizable(member);
         // only count the members in a pseudogroup; not the group itself
-		if (auth instanceof Group && "true".equals(auth.getProperty(UserConstants.PROP_PSEUDO_GROUP))) {
+		if (auth instanceof Group && Boolean.parseBoolean((String)auth.getProperty(UserConstants.PROP_PSEUDO_GROUP))) {
           Group group = (Group) auth;
           LOGGER.debug("Processing pseudoGroup: " + group.getId());
           if (!groupsAlreadyProcessed.contains(group.getId())) {
