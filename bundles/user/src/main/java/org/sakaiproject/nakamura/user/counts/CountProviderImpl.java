@@ -100,7 +100,7 @@ public class CountProviderImpl implements CountProvider {
     AuthorizableManager authorizableManager = session.getAuthorizableManager();
 
     if (CONTENT_ITEMS_PROP.equals(propertyName)) {
-      authorizable.setProperty(CONTENT_ITEMS_PROP, getContentCount(authorizable));
+      authorizable.setProperty(CONTENT_ITEMS_PROP, getContentCount(authorizable, authorizableManager));
     } else {
       if (authorizable instanceof User) {
         if (CONTACTS_PROP.equals(propertyName)) {
@@ -152,9 +152,9 @@ public class CountProviderImpl implements CountProvider {
     return groupMembershipCounter.count(au, authorizableManager);
   }
 
-  private int getContentCount(Authorizable au) throws AccessDeniedException,
+  private int getContentCount(Authorizable au, AuthorizableManager authorizableManager) throws AccessDeniedException,
       StorageClientException {
-    return contentCounter.countExact(au, solrSearchService);
+    return contentCounter.countExact(au, authorizableManager, solrSearchService);
   }
 
   private int getContactsCount(Authorizable au, AuthorizableManager authorizableManager)

@@ -18,6 +18,11 @@
  */
 package org.sakaiproject.nakamura.api.user;
 
+import static org.sakaiproject.nakamura.api.user.UserConstants.GROUP_TITLE_PROPERTY;
+import static org.sakaiproject.nakamura.api.user.UserConstants.PROP_PSEUDO_GROUP;
+import static org.sakaiproject.nakamura.api.user.UserConstants.SAKAI_CATEGORY;
+import static org.sakaiproject.nakamura.api.user.UserConstants.SAKAI_EXCLUDE;
+
 import com.google.common.collect.ImmutableSet;
 
 import org.apache.commons.lang.StringUtils;
@@ -35,7 +40,8 @@ import java.util.Set;
 
 public class AuthorizableUtil {
 
-  public static final Set<String> IGNORE_AUTHIDS = ImmutableSet.of(Group.EVERYONE, User.ANON_USER, User.ADMIN_USER);
+  //list of authorizables to not index
+  public static final Set<String> IGNORE_AUTHIDS = ImmutableSet.of(Group.EVERYONE, User.ANON_USER, User.ADMIN_USER, "owner", "system");
 
   /**
    * Lists the Groups this authorizable is a member of excluding everyone. Includes group that the member is indirectly a memberOf
@@ -45,12 +51,12 @@ public class AuthorizableUtil {
    * @throws AccessDeniedException
    * @throws StorageClientException
    */
-  public static List<Authorizable> getRealGroups(Authorizable au, AuthorizableManager authorizableManager) throws AccessDeniedException, StorageClientException {
+  public static List<Authorizable> getUserFacingGroups(Authorizable au, AuthorizableManager authorizableManager) throws AccessDeniedException, StorageClientException {
 
     List<Authorizable> realGroups = new ArrayList<Authorizable>();
     for (Iterator<Group> memberOf = au.memberOf(authorizableManager); memberOf.hasNext();) {
       Authorizable group = memberOf.next();
-      if (isRealGroup(group)) {
+      if (isUserFacingGroup(group)) {
         realGroups.add(group);			
       }
     }
@@ -62,17 +68,15 @@ public class AuthorizableUtil {
    * @param group the authorizable
    * @return true if its an absolute group
    */
-  public static Boolean isRealGroup(Authorizable group) {
-    if (group == null || !group.isGroup()
+  public static Boolean isUserFacingGroup(Authorizable group) {
+    if (isContactGroup(group)
         // we don't want to count the everyone groups
         || IGNORE_AUTHIDS.contains(group.getId())
         // don't count if the group is to be excluded
-        || Boolean.parseBoolean(String.valueOf(group.getProperty("sakai:excludeSearch")))
+        || Boolean.parseBoolean(String.valueOf(group.getProperty(SAKAI_EXCLUDE)))
         // don't count if the group lacks a title
-        || group.getProperty("sakai:group-title") == null
-        || StringUtils.isEmpty(String.valueOf(group.getProperty("sakai:group-title")))
-        // don't count the special "contacts" group
-        || group.getId().startsWith("g-contacts-")) {
+        || group.getProperty(GROUP_TITLE_PROPERTY) == null
+        || StringUtils.isEmpty(String.valueOf(group.getProperty(GROUP_TITLE_PROPERTY)))) {
       return false;
     }
     else {
@@ -90,9 +94,29 @@ public class AuthorizableUtil {
   public static Boolean isContactGroup(Authorizable group) {
     Boolean result = false;
     if (group != null) {
-      String title = String.valueOf(group.getProperty("sakai:group-title"));
+      String title = String.valueOf(group.getProperty(GROUP_TITLE_PROPERTY));
       result = (group.isGroup() && title.startsWith("g-contacts-"));
     }
     return result;
+  }
+
+  /**
+   * Check if an authorizable is a content collection.
+   *
+   * @param group
+   * @param topLevel
+   * @return
+   */
+  public static boolean isCollection(Authorizable group, boolean topLevel) {
+    boolean retval = false;
+    if (group != null && group.isGroup()
+        && "collection".equals(group.getProperty(SAKAI_CATEGORY))) {
+      retval = true;
+    }
+
+    if (topLevel) {
+      retval = retval && "false".equals(String.valueOf(group.getProperty(PROP_PSEUDO_GROUP)));
+    }
+    return retval;
   }
 }
