@@ -215,7 +215,7 @@ public class SolrResultSetFactory implements ResultSetFactory {
     SolrQuery solrQuery = new SolrQuery(queryString);
     long[] ranges = SolrSearchUtil.getOffsetAndSize(request, options);
     solrQuery.setStart((int) ranges[0]);
-    solrQuery.setRows((int) ranges[1]);
+    solrQuery.setRows(Math.min(defaultMaxResults, (int) ranges[1]));
 
     // add in some options
     if (options != null) {
