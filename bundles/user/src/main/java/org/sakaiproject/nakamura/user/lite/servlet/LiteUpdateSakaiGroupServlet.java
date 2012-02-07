@@ -247,7 +247,7 @@ public class LiteUpdateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
       }
 
       if (!accessControlManager.can(currentUser, Security.ZONE_AUTHORIZABLES, authorizable.getId(), Permissions.CAN_WRITE)) {
-        if (!(Boolean.parseBoolean((String)authorizable.getProperty("sakai:pseudoGroup")) && "collection".equals(authorizable.getProperty("sakai:category")))) {
+        if (!(Boolean.parseBoolean(String.valueOf(authorizable.getProperty("sakai:pseudoGroup"))) && "collection".equals(authorizable.getProperty("sakai:category")))) {
           htmlResponse.setStatus(SC_FORBIDDEN, "Non-manager may not update unless pseudo-group AND collection: " + authorizable.getId());
           return;
         }
