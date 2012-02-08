@@ -113,7 +113,7 @@ public class ProxyClientServiceImpl implements ProxyClientService, ProxyNodeSour
    */
   private static final String JCR_RESOURCE_LOADER = "jcr";
 
-  @Property(value={"rss", "trustedLoginTokenProxyPostProcessor", "someothersafepostprocessor"})
+  @Property(value={"rss", "trustedLoginTokenProxyPostProcessor", "iCal", "someothersafepostprocessor"})
   private static final String SAFE_POSTPROCESSORS = "safe.postprocessors";
 
   /**
