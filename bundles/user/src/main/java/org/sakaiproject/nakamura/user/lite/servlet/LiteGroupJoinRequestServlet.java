@@ -189,25 +189,21 @@ public class LiteGroupJoinRequestServlet extends SlingAllMethodsServlet {
 
   private Joinable getJoinability(String groupID, Session session) throws StorageClientException, AccessDeniedException {
     Joinable joinable = Joinable.no;
-
-    ContentManager contentManager = session.getContentManager();
     AuthorizableManager authorizableManager = session.getAuthorizableManager();
 
     Group targetGroup = (Group) authorizableManager.findAuthorizable(groupID);
-    String profileContentPath = LitePersonalUtils.getProfilePath(groupID);
 
-    // if it's a pseudogroup, get joinability from its parent group
+    // if it's a pseudogroup, get joinability from its parent group instead
     Object pseudoGroupProp = targetGroup.getProperty(UserConstants.PROP_PSEUDO_GROUP);
     if (pseudoGroupProp != null) {
       if (Boolean.parseBoolean(String.valueOf(pseudoGroupProp))) {
         String parentGroupID = String.valueOf(targetGroup.getProperty(UserConstants.PROP_PARENT_GROUP_ID));
-        profileContentPath = LitePersonalUtils.getProfilePath(parentGroupID);
+        targetGroup = (Group) authorizableManager.findAuthorizable(parentGroupID);
       }
     }
 
-    Content profileContent = contentManager.get(profileContentPath);
-    String joinability = String.valueOf(profileContent.getProperty(UserConstants.PROP_JOINABLE_GROUP));
-    if (joinability != null) {
+    String joinability = String.valueOf(targetGroup.getProperty(UserConstants.PROP_JOINABLE_GROUP));
+    if (joinability != null && !joinability.equals("null")) {
       joinable = Joinable.valueOf(joinability);
     }
     return joinable;
