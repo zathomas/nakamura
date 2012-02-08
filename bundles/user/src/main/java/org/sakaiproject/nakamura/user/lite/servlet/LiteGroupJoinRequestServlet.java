@@ -18,11 +18,8 @@
 package org.sakaiproject.nakamura.user.lite.servlet;
 
 import static org.sakaiproject.nakamura.api.user.UserConstants.ANON_USERID;
-
 import com.google.common.collect.ImmutableMap;
-
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
@@ -50,40 +47,40 @@ import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
+import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.sakaiproject.nakamura.util.PathUtils;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
-
 /**
  *
  */
 @ServiceDocumentation(name = "LiteGroupJoinRequestServlet documentation", okForVersion = "1.1",
-  shortDescription = "Servlet to make a request to join a group",
-  description = "Servlet to make a request to join a group, responding to nodes of type sparse/joinrequests",
-  bindings = @ServiceBinding(type = BindingType.TYPE, bindings = "sparse/joinrequests",
-    selectors = @ServiceSelector(name = "create", description = ""),
-    extensions = { @ServiceExtension(name = "json") }),
-  methods = {
-    @ServiceMethod(name = "POST", description = {
-      "Create a new join request.",
-      "curl --referer http://localhost:8080 -u suzy:password -Fuserid=suzy http://localhost:8080/~math101/joinrequests.create.json"
-    },
-      parameters = {
-        @ServiceParameter(name = "userid", description = "The user to join the group.")
-      },
-      response = {
-        @ServiceResponse(code = HttpServletResponse.SC_OK, description = "Request has been processed successfully."),
-        @ServiceResponse(code = HttpServletResponse.SC_NOT_FOUND, description = "Resource could not be found."),
-        @ServiceResponse(code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR, description = "Unable to process request due to a runtime error.")
-      })
-})
+    shortDescription = "Servlet to make a request to join a group",
+    description = "Servlet to make a request to join a group, responding to nodes of type sparse/joinrequests",
+    bindings = @ServiceBinding(type = BindingType.TYPE, bindings = "sparse/joinrequests",
+        selectors = @ServiceSelector(name = "create", description = ""),
+        extensions = {@ServiceExtension(name = "json")}),
+    methods = {
+        @ServiceMethod(name = "POST", description = {
+            "Create a new join request.",
+            "curl --referer http://localhost:8080 -u suzy:password -Fuserid=suzy http://localhost:8080/~math101/joinrequests.create.json"
+        },
+            parameters = {
+                @ServiceParameter(name = "userid", description = "The user to join the group.")
+            },
+            response = {
+                @ServiceResponse(code = HttpServletResponse.SC_OK, description = "Request has been processed successfully."),
+                @ServiceResponse(code = HttpServletResponse.SC_NOT_FOUND, description = "Resource could not be found."),
+                @ServiceResponse(code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR, description = "Unable to process request due to a runtime error.")
+            })
+    })
 @Component(immediate = true, label = "%group.joinServlet.label", description = "%group.joinServlet.desc")
 @SlingServlet(resourceTypes = "sparse/joinrequests", methods = "POST", selectors = "create", generateComponent = false)
 public class LiteGroupJoinRequestServlet extends SlingAllMethodsServlet {
@@ -141,57 +138,79 @@ public class LiteGroupJoinRequestServlet extends SlingAllMethodsServlet {
     }
   }
 
-  private void joinGroup(Content group, String userId) throws StorageClientException, AccessDeniedException  {
+
+  private void joinGroup(Content group, String userId) throws StorageClientException, AccessDeniedException {
     Session session = null;
     try {
-      
-    String groupId = PathUtils.getAuthorizableId(group.getPath());
-    session = repository.loginAdministrative();
-    ContentManager contentManager = session.getContentManager();
-    Content profileContent = contentManager.get(group.getPath()+"/"+LitePersonalUtils.PATH_PUBLIC+"/"+LitePersonalUtils.PATH_AUTH_PROFILE);
-    AuthorizableManager authorizableManager = session.getAuthorizableManager();
-    Group targetGroup = (Group) authorizableManager.findAuthorizable(groupId);
-    Joinable joinable = Joinable.no;
-    String joinability = (String) profileContent.getProperty("sakai:group-joinable");
-    if (joinability != null) {
-      joinable = Joinable.valueOf(joinability);
-    }
 
-    switch (joinable) {
-      case no:
-        break;
-      case yes:
-        // membership is automatically granted
-        targetGroup.addMember(userId);
-        authorizableManager.updateAuthorizable(targetGroup);
-        Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
-        eventAdmin.postEvent(new Event(GroupEvent.joinedSite.getTopic(), eventProps));
-        ActivityUtils.postActivity(eventAdmin, userId, group.getPath(), "Content", "default", "pooled content", "JOINED_GROUP", null);
-        break;
-      case withauth:
-        // check to see if this user is already there
-    	 Content joinRequestUpdate = contentManager.get(group.getPath() + "/joinrequests/"+userId);
-        if (joinRequestUpdate != null) {
-          // just update the date
-          joinRequestUpdate.setProperty("requested", Calendar.getInstance());
-          contentManager.update(joinRequestUpdate);
-        } else {
-          contentManager.update(new Content(group.getPath() + "/joinrequests/"+userId, ImmutableMap.of(
-              "requested", (Object)Calendar.getInstance(),
-              "profile", LitePersonalUtils.getHomeResourcePath(userId) + "/public/authprofile",
-              "name", userId,
-              "sling:resourceType", "sakai/joinrequest"
-          )));
-        }
-        break;
-      default:
-        break;
-    }
+      String groupId = PathUtils.getAuthorizableId(group.getPath());
+      session = repository.loginAdministrative();
+      ContentManager contentManager = session.getContentManager();
+      AuthorizableManager authorizableManager = session.getAuthorizableManager();
+      Group targetGroup = (Group) authorizableManager.findAuthorizable(groupId);
+      Joinable joinable = getJoinability(groupId, session);
+
+      switch (joinable) {
+        case no:
+          break;
+        case yes:
+          // membership is automatically granted
+          targetGroup.addMember(userId);
+          authorizableManager.updateAuthorizable(targetGroup);
+          Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
+          eventAdmin.postEvent(new Event(GroupEvent.joinedSite.getTopic(), eventProps));
+          ActivityUtils.postActivity(eventAdmin, userId, group.getPath(), "Content", "default", "pooled content", "JOINED_GROUP", null);
+          break;
+        case withauth:
+          // check to see if this user is already there
+          Content joinRequestUpdate = contentManager.get(group.getPath() + "/joinrequests/" + userId);
+          if (joinRequestUpdate != null) {
+            // just update the date
+            joinRequestUpdate.setProperty("requested", Calendar.getInstance());
+            contentManager.update(joinRequestUpdate);
+          } else {
+            contentManager.update(new Content(group.getPath() + "/joinrequests/" + userId, ImmutableMap.of(
+                "requested", (Object) Calendar.getInstance(),
+                "profile", LitePersonalUtils.getHomeResourcePath(userId) + "/public/authprofile",
+                "name", userId,
+                "sling:resourceType", "sakai/joinrequest"
+            )));
+          }
+          break;
+        default:
+          break;
+      }
     } finally {
-      if ( session != null ) {
+      if (session != null) {
         session.logout();
       }
     }
+  }
+
+  private Joinable getJoinability(String groupID, Session session) throws StorageClientException, AccessDeniedException {
+    Joinable joinable = Joinable.no;
+
+    ContentManager contentManager = session.getContentManager();
+    AuthorizableManager authorizableManager = session.getAuthorizableManager();
+
+    Group targetGroup = (Group) authorizableManager.findAuthorizable(groupID);
+    String profileContentPath = LitePersonalUtils.getProfilePath(groupID);
+
+    // if it's a pseudogroup, get joinability from its parent group
+    Object pseudoGroupProp = targetGroup.getProperty(UserConstants.PROP_PSEUDO_GROUP);
+    if (pseudoGroupProp != null) {
+      if (Boolean.parseBoolean(String.valueOf(pseudoGroupProp))) {
+        String parentGroupID = String.valueOf(targetGroup.getProperty(UserConstants.PROP_PARENT_GROUP_ID));
+        profileContentPath = LitePersonalUtils.getProfilePath(parentGroupID);
+      }
+    }
+
+    Content profileContent = contentManager.get(profileContentPath);
+    String joinability = String.valueOf(profileContent.getProperty(UserConstants.PROP_JOINABLE_GROUP));
+    if (joinability != null) {
+      joinable = Joinable.valueOf(joinability);
+    }
+    return joinable;
   }
 
   /**
@@ -209,7 +228,7 @@ public class LiteGroupJoinRequestServlet extends SlingAllMethodsServlet {
     /**
      * The site is joinable with approval.
      */
-    withauth();
+    withauth()
   }
 
   /**
@@ -237,14 +256,6 @@ public class LiteGroupJoinRequestServlet extends SlingAllMethodsServlet {
      * The topic that the event is sent as.
      */
     public static final String TOPIC = "org/sakaiproject/nakamura/api/group/event/";
-    /**
-     * The user that is the subject of the event.
-     */
-    public static final String USER = "user";
-    /**
-     * The target group of the request.
-     */
-    public static final String GROUP = "group";
 
     /**
      * @return a topic ID for sites, bound to the operation being performed.
