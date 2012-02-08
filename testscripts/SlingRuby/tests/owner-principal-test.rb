@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-
+require 'rubygems'
 require 'nakamura.rb'
 require 'nakamura/test'
 include SlingInterface

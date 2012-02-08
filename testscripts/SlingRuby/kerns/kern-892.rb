@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-
+require 'rubygems'
 require 'nakamura/test'
 
 class TC_Kern892Test < Test::Unit::TestCase

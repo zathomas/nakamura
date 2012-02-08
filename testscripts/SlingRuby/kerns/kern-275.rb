@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-
+require 'rubygems'
 require 'nakamura'
 require 'base64'
 require 'nakamura/test'

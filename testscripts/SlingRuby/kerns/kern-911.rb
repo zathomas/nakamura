@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-
+require 'rubygems'
 require 'nakamura/test'
 require 'test/unit.rb'
 include SlingSearch
