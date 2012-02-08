@@ -242,6 +242,7 @@ public class ExportIMSCP implements ResourceProvider {
       throws JSONException, IOException, StorageClientException, AccessDeniedException {
     String resourcesDir = "resources/";
     String filename = (String)content.getProperty(FilesConstants.POOLED_CONTENT_FILENAME);
+    filename = filename.replaceAll("/", "_");
     File f = new File (filename + ".zip");
     while (f.exists()) {
       filename = filename + "1";
