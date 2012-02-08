@@ -51,7 +51,7 @@ public class GroupMembershipCounter {
     int count = 0;
     if ( au != null && !CountProvider.IGNORE_AUTHIDS.contains(au.getId())) {
       // get groups from AuthorizableUtil
-      List<Authorizable> groups = AuthorizableUtil.getRealGroups(au,authorizableManager);
+      List<Authorizable> groups = AuthorizableUtil.getUserFacingGroups(au,authorizableManager);
       for (Authorizable group : groups) {
         if (group.hasProperty(UserConstants.PROP_MANAGED_GROUP)) {
           // fetch the group that the manager group manages

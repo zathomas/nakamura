@@ -165,6 +165,11 @@ public class SolrResultSetFactory implements ResultSetFactory {
         }
       }
 
+      // filter out 'excluded' items. these are indexed because we do need to search for
+      // some things on the server that the UI doesn't want (e.g. collection groups)
+      filterQueries.add("-exclude:true");
+
+      // filter out deleted items
       List<String> deletedPaths = deletedPathsService.getDeletedPaths();
       if (!deletedPaths.isEmpty()) {
         // these are escaped as they are collected

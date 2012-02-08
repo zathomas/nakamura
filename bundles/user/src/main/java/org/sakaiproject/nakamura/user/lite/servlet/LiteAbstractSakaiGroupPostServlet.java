@@ -17,6 +17,7 @@
  */
 package org.sakaiproject.nakamura.user.lite.servlet;
 
+import static org.sakaiproject.nakamura.api.user.UserConstants.CONTENT_ITEMS_PROP;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
@@ -36,6 +37,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
+import org.sakaiproject.nakamura.api.user.AuthorizableUtil;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.api.user.UserConstants.Joinable;
 import org.sakaiproject.nakamura.user.lite.resource.LiteAuthorizableResourceProvider;
@@ -151,6 +153,11 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
             memberAuthorizable = authorizableManager.findAuthorizable(memberId);
           }
           if (memberAuthorizable != null) {
+            // reset the count for top-level collection groups
+            if (AuthorizableUtil.isCollection(memberAuthorizable, true)) {
+              this.authorizableCountChanger.notify(CONTENT_ITEMS_PROP, memberAuthorizable.getId());
+            }
+
             if(!User.ADMIN_USER.equals(session.getUserId()) && !UserConstants.ANON_USERID.equals(session.getUserId())
                 && Joinable.yes.equals(groupJoin)
                 && memberAuthorizable.getId().equals(session.getUserId())
