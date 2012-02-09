@@ -136,6 +136,13 @@
        </modules>
     </profile>
     <profile>
+       <!-- start the server and run all the integration tests -->
+       <id>integration</id>
+       <modules>
+        <module>integration</module>
+       </modules>
+    </profile>
+    <profile>
       <id>redeploy</id>
       <build>
        <plugins>
