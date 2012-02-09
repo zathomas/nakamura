@@ -112,8 +112,28 @@ public class IMSCPFileHandler implements FileUploadHandler {
         LOGGER.debug("PoolID {} has wrong mimetype, {} ignoring ",poolId, type);
         return;
       }
+      
+      // Check for Manifest file
+      ZipInputStream zin = new ZipInputStream(fileInputStream);
+      ZipEntry zipEntry;
+      String manifestFilename = "imsmanifest.xml";
+      boolean manifestFlag = false;
+      while ((zipEntry = zin.getNextEntry()) != null) {
+        if (manifestFilename.equalsIgnoreCase(zipEntry.getName())){
+          manifestFlag = true;
+          break;
+        }
+      }
+      if (!manifestFlag) {
+        LOGGER.debug("PoolID {} is not an IMSCP file, hence ignoring",poolId);
+        zin.closeEntry();
+        zin.close();
+        return;
+      }
+      
+      InputStream inputStream = contentManager.getInputStream(poolId);
       String name = (String)contentManager.get(poolId).getProperty(POOLED_CONTENT_FILENAME);
-      Content content = createCourse(poolId, adminSession, fileInputStream, name, userId);
+      Content content = createCourse(poolId, adminSession, inputStream, name, userId);
       if (content == null) {
         LOGGER.debug("PoolID {} is not IMS_CP format, ignore", poolId);
         return;
@@ -139,32 +159,11 @@ public class IMSCPFileHandler implements FileUploadHandler {
     ZipEntry entry;
     String baseDir = poolId;
     String filename = "imsmanifest.xml";
-    //To record whether there is manifest.xml.
-    boolean manifestFlag = false; 
     HashMap<String, String> fileContent = new HashMap<String, String>();
     List<String> filePaths = new ArrayList<String>();
     Manifest manifest = new Manifest();
     while ((entry = zin.getNextEntry()) != null) {
       filePaths.add(entry.getName());
-      if (filename.equalsIgnoreCase(entry.getName())) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(getInputStream(zin)));
-        StringBuilder builder = new StringBuilder();
-        char[] chars = new char[4096];
-        int length = 0;
-        while (0 < (length = reader.read(chars))) {
-          builder.append(chars, 0, length);
-        }
-        String xmlContent = builder.toString();
-        // Abandon the last character, otherwise there will be parse error in toJSONObject method
-        xmlContent = xmlContent.substring(0, xmlContent.lastIndexOf('>') + 1);
-        manifest = new Manifest(xmlContent);
-        manifestFlag = true;
-        LOGGER.debug(" Saving Manifest file {} ",baseDir+"/"+filename);
-        contentManager.writeBody(baseDir + "/" + filename, new ByteArrayInputStream(builder.toString().getBytes()));
-        reader.close();
-        continue;
-      }
-      
       String entryType = mimeTypesMap.getContentType(entry.getName());
       if (entryType != null && entryType.contains("text")) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(getInputStream(zin)));
@@ -180,14 +179,31 @@ public class IMSCPFileHandler implements FileUploadHandler {
         reader.close();
         continue;
       }
+      
+      if (filename.equalsIgnoreCase(entry.getName())) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(getInputStream(zin)));
+        StringBuilder builder = new StringBuilder();
+        char[] chars = new char[4096];
+        int length = 0;
+        while (0 < (length = reader.read(chars))) {
+          builder.append(chars, 0, length);
+        }
+        String xmlContent = builder.toString();
+        // Abandon the last character, otherwise there will be parse error in toJSONObject method
+        xmlContent = xmlContent.substring(0, xmlContent.lastIndexOf('>') + 1);
+        manifest = new Manifest(xmlContent);
+        LOGGER.debug(" Saving Manifest file {} ",baseDir+"/"+filename);
+        contentManager.writeBody(baseDir + "/" + filename, new ByteArrayInputStream(builder.toString().getBytes()));
+        reader.close();
+        continue;
+      }
+      
       LOGGER.debug(" Saving file {} ",baseDir+"/"+entry.getName());
       contentManager.writeBody(baseDir + "/" + entry.getName(), getInputStream(zin));
     }
     zin.closeEntry();
     zin.close();
-    if (!manifestFlag) {
-      return null;
-    }
+
     contentManager.writeBody(poolId + "/" + name, contentManager.getInputStream(poolId));
     //Replace relative file path to JCR path
     for (Entry<String, String> fileContentEntry : fileContent.entrySet()) {
