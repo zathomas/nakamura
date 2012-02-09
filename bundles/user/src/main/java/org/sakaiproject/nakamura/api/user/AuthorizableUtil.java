@@ -32,6 +32,8 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -39,6 +41,9 @@ import java.util.List;
 import java.util.Set;
 
 public class AuthorizableUtil {
+
+  private static final Logger LOGGER = LoggerFactory
+      .getLogger(AuthorizableUtil.class);
 
   //list of authorizables to not index
   public static final Set<String> IGNORE_AUTHIDS = ImmutableSet.of(Group.EVERYONE, User.ANON_USER, User.ADMIN_USER, "owner", "system");
@@ -119,4 +124,44 @@ public class AuthorizableUtil {
     }
     return retval;
   }
+
+  /**
+   * @return true if the authz group is joinable
+   */
+  public static UserConstants.Joinable getJoinable(Authorizable authorizable, AuthorizableManager authorizableManager)
+      throws StorageClientException, AccessDeniedException {
+
+    if (authorizable instanceof Group) {
+      Group targetGroup = (Group) authorizable;
+
+      // if it's a pseudogroup, get joinability from its parent group instead
+      Object pseudoGroupProp = authorizable.getProperty(UserConstants.PROP_PSEUDO_GROUP);
+      if (pseudoGroupProp != null) {
+        if (Boolean.parseBoolean(String.valueOf(pseudoGroupProp))) {
+          String parentGroupID = String.valueOf(targetGroup.getProperty(UserConstants.PROP_PARENT_GROUP_ID));
+          Authorizable parentGroup = authorizableManager.findAuthorizable(parentGroupID);
+          if (parentGroup != null && parentGroup instanceof Group) {
+            LOGGER.info("{} is a pseudoGroup, using its parent group {} for joinable property", authorizable, parentGroup);
+            targetGroup = (Group) parentGroup;
+          }
+        }
+      }
+
+      if (targetGroup.hasProperty(UserConstants.PROP_JOINABLE_GROUP)) {
+        try {
+          String joinable = String.valueOf(targetGroup.getProperty(UserConstants.PROP_JOINABLE_GROUP));
+          LOGGER.info("Joinable Property on {} {} ", targetGroup, joinable);
+          if (joinable != null && !joinable.equals("null")) {
+            return UserConstants.Joinable.valueOf(joinable);
+          }
+        } catch (IllegalArgumentException e) {
+          LOGGER.info(e.getMessage(), e);
+        }
+      } else {
+        LOGGER.info("No Joinable Property on {} ", targetGroup);
+      }
+    }
+    return UserConstants.Joinable.no;
+  }
+
 }

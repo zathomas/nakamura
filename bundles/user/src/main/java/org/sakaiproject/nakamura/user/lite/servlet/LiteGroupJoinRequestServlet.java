@@ -47,6 +47,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
+import org.sakaiproject.nakamura.api.user.AuthorizableUtil;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.sakaiproject.nakamura.util.PathUtils;
@@ -143,12 +144,12 @@ public class LiteGroupJoinRequestServlet extends SlingAllMethodsServlet {
     Session session = null;
     try {
 
-      String groupId = PathUtils.getAuthorizableId(group.getPath());
       session = repository.loginAdministrative();
       ContentManager contentManager = session.getContentManager();
       AuthorizableManager authorizableManager = session.getAuthorizableManager();
+      String groupId = PathUtils.getAuthorizableId(group.getPath());
       Group targetGroup = (Group) authorizableManager.findAuthorizable(groupId);
-      Joinable joinable = getJoinability(groupId, session);
+      UserConstants.Joinable joinable = AuthorizableUtil.getJoinable(targetGroup, authorizableManager);
 
       switch (joinable) {
         case no:
@@ -185,50 +186,6 @@ public class LiteGroupJoinRequestServlet extends SlingAllMethodsServlet {
         session.logout();
       }
     }
-  }
-
-  private Joinable getJoinability(String groupID, Session session) throws StorageClientException, AccessDeniedException {
-    Joinable joinable = Joinable.no;
-
-    ContentManager contentManager = session.getContentManager();
-    AuthorizableManager authorizableManager = session.getAuthorizableManager();
-
-    Group targetGroup = (Group) authorizableManager.findAuthorizable(groupID);
-    String profileContentPath = LitePersonalUtils.getProfilePath(groupID);
-
-    // if it's a pseudogroup, get joinability from its parent group
-    Object pseudoGroupProp = targetGroup.getProperty(UserConstants.PROP_PSEUDO_GROUP);
-    if (pseudoGroupProp != null) {
-      if (Boolean.parseBoolean(String.valueOf(pseudoGroupProp))) {
-        String parentGroupID = String.valueOf(targetGroup.getProperty(UserConstants.PROP_PARENT_GROUP_ID));
-        profileContentPath = LitePersonalUtils.getProfilePath(parentGroupID);
-      }
-    }
-
-    Content profileContent = contentManager.get(profileContentPath);
-    String joinability = String.valueOf(profileContent.getProperty(UserConstants.PROP_JOINABLE_GROUP));
-    if (joinability != null) {
-      joinable = Joinable.valueOf(joinability);
-    }
-    return joinable;
-  }
-
-  /**
-   * The joinable property
-   */
-  public enum Joinable {
-    /**
-     * The site is joinable.
-     */
-    yes(),
-    /**
-     * The site is not joinable.
-     */
-    no(),
-    /**
-     * The site is joinable with approval.
-     */
-    withauth()
   }
 
   /**
