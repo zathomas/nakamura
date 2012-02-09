@@ -20,7 +20,6 @@ package org.sakaiproject.nakamura.user.lite.servlet;
 import static org.sakaiproject.nakamura.api.user.UserConstants.CONTENT_ITEMS_PROP;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -44,16 +43,13 @@ import org.sakaiproject.nakamura.user.lite.resource.LiteAuthorizableResourceProv
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
 
 
 
@@ -104,7 +100,7 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
       boolean changed = false;
 
       AuthorizableManager authorizableManager = session.getAuthorizableManager();
-      Joinable groupJoin = getJoinable(group);
+      Joinable groupJoin = AuthorizableUtil.getJoinable(group, authorizableManager);
 
       // the group's count of members changed
       this.authorizableCountChanger.notify(UserConstants.GROUP_MEMBERS_PROP, group.getId());
@@ -423,29 +419,6 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
         LOGGER.error("Unable to log out of session: " + t.getMessage(), t);
       }
     }
-  }
-
-  /**
-   * @return true if the authz group is joinable
-   * @throws RepositoryException
-   * @throws PathNotFoundException
-   * @throws ValueFormatException
-   */
-  public Joinable getJoinable(Authorizable authorizable) {
-      if (authorizable instanceof Group && authorizable.hasProperty(UserConstants.PROP_JOINABLE_GROUP)) {
-        try {
-          String joinable = (String) authorizable.getProperty(UserConstants.PROP_JOINABLE_GROUP);
-          LOGGER.info("Joinable Property on {} {} ", authorizable, joinable);
-          if (joinable != null) {
-            return Joinable.valueOf(joinable);
-          }
-        } catch (IllegalArgumentException e) {
-          LOGGER.info(e.getMessage(),e);
-        }
-      } else {
-        LOGGER.info("No Joinable Property on {} ", authorizable);
-      }
-    return Joinable.no;
   }
 
 }
