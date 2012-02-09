@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 
 
+require 'rubygems'
+require 'bundler'
+Bundler.setup(:default)
 require 'nakamura/test'
 require 'test/unit.rb'
 include SlingUsers
