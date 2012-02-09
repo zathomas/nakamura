@@ -2,6 +2,8 @@
 
 
 require 'rubygems'
+require 'bundler'
+Bundler.setup(:default)
 require 'daemons'
 require 'mailtrap'
 

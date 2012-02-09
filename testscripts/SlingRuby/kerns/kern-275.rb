@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
+require 'bundler'
+Bundler.setup(:default)
 require 'nakamura'
 require 'base64'
 require 'nakamura/test'
