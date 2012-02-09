@@ -55,6 +55,7 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
+import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.solr.IndexingHandler;
 import org.sakaiproject.nakamura.api.solr.RepositorySession;
@@ -162,13 +163,11 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
       // get the name of the authorizable (user,group)
       String authName = String.valueOf(event.getProperty(FIELD_PATH));
       Authorizable authorizable = getAuthorizable(authName, repositorySession);
-      if (authorizable != null) {
-        SolrInputDocument doc = createAuthDoc(authorizable, repositorySession);
-        if (doc != null) {
-          documents.add(doc);
+      SolrInputDocument doc = createAuthDoc(authorizable, repositorySession);
+      if (doc != null) {
+        documents.add(doc);
 
-          logger.info("{} authorizable for searching: {}", topic, authName);
-        }
+        logger.info("{} authorizable for searching: {}", topic, authName);
       }
     }
     logger.debug("Got documents {} ", documents);
@@ -204,8 +203,15 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
    * @return The SolrInputDocument or null if authorizable shouldn't be indexed.
    */
   protected SolrInputDocument createAuthDoc(Authorizable authorizable, RepositorySession repositorySession) {
-    if (!AuthorizableUtil.isUserFacingGroup(authorizable)
-        || (authorizable.isGroup() && authorizable.hasProperty(PROP_MANAGED_GROUP))) {
+    if (authorizable == null) {
+      return null;
+    }
+
+    boolean isAnonymous = User.ANON_USER.equals(authorizable.getId());
+    boolean isUserFacingGroup = AuthorizableUtil.isUserFacing(authorizable, true);
+    boolean hasManagedGroup = authorizable.hasProperty(PROP_MANAGED_GROUP);
+
+    if (isAnonymous || !isUserFacingGroup || hasManagedGroup) {
       return null;
     }
 
