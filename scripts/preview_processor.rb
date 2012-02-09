@@ -1,16 +1,15 @@
 #!/usr/bin/env ruby
 require 'rubygems'
-require 'fileutils'
-require 'nakamura'
-include SlingInterface
+require 'bundler/setup'
+Bundler.require(:default, :preview_processor)
 require 'nakamura/users'
+include SlingInterface
 include SlingUsers
-require 'docsplit'
 RMAGICK_BYPASS_VERSION_TEST = true
 require 'RMagick'
+require 'fileutils'
 require "getopt/long"
 require "cgi"
-require 'term-extract'
 
 Dir.chdir(File.dirname(__FILE__))
 MAIN_DIR = Dir.getwd

@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
+require 'bundler'
+Bundler.setup(:default)
 require 'set'
 require 'nakamura/test'
 require 'nakamura/message'
