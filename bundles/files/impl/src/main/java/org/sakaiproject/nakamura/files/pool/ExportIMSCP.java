@@ -33,6 +33,7 @@ import org.sakaiproject.nakamura.lom.elements.Description;
 import org.sakaiproject.nakamura.lom.elements.Keyword;
 import org.sakaiproject.nakamura.lom.elements.LangString;
 import org.sakaiproject.nakamura.lom.elements.Title;
+import org.sakaiproject.nakamura.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -279,8 +280,9 @@ public class ExportIMSCP implements ResourceProvider {
       String page = "";
       for (Content c : content.listChildren()) {
         String s = (String)c.getProperty("_path");
-        if (s.endsWith(resource.getIdentifier())) {
-          page = (String)c.getProperty("page");
+        if (s.endsWith(resource.getIdentifier()) && c.hasProperty("page")) {
+          page = String.valueOf(c.getProperty("page"));
+          break;
         }
       }
       page = handlePage(page, contentManager, poolId, zos);
@@ -308,7 +310,7 @@ public class ExportIMSCP implements ResourceProvider {
   private String handlePage(String page, ContentManager contentManager, String poolId, ZipOutputStream zos) 
       throws StorageClientException, AccessDeniedException, IOException {
     int index = 0; 
-    if (page == null) {
+    if (StringUtils.isEmpty(page)) {
       return "";
     }
     while ((index = page.indexOf("<img id=\"widget_embedcontent_id", index)) >= 0) {
