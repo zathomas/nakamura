@@ -280,7 +280,7 @@ public class ExportIMSCP implements ResourceProvider {
       for (Content c : content.listChildren()) {
         String s = (String)c.getProperty("_path");
         if (s.endsWith(resource.getIdentifier())) {
-          page = (String)c.getProperty("page");
+          page = c.getProperty("page").toString();
         }
       }
       page = handlePage(page, contentManager, poolId, zos);
