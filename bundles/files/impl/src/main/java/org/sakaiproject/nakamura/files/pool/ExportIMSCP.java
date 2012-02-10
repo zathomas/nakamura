@@ -1,7 +1,5 @@
 package org.sakaiproject.nakamura.files.pool;
 
-import com.ctc.wstx.util.StringUtil;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
