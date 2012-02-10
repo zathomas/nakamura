@@ -1,5 +1,7 @@
 package org.sakaiproject.nakamura.files.pool;
 
+import com.ctc.wstx.util.StringUtil;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -33,6 +35,7 @@ import org.sakaiproject.nakamura.lom.elements.Description;
 import org.sakaiproject.nakamura.lom.elements.Keyword;
 import org.sakaiproject.nakamura.lom.elements.LangString;
 import org.sakaiproject.nakamura.lom.elements.Title;
+import org.sakaiproject.nakamura.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -309,7 +312,7 @@ public class ExportIMSCP implements ResourceProvider {
   private String handlePage(String page, ContentManager contentManager, String poolId, ZipOutputStream zos) 
       throws StorageClientException, AccessDeniedException, IOException {
     int index = 0; 
-    if (page == null) {
+    if (StringUtils.isEmpty(page)) {
       return "";
     }
     while ((index = page.indexOf("<img id=\"widget_embedcontent_id", index)) >= 0) {
