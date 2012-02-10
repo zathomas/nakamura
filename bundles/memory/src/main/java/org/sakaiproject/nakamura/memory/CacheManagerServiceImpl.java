@@ -167,7 +167,12 @@ public class CacheManagerServiceImpl implements CacheManagerService {
       }
       config.append(configLine + "\n");
     }
-    return IOUtils.toInputStream(config);
+
+    try {
+      return IOUtils.toInputStream(config.toString(), "UTF-8");
+    } catch (IOException e) {
+      throw new RuntimeException(e.getMessage());
+    }
   }
 
   public static void main(String[] args) throws Exception {
