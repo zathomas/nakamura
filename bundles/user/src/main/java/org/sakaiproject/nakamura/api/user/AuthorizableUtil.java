@@ -61,8 +61,8 @@ public class AuthorizableUtil {
     List<Authorizable> realGroups = new ArrayList<Authorizable>();
     for (Iterator<Group> memberOf = au.memberOf(authorizableManager); memberOf.hasNext();) {
       Authorizable group = memberOf.next();
-      if (isUserFacingGroup(group)) {
-        realGroups.add(group);			
+      if (group.isGroup() && isUserFacing(group, false)) {
+        realGroups.add(group);
       }
     }
     return realGroups;
@@ -70,23 +70,38 @@ public class AuthorizableUtil {
 
   /**
    * Validates if an authorizable is a valid group
-   * @param group the authorizable
+   * @param auth the authorizable
+   * @param includeCollections Whether to include collections as user facing.
    * @return true if its an absolute group
    */
-  public static Boolean isUserFacingGroup(Authorizable group) {
-    if (isContactGroup(group)
-        // we don't want to count the everyone groups
-        || IGNORE_AUTHIDS.contains(group.getId())
-        // don't count if the group is to be excluded
-        || Boolean.parseBoolean(String.valueOf(group.getProperty(SAKAI_EXCLUDE)))
-        // don't count if the group lacks a title
-        || group.getProperty(GROUP_TITLE_PROPERTY) == null
-        || StringUtils.isEmpty(String.valueOf(group.getProperty(GROUP_TITLE_PROPERTY)))) {
+  public static boolean isUserFacing(Authorizable auth, boolean includeCollections) {
+    // we don't want to count certrain special users & groups
+    if (auth == null || IGNORE_AUTHIDS.contains(auth.getId())) {
       return false;
     }
-    else {
-      return true;
-    }		
+
+    if (auth.isGroup()) {
+      boolean isContactGroup = isContactGroup(auth);
+
+      // don't count if the group is to be excluded
+      boolean includeGroup = includeCollections
+          && "collection".equals(String.valueOf(auth.getProperty(SAKAI_CATEGORY)))
+          && "false".equals(String.valueOf(auth.getProperty(UserConstants.PROP_PSEUDO_GROUP)));
+      boolean hasExclude = Boolean.parseBoolean(String.valueOf(auth.getProperty(SAKAI_EXCLUDE)));
+
+      if (!includeGroup && !hasExclude) {
+        includeGroup = true;
+      }
+
+      // don't count if the group lacks a title
+      boolean lacksTitle = auth.getProperty(GROUP_TITLE_PROPERTY) != null
+          && StringUtils.isEmpty(String.valueOf(auth.getProperty(GROUP_TITLE_PROPERTY)));
+
+      if (isContactGroup || !includeGroup || lacksTitle) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -96,11 +111,10 @@ public class AuthorizableUtil {
    * @param group
    * @return
    */
-  public static Boolean isContactGroup(Authorizable group) {
-    Boolean result = false;
-    if (group != null) {
-      String title = String.valueOf(group.getProperty(GROUP_TITLE_PROPERTY));
-      result = (group.isGroup() && title.startsWith("g-contacts-"));
+  public static boolean isContactGroup(Authorizable group) {
+    boolean result = false;
+    if (group != null && group.isGroup() && group.getId().startsWith("g-contacts-")) {
+      result = true;
     }
     return result;
   }
