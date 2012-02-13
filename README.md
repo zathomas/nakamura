@@ -7,7 +7,7 @@ To run:
 
     mvn clean install
     . tools/version
-    java -jar app/target/org.sakaiproject.nakamura.app-${K2VERSION}.jar
+    java -Dfile.encoding=UTF8 -jar app/target/org.sakaiproject.nakamura.app-${K2VERSION}.jar
 
 This will start Felix configured with Sling and the Sakai nakamura bundles.
 
