@@ -50,6 +50,7 @@ import org.sakaiproject.nakamura.api.doc.ServiceParameter;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.files.TagUtils;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
+import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
@@ -110,6 +111,11 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
 
   @Reference
   protected transient EventAdmin eventAdmin;
+
+  // even though this reference is never used,
+  // keeping it here fixes KERN-2529
+  @Reference
+  private Repository repository;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SparseTagOperation.class);
 
