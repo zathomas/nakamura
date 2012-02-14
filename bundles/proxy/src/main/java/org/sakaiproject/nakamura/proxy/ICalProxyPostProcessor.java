@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,8 +38,7 @@ import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.property.DateProperty;
 
-import org.apache.commons.io.input.CountingInputStream;
-import org.apache.commons.io.output.StringBuilderWriter;
+import org.apache.commons.io.input.ProxyInputStream;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -261,9 +261,10 @@ public class ICalProxyPostProcessor implements ProxyPostProcessor {
   /** 
    * Parse the response as an iCalendar feed, throwing an IOException if the response
    * is too long.
+   * @throws ResponseFailedException 
    * */
   private Calendar loadCalendar(ProxyResponse response) throws IOException, 
-      ParserException {
+      ParserException, ResponseFailedException {
     
     // We won't bother checking the Content-Length header directly as it may not be 
     // present, we'll just count the number of bytes read from the input stream.
@@ -276,7 +277,9 @@ public class ICalProxyPostProcessor implements ProxyPostProcessor {
     // The LengthLimitingInputStream throws a StreamLengthException when a read() pushes
     // the number of read bytes over the limit
     catch(StreamLengthException e) {
-      throw new IOException("The server response was too long.", e);
+      throw new ResponseFailedException(
+          HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE, 
+          "The remote server's response was too long: " + e.getMessage());
     }
   }
   
@@ -336,7 +339,7 @@ public class ICalProxyPostProcessor implements ProxyPostProcessor {
       
       // Build JSON response in memory to allow an error to be sent if something goes 
       // wrong.
-      StringBuilderWriter writer = new StringBuilderWriter();
+      StringWriter writer = new StringWriter();
       JSONWriter json = new JSONWriter(writer);
       
       try {
@@ -442,40 +445,88 @@ public class ICalProxyPostProcessor implements ProxyPostProcessor {
   }
   
   /**
-   * An InputStream decorator which immediately throws a {@link StreamLengthException} 
+   * An InputStream decorator which immediately throws an {@link StreamLengthException}
    * when more bytes than permitted are read from the stream.
    * 
-   * <p>Note that {@link StreamLengthException} is a Runtime exception, not an IO 
-   * exception. This is because {@link CountingInputStream} does not declare that IO 
-   * exceptions can be thrown from {@code afterRead()}. This should be rectified if this
-   * class is ever made available outside {@link ICalProxyPostProcessor}.
-   * 
-   * <p>Also note that Google Guava has a LimitInputStream in the io pakage, but it's 
-   * marked as beta, so not safe to rely on yet.
+   * <p>It should be noted that the intent is to blow up in a loud way when the limit is 
+   * reached, rather than silently claiming the stream ended as Google Guava's 
+   * LimitInputStream and commons IO's BoundedInputStreams do.
    */
-  private static class LengthLimitingInputStream extends CountingInputStream {
+  private static final class LengthLimitingInputStream extends ProxyInputStream {
 
     private final long maxLength;
+    private long bytesRead;
     
     public LengthLimitingInputStream(InputStream in, long maxLength) {
       super(in);
       this.maxLength = maxLength;
+      this.bytesRead = 0;
     }
     
     @Override
-    protected synchronized void afterRead(int n) throws StreamLengthException {
-      super.afterRead(n);
-      
+    public int read() throws IOException {
+      return postReadHook(super.read());
+    }
+    
+    @Override
+    public int read(byte[] bts) throws IOException {
+      return postReadHook(super.read(bts));
+    }
+    
+    @Override
+    public int read(byte[] bts, int st, int end) throws IOException {
+      return postReadHook(super.read(bts, st, end));
+    }
+    
+    @Override
+    public long skip(long ln) throws IOException {
+      long count = super.skip(ln);
+      if(count > 0) {
+        this.bytesRead += count;
+        postRead();
+      }
+      return count;
+    }
+    
+    /** Helper to increment bytesRead and call {@link #postRead()}*/
+    private int postReadHook(int count) throws IOException {
+      if(count > 0) {
+        bytesRead += count;
+        postRead();
+      }
+      return count;
+    }
+    
+    private long getByteCount() {
+      return bytesRead;
+    }
+    
+    private void postRead() throws IOException {
       if(getByteCount() > this.maxLength) {
         // Ideally we'd throw an IO exception here, but CountingInputStream#afterRead()
         // does not re-declare throws IOException, so we can't.
         throw new StreamLengthException(this.maxLength, getByteCount());
       }
     }
+    
+    @Override
+    public synchronized void mark(int idx) {
+      throw new RuntimeException("Not supported");
+    }
+    
+    @Override
+    public synchronized void reset() throws IOException {
+      throw new RuntimeException("Not supported.");
+    }
+    
+    @Override
+    public boolean markSupported() {
+      return false;
+    }
   }
   
   /** Signals that too many bytes have been passed through a stream. */
-  private static class StreamLengthException extends RuntimeException {
+  private static class StreamLengthException extends IOException {
     public StreamLengthException(long maxLength, long actualLength) {
       super(String.format("An attempt was made to pass more bytes than permitted " +
       		"through a stream. Max bytes: %s, processed count: %s", 
