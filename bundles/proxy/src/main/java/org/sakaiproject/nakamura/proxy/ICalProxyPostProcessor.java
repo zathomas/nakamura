@@ -87,7 +87,9 @@ public class ICalProxyPostProcessor implements ProxyPostProcessor {
       // Standard mime type
       "text/calendar",
       // vCalendar used to use this it seems...
-      "x-vcalendar");
+      "text/x-vcalendar",
+      "binary/octet-stream",
+      "application/octet-stream");
   
   /** 
    * The key into the templateParams {@link Map} passed into the {@link #process} method.
