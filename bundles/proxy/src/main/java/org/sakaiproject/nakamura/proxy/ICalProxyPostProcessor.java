@@ -503,8 +503,6 @@ public class ICalProxyPostProcessor implements ProxyPostProcessor {
     
     private void postRead() throws IOException {
       if(getByteCount() > this.maxLength) {
-        // Ideally we'd throw an IO exception here, but CountingInputStream#afterRead()
-        // does not re-declare throws IOException, so we can't.
         throw new StreamLengthException(this.maxLength, getByteCount());
       }
     }
