@@ -150,6 +150,7 @@ public class ICalProxyPostProcessor implements ProxyPostProcessor {
         maxResponseLength);
     checkNotNull(response);
     checkNotNull(proxyResponse);
+    if(templateParams == null) templateParams = ImmutableMap.of();
     
     try {
       validateResponseHeaders(proxyResponse);
@@ -446,6 +447,9 @@ public class ICalProxyPostProcessor implements ProxyPostProcessor {
    * exception. This is because {@link CountingInputStream} does not declare that IO 
    * exceptions can be thrown from {@code afterRead()}. This should be rectified if this
    * class is ever made available outside {@link ICalProxyPostProcessor}.
+   * 
+   * <p>Also note that Google Guava has a LimitInputStream in the io pakage, but it's 
+   * marked as beta, so not safe to rely on yet.
    */
   private static class LengthLimitingInputStream extends CountingInputStream {
 
