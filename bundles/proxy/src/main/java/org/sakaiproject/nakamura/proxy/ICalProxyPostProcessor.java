@@ -445,7 +445,7 @@ public class ICalProxyPostProcessor implements ProxyPostProcessor {
   }
   
   /**
-   * An InputStream decorator which immediately throws an {@link StreamLengthException}
+   * An InputStream decorator which immediately throws a {@link StreamLengthException}
    * when more bytes than permitted are read from the stream.
    * 
    * <p>It should be noted that the intent is to blow up in a loud way when the limit is 
