@@ -189,6 +189,16 @@ public class QueueManager implements Runnable {
 		notifyReader();
 	}
 
+
+	private void fireCommitEvent(String topic) {
+		Dictionary<String, Object> props = new Hashtable<String, Object>();
+
+		queueManagerDriver
+			.getEventAdmin()
+			.postEvent(new Event(topic, props));
+	}
+
+
 	private void batchedEventRun() {
 		int backoff = 0;
 		while (running) {
@@ -282,21 +292,24 @@ public class QueueManager implements Runnable {
 									if ( repositorySession == null ) {
 										repositorySession = getRepositorySession();
 									}
-									for (String deleteQuery : contentIndexHandler
-											.getDeleteQueries(
-													repositorySession, event)) {
-										if (service != null) {
-											LOGGER.debug(
-													"Added delete Query {} ",
-													deleteQuery);
-											try {
-												service.deleteByQuery(deleteQuery);
-												needsCommit = true;
-											} catch (SolrServerException e) {
-												LOGGER.info(
-														" Failed to delete {}  cause :{}",
-														deleteQuery,
-														e.getMessage());
+									Collection<String> deleteQueries = contentIndexHandler
+									.getDeleteQueries(
+											repositorySession, event); 
+									if ( deleteQueries != null ) {
+										for (String deleteQuery : deleteQueries ) {
+											if (service != null) {
+												LOGGER.debug(
+														"Added delete Query {} ",
+														deleteQuery);
+												try {
+													service.deleteByQuery(deleteQuery);
+													needsCommit = true;
+												} catch (SolrServerException e) {
+													LOGGER.info(
+															" Failed to delete {}  cause :{}",
+															deleteQuery,
+															e.getMessage());
+												}
 											}
 										}
 									}
@@ -344,21 +357,17 @@ public class QueueManager implements Runnable {
 							updateRequest.setParam(UpdateParams.SOFT_COMMIT,
 									"true");
 							updateRequest.process(service);
+							fireCommitEvent("org/sakaiproject/nakamura/solr/SOFT_COMMIT");
+
 						} else {
 							service.commit(false, false);
-							Dictionary<String, Object> props = new Hashtable<String, Object>();
-							queueManagerDriver
-									.getEventAdmin()
-									.postEvent(
-											new Event(
-													"org/sakaiproject/nakamura/solr/COMMIT",
-													props));
+							fireCommitEvent("org/sakaiproject/nakamura/solr/COMMIT");
 						}
 					}
 					backoff = 0;
 					commit();
 				} catch (SolrServerException e) {
-					if (e.getCause() instanceof ConnectException) {
+					if (e.getCause() instanceof ConnectException || e.getMessage().contains("try again")) {
 						if (backoff == 0) {
 							backoff = 2;
 						} else if (backoff > 60) {
@@ -366,10 +375,14 @@ public class QueueManager implements Runnable {
 						} else {
 							backoff = backoff * 2;
 						}
-						LOGGER.warn(
+						if ( e.getMessage().contains("try again") ) {
+							LOGGER.warn(
+								"Received transient Solr exception, will retry index operation in {}s", backoff);
+						} else {    
+							LOGGER.warn(
 								"Remote Solr master is down, will retry index operation in {}s ",
 								backoff);
-
+						}
 						rollback();
 						Thread.sleep(1000 * backoff);
 					} else {
