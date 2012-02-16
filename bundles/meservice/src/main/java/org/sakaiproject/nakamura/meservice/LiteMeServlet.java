@@ -64,6 +64,8 @@ import org.sakaiproject.nakamura.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
@@ -205,7 +207,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
 
       // Dump this user his number of contacts.
       writer.key("contacts");
-      writeContactCounts(writer, session, au, request);
+      writeContactCounts(writer, au, request);
 
       // Dump the groups for this user.
       writer.key("groups");
@@ -289,8 +291,8 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
    * @throws SolrSearchException
    * @throws RepositoryException
    */
-  protected void writeContactCounts(ExtendedJSONWriter writer, Session session,
-      Authorizable au, SlingHttpServletRequest request) throws JSONException, SolrSearchException {
+  protected void writeContactCounts(ExtendedJSONWriter writer, Authorizable au,
+      SlingHttpServletRequest request) throws JSONException, SolrSearchException {
     writer.object();
 
     // We don't do queries for anonymous users. (Possible ddos hole).
@@ -560,11 +562,8 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
             result.put(propName, values[0]);
             break;
           default: {
-            StringBuilder valueString = new StringBuilder("");
-            for (int i = 0; i < values.length; i++) {
-              valueString.append("," + values[i]);
-            }
-            result.put(propName, valueString.toString().substring(1));
+            String valueString = Joiner.on(',').join(values);
+            result.put(propName, valueString);
           }
           }
         } else {
