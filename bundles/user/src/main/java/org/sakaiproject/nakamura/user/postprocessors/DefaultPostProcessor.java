@@ -184,6 +184,12 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
   public static final String PARAM_ADD_TO_MANAGERS_GROUP = ":sakai:manager";
   public static final String PARAM_REMOVE_FROM_MANAGERS_GROUP = PARAM_ADD_TO_MANAGERS_GROUP
       + SlingPostConstants.SUFFIX_DELETE;
+
+  /**
+   * Restrict behavior as closely as possible to Sling's original client-server Authorizable
+   * API, avoiding action on OAE Home folders and related functionality.
+   */
+  public static final String PARAM_AUTHORIZABLE_ONLY = ":sakai:authorizableOnly";
   
   static final String VISIBILITY_PREFERENCE_DEFAULT = VISIBILITY_PUBLIC;
   @Property(value = VISIBILITY_PREFERENCE_DEFAULT, options = {
@@ -289,6 +295,15 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
       Session session, Modification change, Map<String, Object[]> parameters)
       throws Exception {
     LOGGER.debug("Default Post processor on {} with {} ", authorizable.getId(), change);
+
+    if (parameters.containsKey(PARAM_AUTHORIZABLE_ONLY)) {
+      String paramAuthorizableOnly = (String) parameters.get(PARAM_AUTHORIZABLE_ONLY)[0];
+      if ("true".equalsIgnoreCase(paramAuthorizableOnly)) {
+        LOGGER.info("Authorizable-only mode specified; skipping Home folder post-processing for {}",
+            authorizable.getId());
+        return;
+      }
+    }
 
     Session adminSession = null;
     try {
