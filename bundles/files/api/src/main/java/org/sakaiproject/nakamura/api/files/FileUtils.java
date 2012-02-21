@@ -130,7 +130,7 @@ public class FileUtils {
       }
     }
     linkNode
-        .setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, RT_SAKAI_LINK);
+    .setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, RT_SAKAI_LINK);
     linkNode.setProperty(SAKAI_LINK, fileNode.getIdentifier());
 
     // Save link.
@@ -181,7 +181,7 @@ public class FileUtils {
 
   public static void writeFileNode(Content content,
       org.sakaiproject.nakamura.api.lite.Session session, JSONWriter write)
-      throws JSONException, StorageClientException {
+          throws JSONException, StorageClientException {
     writeFileNode(content, session, write, 0);
   }
 
@@ -226,11 +226,11 @@ public class FileUtils {
 
   public static void writeFileNode(Content content,
       org.sakaiproject.nakamura.api.lite.Session session, JSONWriter write, int maxDepth)
-      throws JSONException, StorageClientException {
-    
+          throws JSONException, StorageClientException {
+
     writeFileNode(content, session, write, maxDepth, false);
   }
-  
+
   public static void writeFileNode(Content content,
       org.sakaiproject.nakamura.api.lite.Session session, JSONWriter write, int maxDepth, boolean objectInProgress)
           throws JSONException, StorageClientException {
@@ -294,7 +294,7 @@ public class FileUtils {
   public static void writeLinkNode(Content content,
       org.sakaiproject.nakamura.api.lite.Session session, JSONWriter writer, boolean objectInProgress)
           throws StorageClientException, JSONException {
-    
+
     if (!objectInProgress){
       writer.object();
     }
@@ -324,7 +324,7 @@ public class FileUtils {
 
   public static void writeLinkNode(Content content,
       org.sakaiproject.nakamura.api.lite.Session session, JSONWriter writer)
-      throws StorageClientException, JSONException {
+          throws StorageClientException, JSONException {
 
     writeLinkNode(content, session, writer, false);
   }
@@ -357,7 +357,7 @@ public class FileUtils {
       writer.endObject();
     }
   }
-  
+
   /**
    * Gives the permissions for this user.
    *
@@ -383,7 +383,7 @@ public class FileUtils {
 
   private static void writePermissions(Content content,
       org.sakaiproject.nakamura.api.lite.Session session, JSONWriter writer)
-      throws StorageClientException, JSONException {
+          throws StorageClientException, JSONException {
     if (content == null) {
       log.warn("Can't output permissions of null content.");
       return;
