@@ -36,9 +36,9 @@
           <instructions>
             <Bundle-Category> sakai-nakamura </Bundle-Category>
             <Bundle-Activator>org.sakaiproject.nakamura.files.Activator</Bundle-Activator>
+            <Import-Package>!org.apache.xmlbeans.*,*</Import-Package>
             <Private-Package>
-              org.sakaiproject.nakamura.files.*,
-              !org.mozilla.javascript.xml.impl.xmlbeans
+              org.sakaiproject.nakamura.files.*
             </Private-Package>
             <Sling-Initial-Content>SLING-INF/content;overwriteProperties:=true;uninstall:=false</Sling-Initial-Content>
             <Embed-Dependency>rhino</Embed-Dependency>
