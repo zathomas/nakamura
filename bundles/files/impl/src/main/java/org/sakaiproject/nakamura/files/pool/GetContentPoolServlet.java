@@ -24,18 +24,25 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.json.io.JSONWriter;
 import org.sakaiproject.nakamura.api.doc.BindingType;
 import org.sakaiproject.nakamura.api.doc.ServiceBinding;
 import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
 import org.sakaiproject.nakamura.api.doc.ServiceExtension;
 import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
+import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.content.Content;
+import org.sakaiproject.nakamura.api.resource.lite.LiteJsonImporter;
+import org.sakaiproject.nakamura.files.DocMigrator;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.StringWriter;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -94,11 +101,29 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
 
     response.setContentType("application/json");
     response.setCharacterEncoding("UTF-8");
+    StringWriter stringWriter = new StringWriter();
+    ExtendedJSONWriter stringJsonWriter = new ExtendedJSONWriter(stringWriter);
     ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
     writer.setTidy(isTidy);
     try {
       Content content = resource.adaptTo(Content.class);
       if ( content != null ) {
+        ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, content, false,  recursion);
+        DocMigrator docMigrator = new DocMigrator();
+        if (docMigrator.contentNeedsMigration(content)) {
+          Session adminSession = null;
+          try {
+            adminSession = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class)).getRepository().loginAdministrative();
+            JSONObject newPageStructure = docMigrator.migratePageStructure(stringWriter.toString());
+            LiteJsonImporter liteJsonImporter = new LiteJsonImporter();
+            liteJsonImporter.internalImportContent(adminSession.getContentManager(), newPageStructure, content.getPath(), Boolean.TRUE, adminSession.getAccessControlManager());
+            content = adminSession.getContentManager().get(content.getPath());
+          } finally {
+            if (adminSession != null) {
+              adminSession.logout();
+            }
+          }
+        }
         ExtendedJSONWriter.writeContentTreeToWriter(writer, content, false,  recursion);
       } else {
         Node node = resource.adaptTo(Node.class);
@@ -111,6 +136,8 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
     } catch (RepositoryException e) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
       LOGGER.info("Caught Repository {}", e.getMessage());
+    } catch (Exception e) {
+      LOGGER.error(e.getMessage());
     }
   }
 

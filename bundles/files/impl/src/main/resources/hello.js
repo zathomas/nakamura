@@ -1,14 +1,12 @@
-var requiresMigration = function(structure0String, originalstructureString, returnValue){
-    console.log('Starting out...');
-    console.log(typeof structure0String);
-    var structure0;
-    if (typeof structure0String === "string"){
-        console.log('Going to parse JSON for structure0String');
-        var structure0 = $.parseJSON(structure0String);
-    } else {
-        structure0 = structure0String;
+var requiresMigration = function(structure0, originalstructure, returnValue){
+    console.log('checking if migration required in structure');
+    if (typeof structure0 === "string"){
+        console.log('Going to parse JSON for structure0 string');
+        structure0 = $.parseJSON(structure0);
     }
-    var originalstructure = $.parseJSON(originalstructureString);
+    if (typeof originalstructure === "string") {
+        originalstructure = $.parseJSON(originalstructure);
+    }
     $.each(structure0, function(key, item){
         console.log('Examining key ' + key);
         if (key.substring(0, 1) !== "_"){
@@ -18,7 +16,7 @@ var requiresMigration = function(structure0String, originalstructureString, retu
                     returnValue = true;
                 }
             }
-            returnValue = requiresMigration(item, originalstructureString, returnValue);
+            returnValue = requiresMigration(item, originalstructure, returnValue);
         }
     });
     return returnValue;
@@ -43,7 +41,7 @@ var processStructure0 = function(structure0, originalstructure, json){
      * @param {Object} currentHTMLBlock      The collected text so far
      */
     var addRowToPage = function(currentRow, currentPage, columnsForNextRow, currentHTMLBlock){
-        if (currentHTMLBlock && sakai_util.determineEmptyContent(currentHTMLBlock.html())){
+        if (currentHTMLBlock && determineEmptyContent(currentHTMLBlock.html())){
             currentPage = generateNewCell(false, "htmlblock", currentPage, currentRow, false, {
                 "htmlblock": {
                     "content": currentHTMLBlock.html()
@@ -65,12 +63,12 @@ var processStructure0 = function(structure0, originalstructure, json){
     }
 
     /**
-     * Generate a new empty row to addd to the page
+     * Generate a new empty row to add to the page
      * @param {Object} columnCount    Number of columns in this row
      */
     var generateEmptyRow = function(columnCount){
         var row = {
-            "id": sakai_util.generateWidgetId(),
+            "id": generateWidgetId(),
             "columns": []
         };
         for (var c = 0; c < columnCount; c++){
@@ -92,7 +90,7 @@ var processStructure0 = function(structure0, originalstructure, json){
      */
     var generateNewCell= function(id, type, currentPage, currentRow, column, data){
         if (type !== "tooltip" && type !== "joinrequestbuttons") {
-            id = id || sakai_util.generateWidgetId();
+            id = id || generateWidgetId();
             currentRow.columns[column || 0].elements.push({
                 "id": id,
                 "type": type
@@ -116,12 +114,13 @@ var processStructure0 = function(structure0, originalstructure, json){
     };
 
     if (typeof structure0 === "string") {
+        console.log('parsing JSON for the structure0 string');
         structure0 = $.parseJSON(structure0);
     }
     $.each(structure0, function(key, item){
         // Keys with an underscore are system properties. Only keys that
         // don't start with an _ indicate a page
-        console.log('Examining key ' + key + ' of type ' + typeof key);
+        console.log("looking at key %s", key);
         if (key.substring(0, 1) !== "_"){
             var ref = item._ref;
             if (typeof originalstructure === "string") {
@@ -130,10 +129,13 @@ var processStructure0 = function(structure0, originalstructure, json){
             if (originalstructure[ref]){
                 // The page has been migrated if there is a rows property
                 if (originalstructure[ref].rows) {
+                    console.log('this page does not need migrating: ' + ref);
                     json[ref] = originalstructure[ref];
-                    // The page doesn't have a rows property. Needs to be migrated
                 } else {
+                    // The page doesn't have a rows property. Needs to be migrated
                     // Original page content --> Convert into a jQuery object
+                    console.log('proceeding to migrate page: ' + ref);
+                    console.log(originalstructure[ref].page);
                     var page = $(originalstructure[ref].page);
 
                     // Array that will hold all the rows for this page
@@ -151,7 +153,7 @@ var processStructure0 = function(structure0, originalstructure, json){
                         if ($topLevelElement.hasClass("widget_inline")) {
 
                             // If we have collected any text for our htmlblock widget, we add it to the page
-                            if (sakai_util.determineEmptyContent(currentHTMLBlock.html())) {
+                            if (determineEmptyContent(currentHTMLBlock.html())) {
                                 currentPage = generateNewCell(false, "htmlblock", currentPage, currentRow, false, {
                                     "htmlblock": {
                                         "content": currentHTMLBlock.html()
@@ -163,7 +165,7 @@ var processStructure0 = function(structure0, originalstructure, json){
                             // Add the widget to the page
                             var widgetId = $topLevelElement.attr("id").split("_");
                             var widgetType = widgetId[1];
-                            widgetId = widgetId.length > 2 ? widgetId[2] : sakai_util.generateWidgetId();
+                            widgetId = widgetId.length > 2 ? widgetId[2] : generateWidgetId();
                             // Filter out widgets that should not be re-included as they are already in topnavigation
                             currentPage = generateNewCell(widgetId, widgetType, currentPage, currentRow, false, originalstructure[widgetId]);
 
@@ -171,7 +173,7 @@ var processStructure0 = function(structure0, originalstructure, json){
                         } else if ($(".widget_inline", $topLevelElement).length > 0) {
 
                             // If we have collected any text for our htmlblock widget, we add it to the page
-                            if (sakai_util.determineEmptyContent(currentHTMLBlock.html())) {
+                            if (determineEmptyContent(currentHTMLBlock.html())) {
                                 currentPage = generateNewCell(false, "htmlblock", currentPage, currentRow, false, {
                                     "htmlblock": {
                                         "content": currentHTMLBlock.html()
@@ -200,7 +202,7 @@ var processStructure0 = function(structure0, originalstructure, json){
                                 // Add the widget to the page
                                 var widgetId = $widgetElement.attr("id").split("_");
                                 var widgetType = widgetId[1];
-                                widgetId = widgetId.length > 2 ? widgetId[2] : sakai_util.generateWidgetId();
+                                widgetId = widgetId.length > 2 ? widgetId[2] : generateWidgetId();
 
                                 // If the widget was floating left, add it to the left column
                                 if ($widgetElement.hasClass("block_image_left")) {
@@ -238,6 +240,7 @@ var processStructure0 = function(structure0, originalstructure, json){
                     ensureRowPresent(currentPage);
 
                     // Add the converted page to the migrated Sakai Doc
+                    console.log('Adding %s to the json output', ref);
                     json[ref] = currentPage;
 
                 }
@@ -248,4 +251,113 @@ var processStructure0 = function(structure0, originalstructure, json){
         }
     });
     return json;
+}
+
+var migratePageStructure = function(structure){
+    console.log('beginning migratePageStructure');
+    if (typeof structure === "string") {
+        structure = $.parseJSON(structure);
+    }
+    var start = new Date().getTime();
+    var newStructure = $.extend(true, {}, structure);
+    if (newStructure.structure0){
+        console.log('structure0 found within structure');
+        var json = {};
+        if (typeof newStructure.structure0 === "string"){
+            console.log('parsing structure0 string to JS object');
+            newStructure.structure0 = $.parseJSON(newStructure.structure0);
+        }
+        if (requiresMigration(newStructure.structure0, newStructure, false)){
+            json = processStructure0(newStructure.structure0, newStructure, json);
+            json.structure0 = structure.structure0;
+            json["sakai:schemaversion"] = 2;
+            $.extend(true, json, structure);
+            return convertArrayToObject($.extend(true, {}, json));
+        } else {
+            console.log('structure0 does not require migration');
+            return newStructure;
+        }
+    } else {
+        console.log('no valid page structure was passed in');
+        return false;
+    }
+}
+
+/**
+ * <p>Convert all the arrays in an object to an object with a unique key.<br />
+ * Mixed arrays (arrays with multiple types) are not supported.
+ * </p>
+ * <code>
+ * {
+ *     "boolean": true,
+ *     "array_object": [{ "key1": "value1", "key2": "value2"}, { "key1": "value1", "key2": "value2"}]
+ * }
+ * </code>
+ * to
+ * <code>
+ * {
+ *     "boolean": true,
+ *     "array_object": {
+ *         "__array__0__": { "key1": "value1", "key2": "value2"},
+ *         "__array__1__": { "key1": "value1", "key2": "value2"}
+ *     }
+ * }
+ * </code>
+ * @param {Object} obj The Object that you want to use to convert all the arrays to objects
+ * @return {Object} An object where all the arrays are converted into objects
+ */
+var convertArrayToObject = function(obj) {
+
+    var i,j,jl;
+    // Since the native createTree method doesn't support an array of objects natively,
+    // we need to write extra functionality for this.
+    for(i in obj){
+
+        // Check if the element is an array, whether it is empty and if it contains any elements
+        if (obj.hasOwnProperty(i) && $.isArray(obj[i]) && obj[i].length > 0) {
+
+            // Deep copy the array
+            var arrayCopy = $.extend(true, [], obj[i]);
+
+            // Set the original array to an empty object
+            obj[i] = {};
+
+            // Add all the elements that were in the original array to the object with a unique id
+            for (j = 0, jl = arrayCopy.length; j < jl; j++) {
+
+                // Copy each object from the array and add it to the object
+                obj[i]["__array__" + j + "__"] = arrayCopy[j];
+
+                // Run recursively
+                convertArrayToObject(arrayCopy[j]);
+            }
+            // If there are array elements inside
+        } else if ($.isPlainObject(obj[i])) {
+            convertArrayToObject(obj[i]);
+        }
+
+    }
+
+    return obj;
+};
+
+var determineEmptyContent = function(content){
+    var textPresent = $.trim($("<div>").html(content).text());
+    var elementArr = ["div", "img", "ol", "ul", "li", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "em", "strong", "code", "dl", "dt", "dd", "table", "tr", "th", "td", "iframe", "frame", "form", "input", "select", "option", "blockquote", "address"];
+    var containsElement = false;
+    $.each(elementArr, function(i, el){
+        if(content.indexOf(el) != -1){
+            containsElement = true;
+            return false;
+        }
+    });
+    return textPresent || containsElement;
+}
+
+var generateWidgetId = function(){
+    return "id" + Math.round(Math.random() * 10000000);
+}
+
+var parseJSON = function(jsonString) {
+    return $.parseJSON(jsonString);
 }

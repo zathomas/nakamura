@@ -11970,7 +11970,7 @@ XMLParser.parseDocument = function(xmlstring, xmldoc, mimetype){
         tmpNode;
 
     if(mimetype && mimetype == 'text/xml'){
-        //console.log('mimetype: text/xml');
+        console.log('mimetype: text/xml');
         tmpdoc.baseURI = 'http://envjs.com/xml';
         xmlstring = '<html><head></head><body>'+
             '<envjs_1234567890 xmlns="envjs_1234567890">'
@@ -11980,6 +11980,7 @@ XMLParser.parseDocument = function(xmlstring, xmldoc, mimetype){
         Envjs.parseHtmlDocument(xmlstring, tmpdoc, false, null, null);
         parent = tmpdoc.getElementsByTagName('envjs_1234567890')[0];
     }else{
+        console.log('Cool, we gon parse');
         Envjs.parseHtmlDocument(xmlstring, tmpdoc, false, null, null);
         parent = tmpdoc.documentElement;
     }
@@ -12323,6 +12324,7 @@ var __elementPopped__ = function(ns, name, node){
 
 __extend__(HTMLElement.prototype,{
     set innerHTML(html){
+        console.log('envjs gonna parse this html fragment.');
         HTMLParser.parseFragment(html, this);
     }
 });
