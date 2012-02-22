@@ -76,9 +76,9 @@ public class LiteJsonImporter {
     if ( removeTree ) {
       for ( Iterator<String> i = contentManager.listChildPaths(path); i.hasNext(); ) {
         String childPath = i.next();
-        LOGGER.info("Deleting {} ",childPath);
+        LOGGER.debug("Deleting {} ",childPath);
         StorageClientUtils.deleteTree(contentManager, childPath);
-        LOGGER.info("Done Deleting {} ",childPath);
+        LOGGER.debug("Done Deleting {} ",childPath);
       }
     }
     internalImportContent(contentManager, json, path, replaceProperties, accessControlManager);
@@ -134,11 +134,11 @@ public class LiteJsonImporter {
     Content content = contentManager.get(path);
     if (content == null) {
       contentManager.update(new Content(path, properties));
-      LOGGER.info("Created Node {} {}",path,properties);
+      LOGGER.debug("Created Node {} {}",path,properties);
     } else {
       for (Entry<String, Object> e : properties.entrySet()) {
         if ( replaceProperties || !content.hasProperty(e.getKey())) {
-          LOGGER.info("Updated Node {} {} {} ",new Object[]{path,e.getKey(), e.getValue()});
+          LOGGER.debug("Updated Node {} {} {} ",new Object[]{path,e.getKey(), e.getValue()});
           content.setProperty(e.getKey(), e.getValue());
         }
       }
