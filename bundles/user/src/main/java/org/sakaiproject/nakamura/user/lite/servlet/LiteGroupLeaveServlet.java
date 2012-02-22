@@ -147,5 +147,10 @@ public class LiteGroupLeaveServlet extends LiteAbstractSakaiGroupPostServlet {
     // remove manager permissions
     handleAuthorizablesOnProperty(groupToLeave, UserConstants.PROP_GROUP_MANAGERS,
         new String[] { authId }, null, toSave);
+
+    // notify the authz count updater of change
+    this.authorizableCountChanger.notify(UserConstants.GROUP_MEMBERS_PROP, groupToLeave.getId());
+    this.authorizableCountChanger.notify(UserConstants.GROUP_MEMBERSHIPS_PROP, authId);
+
   }
 }
