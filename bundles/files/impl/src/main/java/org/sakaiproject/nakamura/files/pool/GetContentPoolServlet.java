@@ -17,6 +17,7 @@
  */
 package org.sakaiproject.nakamura.files.pool;
 
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -25,13 +26,15 @@ import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.sakaiproject.nakamura.api.doc.BindingType;
 import org.sakaiproject.nakamura.api.doc.ServiceBinding;
 import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
 import org.sakaiproject.nakamura.api.doc.ServiceExtension;
 import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
+import org.sakaiproject.nakamura.api.files.FileMigrationCheck;
+import org.sakaiproject.nakamura.api.files.FileMigrationService;
+import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.content.Content;
@@ -70,6 +73,12 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
   private static final long serialVersionUID = -382733858518678148L;
   private static final Logger LOGGER = LoggerFactory.getLogger(GetContentPoolServlet.class);
 
+  @Reference
+  protected FileMigrationCheck migrationCheck;
+
+  @Reference
+  protected FileMigrationService migrationService;
+
   @Override
   protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
       throws ServletException, IOException {
@@ -101,30 +110,12 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
 
     response.setContentType("application/json");
     response.setCharacterEncoding("UTF-8");
-    StringWriter stringWriter = new StringWriter();
-    ExtendedJSONWriter stringJsonWriter = new ExtendedJSONWriter(stringWriter);
     ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
     writer.setTidy(isTidy);
     try {
       Content content = resource.adaptTo(Content.class);
       if ( content != null ) {
-        ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, content, false,  recursion);
-        DocMigrator docMigrator = new DocMigrator();
-        if (docMigrator.contentNeedsMigration(content)) {
-          Session adminSession = null;
-          try {
-            adminSession = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class)).getRepository().loginAdministrative();
-            JSONObject newPageStructure = docMigrator.migratePageStructure(stringWriter.toString());
-            LiteJsonImporter liteJsonImporter = new LiteJsonImporter();
-            liteJsonImporter.internalImportContent(adminSession.getContentManager(), newPageStructure, content.getPath(), Boolean.TRUE, adminSession.getAccessControlManager());
-            content = adminSession.getContentManager().get(content.getPath());
-          } finally {
-            if (adminSession != null) {
-              adminSession.logout();
-            }
-          }
-        }
-        ExtendedJSONWriter.writeContentTreeToWriter(writer, content, false,  recursion);
+        writeContentResponse(recursion, writer, content);
       } else {
         Node node = resource.adaptTo(Node.class);
         ExtendedJSONWriter.writeNodeTreeToWriter(writer, node, recursion);
@@ -138,6 +129,19 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
       LOGGER.info("Caught Repository {}", e.getMessage());
     } catch (Exception e) {
       LOGGER.error(e.getMessage());
+    }
+  }
+
+  private void writeContentResponse(int recursion, ExtendedJSONWriter writer, Content content) throws Exception {
+    Content contentToWrite = migrateFileContent(content);
+    ExtendedJSONWriter.writeContentTreeToWriter(writer, contentToWrite, false,  recursion);
+  }
+
+  private Content migrateFileContent(Content content) {
+    if (migrationCheck.fileContentNeedsMigration(content)) {
+      return migrationService.migrateFileContent(content);
+    } else {
+      return content;
     }
   }
 

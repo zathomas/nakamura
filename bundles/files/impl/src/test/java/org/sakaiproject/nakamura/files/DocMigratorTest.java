@@ -17,9 +17,11 @@
  */
 package org.sakaiproject.nakamura.files;
 
+import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.sakaiproject.nakamura.api.lite.content.Content;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,16 +41,8 @@ public class DocMigratorTest {
   }
 
   @Test
-  public void can_round_trip_json() throws Exception {
-    String structure = SAMPLE_OLD_STRUCTURE;
-    String structureMigration = docMigrator.jsonFromString(structure).toString();
-    assertEquals(SAMPLE_OLD_STRUCTURE, structureMigration);
-  }
-
-  @Test
   public void detect_requires_migration() throws Exception {
-    String structure = readFileAsString("/Users/zach/dev/nakamura/bundles/files/impl/src/main/resources/oldstructure.json");
-    boolean requiresMigration = docMigrator.requiresMigration(structure);
+    boolean requiresMigration = docMigrator.fileContentNeedsMigration(new Content("/some/path", ImmutableMap.of("name", (Object) "Wilma")));
     assertTrue(requiresMigration);
   }
 

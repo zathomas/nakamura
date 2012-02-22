@@ -1,14 +1,11 @@
 var requiresMigration = function(structure0, originalstructure, returnValue){
-    console.log('checking if migration required in structure');
     if (typeof structure0 === "string"){
-        console.log('Going to parse JSON for structure0 string');
         structure0 = $.parseJSON(structure0);
     }
     if (typeof originalstructure === "string") {
         originalstructure = $.parseJSON(originalstructure);
     }
     $.each(structure0, function(key, item){
-        console.log('Examining key ' + key);
         if (key.substring(0, 1) !== "_"){
             var ref = item._ref;
             if (originalstructure[ref]){
@@ -114,13 +111,11 @@ var processStructure0 = function(structure0, originalstructure, json){
     };
 
     if (typeof structure0 === "string") {
-        console.log('parsing JSON for the structure0 string');
         structure0 = $.parseJSON(structure0);
     }
     $.each(structure0, function(key, item){
         // Keys with an underscore are system properties. Only keys that
         // don't start with an _ indicate a page
-        console.log("looking at key %s", key);
         if (key.substring(0, 1) !== "_"){
             var ref = item._ref;
             if (typeof originalstructure === "string") {
@@ -129,13 +124,11 @@ var processStructure0 = function(structure0, originalstructure, json){
             if (originalstructure[ref]){
                 // The page has been migrated if there is a rows property
                 if (originalstructure[ref].rows) {
-                    console.log('this page does not need migrating: ' + ref);
                     json[ref] = originalstructure[ref];
                 } else {
                     // The page doesn't have a rows property. Needs to be migrated
                     // Original page content --> Convert into a jQuery object
                     console.log('proceeding to migrate page: ' + ref);
-                    console.log(originalstructure[ref].page);
                     var page = $(originalstructure[ref].page);
 
                     // Array that will hold all the rows for this page
@@ -240,7 +233,6 @@ var processStructure0 = function(structure0, originalstructure, json){
                     ensureRowPresent(currentPage);
 
                     // Add the converted page to the migrated Sakai Doc
-                    console.log('Adding %s to the json output', ref);
                     json[ref] = currentPage;
 
                 }
@@ -261,10 +253,8 @@ var migratePageStructure = function(structure){
     var start = new Date().getTime();
     var newStructure = $.extend(true, {}, structure);
     if (newStructure.structure0){
-        console.log('structure0 found within structure');
         var json = {};
         if (typeof newStructure.structure0 === "string"){
-            console.log('parsing structure0 string to JS object');
             newStructure.structure0 = $.parseJSON(newStructure.structure0);
         }
         if (requiresMigration(newStructure.structure0, newStructure, false)){
@@ -274,11 +264,9 @@ var migratePageStructure = function(structure){
             $.extend(true, json, structure);
             return convertArrayToObject($.extend(true, {}, json));
         } else {
-            console.log('structure0 does not require migration');
             return newStructure;
         }
     } else {
-        console.log('no valid page structure was passed in');
         return false;
     }
 }

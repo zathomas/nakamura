@@ -18,6 +18,8 @@
 package org.sakaiproject.nakamura.files;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -30,19 +32,33 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.tools.shell.Global;
 import org.mozilla.javascript.tools.shell.Main;
+import org.sakaiproject.nakamura.api.files.FileMigrationCheck;
+import org.sakaiproject.nakamura.api.files.FileMigrationService;
+import org.sakaiproject.nakamura.api.lite.ClientPoolException;
+import org.sakaiproject.nakamura.api.lite.Repository;
+import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
+import org.sakaiproject.nakamura.api.resource.lite.LiteJsonImporter;
+import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-public class DocMigrator {
+@Component(metatype = true, enabled = true)
+public class DocMigrator implements FileMigrationCheck, FileMigrationService {
   private static final Logger LOGGER = LoggerFactory.getLogger(DocMigrator.class);
+
+  @Reference
+  protected Repository repository;
 
   private static final Set TIME_PROPS = ImmutableSet.of("_created", "_lastModified", "time");
 
@@ -63,22 +79,37 @@ public class DocMigrator {
       Main.processSource(cx, "/Users/zach/dev/nakamura/bundles/files/impl/src/main/resources/hello.js");
     }
   }
-  public boolean contentNeedsMigration(Content poolContent) {
-    return !(poolContent.hasProperty("sakai:schemaversion") && StorageClientUtils.toInt(poolContent.getProperty("sakai:schemaversion")) >= 2);
+
+  @Override
+  public boolean fileContentNeedsMigration(Content content) {
+    return !(content.hasProperty("sakai:schemaversion") && StorageClientUtils.toInt(content.getProperty("sakai:schemaversion")) >= CURRENT_SCHEMA_VERSION);
   }
 
-  private boolean pageDefinitionsMissingRows(Content poolContent) {
-    boolean missingRows = false;
-
-    return missingRows;
-  }
-
-  private boolean contentHasStructure(Content poolContent) {
-    return poolContent.hasProperty("structure0");
-  }
-
-  public boolean requiresMigration(String structureString) throws Exception {
-    return (Boolean)callFunction(getScope(), "requiresMigration", new Object[]{getStructure0String(structureString), structureString, Boolean.FALSE});
+  @Override
+  public Content migrateFileContent(Content content) {
+    Content returnContent = content;
+    StringWriter stringWriter = new StringWriter();
+    ExtendedJSONWriter stringJsonWriter = new ExtendedJSONWriter(stringWriter);
+    Session adminSession = null;
+    try {
+      ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, content, false,  -1);
+      adminSession = repository.loginAdministrative();
+      JSONObject newPageStructure = migratePageStructure(stringWriter.toString());
+      LiteJsonImporter liteJsonImporter = new LiteJsonImporter();
+      liteJsonImporter.internalImportContent(adminSession.getContentManager(), newPageStructure, content.getPath(), Boolean.TRUE, adminSession.getAccessControlManager());
+      returnContent = adminSession.getContentManager().get(content.getPath());
+    } catch (Exception e) {
+      LOGGER.error(e.getMessage());
+    } finally {
+      if (adminSession != null) {
+        try {
+          adminSession.logout();
+        } catch (ClientPoolException e) {
+          LOGGER.error(e.getMessage());
+        }
+      }
+    }
+    return returnContent;
   }
 
   private Scriptable getScope() {
@@ -88,16 +119,11 @@ public class DocMigrator {
     return scope;
   }
 
-  public String processStructure(String structureString) throws Exception {
-    Object result = callFunction(getScope(), "processStructure0", new Object[]{getStructure0String(structureString), structureString, new NativeObject()});
-    return convertToJson((NativeObject) result).toString();
-  }
-
-  public String getMigratedPageStructureString(String structureString) throws Exception {
+  protected String getMigratedPageStructureString(String structureString) throws Exception {
     return migratePageStructure(structureString).toString();
   }
 
-  public JSONObject migratePageStructure(String structureString) throws Exception {
+  private JSONObject migratePageStructure(String structureString) throws JSONException {
     Object result = callFunction(getScope(), "migratePageStructure", new Object[]{structureString});
     return convertToJson((NativeObject)result);
   }
@@ -105,12 +131,6 @@ public class DocMigrator {
   private Object callFunction(Scriptable scope, String functionName, Object[] args) {
     Function f = (Function) Main.getGlobal().get(functionName, scope);
     return f.call(cx, scope, scope, args);
-  }
-
-  private String getStructure0String(String structureString) throws Exception {
-    JSONObject pageStructure = new JSONObject(structureString);
-    JSONObject structure0 = new JSONObject(pageStructure.getString("structure0"));
-    return structure0.toString();
   }
 
   private JSONObject convertToJson(NativeObject javascriptObject) throws JSONException {
@@ -138,9 +158,5 @@ public class DocMigrator {
         jsonObject.accumulate(key, item);
       }
     }
-  }
-
-  public JSONObject jsonFromString(String structure) throws JSONException {
-    return convertToJson((NativeObject) callFunction(getScope(), "parseJSON", new Object[]{structure}));
   }
 }
