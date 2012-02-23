@@ -17,6 +17,8 @@
  */
 package org.sakaiproject.nakamura.api.files;
 
+import com.google.common.collect.ImmutableMap;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -40,6 +42,10 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.sakaiproject.nakamura.api.lite.StorageClientException;
+import org.sakaiproject.nakamura.api.lite.content.Content;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager;
+import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -67,7 +73,7 @@ public class FilesUtilsTest {
 
   @Test
   public void testWriteFileNode() throws JSONException, RepositoryException,
-      UnsupportedEncodingException, IOException {
+  UnsupportedEncodingException, IOException {
     Session session = mock(Session.class);
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     Writer w = new PrintWriter(baos);
@@ -85,6 +91,37 @@ public class FilesUtilsTest {
   }
 
   /**
+   * This test covers all FileUtils.writeFileNode methods that take Content as one of the parameter
+   * 
+   * @throws JSONException
+   * @throws StorageClientException
+   * @throws RepositoryException
+   * @throws IOException
+   * @throws UnsupportedEncodingException
+   */
+  @Test
+  public void testWriteFileNode2() throws JSONException, RepositoryException,
+  UnsupportedEncodingException, IOException, StorageClientException {
+
+    org.sakaiproject.nakamura.api.lite.Session session = mock(org.sakaiproject.nakamura.api.lite.Session.class);
+    AccessControlManager accessControlManager = mock(AccessControlManager.class);
+    when(session.getAccessControlManager()).thenReturn(accessControlManager);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    Writer w = new PrintWriter(baos);
+    JSONWriter write = new JSONWriter(w);
+    Content content = new Content("/path/to/file.doc", ImmutableMap.of("jcr:name", (Object)"file.doc", "jcr:path", "/path/to/file.doc"));
+    try {
+      FileUtils.writeFileNode(content, session, write);
+    } catch (StorageClientException e) {
+      fail("No exception should be thrown");
+    }
+    w.flush();
+    String s = baos.toString("UTF-8");
+    JSONObject j = new JSONObject(s);
+    assertFileNodeInfo2(j);
+  }
+
+  /**
    * @throws JSONException
    *
    */
@@ -94,6 +131,17 @@ public class FilesUtilsTest {
     assertEquals("bar", j.getString("foo"));
     assertEquals("text/plain", j.getString("jcr:mimeType"));
     assertEquals(12345, j.getLong("jcr:data"));
+  }
+
+  /**
+   * Assertion method for testWriteFileNode2() and testWriteLinkNode2() 
+   * 
+   * @throws JSONException
+   */
+  private void assertFileNodeInfo2(JSONObject j) throws JSONException {
+    assertEquals("file.doc", j.getString("jcr:name"));
+    assertEquals("/path/to/file.doc", j.getString("jcr:path"));
+    assertEquals(true, j.has("permissions"));
   }
 
   private Node createFileNode() throws ValueFormatException, RepositoryException {
@@ -155,7 +203,36 @@ public class FilesUtilsTest {
 
   }
 
-/*
+
+  /**
+   * This test covers all FileUtils.writeLinkNode methods that take Content as one of the parameter
+   * 
+   * @throws JSONException
+   * @throws StorageClientException
+   * @throws RepositoryException
+   * @throws IOException
+   */
+  @Test
+  public void testWriteLinkNode2() throws JSONException, RepositoryException, IOException, StorageClientException {
+    org.sakaiproject.nakamura.api.lite.Session session = mock(org.sakaiproject.nakamura.api.lite.Session.class);
+    AccessControlManager accessControlManager = mock(AccessControlManager.class);
+    when(session.getAccessControlManager()).thenReturn(accessControlManager);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    Writer w = new PrintWriter(baos);
+    JSONWriter write = new JSONWriter(w);
+    Content content = new Content("/path/to/file.doc", ImmutableMap.of("jcr:name", (Object)"file.doc", "jcr:path", "/path/to/file.doc"));
+    try {
+      FileUtils.writeLinkNode(content, session, write);
+    } catch (StorageClientException e) {
+      fail("No exception should be thrown");
+    }
+    w.flush();
+    String s = baos.toString("UTF-8");
+    JSONObject j = new JSONObject(s);
+    assertFileNodeInfo2(j);
+  }
+
+  /*
   @Test
   public void testIsTag() throws RepositoryException {
     Node node = new MockNode("/path/to/tag");
@@ -167,7 +244,7 @@ public class FilesUtilsTest {
     result = FileUtils.isTag(node);
     assertEquals(false, result);
   }
-*/
+   */
 
   @Test
   public void testCreateLinkNode() throws AccessDeniedException, RepositoryException {
@@ -286,11 +363,54 @@ public class FilesUtilsTest {
     try {
       @SuppressWarnings("unused")
       Node node = resolveNode("poolId1234", resourceResolver);
-      
+
       // TODO: fix this
       Assert.fail("Pool Nodes cant be tagged at the moment");
     } catch (Throwable e) {
     }
+  }
+
+  /**
+   * This test covers FileUtils.writeComments method 
+   * 
+   * @throws JSONException
+   * @throws StorageClientException
+   * @throws RepositoryException
+   * @throws IOException
+   */
+  @Test
+  public void testWriteComments() throws JSONException, RepositoryException,
+  UnsupportedEncodingException, IOException {
+
+    org.sakaiproject.nakamura.api.lite.Session session = mock(org.sakaiproject.nakamura.api.lite.Session.class);
+    ContentManager cm = mock(ContentManager.class);
+    Content content = new Content("/path/to/file.doc", ImmutableMap.of("jcr:name", (Object)"file.doc", "jcr:path", "/path/to/file.doc"));
+    Content comments = new Content("/path/to/file.doc/comments", ImmutableMap.of("name", (Object)"Tom", "text", "This is a test comment"));
+    try {
+      when(cm.get("/path/to/file.doc/comments")).thenReturn(comments);
+      when(session.getContentManager()).thenReturn(cm);
+    } catch (org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException e) {
+      fail("No exception should be thrown");
+    } catch (StorageClientException e1) {
+      fail("No exception should be thrown");
+    }
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    Writer w = new PrintWriter(baos);
+    JSONWriter write = new JSONWriter(w);
+
+    try {
+      write.object();
+      FileUtils.writeComments(content, session, write);
+    } catch (StorageClientException e) {
+      fail("No exception should be thrown for StorageClientException");
+    }
+    write.endObject();
+    w.flush();
+    String s = baos.toString("UTF-8");
+    JSONObject j = new JSONObject(s);
+    JSONObject jc = j.getJSONObject("comments");
+    assertEquals("Tom", jc.get("name"));
+    assertEquals("This is a test comment", jc.get("text"));
   }
 
 }

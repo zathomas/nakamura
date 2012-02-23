@@ -31,6 +31,7 @@ import org.sakaiproject.nakamura.api.http.cache.CachedResponse;
 import org.sakaiproject.nakamura.api.memory.Cache;
 import org.sakaiproject.nakamura.api.memory.CacheManagerService;
 import org.sakaiproject.nakamura.api.memory.CacheScope;
+import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 
 import java.io.IOException;
 import java.util.Dictionary;
@@ -125,6 +126,7 @@ public class CacheControlFilter implements Filter {
     HttpServletRequest srequest = (HttpServletRequest) request;
     HttpServletResponse sresponse = (HttpServletResponse) response;
     String path = srequest.getPathInfo();
+    TelemetryCounter.incrementValue("http","CacheControl", path);
     int respCode = 0;
     Map<String, String> headers = null;
     boolean withLastModfied = true;
