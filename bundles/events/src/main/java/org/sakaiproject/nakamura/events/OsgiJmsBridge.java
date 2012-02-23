@@ -46,7 +46,7 @@ import org.sakaiproject.nakamura.api.events.EventDeliveryConstants;
 import org.sakaiproject.nakamura.api.events.EventDeliveryConstants.EventAcknowledgeMode;
 import org.sakaiproject.nakamura.api.events.EventDeliveryConstants.EventDeliveryMode;
 import org.sakaiproject.nakamura.api.events.EventDeliveryConstants.EventMessageMode;
-import org.sakaiproject.nakamura.util.TelemetryCounter;
+import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

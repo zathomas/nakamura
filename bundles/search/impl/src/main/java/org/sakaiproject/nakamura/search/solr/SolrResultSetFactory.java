@@ -51,7 +51,7 @@ import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchUtil;
 import org.sakaiproject.nakamura.api.solr.SolrServerService;
-import org.sakaiproject.nakamura.util.TelemetryCounter;
+import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

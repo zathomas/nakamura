@@ -62,7 +62,7 @@ import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.sakaiproject.nakamura.util.PathUtils;
-import org.sakaiproject.nakamura.util.TelemetryCounter;
+import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

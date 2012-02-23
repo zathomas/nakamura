@@ -31,7 +31,7 @@ import org.sakaiproject.nakamura.api.http.cache.CachedResponse;
 import org.sakaiproject.nakamura.api.memory.Cache;
 import org.sakaiproject.nakamura.api.memory.CacheManagerService;
 import org.sakaiproject.nakamura.api.memory.CacheScope;
-import org.sakaiproject.nakamura.util.TelemetryCounter;
+import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 
 import java.io.IOException;
 import java.util.Dictionary;
