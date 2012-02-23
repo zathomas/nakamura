@@ -70,6 +70,7 @@ import org.sakaiproject.nakamura.api.templates.TemplateService;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.sakaiproject.nakamura.util.JcrUtils;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
+import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -188,7 +189,7 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
                 + SEARCH_PATH_PREFIX);
         return;
       }
-
+      TelemetryCounter.incrementValue("search", "SolrSearchServlet", resource.getPath());
       Node node = resource.adaptTo(Node.class);
       if (node != null && node.hasProperty(SAKAI_QUERY_TEMPLATE)) {
         // KERN-1147 Respond better when all parameters haven't been provided for a query

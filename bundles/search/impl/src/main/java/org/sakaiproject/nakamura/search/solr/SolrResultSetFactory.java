@@ -52,6 +52,7 @@ import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchUtil;
 import org.sakaiproject.nakamura.api.solr.SolrServerService;
+import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -193,8 +194,10 @@ public class SolrResultSetFactory implements ResultSetFactory {
       try {
         if ( tquery > verySlowQueryThreshold ) {
           SLOW_QUERY_LOGGER.error("Very slow solr query {} ms {} ",tquery, URLDecoder.decode(solrQuery.toString(),"UTF-8"));
+          TelemetryCounter.incrementValue("search","VERYSLOW",request.getResource().getPath());
         } else if ( tquery > slowQueryThreshold ) {
           SLOW_QUERY_LOGGER.warn("Slow solr query {} ms {} ",tquery, URLDecoder.decode(solrQuery.toString(),"UTF-8"));
+          TelemetryCounter.incrementValue("search", "SLOW", request.getResource().getPath());
         }
       } catch (UnsupportedEncodingException e) {
       }
