@@ -24,6 +24,7 @@ import net.sf.ehcache.config.CacheConfiguration;
 
 import org.sakaiproject.nakamura.api.memory.Cache;
 import org.sakaiproject.nakamura.api.memory.CacheScope;
+import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,16 +100,26 @@ public class CacheImpl<V> implements Cache<V> {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * @see org.sakaiproject.nakamura.api.memory.Cache#get(java.lang.String)
    */
-  @SuppressWarnings("unchecked")
   public V get(String key) {
     Element e = cache.get(key);
     if (e == null) {
       return null;
     }
-    return (V) e.getObjectValue();
+    return stats(e.getObjectValue());
+  }
+
+  @SuppressWarnings("unchecked")
+  private V stats(Object objectValue) {
+    if (objectValue == null) {
+      TelemetryCounter.incrementValue("memory", "Cache", "misses");
+    } else {
+      TelemetryCounter.incrementValue("memory", "Cache", "hits");
+    }
+    TelemetryCounter.incrementValue("memory", "Cache", "gets");
+    return (V) objectValue;
   }
 
   /**
