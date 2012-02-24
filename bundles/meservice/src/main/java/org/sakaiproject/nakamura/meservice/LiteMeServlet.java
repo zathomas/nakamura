@@ -442,12 +442,16 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       String localeProp = String.valueOf(LOCALE_FIELD);
       String locale[] = StringUtils.split(localeProp, '_', 2);
       try {
-        l = new Locale(locale[0], locale[1]);
+        if (locale.length == 2) {
+          l = new Locale(locale[0], locale[1]);
+        } else if (locale.length == 1) {
+          l = new Locale(locale[0]);
+        }
       } catch (MissingResourceException e) {
-        // kern-2589
-        if ("es".equals(locale[0]) && "419".equals(locale[1])) {
-          l = new Locale("es", "ES");
-          LOG.info("Substituted es_ES for es_419");
+        // if language and country were specified, try falling back to just the language
+        if (locale.length == 2) {
+          l = new Locale(locale[0]);
+          LOG.info("Substituted [{}] for [{}]", locale[0], localeProp);
         } else {
           throw e;
         }
