@@ -61,6 +61,7 @@ import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.sakaiproject.nakamura.util.PathUtils;
+import org.sakaiproject.nakamura.util.StringUtils;
 import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +77,7 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.MissingResourceException;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -437,9 +439,18 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     /* Get the correct locale */
     Locale l = request.getLocale();
     if (properties.containsKey(LOCALE_FIELD)) {
-      String locale[] = properties.get(LOCALE_FIELD).toString().split("_");
-      if (locale.length == 2) {
+      String localeProp = String.valueOf(LOCALE_FIELD);
+      String locale[] = StringUtils.split(localeProp, '_', 2);
+      try {
         l = new Locale(locale[0], locale[1]);
+      } catch (MissingResourceException e) {
+        // kern-2589
+        if ("es".equals(locale[0]) && "419".equals(locale[1])) {
+          l = new Locale("es", "ES");
+          LOG.info("Substituted es_ES for es_419");
+        } else {
+          throw e;
+        }
       }
     }
 
