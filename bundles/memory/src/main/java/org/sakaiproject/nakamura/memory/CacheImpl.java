@@ -73,8 +73,8 @@ public class CacheImpl<V> implements Cache<V> {
     }
     checkPayloadClasses = false;
     CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
-    if ( CacheScope.CLUSTERREPLICATED.equals(scope) || cacheConfiguration.isDiskPersistent() || cacheConfiguration.isEternal() || cacheConfiguration.isOverflowToDisk()) {
-	checkPayloadClasses = true;
+    if (CacheScope.CLUSTERREPLICATED.equals(scope) || cacheConfiguration.isDiskPersistent() || cacheConfiguration.isEternal() || cacheConfiguration.isOverflowToDisk()) {
+      checkPayloadClasses = true;
     }
     // this isn't really checking to see if the cache is configured to replicate payloads, but there doesn't appear to be
     // a way of finding that out from the Cache Configuration object.
@@ -82,7 +82,7 @@ public class CacheImpl<V> implements Cache<V> {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * @see org.sakaiproject.nakamura.api.memory.Cache#clear()
    */
   public void clear() {
@@ -91,7 +91,7 @@ public class CacheImpl<V> implements Cache<V> {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * @see org.sakaiproject.nakamura.api.memory.Cache#containsKey(java.lang.String)
    */
   public boolean containsKey(String key) {
@@ -124,7 +124,7 @@ public class CacheImpl<V> implements Cache<V> {
 
   /**
    * {@inherit-doc}
-   * 
+   *
    * @see org.sakaiproject.nakamura.api.memory.Cache#put(java.lang.String, java.lang.Object)
    */
   @SuppressWarnings("unchecked")
@@ -136,49 +136,49 @@ public class CacheImpl<V> implements Cache<V> {
         previous = (V) e.getObjectValue();
       }
     }
-		if (checkPayloadClasses
-				&& !loadedClasses.contains(payload.getClass().getName())) {
-			ClassLoader cl = Thread.currentThread().getContextClassLoader();
-			Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-			try {
+    if (checkPayloadClasses
+        && !loadedClasses.contains(payload.getClass().getName())) {
+      ClassLoader cl = Thread.currentThread().getContextClassLoader();
+      Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+      try {
 
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ObjectOutputStream oos = new ObjectOutputStream(baos);
-				oos.writeObject(payload);
-				oos.flush();
-				ByteArrayInputStream bin = new ByteArrayInputStream(
-						baos.toByteArray());
-				ObjectInputStream ois = new ObjectInputStream(bin);
-				Object o = ois.readObject();
-				if (!o.getClass().equals(payload.getClass())) {
-					throw new IllegalArgumentException(
-							"Class "
-									+ payload.getClass()
-									+ " may not be added to cache "
-									+ cacheName
-									+ "  as it would result in a ClassCast exception, please ensure the class is exported ");
-				}
-				loadedClasses.add(payload.getClass().getName());
-			} catch (IOException e) {
-				LOGGER.error("Unable to check serialization " + e.getMessage(),
-						e);
-			} catch (ClassNotFoundException e) {
-				LOGGER.error(e.getMessage(), e);
-				throw new IllegalArgumentException("Class "
-						+ payload.getClass() + " may not be added to cache "
-						+ cacheName + " serialization error cause:"
-						+ e.getMessage());
-			} finally {
-				Thread.currentThread().setContextClassLoader(cl);
-			}
-		}
-		cache.put(new Element(key, payload));
-		return previous;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(payload);
+        oos.flush();
+        ByteArrayInputStream bin = new ByteArrayInputStream(
+            baos.toByteArray());
+        ObjectInputStream ois = new ObjectInputStream(bin);
+        Object o = ois.readObject();
+        if (!o.getClass().equals(payload.getClass())) {
+          throw new IllegalArgumentException(
+              "Class "
+                  + payload.getClass()
+                  + " may not be added to cache "
+                  + cacheName
+                  + "  as it would result in a ClassCast exception, please ensure the class is exported ");
+        }
+        loadedClasses.add(payload.getClass().getName());
+      } catch (IOException e) {
+        LOGGER.error("Unable to check serialization " + e.getMessage(),
+            e);
+      } catch (ClassNotFoundException e) {
+        LOGGER.error(e.getMessage(), e);
+        throw new IllegalArgumentException("Class "
+            + payload.getClass() + " may not be added to cache "
+            + cacheName + " serialization error cause:"
+            + e.getMessage());
+      } finally {
+        Thread.currentThread().setContextClassLoader(cl);
+      }
+    }
+    cache.put(new Element(key, payload));
+    return previous;
   }
 
   /**
    * {@inherit-doc}
-   * 
+   *
    * @see org.sakaiproject.nakamura.api.memory.Cache#remove(java.lang.String)
    */
   public void remove(String key) {
@@ -187,7 +187,7 @@ public class CacheImpl<V> implements Cache<V> {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * @see org.sakaiproject.nakamura.api.memory.Cache#removeChildren(java.lang.String)
    */
   public void removeChildren(String key) {
@@ -205,7 +205,7 @@ public class CacheImpl<V> implements Cache<V> {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * @see org.sakaiproject.nakamura.api.memory.Cache#list()
    */
   @SuppressWarnings("unchecked")
@@ -214,7 +214,7 @@ public class CacheImpl<V> implements Cache<V> {
     List<V> values = new ArrayList<V>();
     for (String k : keys) {
       Element e = cache.get(k);
-      if ( e != null ) {
+      if (e != null) {
         values.add((V) e.getObjectValue());
       }
     }
@@ -222,11 +222,11 @@ public class CacheImpl<V> implements Cache<V> {
   }
 
   public void checkCompatableScope(CacheScope scope) {
-		if (!scope.equals(this.scope)) {
-			throw new IllegalStateException("The cache called " + cacheName
-					+ " is a " + this.scope
-					+ " cache and cant be re-used as a " + scope + " cache");
-		}
-	}
+    if (!scope.equals(this.scope)) {
+      throw new IllegalStateException("The cache called " + cacheName
+          + " is a " + this.scope
+          + " cache and cant be re-used as a " + scope + " cache");
+    }
+  }
 
 }
