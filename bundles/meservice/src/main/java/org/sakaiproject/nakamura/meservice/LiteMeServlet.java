@@ -21,6 +21,10 @@ import static org.sakaiproject.nakamura.api.connections.ConnectionState.ACCEPTED
 import static org.sakaiproject.nakamura.api.connections.ConnectionState.INVITED;
 import static org.sakaiproject.nakamura.api.connections.ConnectionState.PENDING;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.jackrabbit.util.ISO9075;
@@ -30,6 +34,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.sakaiproject.nakamura.api.connections.ConnectionConstants;
 import org.sakaiproject.nakamura.api.connections.ConnectionManager;
@@ -126,8 +131,13 @@ import javax.servlet.http.HttpServletResponse;
       "}<pre>"),
     @ServiceResponse(code = 401, description = "Unauthorized: credentials provided were not acceptable to return information for."),
     @ServiceResponse(code = 500, description = "Unable to return information about current user.") }))
-@SlingServlet(paths = { "/system/me" }, generateComponent = true, generateService = true, methods = { "GET" })
+@SlingServlet(paths = { "/system/me" }, generateComponent = false, methods = { "GET" })
+@Component // this is needed to add the activate method
+@Property(name = LiteMeServlet.LOCALE_DEFAULT_PROP, value = LiteMeServlet.DEFAULT_LOCALE)
 public class LiteMeServlet extends SlingSafeMethodsServlet {
+  public static final String LOCALE_DEFAULT_PROP = "locale.default";
+
+  public static final String DEFAULT_LOCALE = "en_US";
 
   private static final long serialVersionUID = -3786472219389695181L;
   private static final Logger LOG = LoggerFactory.getLogger(LiteMeServlet.class);
@@ -148,6 +158,13 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
 
   @Reference
   BasicUserInfoService basicUserInfoService;
+
+  private String defaultLocale;
+
+  @Activate @Modified
+  protected void activate(Map<?, ?> props) {
+    defaultLocale = PropertiesUtil.toString(props.get(LOCALE_DEFAULT_PROP), DEFAULT_LOCALE);
+  }
 
   /**
    * {@inheritDoc}
@@ -437,24 +454,26 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       SlingHttpServletRequest request) throws JSONException {
 
     /* Get the correct locale */
-    Locale l = request.getLocale();
+    String localeProp = defaultLocale;
     if (properties.containsKey(LOCALE_FIELD)) {
-      String localeProp = String.valueOf(properties.get(LOCALE_FIELD));
-      String locale[] = StringUtils.split(localeProp, '_', 2);
-      try {
-        if (locale.length == 2) {
-          l = new Locale(locale[0], locale[1]);
-        } else if (locale.length == 1) {
-          l = new Locale(locale[0]);
-        }
-      } catch (MissingResourceException e) {
-        // if language and country were specified, try falling back to just the language
-        if (locale.length == 2) {
-          l = new Locale(locale[0]);
-          LOG.info("Substituted [{}] for [{}]", locale[0], localeProp);
-        } else {
-          throw e;
-        }
+      localeProp = String.valueOf(properties.get(LOCALE_FIELD));
+    }
+
+    Locale l = null;
+    String locale[] = StringUtils.split(localeProp, '_', 2);
+    try {
+      if (locale.length == 2) {
+        l = new Locale(locale[0], locale[1]);
+      } else if (locale.length == 1) {
+        l = new Locale(locale[0]);
+      }
+    } catch (MissingResourceException e) {
+      // if language and country were specified, try falling back to just the language
+      if (locale.length == 2) {
+        l = new Locale(locale[0]);
+        LOG.info("Falling back to [{}] from [{}]", locale[0], localeProp);
+      } else {
+        throw e;
       }
     }
 
