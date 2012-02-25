@@ -439,7 +439,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     /* Get the correct locale */
     Locale l = request.getLocale();
     if (properties.containsKey(LOCALE_FIELD)) {
-      String localeProp = String.valueOf(LOCALE_FIELD);
+      String localeProp = String.valueOf(properties.get(LOCALE_FIELD));
       String locale[] = StringUtils.split(localeProp, '_', 2);
       try {
         if (locale.length == 2) {
@@ -461,7 +461,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     /* Get the correct time zone */
     TimeZone tz = TimeZone.getDefault();
     if (properties.containsKey(TIMEZONE_FIELD)) {
-      String timezone = properties.get(TIMEZONE_FIELD).toString();
+      String timezone = String.valueOf(properties.get(TIMEZONE_FIELD));
       tz = TimeZone.getTimeZone(timezone);
     }
     int daylightSavingsOffset = tz.inDaylightTime(new Date()) ? tz.getDSTSavings() : 0;
