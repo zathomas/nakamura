@@ -118,7 +118,6 @@ public class CacheImpl<V> implements Cache<V> {
     } else {
       TelemetryCounter.incrementValue("memory", "Cache", "hits");
     }
-    TelemetryCounter.incrementValue("memory", "Cache", "gets");
     return (V) objectValue;
   }
 
