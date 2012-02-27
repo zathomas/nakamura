@@ -15,11 +15,10 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.files;
+package org.sakaiproject.nakamura.filesmigrator;
 
 import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 

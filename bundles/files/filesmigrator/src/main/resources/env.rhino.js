@@ -12324,7 +12324,6 @@ var __elementPopped__ = function(ns, name, node){
 
 __extend__(HTMLElement.prototype,{
     set innerHTML(html){
-        console.log('envjs gonna parse this html fragment.');
         HTMLParser.parseFragment(html, this);
     }
 });

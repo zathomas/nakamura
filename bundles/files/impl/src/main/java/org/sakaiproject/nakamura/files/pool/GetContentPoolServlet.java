@@ -18,6 +18,7 @@
 package org.sakaiproject.nakamura.files.pool;
 
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -25,7 +26,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.sakaiproject.nakamura.api.doc.BindingType;
 import org.sakaiproject.nakamura.api.doc.ServiceBinding;
 import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
@@ -34,18 +34,12 @@ import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.files.FileMigrationCheck;
 import org.sakaiproject.nakamura.api.files.FileMigrationService;
-import org.sakaiproject.nakamura.api.lite.Repository;
-import org.sakaiproject.nakamura.api.lite.Session;
-import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.content.Content;
-import org.sakaiproject.nakamura.api.resource.lite.LiteJsonImporter;
-import org.sakaiproject.nakamura.files.DocMigrator;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.StringWriter;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -73,10 +67,10 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
   private static final long serialVersionUID = -382733858518678148L;
   private static final Logger LOGGER = LoggerFactory.getLogger(GetContentPoolServlet.class);
 
-  @Reference
+  @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
   protected FileMigrationCheck migrationCheck;
 
-  @Reference
+  @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
   protected FileMigrationService migrationService;
 
   @Override
@@ -138,7 +132,9 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
   }
 
   private Content migrateFileContent(Content content) {
-    if (migrationCheck.fileContentNeedsMigration(content)) {
+    if (migrationCheck != null
+      && migrationService != null
+      && migrationCheck.fileContentNeedsMigration(content)) {
       return migrationService.migrateFileContent(content);
     } else {
       return content;

@@ -15,11 +15,12 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.files;
+package org.sakaiproject.nakamura.filesmigrator;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -28,6 +29,7 @@ import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.tools.shell.Global;
@@ -37,23 +39,22 @@ import org.sakaiproject.nakamura.api.files.FileMigrationService;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
-import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
-import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.resource.lite.LiteJsonImporter;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-@Component(metatype = true, enabled = true)
+@Service
+@Component(enabled = false)
 public class DocMigrator implements FileMigrationCheck, FileMigrationService {
   private static final Logger LOGGER = LoggerFactory.getLogger(DocMigrator.class);
 
@@ -64,6 +65,7 @@ public class DocMigrator implements FileMigrationCheck, FileMigrationService {
 
   private final Context cx;
   private ScriptableObject sharedScope = null;
+  private ClassLoader classLoader = DocMigrator.class.getClassLoader();
 
   public DocMigrator() {
     cx = ContextFactory.getGlobal().enterContext();
@@ -74,9 +76,22 @@ public class DocMigrator implements FileMigrationCheck, FileMigrationService {
     if (!global.isInitialized()) {
       global.init(cx);
       Main.setOut(System.out);
-      Main.processSource(cx, "/Users/zach/opt/envjs/dist/env.rhino.js");
-      Main.processSource(cx, "/Users/zach/dev/nakamura/bundles/files/impl/src/main/resources/jquery.js");
-      Main.processSource(cx, "/Users/zach/dev/nakamura/bundles/files/impl/src/main/resources/hello.js");
+      InputStream envJsStream = classLoader.getResourceAsStream("env.rhino.js");
+      InputStream jqueryStream = classLoader.getResourceAsStream("jquery.js");
+      InputStream migratorStream = classLoader.getResourceAsStream("hello.js");
+      Script envJs = null;
+      Script jquery = null;
+      Script migrator = null;
+      try {
+        envJs = cx.compileReader(new InputStreamReader(envJsStream),"env.rhino.js", 1, null);
+        jquery = cx.compileReader(new InputStreamReader(jqueryStream), "jquery.js", 1, null);
+        migrator = cx.compileReader(new InputStreamReader(migratorStream), "hello.js", 1, null);
+      } catch (IOException e) {
+        LOGGER.error(e.getMessage());
+      }
+      envJs.exec(cx, global);
+      jquery.exec(cx, global);
+      migrator.exec(cx, global);
     }
   }
 
