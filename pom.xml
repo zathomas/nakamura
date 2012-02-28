@@ -83,6 +83,7 @@
         <module>bundles/upgrade</module>
         <module>bundles/lom</module>
         <module>bundles/content-packaging</module>
+        <module>bundles/postgresqlwrapper</module>
         <module>testscripts</module>
       </modules>
     </profile>
@@ -449,7 +450,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.2.2</version>
+        <version>2.2.1</version>
         <configuration>
           <useReleaseProfile>false</useReleaseProfile>
           <goals>deploy</goals>
@@ -1138,7 +1139,7 @@
       <dependency>
         <groupId>org.sakaiproject.nakamura</groupId>
         <artifactId>org.sakaiproject.nakamura.core</artifactId>
-        <version>1.5-20120223</version>
+        <version>1.3-20120228</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
@@ -1147,6 +1148,13 @@
         <version>1.4</version>
         <scope>provided</scope>
       </dependency>
+
+      <dependency>
+        <groupId>org.sakaiproject.nakamura</groupId>
+        <artifactId>org.sakaiproject.nakamura.postgresqlwrapper</artifactId>
+        <version>1.2-SNAPSHOT</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 </project>
