@@ -85,7 +85,7 @@ public class SparseGetVersionServletHandler extends AbstractSafeMethodsServletRe
         if ( i < 0 || i >= versionIds.size()) {
           response
           .sendError(HttpServletResponse.SC_BAD_REQUEST,
-              "No version specified, url should of the form nodepath.version.,versionnumber,.json");
+              "Found " + versionIds.size() + " versions while you requested #" + versionNumber);
           return;          
         }
         requestVersionName = versionIds.get(versionIds.size()-1-versionNumber);

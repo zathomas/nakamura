@@ -39,7 +39,8 @@ public class SparseGetVersionServletHandlerTest {
     ContentManager mockContentManager = mock(ContentManager.class);
     Resource mockResource = mock(Resource.class);
     String versionName = "abcd";
-    ResourceWrapper testWrapper = SparseGetVersionServletHandler.getVersionResourceWrapper(mockResource, versionName, mockContent, mockContentManager);
+    ResourceWrapper testWrapper =
+      SparseGetVersionServletHandler.getVersionResourceWrapper(mockResource, versionName, mockContent, mockContentManager);
     assertNull(mockContent.getProperty("sakai:resourceType"));
     assertNotNull(testWrapper.getResourceType());
   }
