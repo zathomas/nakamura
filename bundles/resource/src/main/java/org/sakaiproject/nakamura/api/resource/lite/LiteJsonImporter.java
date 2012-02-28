@@ -216,9 +216,13 @@ public class LiteJsonImporter {
   }
   @SuppressWarnings("unchecked")
   protected <T> T getObject(Object obj, Class<T> type) {
+    if (JSONObject.NULL.equals(obj)) {
+      return null;
+    }
+
     if ( type.equals(Object.class)) {
       return (T) obj; // no type hint, just accept the json parser
-    }else if ( type.equals(String.class)) {
+    } else if ( type.equals(String.class)) {
       return (T) String.valueOf(obj);
     } else if ( type.equals(Integer.class) ) {
       if ( obj instanceof Integer ) {
