@@ -244,6 +244,8 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
   @Property(value = "http://sakaiproject.org", name = "lti.instanceUrl", description = "Needs documentation; not required but tasty...")
   protected static final String INSTANCE_URL = "lti.instanceUrl";
 
+  protected static final String EXTERNAL_COURSE_ID = "external_course_id";
+
   @Activate
   protected void activate(ComponentContext componentContext) throws Exception {
     LOG.debug("activate(ComponentContext componentContext)");
@@ -462,6 +464,10 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
               (String) groupProfileNode.getProperty("sakai:group-title"));
           launchProps.put(CONTEXT_LABEL,
               (String) groupProfileNode.getProperty("sakai:group-id"));
+          if (groupProfileNode.getProperty("sakai:external-course-id") != null) {
+            launchProps.put(CUSTOM_PREFIX+ EXTERNAL_COURSE_ID,
+                (String) groupProfileNode.getProperty("sakai:external-course-id"));
+          }
         } else {
           // cannot find group profile data
           launchProps.put(CONTEXT_TITLE, (String) pooledContentNode.getProperty("_path"));
