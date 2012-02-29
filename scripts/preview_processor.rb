@@ -305,7 +305,6 @@ def main()
               # Generate tags for document
               @s.execute_post @s.url_for("p/#{id}"), {':operation' => 'tag', 'key' => terms}
               log "Generate tags for #{id}, #{terms}"
-              FileUtils.rm_f "#{id}.txt"
               admin_id = "admin"
               origin_file_name = meta["sakai:pooled-content-file-name"]
               if not terms.nil? and terms.length > 0 and user["user"]["properties"]["sendTagMsg"] and user["user"]["properties"]["sendTagMsg"] != "false"
