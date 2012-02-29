@@ -61,38 +61,52 @@ public class DocMigrator implements FileMigrationCheck, FileMigrationService {
   @Reference
   protected Repository repository;
 
-  private static final Set TIME_PROPS = ImmutableSet.of("_created", "_lastModified", "time");
+  public static final ThreadLocal javascriptThreadContext = new ThreadLocal();
+  public static final ThreadLocal javascriptThreadScope = new ThreadLocal();
 
-  private final Context cx;
-  private ScriptableObject sharedScope = null;
+  private static final Set TIME_PROPS = ImmutableSet.of("_created", "_lastModified", "time", "sakai:schemaversion");
+  
   private ClassLoader classLoader = DocMigrator.class.getClassLoader();
 
   public DocMigrator() {
-    cx = ContextFactory.getGlobal().enterContext();
-    cx.setOptimizationLevel(-1);
-    cx.setLanguageVersion(Context.VERSION_1_6);
-    sharedScope = cx.initStandardObjects();
-    Global global = Main.getGlobal();
-    if (!global.isInitialized()) {
-      global.init(cx);
-      Main.setOut(System.out);
-      InputStream envJsStream = classLoader.getResourceAsStream("env.rhino.js");
-      InputStream jqueryStream = classLoader.getResourceAsStream("jquery.js");
-      InputStream migratorStream = classLoader.getResourceAsStream("hello.js");
-      Script envJs = null;
-      Script jquery = null;
-      Script migrator = null;
-      try {
-        envJs = cx.compileReader(new InputStreamReader(envJsStream),"env.rhino.js", 1, null);
-        jquery = cx.compileReader(new InputStreamReader(jqueryStream), "jquery.js", 1, null);
-        migrator = cx.compileReader(new InputStreamReader(migratorStream), "hello.js", 1, null);
-      } catch (IOException e) {
-        LOGGER.error(e.getMessage());
+    threadInit();
+  }
+  
+  private Context threadInit() {
+    Context cx = (Context) javascriptThreadContext.get();
+    if (cx != null) {
+      return cx;
+    } else {
+      LOGGER.debug("Initializing JavaScript migrator on a new thread.");
+      cx = ContextFactory.getGlobal().enterContext();
+      cx.setOptimizationLevel(-1);
+      cx.setLanguageVersion(Context.VERSION_1_6);
+      ScriptableObject sharedScope = cx.initStandardObjects();
+      Global global = Main.getGlobal();
+      if (!global.isInitialized()) {
+        global.init(cx);
+        Main.setOut(System.out);
+        InputStream envJsStream = classLoader.getResourceAsStream("env.rhino.js");
+        InputStream jqueryStream = classLoader.getResourceAsStream("jquery.js");
+        InputStream migratorStream = classLoader.getResourceAsStream("hello.js");
+        Script envJs = null;
+        Script jquery = null;
+        Script migrator = null;
+        try {
+          envJs = cx.compileReader(new InputStreamReader(envJsStream),"env.rhino.js", 1, null);
+          jquery = cx.compileReader(new InputStreamReader(jqueryStream), "jquery.js", 1, null);
+          migrator = cx.compileReader(new InputStreamReader(migratorStream), "hello.js", 1, null);
+        } catch (IOException e) {
+          LOGGER.error(e.getMessage());
+        }
+        envJs.exec(cx, global);
+        jquery.exec(cx, global);
+        migrator.exec(cx, global);
       }
-      envJs.exec(cx, global);
-      jquery.exec(cx, global);
-      migrator.exec(cx, global);
-    }
+      javascriptThreadContext.set(cx);
+      javascriptThreadScope.set(sharedScope);
+      return cx;
+      }
   }
 
   @Override
@@ -102,6 +116,7 @@ public class DocMigrator implements FileMigrationCheck, FileMigrationService {
 
   @Override
   public Content migrateFileContent(Content content) {
+    LOGGER.debug("Starting migration of {}", content.getPath());
     Content returnContent = content;
     StringWriter stringWriter = new StringWriter();
     ExtendedJSONWriter stringJsonWriter = new ExtendedJSONWriter(stringWriter);
@@ -110,8 +125,10 @@ public class DocMigrator implements FileMigrationCheck, FileMigrationService {
       ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, content, false,  -1);
       adminSession = repository.loginAdministrative();
       JSONObject newPageStructure = migratePageStructure(stringWriter.toString());
+      validateStructure(newPageStructure);
+      LOGGER.debug("Generated new page structure. Saving content {}", content.getPath());
       LiteJsonImporter liteJsonImporter = new LiteJsonImporter();
-      liteJsonImporter.internalImportContent(adminSession.getContentManager(), newPageStructure, content.getPath(), Boolean.TRUE, adminSession.getAccessControlManager());
+      liteJsonImporter.importContent(adminSession.getContentManager(), newPageStructure, content.getPath(), true, true, true, adminSession.getAccessControlManager());
       returnContent = adminSession.getContentManager().get(content.getPath());
     } catch (Exception e) {
       LOGGER.error(e.getMessage());
@@ -127,9 +144,17 @@ public class DocMigrator implements FileMigrationCheck, FileMigrationService {
     return returnContent;
   }
 
+  private void validateStructure(JSONObject newPageStructure) throws JSONException, SakaiDocMigrationException {
+    if (newPageStructure.get("sakai:schemaversion") == null) {
+      throw new SakaiDocMigrationException();
+    }
+    LOGGER.debug("new page structure passes validation.");
+  }
+
   private Scriptable getScope() {
-    Scriptable scope = cx.newObject(sharedScope);
-    scope.setPrototype(sharedScope);
+    Context cx = threadInit();
+    Scriptable scope = cx.newObject((ScriptableObject) javascriptThreadScope.get());
+    scope.setPrototype((ScriptableObject) javascriptThreadScope.get());
     scope.setParentScope(null);
     return scope;
   }
@@ -144,8 +169,9 @@ public class DocMigrator implements FileMigrationCheck, FileMigrationService {
   }
 
   private Object callFunction(Scriptable scope, String functionName, Object[] args) {
+    Context context = threadInit();
     Function f = (Function) Main.getGlobal().get(functionName, scope);
-    return f.call(cx, scope, scope, args);
+    return f.call(context, scope, scope, args);
   }
 
   private JSONObject convertToJson(NativeObject javascriptObject) throws JSONException {
