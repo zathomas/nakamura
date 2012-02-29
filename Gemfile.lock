@@ -5,7 +5,8 @@ GEM
     docsplit (0.6.0)
     getopt (1.4.1)
     json (1.6.3)
-    nakamura (0.6)
+    nakamura (0.7)
+      json (>= 1.6.3)
     rbtagger (0.4.7)
     rmagick (2.13.1)
     term-extract (0.5.2)
@@ -19,6 +20,6 @@ DEPENDENCIES
   docsplit
   getopt
   json
-  nakamura (>= 0.6)
+  nakamura (>= 0.7)
   rmagick
   term-extract
