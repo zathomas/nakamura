@@ -267,7 +267,7 @@ var migratePageStructure = function(structure){
             return newStructure;
         }
     } else {
-        return false;
+        return structure;
     }
 }
 

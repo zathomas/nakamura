@@ -88,14 +88,14 @@ public class DocMigrator implements FileMigrationCheck, FileMigrationService {
         Main.setOut(System.out);
         InputStream envJsStream = classLoader.getResourceAsStream("env.rhino.js");
         InputStream jqueryStream = classLoader.getResourceAsStream("jquery.js");
-        InputStream migratorStream = classLoader.getResourceAsStream("hello.js");
+        InputStream migratorStream = classLoader.getResourceAsStream("migrator.js");
         Script envJs = null;
         Script jquery = null;
         Script migrator = null;
         try {
           envJs = cx.compileReader(new InputStreamReader(envJsStream),"env.rhino.js", 1, null);
           jquery = cx.compileReader(new InputStreamReader(jqueryStream), "jquery.js", 1, null);
-          migrator = cx.compileReader(new InputStreamReader(migratorStream), "hello.js", 1, null);
+          migrator = cx.compileReader(new InputStreamReader(migratorStream), "migrator.js", 1, null);
         } catch (IOException e) {
           LOGGER.error(e.getMessage());
         }
@@ -111,7 +111,40 @@ public class DocMigrator implements FileMigrationCheck, FileMigrationService {
 
   @Override
   public boolean fileContentNeedsMigration(Content content) {
-    return !(content.hasProperty("sakai:schemaversion") && StorageClientUtils.toInt(content.getProperty("sakai:schemaversion")) >= CURRENT_SCHEMA_VERSION);
+    try {
+      return !(isNotSakaiDoc(content) || schemaVersionIsCurrent(content) || contentHasUpToDateStructure(content));
+    } catch (SakaiDocMigrationException e) {
+      LOGGER.error("Could not determine requiresMigration with content {}", content.getPath());
+      throw new RuntimeException("Could not determine requiresMigration with content " + content.getPath());
+    }
+  }
+
+  private boolean isNotSakaiDoc(Content content) {
+    return !content.hasProperty("structure0");
+  }
+
+  private boolean contentHasUpToDateStructure(Content content) throws SakaiDocMigrationException {
+    StringWriter stringWriter = new StringWriter();
+    ExtendedJSONWriter stringJsonWriter = new ExtendedJSONWriter(stringWriter);
+    try {
+      ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, content, false, -1);
+      String structureString = (String)content.getProperty("structure0");
+      String docJson = stringWriter.toString();
+      Object result = callFunction(getScope(), "requiresMigration", new Object[]{structureString, docJson, false});
+      if (result instanceof Boolean) {
+        return !(Boolean)result;
+      } else {
+        throw new SakaiDocMigrationException();
+      }
+    } catch (JSONException e) {
+      LOGGER.error(e.getLocalizedMessage());
+      return false;
+    }
+  }
+
+  private boolean schemaVersionIsCurrent(Content content) {
+    return (content.hasProperty("sakai:schemaversion")
+        && StorageClientUtils.toInt(content.getProperty("sakai:schemaversion")) >= CURRENT_SCHEMA_VERSION);
   }
 
   @Override
