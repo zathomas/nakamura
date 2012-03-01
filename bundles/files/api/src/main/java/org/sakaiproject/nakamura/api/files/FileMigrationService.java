@@ -20,5 +20,9 @@ import org.sakaiproject.nakamura.api.lite.content.Content;
  * specific language governing permissions and limitations under the License.
  */
 public interface FileMigrationService {
+  public static final int CURRENT_SCHEMA_VERSION = 2;
+
+  boolean fileContentNeedsMigration(Content content);
+
   Content migrateFileContent(Content content);
 }

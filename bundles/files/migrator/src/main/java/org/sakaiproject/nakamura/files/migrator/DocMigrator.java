@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.filesmigrator;
+package org.sakaiproject.nakamura.files.migrator;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.felix.scr.annotations.Component;
@@ -34,7 +34,6 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.tools.shell.Global;
 import org.mozilla.javascript.tools.shell.Main;
-import org.sakaiproject.nakamura.api.files.FileMigrationCheck;
 import org.sakaiproject.nakamura.api.files.FileMigrationService;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
@@ -55,7 +54,7 @@ import java.util.Set;
 
 @Service
 @Component(enabled = false)
-public class DocMigrator implements FileMigrationCheck, FileMigrationService {
+public class DocMigrator implements FileMigrationService {
   private static final Logger LOGGER = LoggerFactory.getLogger(DocMigrator.class);
 
   @Reference

@@ -637,7 +637,7 @@ KERN-1187
     </bundle>
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
-      <artifactId>org.sakaiproject.nakamura.filesmigrator</artifactId>
+      <artifactId>org.sakaiproject.nakamura.files.migrator</artifactId>
       <version>1.2-SNAPSHOT</version>
     </bundle>
     <bundle>

@@ -16,7 +16,7 @@
     <artifactId>base</artifactId>
     <version>1.1</version>
   </parent>
-  <artifactId>org.sakaiproject.nakamura.filesmigrator</artifactId>
+  <artifactId>org.sakaiproject.nakamura.files.migrator</artifactId>
   <groupId>org.sakaiproject.nakamura</groupId>
   <packaging>bundle</packaging>
   <name>Sakai Nakamura Files: Sakai Doc Migrator</name>

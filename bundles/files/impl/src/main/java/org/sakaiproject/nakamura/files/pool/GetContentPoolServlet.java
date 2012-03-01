@@ -33,7 +33,6 @@ import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
 import org.sakaiproject.nakamura.api.doc.ServiceExtension;
 import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
-import org.sakaiproject.nakamura.api.files.FileMigrationCheck;
 import org.sakaiproject.nakamura.api.files.FileMigrationService;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
@@ -67,9 +66,6 @@ import javax.servlet.http.HttpServletResponse;
 public class GetContentPoolServlet extends SlingSafeMethodsServlet implements OptingServlet {
   private static final long serialVersionUID = -382733858518678148L;
   private static final Logger LOGGER = LoggerFactory.getLogger(GetContentPoolServlet.class);
-
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-  protected FileMigrationCheck migrationCheck;
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
   protected FileMigrationService migrationService;
@@ -134,9 +130,8 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
   }
 
   private Content migrateFileContent(Content content) {
-    if (migrationCheck != null
-      && migrationService != null
-      && migrationCheck.fileContentNeedsMigration(content)) {
+    if (migrationService != null
+      && migrationService.fileContentNeedsMigration(content)) {
       return migrationService.migrateFileContent(content);
     } else {
       return content;
