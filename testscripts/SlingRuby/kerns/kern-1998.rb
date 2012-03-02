@@ -166,7 +166,7 @@ class TC_Kern1998Test < Test::Unit::TestCase
   def is_priority?(result)
     if (!result['sakai:tags'].nil? && result['sakai:tags'].length >= 1) \
         || (!result['sakai:tag-uuid'].nil? && result['sakai:tag-uuid'].length >= 1) \
-        || !result['description'].nil? || result['hasPreview'] == 'true'
+        || !result['sakai:description'].nil? || result['hasPreview'] == 'true'
       true
     else
       false
