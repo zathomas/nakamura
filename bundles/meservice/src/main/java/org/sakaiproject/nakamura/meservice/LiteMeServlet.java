@@ -24,6 +24,7 @@ import static org.sakaiproject.nakamura.api.connections.ConnectionState.PENDING;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
@@ -66,7 +67,6 @@ import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.sakaiproject.nakamura.util.PathUtils;
-import org.sakaiproject.nakamura.util.StringUtils;
 import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +85,8 @@ import java.util.Map.Entry;
 import java.util.MissingResourceException;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
@@ -133,11 +135,23 @@ import javax.servlet.http.HttpServletResponse;
     @ServiceResponse(code = 500, description = "Unable to return information about current user.") }))
 @SlingServlet(paths = { "/system/me" }, generateComponent = false, methods = { "GET" })
 @Component // this is needed to add the activate method
-@Property(name = LiteMeServlet.LOCALE_DEFAULT_PROP, value = LiteMeServlet.DEFAULT_LOCALE)
+@Properties({
+  @Property(name = LiteMeServlet.LOCALE_LANGUAGE_PROP, value = LiteMeServlet.DEFAULT_LANGUAGE),
+  @Property(name = LiteMeServlet.LOCALE_COUNTRY_PROP, value = LiteMeServlet.DEFAULT_COUNTRY)
+})
 public class LiteMeServlet extends SlingSafeMethodsServlet {
-  public static final String LOCALE_DEFAULT_PROP = "locale.default";
+  public static final String LOCALE_LANGUAGE_PROP = "locale.language";
+  public static final String LOCALE_COUNTRY_PROP = "locale.country";
 
-  public static final String DEFAULT_LOCALE = "en_US";
+  public static final String DEFAULT_LANGUAGE = "en";
+  public static final String DEFAULT_COUNTRY = "US";
+
+  // ^[a-zA-Z]{2}([_]?([a-zA-Z]{2}|[0-9]{3}))?$");
+  private static final String LANGUAGE_PATTERN = "([a-zA-Z]{2})";
+  private static final String COUNTRY_PATTERN = "([a-zA-Z]{2}|[0-9]{3})";
+  private static final String LOCALE_PATTERN = "^%s(_%s)?$";
+  private static final Pattern LOCALE_REGEX = Pattern.compile(String.format(
+      LOCALE_PATTERN, LANGUAGE_PATTERN, COUNTRY_PATTERN));
 
   private static final long serialVersionUID = -3786472219389695181L;
   private static final Logger LOG = LoggerFactory.getLogger(LiteMeServlet.class);
@@ -151,19 +165,21 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
   protected transient ConnectionManager connectionManager;
 
   @Reference
-  private MessageBucketService messageBucketService;
+  protected MessageBucketService messageBucketService;
 
   @Reference
-  SolrSearchServiceFactory searchServiceFactory;
+  protected SolrSearchServiceFactory searchServiceFactory;
 
   @Reference
-  BasicUserInfoService basicUserInfoService;
+  protected BasicUserInfoService basicUserInfoService;
 
-  private String defaultLocale;
+  private String defaultLanguage;
+  private String defaultCountry;
 
   @Activate @Modified
   protected void activate(Map<?, ?> props) {
-    defaultLocale = PropertiesUtil.toString(props.get(LOCALE_DEFAULT_PROP), DEFAULT_LOCALE);
+    defaultLanguage = PropertiesUtil.toString(props.get(LOCALE_LANGUAGE_PROP), DEFAULT_LANGUAGE);
+    defaultCountry = PropertiesUtil.toString(props.get(LOCALE_COUNTRY_PROP), DEFAULT_COUNTRY).toUpperCase();
   }
 
   /**
@@ -453,29 +469,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
   protected void writeLocale(ExtendedJSONWriter write, Map<String, Object> properties,
       SlingHttpServletRequest request) throws JSONException {
 
-    /* Get the correct locale */
-    String localeProp = defaultLocale;
-    if (properties.containsKey(LOCALE_FIELD)) {
-      localeProp = String.valueOf(properties.get(LOCALE_FIELD));
-    }
-
-    Locale l = null;
-    String locale[] = StringUtils.split(localeProp, '_', 2);
-    try {
-      if (locale.length == 2) {
-        l = new Locale(locale[0], locale[1]);
-      } else if (locale.length == 1) {
-        l = new Locale(locale[0]);
-      }
-    } catch (MissingResourceException e) {
-      // if language and country were specified, try falling back to just the language
-      if (locale.length == 2) {
-        l = new Locale(locale[0]);
-        LOG.info("Falling back to [{}] from [{}]", locale[0], localeProp);
-      } else {
-        throw e;
-      }
-    }
+    Locale locale = getLocale(properties);
 
     /* Get the correct time zone */
     TimeZone tz = TimeZone.getDefault();
@@ -490,23 +484,33 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     write.key("locale");
     write.object();
     write.key("country");
-    write.value(l.getCountry());
+    write.value(locale.getCountry());
     write.key("displayCountry");
-    write.value(l.getDisplayCountry(l));
+    write.value(locale.getDisplayCountry(locale));
     write.key("displayLanguage");
-    write.value(l.getDisplayLanguage(l));
+    write.value(locale.getDisplayLanguage(locale));
     write.key("displayName");
-    write.value(l.getDisplayName(l));
+    write.value(locale.getDisplayName(locale));
     write.key("displayVariant");
-    write.value(l.getDisplayVariant(l));
+    write.value(locale.getDisplayVariant(locale));
     write.key("ISO3Country");
-    write.value(l.getISO3Country());
+    try {
+      write.value(locale.getISO3Country());
+    } catch (MissingResourceException e) {
+      write.value("");
+      LOG.debug("Unable to find ISO3 country [{}]", locale);
+    }
     write.key("ISO3Language");
-    write.value(l.getISO3Language());
+    try {
+      write.value(locale.getISO3Language());
+    } catch (MissingResourceException e) {
+      write.value("");
+      LOG.debug("Unable to find ISO3 language [{}]", locale);
+    }
     write.key("language");
-    write.value(l.getLanguage());
+    write.value(locale.getLanguage());
     write.key("variant");
-    write.value(l.getVariant());
+    write.value(locale.getVariant());
 
     /* Add the timezone information into the output */
     write.key("timezone");
@@ -518,6 +522,40 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     write.endObject();
 
     write.endObject();
+  }
+
+  /**
+   * Get a valid {@link Locale}. Checks <code>properties</code> for a locale setting.
+   * Defaults to the server configured language and country code.
+   *
+   * @param properties
+   * @return
+   */
+  protected Locale getLocale(Map<String, Object> properties) {
+    /* Get the correct locale */
+    String localeLanguage = defaultLanguage;
+    String localeCountry = defaultCountry;
+    if (properties.containsKey(LOCALE_FIELD)) {
+      String localeProp = String.valueOf(properties.get(LOCALE_FIELD));
+      Matcher localeMatcher = LOCALE_REGEX.matcher(localeProp);
+      if (localeMatcher.matches()) {
+        localeLanguage = localeMatcher.group(1);
+        if (localeMatcher.groupCount() == 3 && localeMatcher.group(3) != null) {
+          localeCountry = localeMatcher.group(3).toUpperCase();
+        } else {
+          localeCountry = "";
+        }
+      } else {
+        LOG.info("Using default locale [{}_{}] instead of locale setting [{}]",
+            new Object[] { localeLanguage, localeCountry, localeProp });
+      }
+    } else {
+      LOG.info("Using default locale [{}_{}]; no locale setting found", new Object[] {
+          localeLanguage, localeCountry });
+    }
+
+    Locale locale = new Locale(localeLanguage, localeCountry);
+    return locale;
   }
 
   /**
