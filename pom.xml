@@ -43,6 +43,7 @@
         <module>bundles/messaging</module>
         <module>bundles/files/api</module>
         <module>bundles/files/impl</module>
+        <module>bundles/files/migrator</module>
         <module>bundles/personal</module>
         <module>bundles/presence</module>
         <module>bundles/resource</module>
