@@ -34,6 +34,7 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.tools.shell.Global;
 import org.mozilla.javascript.tools.shell.Main;
+import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.files.FileMigrationService;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
@@ -63,7 +64,7 @@ public class DocMigrator implements FileMigrationService {
   public static final ThreadLocal javascriptThreadContext = new ThreadLocal();
   public static final ThreadLocal javascriptThreadScope = new ThreadLocal();
 
-  private static final Set TIME_PROPS = ImmutableSet.of("_created", "_lastModified", "time", "sakai:schemaversion");
+  private static final Set TIME_PROPS = ImmutableSet.of("_created", "_lastModified", "time", FilesConstants.SCHEMA_VERSION);
   
   private ClassLoader classLoader = DocMigrator.class.getClassLoader();
 
@@ -142,8 +143,8 @@ public class DocMigrator implements FileMigrationService {
   }
 
   private boolean schemaVersionIsCurrent(Content content) {
-    return (content.hasProperty("sakai:schemaversion")
-        && StorageClientUtils.toInt(content.getProperty("sakai:schemaversion")) >= CURRENT_SCHEMA_VERSION);
+    return (content.hasProperty(FilesConstants.SCHEMA_VERSION)
+        && StorageClientUtils.toInt(content.getProperty(FilesConstants.SCHEMA_VERSION)) >= CURRENT_SCHEMA_VERSION);
   }
 
   @Override
@@ -177,7 +178,7 @@ public class DocMigrator implements FileMigrationService {
   }
 
   private void validateStructure(JSONObject newPageStructure) throws JSONException, SakaiDocMigrationException {
-    if (newPageStructure.get("sakai:schemaversion") == null) {
+    if (newPageStructure.get(FilesConstants.SCHEMA_VERSION) == null) {
       throw new SakaiDocMigrationException();
     }
     LOGGER.debug("new page structure passes validation.");

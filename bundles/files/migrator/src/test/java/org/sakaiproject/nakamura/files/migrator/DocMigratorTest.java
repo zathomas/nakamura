@@ -20,6 +20,7 @@ package org.sakaiproject.nakamura.files.migrator;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
+import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 
 import java.io.File;
@@ -40,7 +41,7 @@ public class DocMigratorTest {
   @Test
   public void detect_requires_migration() throws Exception {
     boolean requiresMigration = docMigrator.fileContentNeedsMigration(new Content("/some/path",
-        ImmutableMap.of("structure0", "{}","sakai:schemaversion", (Object) 2)));
+        ImmutableMap.of("structure0", "{}",FilesConstants.SCHEMA_VERSION, (Object) 2)));
     assertFalse(requiresMigration);
   }
 
