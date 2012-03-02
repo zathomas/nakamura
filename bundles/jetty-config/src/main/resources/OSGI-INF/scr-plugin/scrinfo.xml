@@ -9,7 +9,7 @@
         <property name="service.vendor" type="String" value="The Sakai Foundation" private="false"/>
         <property name="bufferSize" type="Integer" value="8192" private="false"/>
         <property name="minGzipSize" type="Integer" value="8192" private="false"/>
-        <property name="userAgent" type="String" value="(?:Mozilla[^\(]*\(compatible;\s*+([^;]*);.*)|(?:.*?([^\s]+/[^\s]+).*)" private="false"/>
+        <property name="userAgent" type="String" value="(?:Mozilla[^\\(]*\\(compatible;\\s*+([^;]*);.*)|(?:.*?([^\\s]+/[^\\s]+).*)" private="false"/>
         <property name="mimeTypes" type="String" value="text/html,text/plain,text/css,text/javascript,text/xml,application/xml,application/xhtml+xml,application/rss+xml,application/javascript,application/x-javascript,application/json" private="false"/>
         <property name="excludedAgents" type="String" value="" private="false"/>
         <property name="enabled" type="Boolean" value="false" private="false"/>

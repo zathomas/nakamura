@@ -52,7 +52,8 @@ import javax.servlet.ServletResponse;
   @Property(name="service.vendor", value="The Sakai Foundation"),
   @Property(name="bufferSize", intValue=8192),
   @Property(name="minGzipSize", intValue=8192),
-  // (?:Mozilla[^\(]*\(compatible;\s*+([^;]*);.*)|(?:.*?([^\s]+/[^\s]+).*)
+  // regex string:  (?:Mozilla[^\(]*\(compatible;\s*+([^;]*);.*)|(?:.*?([^\s]+/[^\s]+).*)
+  // java string: (?:Mozilla[^\\(]*\\(compatible;\\s*+([^;]*);.*)|(?:.*?([^\\s]+/[^\\s]+).*)
   @Property(name="userAgent", value="SEE SOURCE FOR CORRECT VALUE"),
   @Property(name="mimeTypes", value="text/html,text/plain,text/css,text/javascript,text/xml,application/xml,application/xhtml+xml,application/rss+xml,application/javascript,application/x-javascript,application/json"), 
   @Property(name="excludedAgents", value=""),
