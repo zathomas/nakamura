@@ -78,10 +78,17 @@ public class LiteMeServletTest {
 
   @Test
   public void getCustomLocale() {
+    // common la_CO format
     Map<String, Object> props = ImmutableMap.<String, Object>of("locale", Locale.GERMANY.toString());
     Locale locale = meServlet.getLocale(props);
     assertEquals(locale.getLanguage(), Locale.GERMANY.getLanguage());
     assertEquals(locale.getCountry(), Locale.GERMANY.getCountry());
+
+    // the funky format that prompted all this es_419
+    props = ImmutableMap.<String, Object>of("locale", "es_419");
+    locale = meServlet.getLocale(props);
+    assertEquals(locale.getLanguage(), "es");
+    assertEquals(locale.getCountry(), "419");
   }
 
   @Test
