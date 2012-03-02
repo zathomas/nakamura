@@ -41,7 +41,7 @@ public class DocMigratorTest {
   @Test
   public void detect_requires_migration() throws Exception {
     boolean requiresMigration = docMigrator.fileContentNeedsMigration(new Content("/some/path",
-        ImmutableMap.of("structure0", "{}",FilesConstants.SCHEMA_VERSION, (Object) 2)));
+        ImmutableMap.of("structure0", "{}", FilesConstants.SCHEMA_VERSION, (Object) 2)));
     assertFalse(requiresMigration);
   }
 
