@@ -165,13 +165,13 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
   protected transient ConnectionManager connectionManager;
 
   @Reference
-  private MessageBucketService messageBucketService;
+  protected MessageBucketService messageBucketService;
 
   @Reference
-  SolrSearchServiceFactory searchServiceFactory;
+  protected SolrSearchServiceFactory searchServiceFactory;
 
   @Reference
-  BasicUserInfoService basicUserInfoService;
+  protected BasicUserInfoService basicUserInfoService;
 
   private String defaultLanguage;
   private String defaultCountry;
@@ -469,7 +469,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
   protected void writeLocale(ExtendedJSONWriter write, Map<String, Object> properties,
       SlingHttpServletRequest request) throws JSONException {
 
-    Locale l = getLocale(properties);
+    Locale locale = getLocale(properties);
 
     /* Get the correct time zone */
     TimeZone tz = TimeZone.getDefault();
@@ -484,33 +484,33 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     write.key("locale");
     write.object();
     write.key("country");
-    write.value(l.getCountry());
+    write.value(locale.getCountry());
     write.key("displayCountry");
-    write.value(l.getDisplayCountry(l));
+    write.value(locale.getDisplayCountry(locale));
     write.key("displayLanguage");
-    write.value(l.getDisplayLanguage(l));
+    write.value(locale.getDisplayLanguage(locale));
     write.key("displayName");
-    write.value(l.getDisplayName(l));
+    write.value(locale.getDisplayName(locale));
     write.key("displayVariant");
-    write.value(l.getDisplayVariant(l));
+    write.value(locale.getDisplayVariant(locale));
     write.key("ISO3Country");
     try {
-      write.value(l.getISO3Country());
+      write.value(locale.getISO3Country());
     } catch (MissingResourceException e) {
       write.value("");
-      LOG.debug("Unable to find ISO3 country [{}]", l);
+      LOG.debug("Unable to find ISO3 country [{}]", locale);
     }
     write.key("ISO3Language");
     try {
-      write.value(l.getISO3Language());
+      write.value(locale.getISO3Language());
     } catch (MissingResourceException e) {
       write.value("");
-      LOG.debug("Unable to find ISO3 language [{}]", l);
+      LOG.debug("Unable to find ISO3 language [{}]", locale);
     }
     write.key("language");
-    write.value(l.getLanguage());
+    write.value(locale.getLanguage());
     write.key("variant");
-    write.value(l.getVariant());
+    write.value(locale.getVariant());
 
     /* Add the timezone information into the output */
     write.key("timezone");
@@ -531,7 +531,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
    * @param properties
    * @return
    */
-  private Locale getLocale(Map<String, Object> properties) {
+  protected Locale getLocale(Map<String, Object> properties) {
     /* Get the correct locale */
     String localeLanguage = defaultLanguage;
     String localeCountry = defaultCountry;
@@ -540,7 +540,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       Matcher localeMatcher = LOCALE_REGEX.matcher(localeProp);
       if (localeMatcher.matches()) {
         localeLanguage = localeMatcher.group(1);
-        if (localeMatcher.groupCount() == 3) {
+        if (localeMatcher.groupCount() == 3 && localeMatcher.group(3) != null) {
           localeCountry = localeMatcher.group(3).toUpperCase();
         } else {
           localeCountry = "";
@@ -554,8 +554,8 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
           localeLanguage, localeCountry });
     }
 
-    Locale l = new Locale(localeLanguage, localeCountry);
-    return l;
+    Locale locale = new Locale(localeLanguage, localeCountry);
+    return locale;
   }
 
   /**
