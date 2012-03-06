@@ -34,7 +34,10 @@ import org.sakaiproject.nakamura.api.doc.ServiceExtension;
 import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.files.FileMigrationService;
+import org.sakaiproject.nakamura.api.lite.StorageClientException;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
+import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,8 +108,9 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
     writer.setTidy(isTidy);
     try {
       Content content = resource.adaptTo(Content.class);
+      ContentManager contentManager = resource.adaptTo(ContentManager.class);
       if ( content != null ) {
-        writeContentResponse(recursion, writer, content);
+        writeContentResponse(recursion, writer, content, contentManager);
       } else {
         Node node = resource.adaptTo(Node.class);
         ExtendedJSONWriter.writeNodeTreeToWriter(writer, node, recursion);
@@ -124,15 +128,16 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
     }
   }
 
-  private void writeContentResponse(int recursion, ExtendedJSONWriter writer, Content content) throws Exception {
-    Content contentToWrite = migrateFileContent(content);
+  private void writeContentResponse(int recursion, ExtendedJSONWriter writer, Content content, ContentManager contentManager) throws Exception {
+    Content contentToWrite = migrateFileContent(content, contentManager);
     ExtendedJSONWriter.writeContentTreeToWriter(writer, contentToWrite, false,  recursion);
   }
 
-  private Content migrateFileContent(Content content) {
+  private Content migrateFileContent(Content content, ContentManager contentManager) throws StorageClientException, AccessDeniedException {
     if (migrationService != null
       && migrationService.fileContentNeedsMigration(content)) {
-      return migrationService.migrateFileContent(content);
+      migrationService.migrateFileContent(content);
+      return contentManager.get(content.getPath());
     } else {
       return content;
     }

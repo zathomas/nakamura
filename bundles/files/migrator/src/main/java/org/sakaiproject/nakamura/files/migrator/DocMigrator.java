@@ -148,12 +148,11 @@ public class DocMigrator implements FileMigrationService {
   }
 
   @Override
-  public Content migrateFileContent(Content content) {
+  public void migrateFileContent(Content content) {
     if (content == null) {
-      return null;
+      return;
     }
     LOGGER.debug("Starting migration of {}", content.getPath());
-    Content returnContent = content;
     StringWriter stringWriter = new StringWriter();
     ExtendedJSONWriter stringJsonWriter = new ExtendedJSONWriter(stringWriter);
     Session adminSession = null;
@@ -165,7 +164,6 @@ public class DocMigrator implements FileMigrationService {
       LOGGER.debug("Generated new page structure. Saving content {}", content.getPath());
       LiteJsonImporter liteJsonImporter = new LiteJsonImporter();
       liteJsonImporter.importContent(adminSession.getContentManager(), newPageStructure, content.getPath(), true, true, true, adminSession.getAccessControlManager());
-      returnContent = adminSession.getContentManager().get(content.getPath());
     } catch (Exception e) {
       LOGGER.error(e.getMessage());
     } finally {
@@ -177,7 +175,6 @@ public class DocMigrator implements FileMigrationService {
         }
       }
     }
-    return returnContent;
   }
 
   private void validateStructure(JSONObject newPageStructure) throws JSONException, SakaiDocMigrationException {
