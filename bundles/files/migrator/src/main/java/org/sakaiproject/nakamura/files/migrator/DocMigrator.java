@@ -54,7 +54,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Service
-@Component(enabled = false)
+@Component(enabled = true)
 public class DocMigrator implements FileMigrationService {
   private static final Logger LOGGER = LoggerFactory.getLogger(DocMigrator.class);
 
@@ -112,7 +112,7 @@ public class DocMigrator implements FileMigrationService {
   @Override
   public boolean fileContentNeedsMigration(Content content) {
     try {
-      return !(isNotSakaiDoc(content) || schemaVersionIsCurrent(content) || contentHasUpToDateStructure(content));
+      return !(content == null || isNotSakaiDoc(content) || schemaVersionIsCurrent(content) || contentHasUpToDateStructure(content));
     } catch (SakaiDocMigrationException e) {
       LOGGER.error("Could not determine requiresMigration with content {}", content.getPath());
       throw new RuntimeException("Could not determine requiresMigration with content " + content.getPath());
@@ -149,6 +149,9 @@ public class DocMigrator implements FileMigrationService {
 
   @Override
   public Content migrateFileContent(Content content) {
+    if (content == null) {
+      return null;
+    }
     LOGGER.debug("Starting migration of {}", content.getPath());
     Content returnContent = content;
     StringWriter stringWriter = new StringWriter();
