@@ -68,6 +68,6 @@ public class DocMigratorTest {
     JSONObject newStructure = new JSONObject();
     docMigrator.processStructure0(structure0, oldStructure, newStructure);
     JSONObject convertedStructure = (JSONObject) docMigrator.convertArraysToObjects(newStructure);
-    LOGGER.info(convertedStructure.toString(1));
+    docMigrator.validateStructure(convertedStructure);
   }
 }

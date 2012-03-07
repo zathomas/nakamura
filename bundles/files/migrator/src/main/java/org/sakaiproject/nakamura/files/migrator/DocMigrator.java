@@ -194,6 +194,8 @@ public class DocMigrator implements FileMigrationService {
       }
       processStructure0(structureItem, originalStructure, newStructure);
     }
+    // the finishing touch
+    newStructure.put(FilesConstants.SCHEMA_VERSION, 2);
   }
   
   protected JSONObject getJSONObjectOrNull(JSONObject jsonObject, String key) throws JSONException {
@@ -317,8 +319,8 @@ public class DocMigrator implements FileMigrationService {
     return arrayObject;
   }
 
-  private void validateStructure(JSONObject newPageStructure) throws JSONException, SakaiDocMigrationException {
-    if (newPageStructure.get(FilesConstants.SCHEMA_VERSION) == null) {
+  protected void validateStructure(JSONObject newPageStructure) throws JSONException, SakaiDocMigrationException {
+    if (!newPageStructure.has(FilesConstants.SCHEMA_VERSION)) {
       throw new SakaiDocMigrationException();
     }
     LOGGER.debug("new page structure passes validation.");
