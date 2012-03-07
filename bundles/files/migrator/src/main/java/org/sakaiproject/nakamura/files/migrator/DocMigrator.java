@@ -291,69 +291,14 @@ public class DocMigrator implements FileMigrationService {
   }
   
   protected Object convertArraysToObjects(Object json) throws JSONException {
-//    /**
-//     * <p>Convert all the arrays in an object to an object with a unique key.<br />
-//     * Mixed arrays (arrays with multiple types) are not supported.
-//     * </p>
-//     * <code>
-//     * {
-//     *     "boolean": true,
-//     *     "array_object": [{ "key1": "value1", "key2": "value2"}, { "key1": "value1", "key2": "value2"}]
-//     * }
-//     * </code>
-//     * to
-//     * <code>
-//     * {
-//     *     "boolean": true,
-//     *     "array_object": {
-//     *         "__array__0__": { "key1": "value1", "key2": "value2"},
-//     *         "__array__1__": { "key1": "value1", "key2": "value2"}
-//     *     }
-//     * }
-//     * </code>
-//     * @param {Object} obj The Object that you want to use to convert all the arrays to objects
-//     * @return {Object} An object where all the arrays are converted into objects
-//     */
-//    var convertArrayToObject = function(obj) {
-//
-//      var i,j,jl;
-//      // Since the native createTree method doesn't support an array of objects natively,
-//      // we need to write extra functionality for this.
-//      for(i in obj){
-//
-//        // Check if the element is an array, whether it is empty and if it contains any elements
-//        if (obj.hasOwnProperty(i) && $.isArray(obj[i]) && obj[i].length > 0) {
-//
-//          // Deep copy the array
-//          var arrayCopy = $.extend(true, [], obj[i]);
-//
-//          // Set the original array to an empty object
-//          obj[i] = {};
-//
-//          // Add all the elements that were in the original array to the object with a unique id
-//          for (j = 0, jl = arrayCopy.length; j < jl; j++) {
-//
-//            // Copy each object from the array and add it to the object
-//            obj[i]["__array__" + j + "__"] = arrayCopy[j];
-//
-//            // Run recursively
-//            convertArrayToObject(arrayCopy[j]);
-//          }
-//          // If there are array elements inside
-//        } else if ($.isPlainObject(obj[i])) {
-//          convertArrayToObject(obj[i]);
-//        }
-//
-//      }
-//
-//      return obj;
-//    };
     if (json instanceof JSONObject) {
       JSONObject jsonObject = (JSONObject)json;
       for (Iterator<String> keyIterator = jsonObject.keys(); keyIterator.hasNext();) {
         String key = keyIterator.next();
         if (jsonObject.get(key) instanceof JSONArray) {
           jsonObject.put(key, convertArrayToObject((JSONArray)jsonObject.get(key)));
+        } else if (jsonObject.get(key) instanceof JSONObject) {
+          jsonObject.put(key, convertArraysToObjects(jsonObject.get(key)));
         }
       }
       return jsonObject;
