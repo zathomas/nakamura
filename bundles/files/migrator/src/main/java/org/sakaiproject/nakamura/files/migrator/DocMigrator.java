@@ -241,7 +241,7 @@ public class DocMigrator implements FileMigrationService {
     try {
       adminSession = repository.loginAdministrative();
       JSONObject structure0 = new JSONObject((String)content.getProperty("structure0"));
-      return requiresMigration(structure0, content, adminSession.getContentManager());
+      return !requiresMigration(structure0, content, adminSession.getContentManager());
     } catch (Exception e) {
       throw new SakaiDocMigrationException();
     } finally {
