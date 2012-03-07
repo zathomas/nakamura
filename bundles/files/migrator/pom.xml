@@ -35,8 +35,7 @@
         <configuration>
           <instructions>
             <Bundle-Category>sakai-nakamura</Bundle-Category>
-            <Import-Package>!org.apache.xmlbeans.*,*</Import-Package>
-            <Embed-Dependency>rhino</Embed-Dependency>
+            <Embed-Dependency>jsoup</Embed-Dependency>
           </instructions>
         </configuration>
       </plugin>
@@ -89,9 +88,9 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.mozilla</groupId>
-      <artifactId>rhino</artifactId>
-      <version>1.7R3</version>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>1.6.1</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

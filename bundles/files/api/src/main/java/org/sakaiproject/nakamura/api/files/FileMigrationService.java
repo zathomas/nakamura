@@ -24,5 +24,5 @@ public interface FileMigrationService {
 
   boolean fileContentNeedsMigration(Content content);
 
-  Content migrateFileContent(Content content);
+  void migrateFileContent(Content content);
 }

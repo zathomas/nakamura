@@ -17,23 +17,16 @@
  */
 package org.sakaiproject.nakamura.files.migrator;
 
-import com.google.common.collect.ImmutableSet;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.ContextFactory;
-import org.mozilla.javascript.Function;
-import org.mozilla.javascript.NativeArray;
-import org.mozilla.javascript.NativeObject;
-import org.mozilla.javascript.Script;
-import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
-import org.mozilla.javascript.tools.shell.Global;
-import org.mozilla.javascript.tools.shell.Main;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.files.FileMigrationService;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
@@ -41,72 +34,176 @@ import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.content.Content;
+import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.resource.lite.LiteJsonImporter;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.util.Map;
-import java.util.Set;
+import java.util.Iterator;
 
 @Service
 @Component(enabled = true)
 public class DocMigrator implements FileMigrationService {
   private static final Logger LOGGER = LoggerFactory.getLogger(DocMigrator.class);
+  private static final String EMPTY_DIV = "<div />";
 
   @Reference
   protected Repository repository;
 
-  public static final ThreadLocal javascriptThreadContext = new ThreadLocal();
-  public static final ThreadLocal javascriptThreadScope = new ThreadLocal();
-
-  private static final Set TIME_PROPS = ImmutableSet.of("_created", "_lastModified", "time", FilesConstants.SCHEMA_VERSION);
-  
-  private ClassLoader classLoader = DocMigrator.class.getClassLoader();
-
-  public DocMigrator() {
-    threadInit();
+  protected JSONObject generateEmptyRow(int columnCount) throws JSONException {
+    JSONObject row = new JSONObject();
+    row.put("id", generateWidgetId());
+    JSONArray columns = new JSONArray();
+    for (int i = 0; i < columnCount; i++) {
+      JSONObject column = new JSONObject();
+      column.put("width", 1 / columnCount);
+      column.put("elements", new JSONArray());
+      columns.put(column);
+    }
+    row.put("columns", columns);
+    return row;
   }
   
-  private Context threadInit() {
-    Context cx = (Context) javascriptThreadContext.get();
-    if (cx != null) {
-      return cx;
-    } else {
-      LOGGER.debug("Initializing JavaScript migrator on a new thread.");
-      cx = ContextFactory.getGlobal().enterContext();
-      cx.setOptimizationLevel(-1);
-      cx.setLanguageVersion(Context.VERSION_1_6);
-      ScriptableObject sharedScope = cx.initStandardObjects();
-      Global global = Main.getGlobal();
-      if (!global.isInitialized()) {
-        global.init(cx);
-        Main.setOut(System.out);
-        InputStream envJsStream = classLoader.getResourceAsStream("env.rhino.js");
-        InputStream jqueryStream = classLoader.getResourceAsStream("jquery.js");
-        InputStream migratorStream = classLoader.getResourceAsStream("migrator.js");
-        Script envJs = null;
-        Script jquery = null;
-        Script migrator = null;
-        try {
-          envJs = cx.compileReader(new InputStreamReader(envJsStream),"env.rhino.js", 1, null);
-          jquery = cx.compileReader(new InputStreamReader(jqueryStream), "jquery.js", 1, null);
-          migrator = cx.compileReader(new InputStreamReader(migratorStream), "migrator.js", 1, null);
-        } catch (IOException e) {
-          LOGGER.error(e.getMessage());
+  protected String generateWidgetId() {
+    return "id" + Math.round(Math.random() * 10000000);
+  }
+  
+  protected void ensureRowPresent(JSONObject page) throws JSONException {
+    JSONArray rows = page.getJSONArray("rows");
+    if (rows == null || rows.length() < 1) {
+      page.append("rows", generateEmptyRow(1));
+    }
+  }
+  
+  protected void generateNewCell(String id, String type, JSONObject page, JSONObject row, int column, JSONObject widgetData) throws JSONException {
+    if (!"tooltip".equals(type) && !"joinrequestbuttons".equals(type)) {
+      String columnId = id == null ? generateWidgetId() : id;
+      JSONObject element = new JSONObject();
+      element.put("id", columnId);
+      element.put("type", type);
+      row.getJSONArray("columns").getJSONObject(column).append("elements", element);
+      if (widgetData != null) {
+        page.put(columnId, widgetData);
+      }
+    }
+  }
+  
+  protected JSONObject addRowToPage(JSONObject row, JSONObject page, int columnsForNextRow, String htmlBlock) throws JSONException {
+    if (isEmpty(htmlBlock)) {
+      generateNewCell(null, "htmlblock", page, row, 0, generateHtmlBlock(htmlBlock));
+    }
+    boolean rowHasContent = false;
+    for (int i = 0; i < row.getJSONArray("columns").length(); i++) {
+      if (row.getJSONArray("columns").getJSONObject(i).getJSONArray("elements").length() > 0) {
+        rowHasContent = true;
+        break;
+      }
+    }
+    if (rowHasContent) {
+      page.append("rows", row);
+    }
+
+    return generateEmptyRow(columnsForNextRow > 0 ? columnsForNextRow : 1);
+  }
+  
+  protected JSONObject generateHtmlBlock(String html) throws JSONException {
+    JSONObject contentObject = new JSONObject();
+    contentObject.put("content", html);
+    JSONObject htmlBlockObject = new JSONObject();
+    htmlBlockObject.put("htmlblock", contentObject);
+    return htmlBlockObject;
+  }
+  
+  boolean isEmpty(String htmlBlock) {
+    String[] elementNames = new String[]{"div", "img", "ol", "ul", "li", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "em", "strong", "code", "dl", "dt", "dd", "table", "tr", "th", "td", "iframe", "frame", "form", "input", "select", "option", "blockquote", "address"};
+    for (String elementName : elementNames) {
+      if (htmlBlock.contains(elementName)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
+  protected void processStructure0(JSONObject subtree, JSONObject originalStructure, JSONObject newStructure) throws JSONException {
+    for (Iterator<String> keyIterator = subtree.keys(); keyIterator.hasNext();) {
+      String key = keyIterator.next();
+      if (key.startsWith("_")) {
+        newStructure.put(key, subtree.get(key));
+        continue;
+      }
+      JSONObject structureItem = subtree.getJSONObject(key);
+      String ref = structureItem.getString("_ref");
+      if (originalStructure.has(ref) && originalStructure.getJSONObject(ref).has("rows")) {
+        newStructure.put(ref, originalStructure.getJSONObject(ref));
+      } else {
+        // page needs migration
+        Document page = Jsoup.parse(originalStructure.getJSONObject(ref).getString("page"));
+        Document currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
+        JSONObject currentPage = new JSONObject();
+        currentPage.put("rows", new JSONArray());
+        JSONObject currentRow = generateEmptyRow(1);
+        Elements topLevelElements = page.select("body").first().children();
+        for (Element topLevelElement : topLevelElements) {
+          if (topLevelElement.hasClass("widget_inline")) {
+            addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.outerHtml());
+            currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
+            String[] widgetIdParts = topLevelElement.attr("id").split("_");
+            String widgetType = widgetIdParts[1];
+            String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
+            generateNewCell(widgetId, widgetType, currentPage, currentRow, 0, getJSONObjectOrNull(originalStructure, widgetId));
+          } else if (topLevelElement.select(".widget_inline").size() > 0) {
+            addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.outerHtml());
+            currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
+            int numColumns = 1;
+            int leftSideColumn = topLevelElement.select(".widget_inline.block_image_left").size() > 0 ? 1 : 0;
+            numColumns += leftSideColumn;
+            int rightSideColumn = topLevelElement.select(".widget_inline.block_image_right").size() > 0 ? 1 : 0;
+            numColumns += rightSideColumn;
+            if (numColumns > 1) {
+              currentRow = addRowToPage(currentRow, currentPage, numColumns, currentHtmlBlock.outerHtml());
+            }
+            for (Element widgetElement : topLevelElement.select(".widget_inline")) {
+              String[] widgetIdParts = widgetElement.attr("id").split("_");
+              String widgetType = widgetIdParts[1];
+              String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
+              if (widgetElement.hasClass("block_image_left")) {
+                generateNewCell(widgetId, widgetType, currentPage, currentRow, 0, getJSONObjectOrNull(originalStructure, widgetId));
+              } else if (widgetElement.hasClass("block_image_right")) {
+                generateNewCell(widgetId, widgetType, currentPage, currentRow, (leftSideColumn > 0 ? 2 : 1), getJSONObjectOrNull(originalStructure, widgetId));
+              } else {
+                generateNewCell(widgetId, widgetType, currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), getJSONObjectOrNull(originalStructure, widgetId));
+              }
+              widgetElement.remove();
+            }
+            generateNewCell(null, "htmlblock", currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), generateHtmlBlock(topLevelElement.outerHtml()));
+
+            if (numColumns > 1) {
+              currentRow = addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.outerHtml());
+            }
+
+          } else {
+            currentHtmlBlock.appendChild(topLevelElement);
+          }
         }
-        envJs.exec(cx, global);
-        jquery.exec(cx, global);
-        migrator.exec(cx, global);
+        addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.outerHtml());
+        ensureRowPresent(currentPage);
+
+        newStructure.put(ref, currentPage);
       }
-      javascriptThreadContext.set(cx);
-      javascriptThreadScope.set(sharedScope);
-      return cx;
-      }
+      processStructure0(structureItem, originalStructure, newStructure);
+    }
+    // the finishing touch
+    newStructure.put(FilesConstants.SCHEMA_VERSION, 2);
+  }
+  
+  protected JSONObject getJSONObjectOrNull(JSONObject jsonObject, String key) throws JSONException {
+    if (jsonObject.has(key)) {
+      return jsonObject.getJSONObject(key);
+    } else {
+      return null;
+    }
   }
 
   @Override
@@ -118,27 +215,43 @@ public class DocMigrator implements FileMigrationService {
       throw new RuntimeException("Could not determine requiresMigration with content " + content.getPath());
     }
   }
+  
+  protected boolean requiresMigration(JSONObject subtree, Content originalStructure, ContentManager contentManager) throws JSONException {
+    boolean requiresMigration = false;
+    for (Iterator<String> keysIterator = subtree.keys(); keysIterator.hasNext();) {
+      String key = keysIterator.next();
+      if (!key.startsWith("_")) {
+        JSONObject structureItem = subtree.getJSONObject(key);
+        String ref = structureItem.getString("_ref");
+        if (!contentManager.exists(originalStructure.getPath() + "/" + ref + "/rows")) {
+          return true;
+        }
+       requiresMigration = requiresMigration(structureItem, originalStructure, contentManager); 
+      }
+    }
+    return requiresMigration;
+  }
 
   private boolean isNotSakaiDoc(Content content) {
     return !content.hasProperty("structure0");
   }
 
   private boolean contentHasUpToDateStructure(Content content) throws SakaiDocMigrationException {
-    StringWriter stringWriter = new StringWriter();
-    ExtendedJSONWriter stringJsonWriter = new ExtendedJSONWriter(stringWriter);
+    Session adminSession = null;
     try {
-      ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, content, false, -1);
-      String structureString = (String)content.getProperty("structure0");
-      String docJson = stringWriter.toString();
-      Object result = callFunction(getScope(), "requiresMigration", new Object[]{structureString, docJson, false});
-      if (result instanceof Boolean) {
-        return !(Boolean)result;
-      } else {
-        throw new SakaiDocMigrationException();
+      adminSession = repository.loginAdministrative();
+      JSONObject structure0 = new JSONObject((String)content.getProperty("structure0"));
+      return !requiresMigration(structure0, content, adminSession.getContentManager());
+    } catch (Exception e) {
+      throw new SakaiDocMigrationException();
+    } finally {
+      if (adminSession != null) {
+        try {
+          adminSession.logout();
+        } catch (ClientPoolException e) {
+          LOGGER.error(e.getMessage());
+        }
       }
-    } catch (JSONException e) {
-      LOGGER.error(e.getLocalizedMessage());
-      return false;
     }
   }
 
@@ -148,24 +261,24 @@ public class DocMigrator implements FileMigrationService {
   }
 
   @Override
-  public Content migrateFileContent(Content content) {
-    if (content == null) {
-      return null;
+  public void migrateFileContent(Content content) {
+    if (content == null || !content.hasProperty("structure0")) {
+      return;
     }
     LOGGER.debug("Starting migration of {}", content.getPath());
-    Content returnContent = content;
     StringWriter stringWriter = new StringWriter();
     ExtendedJSONWriter stringJsonWriter = new ExtendedJSONWriter(stringWriter);
     Session adminSession = null;
     try {
       ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, content, false,  -1);
       adminSession = repository.loginAdministrative();
-      JSONObject newPageStructure = migratePageStructure(stringWriter.toString());
-      validateStructure(newPageStructure);
+      JSONObject newPageStructure = new JSONObject();
+      processStructure0(new JSONObject((String) content.getProperty("structure0")), new JSONObject(stringWriter.toString()), newPageStructure);
+      JSONObject convertedStructure = (JSONObject) convertArraysToObjects(newPageStructure);
+      validateStructure(convertedStructure);
       LOGGER.debug("Generated new page structure. Saving content {}", content.getPath());
       LiteJsonImporter liteJsonImporter = new LiteJsonImporter();
-      liteJsonImporter.importContent(adminSession.getContentManager(), newPageStructure, content.getPath(), true, true, true, adminSession.getAccessControlManager());
-      returnContent = adminSession.getContentManager().get(content.getPath());
+      liteJsonImporter.importContent(adminSession.getContentManager(), convertedStructure, content.getPath(), true, true, true, adminSession.getAccessControlManager());
     } catch (Exception e) {
       LOGGER.error(e.getMessage());
     } finally {
@@ -177,63 +290,40 @@ public class DocMigrator implements FileMigrationService {
         }
       }
     }
-    return returnContent;
+  }
+  
+  protected Object convertArraysToObjects(Object json) throws JSONException {
+    if (json instanceof JSONObject) {
+      JSONObject jsonObject = (JSONObject)json;
+      for (Iterator<String> keyIterator = jsonObject.keys(); keyIterator.hasNext();) {
+        String key = keyIterator.next();
+        if (jsonObject.get(key) instanceof JSONArray) {
+          jsonObject.put(key, convertArrayToObject((JSONArray)jsonObject.get(key)));
+        } else if (jsonObject.get(key) instanceof JSONObject) {
+          jsonObject.put(key, convertArraysToObjects(jsonObject.get(key)));
+        }
+      }
+      return jsonObject;
+    } else if (json instanceof JSONArray) {
+      return convertArrayToObject((JSONArray)json);
+    } else {
+      return json;
+    }
+  }
+  
+  protected JSONObject convertArrayToObject(JSONArray jsonArray) throws JSONException {
+    JSONObject arrayObject = new JSONObject();
+    for(int i = 0; i < jsonArray.length(); i++) {
+      arrayObject.put("__array__" + i + "__", convertArraysToObjects(jsonArray.get(i)));
+    }
+    return arrayObject;
   }
 
-  private void validateStructure(JSONObject newPageStructure) throws JSONException, SakaiDocMigrationException {
-    if (newPageStructure.get(FilesConstants.SCHEMA_VERSION) == null) {
+  protected void validateStructure(JSONObject newPageStructure) throws JSONException, SakaiDocMigrationException {
+    if (!newPageStructure.has(FilesConstants.SCHEMA_VERSION)) {
       throw new SakaiDocMigrationException();
     }
     LOGGER.debug("new page structure passes validation.");
   }
 
-  private Scriptable getScope() {
-    Context cx = threadInit();
-    Scriptable scope = cx.newObject((ScriptableObject) javascriptThreadScope.get());
-    scope.setPrototype((ScriptableObject) javascriptThreadScope.get());
-    scope.setParentScope(null);
-    return scope;
-  }
-
-  protected String getMigratedPageStructureString(String structureString) throws Exception {
-    return migratePageStructure(structureString).toString();
-  }
-
-  private JSONObject migratePageStructure(String structureString) throws JSONException {
-    Object result = callFunction(getScope(), "migratePageStructure", new Object[]{structureString});
-    return convertToJson((NativeObject)result);
-  }
-
-  private Object callFunction(Scriptable scope, String functionName, Object[] args) {
-    Context context = threadInit();
-    Function f = (Function) Main.getGlobal().get(functionName, scope);
-    return f.call(context, scope, scope, args);
-  }
-
-  private JSONObject convertToJson(NativeObject javascriptObject) throws JSONException {
-    JSONObject json = new JSONObject();
-     for (Map.Entry js : javascriptObject.entrySet()) {
-       String key = js.getKey().toString();
-       Object value = js.getValue();
-       putInJson(key, value, json);
-     }
-    return json;
-  }
-
-  private void putInJson(String key, Object item, JSONObject jsonObject) throws JSONException {
-    if (item instanceof NativeObject) {
-      jsonObject.accumulate(key, convertToJson((NativeObject) item));
-    } else if (item instanceof NativeArray) {
-      jsonObject.put(key, new JSONArray());
-      for (Object arrayItem : ((NativeArray)item).toArray()) {
-        putInJson(key, arrayItem, jsonObject);
-      }
-    } else {
-      if (TIME_PROPS.contains(key)) {
-        jsonObject.accumulate(key, ((Double)item).longValue());
-      } else {
-        jsonObject.accumulate(key, item);
-      }
-    }
-  }
 }
