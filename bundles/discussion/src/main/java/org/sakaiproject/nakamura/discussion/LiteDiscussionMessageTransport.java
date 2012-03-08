@@ -40,7 +40,6 @@ import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
-import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AclModification;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
@@ -142,11 +141,9 @@ public class LiteDiscussionMessageTransport implements LiteMessageTransport {
           propertyBuilder.put(PROP_SAKAI_MESSAGEBOX, BOX_INBOX);
           propertyBuilder.put(PROP_SAKAI_SENDSTATE, STATE_NOTIFIED);
           // store the path of the message store for searching
-          // hash the path to keep it from being too long
           String messageStorePath = messagingService.getFullPathToStore(recipient,
               session);
-          propertyBuilder.put(PROP_SAKAI_MESSAGE_STORE,
-              StorageClientUtils.insecureHash(messageStorePath));
+          propertyBuilder.put(PROP_SAKAI_MESSAGE_STORE, messageStorePath);
 
           Content newMessageNode = new Content(toPath, propertyBuilder);
           
