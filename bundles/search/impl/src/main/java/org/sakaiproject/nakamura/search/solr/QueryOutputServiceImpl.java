@@ -304,10 +304,20 @@ public class QueryOutputServiceImpl implements QueryOutputService {
       String paramName = param.getKey();
       String[] paramVals = param.getValue();
       if (!IGNORE_PARAMS.contains(paramName)) {
+        String[] saveVal = null;
         if (paramVals.length == 1) {
-          opts.put(paramName, paramVals[0]);
+          if (!StringUtils.isBlank(paramVals[0])) {
+            saveVal = paramVals;
+          }
         } else {
-          opts.put(paramName, paramVals);
+          saveVal = paramVals;
+        }
+        // add the option if the value was acceptible
+        if (saveVal != null) {
+          opts.put(paramName, saveVal);
+          if (solrQuery != null) {
+            solrQuery.add(paramName, saveVal);
+          }
         }
       }
     }
