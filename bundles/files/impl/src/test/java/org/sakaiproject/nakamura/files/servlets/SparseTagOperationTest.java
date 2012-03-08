@@ -195,6 +195,46 @@ public class SparseTagOperationTest {
       assertTrue (Arrays.binarySearch(tags, "foo") > -1);
   }
 
+
+  @Test
+  public void testTagWithNestedNewTag() throws Exception {
+    Resource resource = mock(Resource.class);
+    when(resource.getPath()).thenReturn("/bla/bla");
+
+    when(resource.adaptTo(Content.class)).thenReturn(content);
+    when(request.getResource()).thenReturn(resource);
+    when(request.getResourceResolver()).thenReturn(resolver);
+    when(request.getParameterValues("key")).thenReturn(new String[] { "/tags/foo/bar/baz" });
+    when(request.getParameter(":operation")).thenReturn("tag");
+    when(request.getRemoteUser()).thenReturn("john");
+
+    operation.doRun(request, response, contentManager, null, "/bla/bla");
+
+    assertEquals(200, response.getStatusCode());
+
+    Content
+        tagResult = contentManager.get("/tags/foo/bar/baz"),
+        result = contentManager.get("/bla/bla");
+
+    assertEquals ("foo/bar/baz", tagResult.getProperty(SAKAI_TAG_NAME));
+    assertEquals ("sakai/tag", tagResult.getProperty(SLING_RESOURCE_TYPE_PROPERTY));
+
+    String tags[] = (String[]) result.getProperty(SAKAI_TAGS);
+
+    Arrays.sort(tags);
+    assertTrue (Arrays.binarySearch(tags, "foo/bar/baz") > -1);
+
+    // KERN-2621: make sure the ancestors of the new tag are also tags themselves
+    Content parent = contentManager.get("/tags/foo/bar");
+    assertEquals("foo/bar", parent.getProperty(SAKAI_TAG_NAME));
+    assertEquals ("sakai/tag", parent.getProperty(SLING_RESOURCE_TYPE_PROPERTY));
+
+    Content grandParent = contentManager.get("/tags/foo");
+    assertEquals ("foo", grandParent.getProperty(SAKAI_TAG_NAME));
+    assertEquals ("sakai/tag", grandParent.getProperty(SLING_RESOURCE_TYPE_PROPERTY));
+
+  }
+
     @Test
     public void testTagWithExistingTag() throws Exception {
         Resource resource = mock(Resource.class);
