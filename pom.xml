@@ -1140,7 +1140,7 @@
       <dependency>
         <groupId>org.sakaiproject.nakamura</groupId>
         <artifactId>org.sakaiproject.nakamura.core</artifactId>
-        <version>1.3-20120309</version>
+        <version>1.3.1</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
