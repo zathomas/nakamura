@@ -136,7 +136,8 @@ public class DocMigrator implements FileMigrationService {
       JSONObject structureItem = subtree.getJSONObject(key);
       String ref = structureItem.getString("_ref");
       if (originalStructure.has(ref) && originalStructure.getJSONObject(ref).has("rows")) {
-        newStructure.put(ref, originalStructure.getJSONObject(ref));
+        // newStructure.put(ref, originalStructure.getJSONObject(ref));
+        LOGGER.debug("ref {} already has new structure.", ref);
       } else {
         // page needs migration
         Document page = Jsoup.parse(originalStructure.getJSONObject(ref).getString("page"));
@@ -175,6 +176,21 @@ public class DocMigrator implements FileMigrationService {
               } else {
                 generateNewCell(widgetId, widgetType, currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), getJSONObjectOrNull(originalStructure, widgetId));
               }
+              if ("discussion".equals(widgetType)) {
+                String newMessageStorePath = newStructure.getString("_path") + "/" + ref + "/" + widgetId + "/discussion/message";
+                String newAbsoluteMessageStorePath = "/p/" + newMessageStorePath;
+                JSONObject inbox = currentPage.getJSONObject(widgetId).getJSONObject("discussion").getJSONObject("message").getJSONObject("inbox");
+                for(Iterator<String> inboxIterator = inbox.keys(); inboxIterator.hasNext();) {
+                  String inboxKey = inboxIterator.next();
+                  if (inboxKey.startsWith("_")) {
+                    continue;
+                  }
+                  inbox.getJSONObject(inboxKey).put("sakai:to", newAbsoluteMessageStorePath);
+                  inbox.getJSONObject(inboxKey).put("sakai:writeto", newAbsoluteMessageStorePath);
+                  inbox.getJSONObject(inboxKey).put("sakai:messagestore", newMessageStorePath + "/");
+                }
+              }
+              newStructure.remove(widgetId);
               widgetElement.remove();
             }
             generateNewCell(null, "htmlblock", currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), generateHtmlBlock(topLevelElement.outerHtml()));
