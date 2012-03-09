@@ -17,6 +17,7 @@
  */
 package org.sakaiproject.nakamura.files.migrator;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -74,7 +75,9 @@ public class DocMigrator implements FileMigrationService {
   protected void ensureRowPresent(JSONObject page) throws JSONException {
     JSONArray rows = page.getJSONArray("rows");
     if (rows == null || rows.length() < 1) {
-      page.put("rows", generateEmptyRow(1));
+      rows = new JSONArray();
+      rows.put(generateEmptyRow(1));
+      page.put("rows", rows);
     }
   }
   
@@ -91,9 +94,9 @@ public class DocMigrator implements FileMigrationService {
     }
   }
   
-  protected JSONObject addRowToPage(JSONObject row, JSONObject page, int columnsForNextRow, String htmlBlock) throws JSONException {
-    if (isEmpty(htmlBlock)) {
-      generateNewCell(null, "htmlblock", page, row, 0, generateHtmlBlock(htmlBlock));
+  protected JSONObject addRowToPage(JSONObject row, JSONObject page, int columnsForNextRow, Element htmlElement) throws JSONException {
+    if (!isEmpty(htmlElement)) {
+      generateNewCell(null, "htmlblock", page, row, 0, generateHtmlBlock(htmlElement.html()));
     }
     boolean rowHasContent = false;
     for (int i = 0; i < row.getJSONArray("columns").length(); i++) {
@@ -117,14 +120,18 @@ public class DocMigrator implements FileMigrationService {
     return htmlBlockObject;
   }
   
-  boolean isEmpty(String htmlBlock) {
-    String[] elementNames = new String[]{"div", "img", "ol", "ul", "li", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "em", "strong", "code", "dl", "dt", "dd", "table", "tr", "th", "td", "iframe", "frame", "form", "input", "select", "option", "blockquote", "address"};
+  boolean isEmpty(Element htmlElement) {
+    // filter out TinyMCE instances
+    htmlElement.select(".mceEditor").remove();
+    String htmlContent = htmlElement.text().trim();
+    String[] elementNames = new String[]{"img", "iframe", "frame", "input", "select", "option"};
+    boolean containsElement = false;
     for (String elementName : elementNames) {
-      if (htmlBlock.contains(elementName)) {
-        return false;
+      if (!htmlElement.select(elementName).isEmpty()) {
+        containsElement = true;
       }
     }
-    return true;
+    return !(htmlElement.hasText() || containsElement);
   }
   
   protected void processStructure0(JSONObject subtree, JSONObject originalStructure, JSONObject newStructure) throws JSONException {
@@ -148,14 +155,14 @@ public class DocMigrator implements FileMigrationService {
         Elements topLevelElements = page.select("body").first().children();
         for (Element topLevelElement : topLevelElements) {
           if (topLevelElement.hasClass("widget_inline")) {
-            addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.outerHtml());
+            addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.select("body").first());
             currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
             String[] widgetIdParts = topLevelElement.attr("id").split("_");
             String widgetType = widgetIdParts[1];
             String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
             generateNewCell(widgetId, widgetType, currentPage, currentRow, 0, getJSONObjectOrNull(originalStructure, widgetId));
           } else if (topLevelElement.select(".widget_inline").size() > 0) {
-            addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.outerHtml());
+            addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.select("body").first());
             currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
             int numColumns = 1;
             int leftSideColumn = topLevelElement.select(".widget_inline.block_image_left").size() > 0 ? 1 : 0;
@@ -163,7 +170,7 @@ public class DocMigrator implements FileMigrationService {
             int rightSideColumn = topLevelElement.select(".widget_inline.block_image_right").size() > 0 ? 1 : 0;
             numColumns += rightSideColumn;
             if (numColumns > 1) {
-              currentRow = addRowToPage(currentRow, currentPage, numColumns, currentHtmlBlock.outerHtml());
+              currentRow = addRowToPage(currentRow, currentPage, numColumns, currentHtmlBlock.select("body").first());
             }
             for (Element widgetElement : topLevelElement.select(".widget_inline")) {
               String[] widgetIdParts = widgetElement.attr("id").split("_");
@@ -196,14 +203,14 @@ public class DocMigrator implements FileMigrationService {
             generateNewCell(null, "htmlblock", currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), generateHtmlBlock(topLevelElement.outerHtml()));
 
             if (numColumns > 1) {
-              currentRow = addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.outerHtml());
+              currentRow = addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
             }
 
           } else {
-            currentHtmlBlock.appendChild(topLevelElement);
+            currentHtmlBlock.select("div").first().appendChild(topLevelElement);
           }
         }
-        addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.outerHtml());
+        addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
         ensureRowPresent(currentPage);
 
         newStructure.put(ref, currentPage);
@@ -320,7 +327,7 @@ public class DocMigrator implements FileMigrationService {
       for (Iterator<String> keyIterator = jsonObject.keys(); keyIterator.hasNext();) {
         String key = keyIterator.next();
         if (objectIsArrayOfJSONObject(jsonObject.get(key))) {
-          jsonObject.put(key, convertArrayToObject((JSONArray)jsonObject.get(key)));
+          jsonObject.put(key, convertArrayToObject((JSONArray) jsonObject.get(key)));
         } else if (jsonObject.get(key) instanceof JSONObject) {
           jsonObject.put(key, convertArraysToObjects(jsonObject.get(key)));
         }
