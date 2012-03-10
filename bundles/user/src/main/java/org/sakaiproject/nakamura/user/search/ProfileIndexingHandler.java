@@ -109,7 +109,7 @@ public class ProfileIndexingHandler implements IndexingHandler {
         }
       } else {
         // updated the section or further down so process just the section
-        String sectionPath = StringUtils.join(pathParts, "/", 0, 4);
+        String sectionPath = StringUtils.join(pathParts, "/", 0, Math.min(pathParts.length, 4));
         docs.add(processSection(sectionPath, pathParts[0].substring(2), cm));
       }
     } catch (StorageClientException e) {
@@ -131,7 +131,7 @@ public class ProfileIndexingHandler implements IndexingHandler {
       Event event) {
     String actualPath = String.valueOf(event.getProperty("path"));
     String[] pathParts = StringUtils.split(actualPath, "/", 5);
-    String sectionPath = StringUtils.join(pathParts, "/", 0, 4);
+    String sectionPath = StringUtils.join(pathParts, "/", 0, Math.min(pathParts.length, 4));
     return ImmutableList.of("id:" + ClientUtils.escapeQueryChars(sectionPath));
   }
 
