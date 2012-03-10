@@ -107,7 +107,14 @@ public class DocMigrator implements FileMigrationService {
         break;
       }
     }
-    if (rowHasContent) {
+    boolean rowAlreadyPresent = false;
+    for (int i = 0; i < page.getJSONArray("rows").length(); i++) {
+      if ( row == page.getJSONArray("rows").getJSONObject(i)) {
+        rowAlreadyPresent = true;
+        break;
+      }
+    }
+    if (rowHasContent && !rowAlreadyPresent) {
       page.accumulate("rows", row);
     }
 
@@ -215,6 +222,7 @@ public class DocMigrator implements FileMigrationService {
             currentHtmlBlock.select("div").first().appendChild(topLevelElement);
           }
         }
+        addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
         ensureRowPresent(currentPage);
 
         newStructure.put(ref, currentPage);
