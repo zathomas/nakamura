@@ -17,6 +17,7 @@
  */
 package org.sakaiproject.nakamura.files.migrator;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.StringWriter;
 import java.util.Iterator;
+import java.util.Set;
 
 @Service
 @Component(enabled = true)
@@ -105,7 +107,14 @@ public class DocMigrator implements FileMigrationService {
         break;
       }
     }
-    if (rowHasContent) {
+    boolean rowAlreadyPresent = false;
+    for (int i = 0; i < page.getJSONArray("rows").length(); i++) {
+      if ( row == page.getJSONArray("rows").getJSONObject(i)) {
+        rowAlreadyPresent = true;
+        break;
+      }
+    }
+    if (rowHasContent && !rowAlreadyPresent) {
       page.accumulate("rows", row);
     }
 
@@ -135,6 +144,7 @@ public class DocMigrator implements FileMigrationService {
   }
   
   protected void processStructure0(JSONObject subtree, JSONObject originalStructure, JSONObject newStructure) throws JSONException {
+    Set<String> widgetsUsed = Sets.newHashSet();
     for (Iterator<String> keyIterator = subtree.keys(); keyIterator.hasNext();) {
       String key = keyIterator.next();
       if (key.startsWith("_")) {
@@ -161,6 +171,7 @@ public class DocMigrator implements FileMigrationService {
             String widgetType = widgetIdParts[1];
             String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
             generateNewCell(widgetId, widgetType, currentPage, currentRow, 0, getJSONObjectOrNull(originalStructure, widgetId));
+            widgetsUsed.add(widgetId);
           } else if (topLevelElement.select(".widget_inline").size() > 0) {
             addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.select("body").first());
             currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
@@ -183,6 +194,7 @@ public class DocMigrator implements FileMigrationService {
               } else {
                 generateNewCell(widgetId, widgetType, currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), getJSONObjectOrNull(originalStructure, widgetId));
               }
+              widgetsUsed.add(widgetId);
               if ("discussion".equals(widgetType)) {
                 String newMessageStorePath = newStructure.getString("_path") + "/" + ref + "/" + widgetId + "/discussion/message";
                 String newAbsoluteMessageStorePath = "/p/" + newMessageStorePath;
@@ -216,6 +228,12 @@ public class DocMigrator implements FileMigrationService {
         newStructure.put(ref, currentPage);
       }
       processStructure0(structureItem, originalStructure, newStructure);
+    }
+    // pruning the widgets at the top level
+    for (String widgetId : widgetsUsed) {
+      if (newStructure.has(widgetId)) {
+        newStructure.remove(widgetId);
+      }
     }
   }
   
