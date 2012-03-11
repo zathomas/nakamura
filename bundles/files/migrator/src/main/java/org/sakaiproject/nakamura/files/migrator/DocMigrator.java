@@ -18,7 +18,6 @@
 package org.sakaiproject.nakamura.files.migrator;
 
 import com.google.common.collect.Sets;
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -145,89 +144,9 @@ public class DocMigrator implements FileMigrationService {
   
   protected void processStructure0(JSONObject subtree, JSONObject originalStructure, JSONObject newStructure) throws JSONException {
     Set<String> widgetsUsed = Sets.newHashSet();
-    for (Iterator<String> keyIterator = subtree.keys(); keyIterator.hasNext();) {
-      String key = keyIterator.next();
-      if (key.startsWith("_")) {
-        continue;
-      }
-      JSONObject structureItem = subtree.getJSONObject(key);
-      String ref = structureItem.getString("_ref");
-      if (originalStructure.has(ref) && originalStructure.getJSONObject(ref).has("rows")) {
-        // newStructure.put(ref, originalStructure.getJSONObject(ref));
-        LOGGER.debug("ref {} already has new structure.", ref);
-      } else {
-        // page needs migration
-        Document page = Jsoup.parse(originalStructure.getJSONObject(ref).getString("page"));
-        Document currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
-        JSONObject currentPage = new JSONObject();
-        currentPage.put("rows", new JSONArray());
-        JSONObject currentRow = generateEmptyRow(1);
-        Elements topLevelElements = page.select("body").first().children();
-        for (Element topLevelElement : topLevelElements) {
-          if (topLevelElement.hasClass("widget_inline")) {
-            addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.select("body").first());
-            currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
-            String[] widgetIdParts = topLevelElement.attr("id").split("_");
-            String widgetType = widgetIdParts[1];
-            String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
-            generateNewCell(widgetId, widgetType, currentPage, currentRow, 0, getJSONObjectOrNull(originalStructure, widgetId));
-            widgetsUsed.add(widgetId);
-          } else if (topLevelElement.select(".widget_inline").size() > 0) {
-            addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.select("body").first());
-            currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
-            int numColumns = 1;
-            int leftSideColumn = topLevelElement.select(".widget_inline.block_image_left").size() > 0 ? 1 : 0;
-            numColumns += leftSideColumn;
-            int rightSideColumn = topLevelElement.select(".widget_inline.block_image_right").size() > 0 ? 1 : 0;
-            numColumns += rightSideColumn;
-            if (numColumns > 1) {
-              currentRow = addRowToPage(currentRow, currentPage, numColumns, currentHtmlBlock.select("body").first());
-            }
-            for (Element widgetElement : topLevelElement.select(".widget_inline")) {
-              String[] widgetIdParts = widgetElement.attr("id").split("_");
-              String widgetType = widgetIdParts[1];
-              String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
-              if (widgetElement.hasClass("block_image_left")) {
-                generateNewCell(widgetId, widgetType, currentPage, currentRow, 0, getJSONObjectOrNull(originalStructure, widgetId));
-              } else if (widgetElement.hasClass("block_image_right")) {
-                generateNewCell(widgetId, widgetType, currentPage, currentRow, (leftSideColumn > 0 ? 2 : 1), getJSONObjectOrNull(originalStructure, widgetId));
-              } else {
-                generateNewCell(widgetId, widgetType, currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), getJSONObjectOrNull(originalStructure, widgetId));
-              }
-              widgetsUsed.add(widgetId);
-              if ("discussion".equals(widgetType)) {
-                String newMessageStorePath = newStructure.getString("_path") + "/" + ref + "/" + widgetId + "/discussion/message";
-                String newAbsoluteMessageStorePath = "/p/" + newMessageStorePath;
-                JSONObject inbox = currentPage.getJSONObject(widgetId).getJSONObject("discussion").getJSONObject("message").getJSONObject("inbox");
-                for(Iterator<String> inboxIterator = inbox.keys(); inboxIterator.hasNext();) {
-                  String inboxKey = inboxIterator.next();
-                  if (inboxKey.startsWith("_")) {
-                    continue;
-                  }
-                  inbox.getJSONObject(inboxKey).put("sakai:to", newAbsoluteMessageStorePath);
-                  inbox.getJSONObject(inboxKey).put("sakai:writeto", newAbsoluteMessageStorePath);
-                  inbox.getJSONObject(inboxKey).put("sakai:messagestore", newMessageStorePath + "/");
-                }
-              }
-              newStructure.remove(widgetId);
-              widgetElement.remove();
-            }
-            generateNewCell(null, "htmlblock", currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), generateHtmlBlock(topLevelElement.outerHtml()));
-
-            if (numColumns > 1) {
-              currentRow = addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
-            }
-
-          } else {
-            currentHtmlBlock.select("div").first().appendChild(topLevelElement);
-          }
-        }
-        addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
-        ensureRowPresent(currentPage);
-
-        newStructure.put(ref, currentPage);
-      }
-      processStructure0(structureItem, originalStructure, newStructure);
+    for (Iterator<String> referenceIterator = subtree.keys(); referenceIterator.hasNext();) {
+      String reference = referenceIterator.next();
+      processPageReference(subtree, originalStructure, newStructure, widgetsUsed, reference);
     }
     // pruning the widgets at the top level
     for (String widgetId : widgetsUsed) {
@@ -236,7 +155,100 @@ public class DocMigrator implements FileMigrationService {
       }
     }
   }
-  
+
+  private void processPageReference(JSONObject subtree, JSONObject originalStructure, JSONObject newStructure, Set<String> widgetsUsed, String reference) throws JSONException {
+    if (reference.startsWith("_")) {
+      return;
+    }
+    JSONObject structureItem = subtree.getJSONObject(reference);
+    String ref = structureItem.getString("_ref");
+    if (originalStructure.has(ref) && originalStructure.getJSONObject(ref).has("rows")) {
+      // newStructure.put(ref, originalStructure.getJSONObject(ref));
+      LOGGER.debug("ref {} already has new structure.", ref);
+    } else {
+      migratePage(originalStructure, newStructure, widgetsUsed, ref);
+
+    }
+    processStructure0(structureItem, originalStructure, newStructure);
+  }
+
+  private void migratePage(JSONObject originalStructure, JSONObject newStructure, Set<String> widgetsUsed, String ref) throws JSONException {
+    // page needs migration
+    Document page = Jsoup.parse(originalStructure.getJSONObject(ref).getString("page"));
+    Document currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
+    JSONObject currentPage = new JSONObject();
+    currentPage.put("rows", new JSONArray());
+    JSONObject currentRow = generateEmptyRow(1);
+    Elements topLevelElements = page.select("body").first().children();
+    for (Element topLevelElement : topLevelElements) {
+      if (topLevelElement.hasClass("widget_inline")) {
+        addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.select("body").first());
+        currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
+        String[] widgetIdParts = topLevelElement.attr("id").split("_");
+        String widgetType = widgetIdParts[1];
+        String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
+        generateNewCell(widgetId, widgetType, currentPage, currentRow, 0, getJSONObjectOrNull(originalStructure, widgetId));
+        widgetsUsed.add(widgetId);
+      } else if (topLevelElement.select(".widget_inline").size() > 0) {
+        addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.select("body").first());
+        currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
+        int numColumns = 1;
+        int leftSideColumn = topLevelElement.select(".widget_inline.block_image_left").size() > 0 ? 1 : 0;
+        numColumns += leftSideColumn;
+        int rightSideColumn = topLevelElement.select(".widget_inline.block_image_right").size() > 0 ? 1 : 0;
+        numColumns += rightSideColumn;
+        if (numColumns > 1) {
+          currentRow = addRowToPage(currentRow, currentPage, numColumns, currentHtmlBlock.select("body").first());
+        }
+        for (Element widgetElement : topLevelElement.select(".widget_inline")) {
+          String[] widgetIdParts = widgetElement.attr("id").split("_");
+          String widgetType = widgetIdParts[1];
+          String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
+          if (widgetElement.hasClass("block_image_left")) {
+            generateNewCell(widgetId, widgetType, currentPage, currentRow, 0, getJSONObjectOrNull(originalStructure, widgetId));
+          } else if (widgetElement.hasClass("block_image_right")) {
+            generateNewCell(widgetId, widgetType, currentPage, currentRow, (leftSideColumn > 0 ? 2 : 1), getJSONObjectOrNull(originalStructure, widgetId));
+          } else {
+            generateNewCell(widgetId, widgetType, currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), getJSONObjectOrNull(originalStructure, widgetId));
+          }
+          widgetsUsed.add(widgetId);
+          if ("discussion".equals(widgetType)) {
+            migrateDiscussionWidget(newStructure, ref, currentPage, widgetId);
+          }
+          newStructure.remove(widgetId);
+          widgetElement.remove();
+        }
+        generateNewCell(null, "htmlblock", currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), generateHtmlBlock(topLevelElement.outerHtml()));
+
+        if (numColumns > 1) {
+          currentRow = addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
+        }
+
+      } else {
+        currentHtmlBlock.select("div").first().appendChild(topLevelElement);
+      }
+    }
+    addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
+    ensureRowPresent(currentPage);
+
+    newStructure.put(ref, currentPage);
+  }
+
+  private void migrateDiscussionWidget(JSONObject newStructure, String ref, JSONObject currentPage, String widgetId) throws JSONException {
+    String newMessageStorePath = newStructure.getString("_path") + "/" + ref + "/" + widgetId + "/discussion/message";
+    String newAbsoluteMessageStorePath = "/p/" + newMessageStorePath;
+    JSONObject inbox = currentPage.getJSONObject(widgetId).getJSONObject("discussion").getJSONObject("message").getJSONObject("inbox");
+    for(Iterator<String> inboxIterator = inbox.keys(); inboxIterator.hasNext();) {
+      String inboxKey = inboxIterator.next();
+      if (inboxKey.startsWith("_")) {
+        continue;
+      }
+      inbox.getJSONObject(inboxKey).put("sakai:to", newAbsoluteMessageStorePath);
+      inbox.getJSONObject(inboxKey).put("sakai:writeto", newAbsoluteMessageStorePath);
+      inbox.getJSONObject(inboxKey).put("sakai:messagestore", newMessageStorePath + "/");
+    }
+  }
+
   protected JSONObject createNewPageStructure(JSONObject structure0, JSONObject originalDoc) throws JSONException {
     JSONObject newDoc = new JSONObject(originalDoc.toString());
     processStructure0(structure0, originalDoc, newDoc);
