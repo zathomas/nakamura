@@ -43,6 +43,7 @@
         <module>bundles/messaging</module>
         <module>bundles/files/api</module>
         <module>bundles/files/impl</module>
+        <module>bundles/files/migrator</module>
         <module>bundles/personal</module>
         <module>bundles/presence</module>
         <module>bundles/resource</module>
@@ -1139,7 +1140,7 @@
       <dependency>
         <groupId>org.sakaiproject.nakamura</groupId>
         <artifactId>org.sakaiproject.nakamura.core</artifactId>
-        <version>1.3-20120228</version>
+        <version>1.3.1</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
