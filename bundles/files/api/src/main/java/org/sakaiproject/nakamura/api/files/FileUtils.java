@@ -246,7 +246,9 @@ public class FileUtils {
     ExtendedJSONWriter.writeContentTreeToWriter(write, content, true, maxDepth);
     // The permissions for this session.
     writePermissions(content, session, write);
-
+    // The comment count for this content
+    writeCommentCountProperty(content, session, write); 
+    
     write.key(JcrConstants.JCR_LASTMODIFIED);
     Calendar cal = new GregorianCalendar();
     cal.setTimeInMillis(StorageClientUtils.toLong(content.getProperty(Content.LASTMODIFIED_FIELD)));
@@ -305,6 +307,8 @@ public class FileUtils {
 
     // permissions
     writePermissions(content, session, writer);
+    // The comment count for this content
+    writeCommentCountProperty(content, session, writer);
 
     // Write the actual file.
     if (content.hasProperty(SAKAI_LINK)) {
@@ -327,6 +331,36 @@ public class FileUtils {
           throws StorageClientException, JSONException {
 
     writeLinkNode(content, session, writer, false);
+  }
+ 
+  /**
+   * Writes commentCount of content
+   *
+   * @param node
+   * @param session
+   * @param write
+   * @throws RepositoryException
+   * @throws JSONException
+   */
+  public static void writeCommentCountProperty(Content content,
+      org.sakaiproject.nakamura.api.lite.Session session, JSONWriter writer) 
+          throws StorageClientException, JSONException {
+    Content comments = null;
+    try {
+      comments = session.getContentManager().get(content.getPath() + "/comments");
+    } catch (org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    long commentCount = 0;
+    if (comments != null) {
+      for (@SuppressWarnings("unused")
+      Content comment : comments.listChildren()) {
+        commentCount++;
+      }
+    }
+    writer.key("commentCount");
+    writer.value(commentCount);
   }
 
   /**
