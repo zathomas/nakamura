@@ -83,6 +83,7 @@ public class FileMigratorFilter implements Filter {
     ServletRequest chainRequest = request;
     if(fileMigrationService != null
       && isRequestForPrivspaceOrPubspace((HttpServletRequest) request)) {
+      LOGGER.debug("processing a pubspace or privspace request {}", ((HttpServletRequest) request).getPathInfo());
       migratePath(((HttpServletRequest) request).getPathInfo());
     }
     chain.doFilter(chainRequest, response);
@@ -93,9 +94,12 @@ public class FileMigratorFilter implements Filter {
     try {
       adminSession = repository.loginAdministrative();
       String resourcePath = requestPath.substring(0, requestPath.lastIndexOf("space") + 5);
+      LOGGER.debug("resource path is {}", resourcePath);
       String sparseInternalPath = PathUtils.toUserContentPath(resourcePath);
       Content userSpaceContent = adminSession.getContentManager().get(sparseInternalPath);
+      LOGGER.debug("got user space content at {}", userSpaceContent.getPath());
       if (fileMigrationService.fileContentNeedsMigration(userSpaceContent)) {
+        LOGGER.debug("confirmed that user space content needs to be migrated {}", userSpaceContent.getPath());
         fileMigrationService.migrateFileContent(userSpaceContent);
       }
     } catch (AccessDeniedException e) {
