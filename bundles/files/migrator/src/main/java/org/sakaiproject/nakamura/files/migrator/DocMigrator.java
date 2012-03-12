@@ -18,17 +18,13 @@
 package org.sakaiproject.nakamura.files.migrator;
 
 import com.google.common.collect.Sets;
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.files.FileMigrationService;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
@@ -50,184 +46,17 @@ import java.util.Set;
 @Component(enabled = true)
 public class DocMigrator implements FileMigrationService {
   private static final Logger LOGGER = LoggerFactory.getLogger(DocMigrator.class);
-  private static final String EMPTY_DIV = "<div />";
-  private static final String STRUCTURE_ZERO = FilesConstants.STRUCTURE_FIELD_STEM + "0";
+  protected static final String STRUCTURE_ZERO = FilesConstants.STRUCTURE_FIELD_STEM + "0";
 
   @Reference
   protected Repository repository;
+  private final PageMigrator pageMigrator = new PageMigrator(this);
 
-  protected JSONObject generateEmptyRow(int columnCount) throws JSONException {
-    JSONObject row = new JSONObject();
-    row.put("id", generateWidgetId());
-    JSONArray columns = new JSONArray();
-    for (int i = 0; i < columnCount; i++) {
-      JSONObject column = new JSONObject();
-      column.put("width", 1 / columnCount);
-      column.put("elements", new JSONArray());
-      columns.put(column);
-    }
-    row.put("columns", columns);
-    return row;
-  }
-  
-  protected String generateWidgetId() {
-    return "id" + Math.round(Math.random() * 10000000);
-  }
-  
-  protected void ensureRowPresent(JSONObject page) throws JSONException {
-    JSONArray rows = page.getJSONArray("rows");
-    if (rows == null || rows.length() < 1) {
-      rows = new JSONArray();
-      rows.put(generateEmptyRow(1));
-      page.put("rows", rows);
-    }
-  }
-  
-  protected void generateNewCell(String id, String type, JSONObject page, JSONObject row, int column, JSONObject widgetData) throws JSONException {
-    if (!"tooltip".equals(type) && !"joinrequestbuttons".equals(type)) {
-      String columnId = id == null ? generateWidgetId() : id;
-      JSONObject element = new JSONObject();
-      element.put("id", columnId);
-      element.put("type", type);
-      row.getJSONArray("columns").getJSONObject(column).accumulate("elements", element);
-      if (widgetData != null) {
-        page.put(columnId, widgetData);
-      }
-    }
-  }
-  
-  protected JSONObject addRowToPage(JSONObject row, JSONObject page, int columnsForNextRow, Element htmlElement) throws JSONException {
-    if (!isEmpty(htmlElement)) {
-      generateNewCell(null, "htmlblock", page, row, 0, generateHtmlBlock(htmlElement.html()));
-    }
-    boolean rowHasContent = false;
-    for (int i = 0; i < row.getJSONArray("columns").length(); i++) {
-      if (row.getJSONArray("columns").getJSONObject(i).getJSONArray("elements").length() > 0) {
-        rowHasContent = true;
-        break;
-      }
-    }
-    boolean rowAlreadyPresent = false;
-    for (int i = 0; i < page.getJSONArray("rows").length(); i++) {
-      if ( row == page.getJSONArray("rows").getJSONObject(i)) {
-        rowAlreadyPresent = true;
-        break;
-      }
-    }
-    if (rowHasContent && !rowAlreadyPresent) {
-      page.accumulate("rows", row);
-    }
-
-    return generateEmptyRow(columnsForNextRow > 0 ? columnsForNextRow : 1);
-  }
-  
-  protected JSONObject generateHtmlBlock(String html) throws JSONException {
-    JSONObject contentObject = new JSONObject();
-    contentObject.put("content", html);
-    JSONObject htmlBlockObject = new JSONObject();
-    htmlBlockObject.put("htmlblock", contentObject);
-    return htmlBlockObject;
-  }
-  
-  boolean isEmpty(Element htmlElement) {
-    // filter out TinyMCE instances
-    htmlElement.select(".mceEditor").remove();
-    String htmlContent = htmlElement.text().trim();
-    String[] elementNames = new String[]{"img", "iframe", "frame", "input", "select", "option"};
-    boolean containsElement = false;
-    for (String elementName : elementNames) {
-      if (!htmlElement.select(elementName).isEmpty()) {
-        containsElement = true;
-      }
-    }
-    return !(htmlElement.hasText() || containsElement);
-  }
-  
   protected void processStructure0(JSONObject subtree, JSONObject originalStructure, JSONObject newStructure) throws JSONException {
     Set<String> widgetsUsed = Sets.newHashSet();
-    for (Iterator<String> keyIterator = subtree.keys(); keyIterator.hasNext();) {
-      String key = keyIterator.next();
-      if (key.startsWith("_")) {
-        continue;
-      }
-      JSONObject structureItem = subtree.getJSONObject(key);
-      String ref = structureItem.getString("_ref");
-      if (originalStructure.has(ref) && originalStructure.getJSONObject(ref).has("rows")) {
-        // newStructure.put(ref, originalStructure.getJSONObject(ref));
-        LOGGER.debug("ref {} already has new structure.", ref);
-      } else {
-        // page needs migration
-        Document page = Jsoup.parse(originalStructure.getJSONObject(ref).getString("page"));
-        Document currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
-        JSONObject currentPage = new JSONObject();
-        currentPage.put("rows", new JSONArray());
-        JSONObject currentRow = generateEmptyRow(1);
-        Elements topLevelElements = page.select("body").first().children();
-        for (Element topLevelElement : topLevelElements) {
-          if (topLevelElement.hasClass("widget_inline")) {
-            addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.select("body").first());
-            currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
-            String[] widgetIdParts = topLevelElement.attr("id").split("_");
-            String widgetType = widgetIdParts[1];
-            String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
-            generateNewCell(widgetId, widgetType, currentPage, currentRow, 0, getJSONObjectOrNull(originalStructure, widgetId));
-            widgetsUsed.add(widgetId);
-          } else if (topLevelElement.select(".widget_inline").size() > 0) {
-            addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.select("body").first());
-            currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
-            int numColumns = 1;
-            int leftSideColumn = topLevelElement.select(".widget_inline.block_image_left").size() > 0 ? 1 : 0;
-            numColumns += leftSideColumn;
-            int rightSideColumn = topLevelElement.select(".widget_inline.block_image_right").size() > 0 ? 1 : 0;
-            numColumns += rightSideColumn;
-            if (numColumns > 1) {
-              currentRow = addRowToPage(currentRow, currentPage, numColumns, currentHtmlBlock.select("body").first());
-            }
-            for (Element widgetElement : topLevelElement.select(".widget_inline")) {
-              String[] widgetIdParts = widgetElement.attr("id").split("_");
-              String widgetType = widgetIdParts[1];
-              String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
-              if (widgetElement.hasClass("block_image_left")) {
-                generateNewCell(widgetId, widgetType, currentPage, currentRow, 0, getJSONObjectOrNull(originalStructure, widgetId));
-              } else if (widgetElement.hasClass("block_image_right")) {
-                generateNewCell(widgetId, widgetType, currentPage, currentRow, (leftSideColumn > 0 ? 2 : 1), getJSONObjectOrNull(originalStructure, widgetId));
-              } else {
-                generateNewCell(widgetId, widgetType, currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), getJSONObjectOrNull(originalStructure, widgetId));
-              }
-              widgetsUsed.add(widgetId);
-              if ("discussion".equals(widgetType)) {
-                String newMessageStorePath = newStructure.getString("_path") + "/" + ref + "/" + widgetId + "/discussion/message";
-                String newAbsoluteMessageStorePath = "/p/" + newMessageStorePath;
-                JSONObject inbox = currentPage.getJSONObject(widgetId).getJSONObject("discussion").getJSONObject("message").getJSONObject("inbox");
-                for(Iterator<String> inboxIterator = inbox.keys(); inboxIterator.hasNext();) {
-                  String inboxKey = inboxIterator.next();
-                  if (inboxKey.startsWith("_")) {
-                    continue;
-                  }
-                  inbox.getJSONObject(inboxKey).put("sakai:to", newAbsoluteMessageStorePath);
-                  inbox.getJSONObject(inboxKey).put("sakai:writeto", newAbsoluteMessageStorePath);
-                  inbox.getJSONObject(inboxKey).put("sakai:messagestore", newMessageStorePath + "/");
-                }
-              }
-              newStructure.remove(widgetId);
-              widgetElement.remove();
-            }
-            generateNewCell(null, "htmlblock", currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), generateHtmlBlock(topLevelElement.outerHtml()));
-
-            if (numColumns > 1) {
-              currentRow = addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
-            }
-
-          } else {
-            currentHtmlBlock.select("div").first().appendChild(topLevelElement);
-          }
-        }
-        addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
-        ensureRowPresent(currentPage);
-
-        newStructure.put(ref, currentPage);
-      }
-      processStructure0(structureItem, originalStructure, newStructure);
+    for (Iterator<String> referenceIterator = subtree.keys(); referenceIterator.hasNext();) {
+      String reference = referenceIterator.next();
+      pageMigrator.processPageReference(subtree, originalStructure, newStructure, widgetsUsed, reference);
     }
     // pruning the widgets at the top level
     for (String widgetId : widgetsUsed) {
@@ -236,21 +65,13 @@ public class DocMigrator implements FileMigrationService {
       }
     }
   }
-  
+
   protected JSONObject createNewPageStructure(JSONObject structure0, JSONObject originalDoc) throws JSONException {
     JSONObject newDoc = new JSONObject(originalDoc.toString());
     processStructure0(structure0, originalDoc, newDoc);
     // the finishing touches
     newDoc.put(FilesConstants.SCHEMA_VERSION, 2);
     return newDoc;
-  }
-  
-  protected JSONObject getJSONObjectOrNull(JSONObject jsonObject, String key) throws JSONException {
-    if (jsonObject.has(key)) {
-      return jsonObject.getJSONObject(key);
-    } else {
-      return null;
-    }
   }
 
   @Override
@@ -328,6 +149,7 @@ public class DocMigrator implements FileMigrationService {
       liteJsonImporter.importContent(adminSession.getContentManager(), convertedStructure, content.getPath(), true, true, true, adminSession.getAccessControlManager());
     } catch (Exception e) {
       LOGGER.error(e.getMessage());
+      throw new RuntimeException("Error while migrating " + content.getPath());
     } finally {
       if (adminSession != null) {
         try {
