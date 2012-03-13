@@ -68,7 +68,7 @@ import javax.servlet.http.HttpServletResponse;
  * Provides a listing for the members and managers of this group.
  */
 @ServiceDocumentation(
-  name = "Group Member Servlet", okForVersion = "1.1",
+  name = "Group Member Servlet", okForVersion = "1.2",
   shortDescription = "Provides a listing for the members and managers of this group.",
   description = "Provides a listing for the members and managers of this group.",
   bindings = {

@@ -90,7 +90,7 @@ import javax.jcr.Value;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-@ServiceDocumentation(name = "Solr Search Servlet", okForVersion = "1.1",
+@ServiceDocumentation(name = "Solr Search Servlet", okForVersion = "1.2",
   shortDescription = "The Search servlet provides search results from a search template.",
   description = {
     "The Solr Search Servlet responds with search results in json form in response to GETs on search urls. Those URLs are resolved "
