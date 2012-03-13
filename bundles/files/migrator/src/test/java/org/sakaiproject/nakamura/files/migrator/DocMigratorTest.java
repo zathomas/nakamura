@@ -18,7 +18,6 @@
 package org.sakaiproject.nakamura.files.migrator;
 
 import com.google.common.collect.ImmutableMap;
-import junit.framework.Assert;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.Before;
@@ -27,6 +26,7 @@ import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.AclModification;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.resource.lite.LiteJsonImporter;
@@ -34,8 +34,6 @@ import org.sakaiproject.nakamura.lite.BaseMemoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,6 +44,8 @@ import static org.mockito.Mockito.mock;
 
 public class DocMigratorTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(DocMigratorTest.class);
+
+  private static final int ALL_ACCESS = 28679;
   
   private Repository repository;
   
@@ -122,16 +122,25 @@ public class DocMigratorTest {
   
   @Test
   public void make_sure_croby_pubspace_will_migrate() throws Exception {
+    final String CROBY_NAME = "croby";
+    final String CROBY_PATH = "a:" + CROBY_NAME;
+    final String CROBY_PUBSPACE_PATH = CROBY_PATH + "/public/pubspace";
     repository = new BaseMemoryRepository().getRepository();
     docMigrator.repository = repository;
-    Session adminSession = repository.loginAdministrative();
-    ContentManager contentManager = adminSession.getContentManager();
-    AccessControlManager accessControlManager = adminSession.getAccessControlManager();
+    Session session = repository.loginAdministrative();
+    session.getAuthorizableManager().createUser(CROBY_NAME, CROBY_NAME, "shhhh", null);
+    session.getAccessControlManager().setAcl("CO", CROBY_PATH, new AclModification[]{new AclModification(CROBY_NAME + "@g", ALL_ACCESS, AclModification.Operation.OP_REPLACE)});
+    session.logout();
+    session = repository.loginAdministrative(CROBY_NAME);
+    ContentManager contentManager = session.getContentManager();
+    AccessControlManager accessControlManager = session.getAccessControlManager();
     JSONObject crobyPubspace = new JSONObject(CROBY_PUBSPACE);
     LiteJsonImporter jsonImporter = new LiteJsonImporter();
-    jsonImporter.internalImportContent(contentManager, crobyPubspace, "a:croby/public/pubspace", true, accessControlManager);
-    Content crobyPubspaceContent = contentManager.get("a:croby/public/pubspace");
+    jsonImporter.internalImportContent(contentManager, crobyPubspace, CROBY_PUBSPACE_PATH, true, accessControlManager);
+    Content crobyPubspaceContent = contentManager.get(CROBY_PUBSPACE_PATH);
     assertTrue(docMigrator.fileContentNeedsMigration(crobyPubspaceContent));
     docMigrator.migrateFileContent(crobyPubspaceContent);
+    crobyPubspaceContent = contentManager.get(CROBY_PUBSPACE_PATH);
+    assertEquals(CROBY_NAME, crobyPubspaceContent.getProperty("_lastModifiedBy"));
   }
 }
