@@ -1,0 +1,17 @@
+The following people have commit access to the Sakai Nakamura sources.
+
+If you have a question or comment, it's probably best to mail
+oae-dev@collab.sakaiproject.org, rather than mailing any of these
+people directly.
+
+Committers:
+
+   carl@hallwaytech.com Carl Hall 
+   lance@rsmart.com Lance Speelmon 
+   zach@aeroplanesoftware.com Zach Thomas 
+   chris@media.berkeley.edu Chris Tweney 
+   arwhyte@umich.edu Anthony Whyte 
+
+For a complete list of contributiors please see the commit log
+
+   git shortlog -s
