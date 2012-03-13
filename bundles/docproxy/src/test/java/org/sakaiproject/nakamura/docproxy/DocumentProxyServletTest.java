@@ -101,7 +101,7 @@ public class DocumentProxyServletTest extends AbstractDocProxyServlet {
     servlet.doGet(request, response);
 
     String result = baos.toString("UTF-8");
-    assertEquals("K2 docProxy test resource", result);
+    assertEquals("Nakamura docProxy test resource", result);
   }
 
   @Test
@@ -148,7 +148,7 @@ public class DocumentProxyServletTest extends AbstractDocProxyServlet {
     servlet.doGet(request, response);
 
     String result = baos.toString("UTF-8");
-    assertEquals("K2 docProxy test resource", result);
+    assertEquals("Nakamura docProxy test resource", result);
   }
 
   @Test
