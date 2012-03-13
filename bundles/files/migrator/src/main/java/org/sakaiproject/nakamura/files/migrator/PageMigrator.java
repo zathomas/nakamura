@@ -172,7 +172,6 @@ public class PageMigrator {
         for (Element widgetElement : topLevelElement.select(".widget_inline")) {
           extractWidget(originalStructure, contentId, widgetsUsed, ref, currentPage, currentRow, leftSideColumn, widgetElement);
         }
-        generateNewCell(null, "htmlblock", currentPage, currentRow, (leftSideColumn > 0 ? 1 : 0), generateHtmlBlock(topLevelElement.outerHtml()));
 
         if (numColumns > 1) {
           currentRow = addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
