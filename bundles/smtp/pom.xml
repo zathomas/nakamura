@@ -136,18 +136,5 @@
     	<scope>test</scope>
     </dependency>
   </dependencies>
-  <repositories>
-    <repository>
-      <id>Sakai Maven2 Repo</id>
-      <name>Sakai Maven2 Repo</name>
-      <url>http://source.sakaiproject.org/maven2</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
 
 </project>
