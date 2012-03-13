@@ -30,6 +30,7 @@ import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
 import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceParameter;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
+import org.sakaiproject.nakamura.api.jcr.ContentReloaderService;
 import org.sakaiproject.nakamura.api.lite.Feedback;
 import org.sakaiproject.nakamura.api.lite.MigrateContentService;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -85,6 +86,9 @@ public class SparseUpgradeServlet extends SlingAllMethodsServlet {
   @Reference
   private TagMigrator tagMigrator;
 
+  @Reference
+  private ContentReloaderService reloaderService;
+
   @Override
   protected void doPost(SlingHttpServletRequest request, final SlingHttpServletResponse response) throws ServletException, IOException {
     try {
@@ -126,6 +130,12 @@ public class SparseUpgradeServlet extends SlingAllMethodsServlet {
 
       // migrate tags from JCR to Sparse
       this.tagMigrator.migrate(response, dryRun, reindexAll);
+
+      // reload content for all OSGi bundles
+      if (!dryRun) {
+        LOGGER.info("Reloading all content from OSGi bundles");
+        this.reloaderService.reloadContent();
+      }
 
       // reindex solr if necessary
       if (reindexAll && !dryRun) {
