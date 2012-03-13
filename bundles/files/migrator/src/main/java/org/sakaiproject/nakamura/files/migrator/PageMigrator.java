@@ -148,7 +148,7 @@ public class PageMigrator {
     Document page;
     JSONObject oldFashionedWidget = originalStructure.getJSONObject(ref);
     if (oldFashionedWidget.has("page")) {
-      page = Jsoup.parse(originalStructure.getString("page"));
+      page = Jsoup.parse(oldFashionedWidget.getString("page"));
     } else {
       page = Jsoup.parse(EMPTY_DIV);
     }
