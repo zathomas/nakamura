@@ -145,7 +145,13 @@ public class PageMigrator {
   }
 
   JSONObject migratePage(JSONObject originalStructure, String contentId, Set<String> widgetsUsed, String ref) throws JSONException {
-    Document page = Jsoup.parse(originalStructure.getJSONObject(ref).getString("page"));
+    Document page;
+    JSONObject oldFashionedWidget = originalStructure.getJSONObject(ref);
+    if (oldFashionedWidget.has("page")) {
+      page = Jsoup.parse(originalStructure.getString("page"));
+    } else {
+      page = Jsoup.parse(EMPTY_DIV);
+    }
     Document currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
     JSONObject currentPage = new JSONObject();
     currentPage.put("rows", new JSONArray());
