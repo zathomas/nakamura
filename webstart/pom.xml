@@ -27,7 +27,7 @@
     <description> Webstart Package </description>
 
     <properties>
-       <finalhostlocation>http://people.caret.cam.ac.uk/~ib236/sakaioae/</finalhostlocation>
+       <finalhostlocation>http://source.sakaiproject.org/release/oae/1.2.0/webstart</finalhostlocation>
     </properties>
   <build>
     <plugins>
