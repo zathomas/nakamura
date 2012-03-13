@@ -24,10 +24,7 @@
   <groupId>org.sakaiproject.nakamura</groupId>
   <packaging>bundle</packaging>
   <name>Sakai Nakamura Files: Sakai Doc Migrator</name>
-  <description>Implements interfaces used by content servlets to check Sakai docs for their data
-    format and migrate them if necessary.
-  </description>
-  <version>1.3-SNAPSHOT</version>
+  <description>Implements interfaces used by content servlets to check Sakai docs for their data format and migrate them if necessary.</description>
   <build>
     <plugins>
       <plugin>
