@@ -31,7 +31,7 @@ import java.util.List;
 
 import javax.jcr.RepositoryException;
 
-@ServiceDocumentation(name = "AddPropertyOperation documentation", okForVersion = "1.1",
+@ServiceDocumentation(name = "AddPropertyOperation documentation", okForVersion = "1.2",
   shortDescription = "Allows adding a property or properties to one or more resources.",
   description = "Allows adding a property or properties to one or more resources.",
   methods = {

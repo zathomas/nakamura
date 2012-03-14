@@ -82,7 +82,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * <h4>Notes</h4>
  */
-@ServiceDocumentation(name="User Exists Servlet", okForVersion = "1.1",
+@ServiceDocumentation(name="User Exists Servlet", okForVersion = "1.2",
     description="Tests for existence of user. This servlet responds at /system/userManager/user.exists.html",
     shortDescription="Tests for existence of user",
     bindings=@ServiceBinding(type=BindingType.PATH,bindings="/system/userManager/user",

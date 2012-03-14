@@ -41,7 +41,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 @SlingServlet(resourceTypes = { "sakai/template" }, methods = { "GET" })
-@ServiceDocumentation(name = "FulfillTemplateServlet documentation", okForVersion = "1.1",
+@ServiceDocumentation(name = "FulfillTemplateServlet documentation", okForVersion = "1.2",
   shortDescription = "Fills the requested template with the parameters in the query.",
   description = {
     "Fills the requested template with the parameters in the query.",

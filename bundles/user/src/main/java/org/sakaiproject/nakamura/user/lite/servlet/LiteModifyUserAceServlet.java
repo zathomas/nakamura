@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Enumeration;
 import java.util.List;
 
-@ServiceDocumentation(name = "Update User ACE Servlet", okForVersion = "1.1",
+@ServiceDocumentation(name = "Update User ACE Servlet", okForVersion = "1.2",
         description = "Updates a user's Access Control Entry (ACE). Maps on to nodes of resourceType sparse/user " +
                 "with the modifyAce selector. This servlet responds at " +
                 "/system/userManager/user/suzy.modifyAce.html",
