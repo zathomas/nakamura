@@ -56,7 +56,7 @@ import javax.servlet.http.HttpServletResponse;
 @Property(name="handling.servlet",value="GetVersionServlet")
 public class SparseGetVersionServletHandler extends AbstractSafeMethodsServletResourceHandler {
 
-  public static final Logger LOG = LoggerFactory.getLogger(SparseGetVersionServletHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SparseGetVersionServletHandler.class);
 
   @Reference
   FileMigrationService fileMigrationService;
@@ -97,7 +97,7 @@ public class SparseGetVersionServletHandler extends AbstractSafeMethodsServletRe
         requestVersionName = versionIds.get(versionIds.size()-1-versionNumber);
       }
       versionContentTemp = contentManager.getVersion(content.getPath(), requestVersionName);
-      if (versionContentTemp.hasProperty("page") && !versionContentTemp.hasProperty("rows")) {
+      if (fileMigrationService.isPageNode(versionContentTemp, contentManager) && !versionContentTemp.hasProperty("rows")) {
         // this request is for a page we're going to want to migrate
         Content pageParent = contentManager.get(PathUtils.getParentReference(versionContentTemp.getPath()));
         versionContentTemp = fileMigrationService.migrateSinglePage(pageParent, versionContentTemp);
@@ -160,7 +160,7 @@ public class SparseGetVersionServletHandler extends AbstractSafeMethodsServletRe
        if (type.equals(InputStream.class)) {
          getResourceMetadata()
            .setContentLength(toLong(versionContent
-             .getProperty(Content.LENGTH_FIELD)));
+               .getProperty(Content.LENGTH_FIELD)));
          try {
            return (AdapterType) contentManager.getVersionInputStream(versionContent.getPath(), versionName);
          } catch (AccessDeniedException e) {

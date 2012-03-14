@@ -37,6 +37,9 @@ import org.sakaiproject.nakamura.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
@@ -169,4 +172,27 @@ public class DocMigratorTest extends Assert {
     assertTrue(testContent.getProperty("sakai:tags") instanceof String[]);
   }
 
+
+  @Test
+  public void isPageNode() throws Exception {
+    final String DOC_PATH = "/p/12345test";
+    repository = new BaseMemoryRepository().getRepository();
+    docMigrator.repository = repository;
+    Session session = repository.loginAdministrative();
+    ContentManager contentManager = session.getContentManager();
+    AccessControlManager accessControlManager = session.getAccessControlManager();
+    JSONObject doc = readJSONFromFile("DocWithAdditionalPage.json");
+    LiteJsonImporter jsonImporter = new LiteJsonImporter();
+    jsonImporter.internalImportContent(contentManager, doc, DOC_PATH, true, 
+        accessControlManager);
+    Content docContent = contentManager.get(DOC_PATH);
+    assertTrue(docMigrator.fileContentNeedsMigration(docContent));
+    docMigrator.migrateFileContent(docContent);
+    docContent = contentManager.get(DOC_PATH);
+
+    Content subpage = contentManager.get(DOC_PATH + "/id2545619");
+    assertTrue(docMigrator.isPageNode(subpage, contentManager));
+    assertFalse(docMigrator.isPageNode(docContent, contentManager));
+
+  }
 }

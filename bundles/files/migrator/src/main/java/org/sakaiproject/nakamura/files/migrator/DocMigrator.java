@@ -30,7 +30,9 @@ import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.resource.lite.LiteJsonImporter;
@@ -84,6 +86,19 @@ public class DocMigrator implements FileMigrationService {
       LOGGER.error("Could not determine requiresMigration with content {}", content.getPath());
       throw new RuntimeException("Could not determine requiresMigration with content " + content.getPath());
     }
+  }
+
+  @Override
+  public boolean isPageNode(Content content, ContentManager contentManager)
+      throws StorageClientException, AccessDeniedException {
+    if ( content != null && content.hasProperty("page")) {
+      String parentPath = PathUtils.getParentReference(content.getPath());
+      Content parent = contentManager.get(parentPath);
+      if ( parent != null ) {
+        return !(isNotSakaiDoc(parent));
+      }
+    }
+    return false;
   }
 
   protected boolean requiresMigration(JSONObject subtree, Content originalStructure, ContentManager contentManager) throws JSONException {
