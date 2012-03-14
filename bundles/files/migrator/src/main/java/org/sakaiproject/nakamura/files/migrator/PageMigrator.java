@@ -35,6 +35,8 @@ public class PageMigrator {
   private static final Logger LOGGER = LoggerFactory.getLogger(PageMigrator.class);
   
   private static final String EMPTY_DIV = "<div />";
+  
+  private static final String[] imageExtensions = new String[] {".jpg", ".jpeg", ".gif", ".png"};
   private final DocMigrator docMigrator;
 
   public PageMigrator(DocMigrator docMigrator) {
@@ -149,6 +151,18 @@ public class PageMigrator {
     JSONObject oldFashionedWidget = originalStructure.getJSONObject(ref);
     if (oldFashionedWidget.has("page")) {
       page = Jsoup.parse(oldFashionedWidget.getString("page"));
+      if (originalStructure.has("resources")) {
+        LOGGER.debug("This may be an IMS-CP document. Looking for images...");
+        Elements images = page.select("img");
+        LOGGER.debug("Found {} images to process.", images.size());
+        for (Element image : images) {
+          String imgSrc = image.attr("src");
+          LOGGER.debug("Looking at image path '{}'", imgSrc);
+          if (imgSrc.startsWith("p/") && hasImageExtension(imgSrc)) {
+            image.attr("src", imgSrc.substring(0, imgSrc.lastIndexOf(".") + 1));
+          }
+        }
+      }
     } else {
       page = Jsoup.parse(EMPTY_DIV);
     }
@@ -185,6 +199,17 @@ public class PageMigrator {
     ensureRowPresent(currentPage);
 
     return currentPage;
+  }
+
+  private boolean hasImageExtension(String imgSrc) {
+    boolean hasImageExtension = false;
+    for (String extension : imageExtensions) {
+      if (imgSrc.endsWith(extension)) {
+        hasImageExtension = true;
+        break;
+      }
+    }
+    return hasImageExtension;
   }
 
   void extractWidget(JSONObject originalStructure, String contentId, Set<String> widgetsUsed, String ref, JSONObject currentPage, JSONObject currentRow, int leftSideColumn, Element widgetElement) throws JSONException {
