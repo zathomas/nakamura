@@ -17,18 +17,13 @@
  */
 package org.sakaiproject.nakamura.resource.lite.servlet.post.operations;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 import static org.sakaiproject.nakamura.api.resource.MoveCleaner.RESOURCE_TYPE;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -38,8 +33,6 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.commons.osgi.ServiceUtil;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.servlets.post.Modification;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
@@ -53,10 +46,9 @@ import org.sakaiproject.nakamura.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-@Component
+@Component(specVersion = "1.1")
 @Service(value = SparsePostOperation.class)
 @Reference(name = "moveCleaners",
     cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
@@ -105,14 +97,14 @@ public class MoveOperation extends AbstractSparsePostOperation {
       if (cleaners != null) {
         for (MoveCleaner cleaner : cleaners) {
           // consult each cleaner and collect the modifications
-          changes.addAll(cleaner.clean(toContent, contentManager));
+          changes.addAll(cleaner.clean(from, toContent, contentManager));
         }
       }
     }
   }
 
   // ---------- SCR integration ----------
-  protected void bindMoveCleaner(MoveCleaner cleaner, Map<?, ?> props) {
+  protected void bindCleaner(MoveCleaner cleaner, Map<?, ?> props) {
     String[] resourceTypes = PropertiesUtil.toStringArray(props.get(RESOURCE_TYPE));
 
     if (resourceTypes != null && resourceTypes.length > 0) {
@@ -125,7 +117,7 @@ public class MoveOperation extends AbstractSparsePostOperation {
         if (resourceTypeCleaners.addIfAbsent(cleaner)) {
           moveCleaners.put(resourceType, resourceTypeCleaners);
         } else {
-          LOGGER.info("Service already bound [{}]", cleaner);
+          LOGGER.info("Same service [{}] already bound for [{}]", cleaner, resourceType);
         }
       }
     } else {
@@ -133,13 +125,15 @@ public class MoveOperation extends AbstractSparsePostOperation {
     }
   }
 
-  protected void unbindMoveCleaner(MoveCleaner cleaner, Map<?, ?> props) {
-    String resourceType = PropertiesUtil.toString(props.get(RESOURCE_TYPE), null);
+  protected void unbindCleaner(MoveCleaner cleaner, Map<?, ?> props) {
+    String[] resourceTypes = PropertiesUtil.toStringArray(props.get(RESOURCE_TYPE));
 
-    if (StringUtils.isNotBlank(resourceType)) {
-      List<MoveCleaner> resourceTypeCleaners = moveCleaners.get(resourceType);
-      if (resourceTypeCleaners != null) {
-        resourceTypeCleaners.remove(cleaner);
+    if (resourceTypes != null && resourceTypes.length > 0) {
+      for (String resourceType : resourceTypes) {
+        List<MoveCleaner> resourceTypeCleaners = moveCleaners.get(resourceType);
+        if (resourceTypeCleaners != null) {
+          resourceTypeCleaners.remove(cleaner);
+        }
       }
     }
   }

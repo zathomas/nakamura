@@ -20,6 +20,8 @@ package org.sakaiproject.nakamura.api.resource;
 import java.util.List;
 
 import org.apache.sling.servlets.post.Modification;
+import org.sakaiproject.nakamura.api.lite.StorageClientException;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 
@@ -55,7 +57,14 @@ public interface MoveCleaner {
    * content object that has the property "sling:resourceType" per the definition of the
    * OSGi configuration property.
    *
-   * @param content
+   * @param fromPath
+   *          The path the data was moved from.
+   * @param toContent
+   *          The content where the data now lives.
+   * @param cm
+   *          The content manager used to move the data.
+   * @return A list of modifications made when cleaning the moved data.
    */
-  List<Modification> clean(Content content, ContentManager cm);
+  List<Modification> clean(String fromPath, Content toContent, ContentManager cm)
+      throws StorageClientException, AccessDeniedException;
 }
