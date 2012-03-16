@@ -134,7 +134,9 @@ public class DocMigratorTest extends Assert {
   @Test
   public void kern2672() throws Exception {
     JSONObject doc = readJSONFromFile("ListSpanningComments.json"); 
-    LOGGER.info("doc = " + doc.toString(2));
+    JSONObject migrated = docMigrator.createNewPageStructure(
+        new JSONObject(doc.getString("structure0")), doc);
+    LOGGER.info("Migrated kern2672=" + migrated.toString(2));
   }
   
 }
