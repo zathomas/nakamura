@@ -45,6 +45,10 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.ReferenceStrategy;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.osgi.service.event.Event;
@@ -62,6 +66,9 @@ import org.sakaiproject.nakamura.api.solr.RepositorySession;
 import org.sakaiproject.nakamura.api.solr.TopicIndexer;
 import org.sakaiproject.nakamura.api.user.AuthorizableUtil;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
+import org.sakaiproject.nakamura.api.user.UserConstants;
+import org.sakaiproject.nakamura.api.user.indexing.AuthorizableIndexingException;
+import org.sakaiproject.nakamura.api.user.indexing.AuthorizableIndexingWorker;
 import org.sakaiproject.nakamura.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,11 +78,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  *
  */
 @Component(immediate = true)
+@Reference(name="authorizableIndexingWorker",
+		cardinality= ReferenceCardinality.OPTIONAL_MULTIPLE,
+		policy= ReferencePolicy.DYNAMIC,
+		strategy= ReferenceStrategy.EVENT,
+		referenceInterface= AuthorizableIndexingWorker.class,
+		bind="bindAuthorizableIndexingWorker",
+		unbind="unbindAuthorizableIndexingWorker")
 public class AuthorizableIndexingHandler implements IndexingHandler {
   private static final String[] DEFAULT_TOPICS = {
       TOPIC_BASE + "authorizables/" + ADDED_TOPIC,
@@ -124,6 +139,8 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
   @Reference
   protected BasicUserInfoService basicInfo;
 
+  private List<AuthorizableIndexingWorker> indexingWorkers = new CopyOnWriteArrayList<AuthorizableIndexingWorker>();
+
   // ---------- SCR integration ------------------------------------------------
   @Activate
   protected void activate(Map<?, ?> props) {
@@ -165,6 +182,14 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
       Authorizable authorizable = getAuthorizable(authName, repositorySession);
       SolrInputDocument doc = createAuthDoc(authorizable, repositorySession);
       if (doc != null) {
+        for (AuthorizableIndexingWorker worker : indexingWorkers) {
+          try {
+            worker.decorateSolrInputDocument(doc, event, authorizable, repositorySession);
+          } catch (AuthorizableIndexingException e) {
+            logger.error("indexing worker [{}] failed to decorate Solr index for [{}]",
+              worker.getClass().getName(), authName);
+          }
+        }
         documents.add(doc);
 
         logger.info("{} authorizable for searching: {}", topic, authName);
@@ -307,4 +332,17 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
     }
     return authorizable;
   }
+
+  protected void bindAuthorizableIndexingWorker(AuthorizableIndexingWorker worker,
+      Map<String, Object> properties) {
+    logger.debug("About to add indexing worker " + worker);
+    indexingWorkers.add(worker);
+  }
+
+  protected void unbindAuthorizableIndexingWorker(AuthorizableIndexingWorker worker,
+      Map<String, Object> properties) {
+    indexingWorkers.remove(worker);
+  }
+
+
 }
