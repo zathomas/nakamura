@@ -132,11 +132,33 @@ public class DocMigratorTest extends Assert {
   }
   
   @Test
-  public void kern2672() throws Exception {
+  public void testListSpanningComments() throws Exception {
+    // KERN-2672: list content that spans a comments widget goes missing after migration
     JSONObject doc = readJSONFromFile("ListSpanningComments.json"); 
     JSONObject migrated = docMigrator.createNewPageStructure(
         new JSONObject(doc.getString("structure0")), doc);
     LOGGER.info("Migrated kern2672=" + migrated.toString(2));
+    // TODO fix logic and write asserts to check it
   }
-  
+
+  @Test
+  public void testCommentSettings() throws Exception {
+    // KERN-2674: comments widget settings not honored after migration
+    JSONObject doc = readJSONFromFile("CommentSettingsNotHonored.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+        new JSONObject(doc.getString("structure0")), doc);
+    LOGGER.info("Migrated kern2674=" + migrated.toString(2));
+    // TODO fix logic and write asserts to check it
+  }
+
+  @Test
+  public void testDiscussionSettings() throws Exception {
+    // KERN-2675: discussion widget settings not honored after migration
+    JSONObject doc = readJSONFromFile("DiscussionSettingsNotHonored.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+        new JSONObject(doc.getString("structure0")), doc);
+    LOGGER.info("Migrated kern2675=" + migrated.toString(2));
+    // TODO fix logic and write asserts to check it
+  }
+
 }
