@@ -97,7 +97,11 @@ public class FileMigratorFilter implements Filter {
       LOGGER.debug("resource path is {}", resourcePath);
       String sparseInternalPath = PathUtils.toUserContentPath(resourcePath);
       Content userSpaceContent = adminSession.getContentManager().get(sparseInternalPath);
-      LOGGER.debug("got user space content at {}", userSpaceContent.getPath());
+      if (userSpaceContent != null) {
+        LOGGER.debug("got user space content at {}", userSpaceContent.getPath());
+      } else {
+        LOGGER.debug("user space content at {} is null");
+      }
       if (fileMigrationService.fileContentNeedsMigration(userSpaceContent)) {
         LOGGER.debug("confirmed that user space content needs to be migrated {}", userSpaceContent.getPath());
         fileMigrationService.migrateFileContent(userSpaceContent);
