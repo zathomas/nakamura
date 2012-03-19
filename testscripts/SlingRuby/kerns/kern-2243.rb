@@ -117,7 +117,7 @@ class TC_Kern2243 < Test::Unit::TestCase
     assert_equal(["something", "else"], props["stringArrayProp"])
 
     # dates
-    dt_offset = DateTime.now.zone.sub(':', '')
+    dt_offset = Time.new(2010,1,1).strftime('%z')
     assert_equal("Fri Jan 01 2010 00:00:00 GMT#{dt_offset}", props["dateProp"])
     assert_equal(["Fri Jan 01 2010 00:00:00 GMT#{dt_offset}", "Sat Jan 01 2011 00:00:00 GMT#{dt_offset}"], props["dateArrayProp"])
 
