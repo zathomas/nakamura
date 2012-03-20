@@ -81,7 +81,8 @@ public class WorldCreationServlet extends SlingAllMethodsServlet {
     usersToAdd,
     visibility,
     joinability,
-    structure
+    structure,
+    schemaVersion
   }
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WorldCreationServlet.class);

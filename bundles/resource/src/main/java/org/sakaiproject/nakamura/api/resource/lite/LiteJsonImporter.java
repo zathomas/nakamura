@@ -68,7 +68,7 @@ public class LiteJsonImporter {
   }
   
   public void importContent(ContentManager contentManager, JSONObject json,
-      String path, boolean continueIfExists, boolean replaceProperties, boolean removeTree, AccessControlManager accessControlManager) throws JSONException, StorageClientException, AccessDeniedException  {
+      String path, boolean continueIfExists, boolean replaceProperties, boolean removeTree, AccessControlManager accessControlManager, boolean withTouch) throws JSONException, StorageClientException, AccessDeniedException  {
     if ( !continueIfExists && contentManager.get(path) != null) {
       LOGGER.debug("replace=false and path exists, so discontinuing JSON import: " + path);
       return;
@@ -81,10 +81,21 @@ public class LiteJsonImporter {
         LOGGER.debug("Done Deleting {} ",childPath);
       }
     }
-    internalImportContent(contentManager, json, path, replaceProperties, accessControlManager);
+    internalImportContent(contentManager, json, path, replaceProperties, accessControlManager, withTouch);
   }
+  
+  public void importContent(ContentManager contentManager, JSONObject json,
+      String path, boolean continueIfExists, boolean replaceProperties, boolean removeTree, AccessControlManager accessControlManager) throws JSONException, StorageClientException, AccessDeniedException  {
+    importContent(contentManager, json, path, continueIfExists, replaceProperties, removeTree, accessControlManager, Boolean.TRUE);
+  }
+
   public void internalImportContent(ContentManager contentManager, JSONObject json,
       String path, boolean replaceProperties, AccessControlManager accessControlManager) throws JSONException, StorageClientException, AccessDeniedException {
+    internalImportContent(contentManager, json, path, replaceProperties, accessControlManager, Boolean.TRUE);
+  }
+
+  public void internalImportContent(ContentManager contentManager, JSONObject json,
+      String path, boolean replaceProperties, AccessControlManager accessControlManager, boolean withTouch) throws JSONException, StorageClientException, AccessDeniedException {
     Iterator<String> keys = json.keys();
     Map<String, Object> properties = new HashMap<String, Object>();
     List<AclModification> modifications = Lists.newArrayList();
@@ -112,7 +123,7 @@ public class LiteJsonImporter {
             StorageClientUtils.deleteTree(contentManager, path + "/" + pathKey);
           } else {
             // need to do somethingwith delete here
-            internalImportContent(contentManager, (JSONObject) obj, path + "/" + pathKey, replaceProperties, accessControlManager);
+            internalImportContent(contentManager, (JSONObject) obj, path + "/" + pathKey, replaceProperties, accessControlManager, withTouch);
           }
         } else if (obj instanceof JSONArray) {
           if ( key.endsWith("@Delete") ) {
@@ -133,7 +144,7 @@ public class LiteJsonImporter {
     }
     Content content = contentManager.get(path);
     if (content == null) {
-      contentManager.update(new Content(path, properties));
+      contentManager.update(new Content(path, properties), withTouch);
       LOGGER.debug("Created Node {} {}",path,properties);
     } else {
       for (Entry<String, Object> e : properties.entrySet()) {
@@ -142,7 +153,7 @@ public class LiteJsonImporter {
           content.setProperty(e.getKey(), e.getValue());
         }
       }
-      contentManager.update(content);
+      contentManager.update(content, withTouch);
     }
     if ( modifications.size() > 0 ) {
       accessControlManager.setAcl(Security.ZONE_CONTENT, path, modifications.toArray(new AclModification[modifications.size()]));
