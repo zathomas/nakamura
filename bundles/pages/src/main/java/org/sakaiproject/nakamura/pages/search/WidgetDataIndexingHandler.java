@@ -31,6 +31,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.osgi.service.event.Event;
+import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
@@ -125,16 +126,27 @@ public class WidgetDataIndexingHandler implements IndexingHandler {
           }
         }
 
+
         SolrInputDocument doc = new SolrInputDocument();
         // set the path here so that it's the first path found when rendering to
         // the client. we want this one first, so we don't have to create a
         // special result processor
         doc.setField(FIELD_PATH, docPath);
 
+        // grab the parent document's filename to use for general sorting
+        Content parentContent = cm.get(docPath);
+        Map<String, Object> parentProperties = parentContent.getProperties();
+        Object parentFilenameObj = parentProperties
+            .get(FilesConstants.POOLED_CONTENT_FILENAME);
+        if (parentFilenameObj != null) {
+          doc.addField("general_sort", String.valueOf(parentFilenameObj));
+        }
+        
         // set the return to a single value field so we can group it
         doc.setField("returnpath", docPath);
         doc.setField("widgetdata", sb.toString());
         doc.addField(_DOC_SOURCE_OBJECT, content);
+
         docs.add(doc);
       } catch (StorageClientException e) {
         logger.warn(e.getMessage(), e);
