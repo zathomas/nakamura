@@ -126,15 +126,6 @@ public class WidgetDataIndexingHandler implements IndexingHandler {
           }
         }
 
-        // grab the parent document's filename to use for general sorting
-        Content parentContent = cm.get(docPath);
-        Map<String, Object> parentProperties = parentContent.getProperties();
-        String parentFilename = null;
-        Object parentFilenameObj = parentProperties
-            .get(FilesConstants.POOLED_CONTENT_FILENAME);
-        if (parentFilenameObj != null) {
-          parentFilename = parentFilenameObj.toString();
-        }
 
         SolrInputDocument doc = new SolrInputDocument();
         // set the path here so that it's the first path found when rendering to
@@ -142,14 +133,19 @@ public class WidgetDataIndexingHandler implements IndexingHandler {
         // special result processor
         doc.setField(FIELD_PATH, docPath);
 
+        // grab the parent document's filename to use for general sorting
+        Content parentContent = cm.get(docPath);
+        Map<String, Object> parentProperties = parentContent.getProperties();
+        Object parentFilenameObj = parentProperties
+            .get(FilesConstants.POOLED_CONTENT_FILENAME);
+        if (parentFilenameObj != null) {
+          doc.addField("general_sort", String.valueOf(parentFilenameObj));
+        }
+        
         // set the return to a single value field so we can group it
         doc.setField("returnpath", docPath);
         doc.setField("widgetdata", sb.toString());
         doc.addField(_DOC_SOURCE_OBJECT, content);
-
-        if (parentFilename != null) {
-          doc.addField("general_sort", parentFilename);
-        }
 
         docs.add(doc);
       } catch (StorageClientException e) {
