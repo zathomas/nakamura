@@ -19,6 +19,7 @@ package org.sakaiproject.nakamura.version.impl.sparse;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -28,6 +29,7 @@ import org.apache.sling.api.resource.ResourceWrapper;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.sakaiproject.nakamura.api.files.FileMigrationService;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
@@ -35,6 +37,7 @@ import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.resource.AbstractSafeMethodsServletResourceHandler;
 import org.sakaiproject.nakamura.api.resource.SafeServletResourceHandler;
 import org.sakaiproject.nakamura.api.resource.lite.SparseContentResource;
+import org.sakaiproject.nakamura.util.PathUtils;
 import org.sakaiproject.nakamura.version.impl.jcr.VersionRequestPathInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +57,9 @@ import javax.servlet.http.HttpServletResponse;
 public class SparseGetVersionServletHandler extends AbstractSafeMethodsServletResourceHandler {
 
   public static final Logger LOG = LoggerFactory.getLogger(SparseGetVersionServletHandler.class);
+
+  @Reference
+  FileMigrationService fileMigrationService;
 
   /**
    * {@inheritDoc}
@@ -91,6 +97,11 @@ public class SparseGetVersionServletHandler extends AbstractSafeMethodsServletRe
         requestVersionName = versionIds.get(versionIds.size()-1-versionNumber);
       }
       versionContentTemp = contentManager.getVersion(content.getPath(), requestVersionName);
+      if (versionContentTemp.hasProperty("page") && !versionContentTemp.hasProperty("rows")) {
+        // this request is for a page we're going to want to migrate
+        Content pageParent = contentManager.get(PathUtils.getParentReference(versionContentTemp.getPath()));
+        versionContentTemp = fileMigrationService.migrateSinglePage(pageParent, versionContentTemp);
+      }
     } catch (StorageClientException e1) {
       LOG.warn(e1.getMessage(),e1);
       throw new ServletException(e1.getMessage(),e1);

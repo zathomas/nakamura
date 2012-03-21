@@ -160,5 +160,13 @@ public class DocMigratorTest extends Assert {
     LOGGER.info("Migrated kern2675=" + migrated.toString(2));
     // TODO fix logic and write asserts to check it
   }
+  
+  @Test
+  public void test_content_from_json() throws Exception {
+    Content testContent = docMigrator.contentFromJson(readJSONFromFile("CommentSettingsNotHonored.json"));
+    assertEquals("kWlEwusoN", testContent.getPath());
+    assertEquals("i72NwGeREeG8G6WPjdVxzA+", testContent.getId());
+    assertTrue(testContent.getProperty("sakai:tags") instanceof String[]);
+  }
 
 }

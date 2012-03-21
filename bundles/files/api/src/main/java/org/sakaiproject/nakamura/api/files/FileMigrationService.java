@@ -25,4 +25,6 @@ public interface FileMigrationService {
   boolean fileContentNeedsMigration(Content content);
 
   void migrateFileContent(Content content);
+  
+  Content migrateSinglePage(Content documentContent, Content pageContent);
 }
