@@ -176,8 +176,7 @@ public class DocMigrator implements FileMigrationService {
         }
         migratedPage.put((String) pageContentEntry.getKey(), pageContentEntry.getValue());
       }
-      JSONObject migratedPageWithConvertedArrays = (JSONObject) convertArraysToObjects(migratedPage);
-      return contentFromJson(migratedPageWithConvertedArrays);
+      return contentFromJson(migratedPage);
     } catch (JSONException e) {
       LOGGER.error(e.getLocalizedMessage());
       throw new RuntimeException("failed to migrate single page: " + e.getLocalizedMessage());
@@ -186,6 +185,7 @@ public class DocMigrator implements FileMigrationService {
 
   protected Content contentFromJson(JSONObject jsonObject) throws JSONException {
     ImmutableMap.Builder<String, Object> propBuilder = ImmutableMap.builder();
+    boolean needsSubtree = true;
     for (Iterator<String> jsonKeys = jsonObject.keys(); jsonKeys.hasNext();) {
       String key = jsonKeys.next();
       Object value = jsonObject.get(key);
@@ -214,8 +214,13 @@ public class DocMigrator implements FileMigrationService {
         }
       }
       propBuilder.put(key, value);
+      if ("version".equalsIgnoreCase(key)) {
+        needsSubtree = false;
+      }
     }
-    propBuilder.put("version", jsonObject.toString());
+    if (needsSubtree) {
+      propBuilder.put("version", jsonObject.toString());
+    }
     return new Content(jsonObject.getString("_path"), propBuilder.build());
   }
 
