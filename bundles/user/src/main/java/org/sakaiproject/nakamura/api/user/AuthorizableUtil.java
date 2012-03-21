@@ -94,8 +94,8 @@ public class AuthorizableUtil {
       }
 
       // don't count if the group lacks a title
-      boolean lacksTitle = auth.getProperty(GROUP_TITLE_PROPERTY) != null
-          && StringUtils.isEmpty(String.valueOf(auth.getProperty(GROUP_TITLE_PROPERTY)));
+      boolean lacksTitle = auth.getProperty(GROUP_TITLE_PROPERTY) == null
+          || StringUtils.isEmpty(String.valueOf(auth.getProperty(GROUP_TITLE_PROPERTY)));
 
       if (isContactGroup || !includeGroup || lacksTitle) {
         return false;

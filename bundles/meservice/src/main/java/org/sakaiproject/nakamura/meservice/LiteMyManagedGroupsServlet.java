@@ -56,7 +56,7 @@ import org.sakaiproject.nakamura.api.user.UserConstants;
 import java.util.TreeMap;
 
 @ServiceDocumentation(
-  name = "My Managed Groups Servlet", okForVersion = "1.1",
+  name = "My Managed Groups Servlet", okForVersion = "1.2",
   shortDescription = "Gets the groups where the current user is a manager",
   description = "Gets the groups where the current user is a manager",
   bindings = {

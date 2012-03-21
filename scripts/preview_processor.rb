@@ -71,7 +71,7 @@ end
 
 # HTML pages only need the first "page"
 def only_first_page?(extension)
-  ['.htm', '.html', '.xhtml'].include? extension
+  ['.htm', '.html', '.xhtml', '.txt'].include? extension
 end
 
 # Ignore the file types in the ignore.types file

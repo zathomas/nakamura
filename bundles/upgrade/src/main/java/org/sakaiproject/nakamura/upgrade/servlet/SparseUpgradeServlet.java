@@ -30,6 +30,7 @@ import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
 import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceParameter;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
+import org.sakaiproject.nakamura.api.jcr.ContentReloaderService;
 import org.sakaiproject.nakamura.api.lite.Feedback;
 import org.sakaiproject.nakamura.api.lite.MigrateContentService;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -47,7 +48,7 @@ import java.text.MessageFormat;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-@ServiceDocumentation(name = "Sparse Upgrade Servlet", okForVersion = "1.1",
+@ServiceDocumentation(name = "Sparse Upgrade Servlet", okForVersion = "1.2",
         description = "Upgrades data stored in sparsemapcontent storage layer by running all the PropertyMigrator instances " +
                 "that are registered. Note that the upgrade only works for JDBC storage clients. The upgrade may take a long " +
                 "time to run; progress of the upgrade gets written to the response every so often and can be seen in realtime if " +
@@ -84,6 +85,9 @@ public class SparseUpgradeServlet extends SlingAllMethodsServlet {
 
   @Reference
   private TagMigrator tagMigrator;
+
+  @Reference
+  private ContentReloaderService reloaderService;
 
   @Override
   protected void doPost(SlingHttpServletRequest request, final SlingHttpServletResponse response) throws ServletException, IOException {
@@ -126,6 +130,12 @@ public class SparseUpgradeServlet extends SlingAllMethodsServlet {
 
       // migrate tags from JCR to Sparse
       this.tagMigrator.migrate(response, dryRun, reindexAll);
+
+      // reload content for all OSGi bundles
+      if (!dryRun) {
+        LOGGER.info("Reloading all content from OSGi bundles");
+        this.reloaderService.reloadContent();
+      }
 
       // reindex solr if necessary
       if (reindexAll && !dryRun) {
