@@ -140,7 +140,7 @@ public class PageMigrator {
     }
     LOGGER.debug("processing page {} from structure0", reference);
     String ref = structureItem.getString("_ref");
-    if (!originalStructure.has(ref) || !originalStructure.getJSONObject(ref).has("rows")) {
+    if (originalStructure.has(ref) && !originalStructure.getJSONObject(ref).has("rows")) {
       newStructure.put(ref, migratePage(originalStructure, newStructure.getString("_path"), widgetsUsed, ref));
     }
     docMigrator.processStructure0(structureItem, originalStructure, newStructure);
