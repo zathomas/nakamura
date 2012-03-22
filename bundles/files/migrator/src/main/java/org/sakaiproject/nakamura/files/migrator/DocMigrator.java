@@ -182,9 +182,11 @@ public class DocMigrator implements FileMigrationService {
   public Content migrateSinglePage(Content documentContent, Content pageContent) {
     try {
       JSONObject documentJson = jsonFromContent(documentContent);
+      String ref = PathUtils.lastElement(pageContent.getPath());
+      documentJson.getJSONObject(ref).put("page", pageContent.getProperty("page"));
       String contentId = documentJson.getString("_path");
       Set<String> widgetsUsed = Sets.newHashSet();
-      JSONObject migratedPage = pageMigrator.migratePage(documentJson, contentId, widgetsUsed, PathUtils.lastElement(pageContent.getPath()));
+      JSONObject migratedPage = pageMigrator.migratePage(documentJson, contentId, widgetsUsed, ref);
       for (Map.Entry pageContentEntry : pageContent.getProperties().entrySet()) {
         if ("page".equals(pageContentEntry.getKey())) {
           continue;
@@ -200,7 +202,6 @@ public class DocMigrator implements FileMigrationService {
 
   protected Content contentFromJson(JSONObject jsonObject) throws JSONException {
     ImmutableMap.Builder<String, Object> propBuilder = ImmutableMap.builder();
-    boolean needsSubtree = true;
     for (Iterator<String> jsonKeys = jsonObject.keys(); jsonKeys.hasNext();) {
       String key = jsonKeys.next();
       Object value = jsonObject.get(key);
@@ -228,14 +229,13 @@ public class DocMigrator implements FileMigrationService {
           value = outputArray;
         }
       }
-      propBuilder.put(key, value);
-      if ("version".equalsIgnoreCase(key)) {
-        needsSubtree = false;
+      if (!"version".equalsIgnoreCase(key)) {
+        propBuilder.put(key, value);
+      } else {
+        LOGGER.debug("Skipping the 'version' property, as we'll add our own.");
       }
     }
-    if (needsSubtree) {
-      propBuilder.put("version", jsonObject.toString());
-    }
+    propBuilder.put("version", jsonObject.toString());
     return new Content(jsonObject.getString("_path"), propBuilder.build());
   }
 
