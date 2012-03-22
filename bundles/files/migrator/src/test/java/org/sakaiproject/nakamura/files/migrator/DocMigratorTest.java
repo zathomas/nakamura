@@ -195,4 +195,13 @@ public class DocMigratorTest extends Assert {
     assertFalse(docMigrator.isPageNode(docContent, contentManager));
 
   }
+  @Test
+  public void testPageInStructureZeroIsMissing() throws Exception {
+    // KERN-2687: structure0 contains a ref to a page (id1165301022) that's not present
+    JSONObject doc = readJSONFromFile("PageInStructureZeroIsMissing.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+    new JSONObject(doc.getString("structure0")), doc);
+    assertFalse(migrated.has("id1165301022"));
+  }
+
 }
