@@ -138,7 +138,10 @@ public class DocMigratorTest extends Assert {
     JSONObject migrated = docMigrator.createNewPageStructure(
         new JSONObject(doc.getString("structure0")), doc);
     LOGGER.info("Migrated kern2672=" + migrated.toString(2));
-    // TODO fix logic and write asserts to check it
+    assertEquals(2, migrated.getJSONObject("id4297137")
+      .getJSONArray("rows").getJSONObject(0)
+      .getJSONArray("columns").getJSONObject(0)
+      .getJSONArray("elements").length());
   }
 
   @Test
