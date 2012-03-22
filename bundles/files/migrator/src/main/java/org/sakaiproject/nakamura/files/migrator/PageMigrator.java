@@ -235,15 +235,18 @@ public class PageMigrator {
   void migrateDiscussionWidget(String contentId, String ref, JSONObject currentPage, String widgetId) throws JSONException {
     String newMessageStorePath = contentId + "/" + ref + "/" + widgetId + "/discussion/message";
     String newAbsoluteMessageStorePath = "/p/" + newMessageStorePath;
-    JSONObject inbox = currentPage.getJSONObject(widgetId).getJSONObject("discussion").getJSONObject("message").getJSONObject("inbox");
-    for (Iterator<String> inboxIterator = inbox.keys(); inboxIterator.hasNext(); ) {
-      String inboxKey = inboxIterator.next();
-      if (inboxKey.startsWith("_")) {
-        continue;
+    JSONObject discussionMessageStore = currentPage.getJSONObject(widgetId).getJSONObject("discussion").getJSONObject("message");
+    if (discussionMessageStore.has("inbox")) {
+      JSONObject inbox = discussionMessageStore.getJSONObject("inbox");
+      for (Iterator<String> inboxIterator = inbox.keys(); inboxIterator.hasNext(); ) {
+        String inboxKey = inboxIterator.next();
+        if (inboxKey.startsWith("_")) {
+          continue;
+        }
+        inbox.getJSONObject(inboxKey).put("sakai:to", newAbsoluteMessageStorePath);
+        inbox.getJSONObject(inboxKey).put("sakai:writeto", newAbsoluteMessageStorePath);
+        inbox.getJSONObject(inboxKey).put("sakai:messagestore", newMessageStorePath + "/");
       }
-      inbox.getJSONObject(inboxKey).put("sakai:to", newAbsoluteMessageStorePath);
-      inbox.getJSONObject(inboxKey).put("sakai:writeto", newAbsoluteMessageStorePath);
-      inbox.getJSONObject(inboxKey).put("sakai:messagestore", newMessageStorePath + "/");
     }
   }
 

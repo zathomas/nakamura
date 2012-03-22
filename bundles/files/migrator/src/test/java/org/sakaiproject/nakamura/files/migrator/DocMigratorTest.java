@@ -170,4 +170,12 @@ public class DocMigratorTest extends Assert {
     assertFalse(migrated.has("id1165301022"));
   }
 
+  @Test
+  public void testDiscussionWithNoMessages() throws Exception {
+    // KERN-2678: migration blows up if we process a discussion widget without an "inbox" property
+    JSONObject doc = readJSONFromFile("GroupMigrationTest.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+      new JSONObject(doc.getString("structure0")), doc);
+  }
+
 }
