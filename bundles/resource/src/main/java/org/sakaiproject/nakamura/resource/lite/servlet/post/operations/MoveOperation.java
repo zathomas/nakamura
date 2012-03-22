@@ -58,10 +58,10 @@ import com.google.common.collect.Maps;
 @Property(name = "sling.post.operation", value = "move")
 public class MoveOperation extends AbstractSparsePostOperation {
   private static final Logger LOGGER = LoggerFactory.getLogger(MoveOperation.class);
-  private static final String FORCE_PAR = "force";
+  private static final String REPLACE_PAR = ":replace";
+  private static final String DEST_PAR = ":dest";
 
   private ConcurrentMap<String, CopyOnWriteArrayList<MoveCleaner>> moveCleaners;
-  private static final String DEST = ":dest";
 
   public MoveOperation() {
     moveCleaners = Maps.newConcurrentMap();
@@ -77,10 +77,10 @@ public class MoveOperation extends AbstractSparsePostOperation {
       ContentManager contentManager, List<Modification> changes, String contentPath)
       throws StorageClientException, AccessDeniedException {
 
-    boolean force = Boolean.parseBoolean(request.getParameter(FORCE_PAR));
+    boolean replace = Boolean.parseBoolean(request.getParameter(REPLACE_PAR));
     String from = contentPath;
-    String to = PathUtils.toUserContentPath(request.getParameter(DEST));
-    List<ActionRecord> moves = contentManager.move(from, to, force);
+    String to = PathUtils.toUserContentPath(request.getParameter(DEST_PAR));
+    List<ActionRecord> moves = contentManager.move(from, to, replace);
     for (int i = 0; i < moves.size(); i++) {
       ActionRecord move = moves.get(i);
       changes.add(Modification.onMoved(move.getFrom(), move.getTo()));
