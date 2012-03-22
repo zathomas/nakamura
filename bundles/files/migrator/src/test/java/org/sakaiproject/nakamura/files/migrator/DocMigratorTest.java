@@ -37,6 +37,9 @@ import org.sakaiproject.nakamura.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
@@ -163,7 +166,38 @@ public class DocMigratorTest extends Assert {
     LOGGER.info("Migrated kern2675=" + migrated.toString(2));
     // TODO fix logic and write asserts to check it
   }
+  
+  @Test
+  public void test_content_from_json() throws Exception {
+    Content testContent = docMigrator.contentFromJson(readJSONFromFile("CommentSettingsNotHonored.json"));
+    assertEquals("kWlEwusoN", testContent.getPath());
+    assertEquals("i72NwGeREeG8G6WPjdVxzA+", testContent.getId());
+    assertTrue(testContent.getProperty("sakai:tags") instanceof String[]);
+  }
 
+
+  @Test
+  public void isPageNode() throws Exception {
+    final String DOC_PATH = "/p/12345test";
+    repository = new BaseMemoryRepository().getRepository();
+    docMigrator.repository = repository;
+    Session session = repository.loginAdministrative();
+    ContentManager contentManager = session.getContentManager();
+    AccessControlManager accessControlManager = session.getAccessControlManager();
+    JSONObject doc = readJSONFromFile("DocWithAdditionalPage.json");
+    LiteJsonImporter jsonImporter = new LiteJsonImporter();
+    jsonImporter.internalImportContent(contentManager, doc, DOC_PATH, true, 
+        accessControlManager);
+    Content docContent = contentManager.get(DOC_PATH);
+    assertTrue(docMigrator.fileContentNeedsMigration(docContent));
+    docMigrator.migrateFileContent(docContent);
+    docContent = contentManager.get(DOC_PATH);
+
+    Content subpage = contentManager.get(DOC_PATH + "/id2545619");
+    assertTrue(docMigrator.isPageNode(subpage, contentManager));
+    assertFalse(docMigrator.isPageNode(docContent, contentManager));
+
+  }
   @Test
   public void testPageInStructureZeroIsMissing() throws Exception {
     // KERN-2687: structure0 contains a ref to a page (id1165301022) that's not present
