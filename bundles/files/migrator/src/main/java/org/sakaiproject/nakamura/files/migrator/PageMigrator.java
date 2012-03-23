@@ -190,7 +190,9 @@ public class PageMigrator {
         if (numColumns > 1) {
           currentRow = addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
         }
-        currentHtmlBlock.select("div").first().appendChild(topLevelElement);
+        if (!topLevelElement.hasClass("widget_inline")) {
+          currentHtmlBlock.select("div").first().appendChild(topLevelElement);
+        }
 
       } else {
         currentHtmlBlock.select("div").first().appendChild(topLevelElement);
