@@ -214,5 +214,16 @@ public class DocMigratorTest extends Assert {
     JSONObject migrated = docMigrator.createNewPageStructure(
       new JSONObject(doc.getString("structure0")), doc);
   }
+  
+  @Test
+  public void testGroupMigration() throws Exception {
+    JSONObject group = readJSONFromFile("CoffeeNerdsGroup.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+      new JSONObject(group.getString("structure0")), group);
+    assertEquals(1, migrated.getJSONObject("id27903150")
+      .getJSONArray("rows").getJSONObject(0)
+      .getJSONArray("columns").getJSONObject(0)
+      .getJSONArray("elements").length());
+  }
 
 }
