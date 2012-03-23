@@ -29,6 +29,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.sakaiproject.nakamura.api.files.FileUtils;
+import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
@@ -60,6 +61,8 @@ SolrSearchBatchResultProcessor {
 
   @Reference
   protected SolrSearchServiceFactory searchServiceFactory;
+  @Reference
+  private Repository repository;
 
   public static final Logger LOGGER = LoggerFactory
       .getLogger(LiteMeManagerFileSearchBatchResultProcessor.class);
@@ -102,7 +105,7 @@ SolrSearchBatchResultProcessor {
         content = session.getContentManager().get(contentPath);
         write.object();
         ExtendedJSONWriter.writeValueMapInternals(write,result.getProperties());
-        FileUtils.writeCommentCountProperty(content, session, write);
+        FileUtils.writeCommentCountProperty(content, session, write, repository);
         write.endObject();
       } catch (StorageClientException e) {
         throw new JSONException(e);

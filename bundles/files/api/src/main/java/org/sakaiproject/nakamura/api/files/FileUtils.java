@@ -22,7 +22,9 @@ import static org.sakaiproject.nakamura.api.files.FilesConstants.RT_SAKAI_LINK;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.SAKAI_LINK;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -30,6 +32,7 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager;
@@ -246,8 +249,6 @@ public class FileUtils {
     ExtendedJSONWriter.writeContentTreeToWriter(write, content, true, maxDepth);
     // The permissions for this session.
     writePermissions(content, session, write);
-    // The comment count for this content
-    writeCommentCountProperty(content, session, write); 
     
     write.key(JcrConstants.JCR_LASTMODIFIED);
     Calendar cal = new GregorianCalendar();
@@ -307,8 +308,6 @@ public class FileUtils {
 
     // permissions
     writePermissions(content, session, writer);
-    // The comment count for this content
-    writeCommentCountProperty(content, session, writer);
 
     // Write the actual file.
     if (content.hasProperty(SAKAI_LINK)) {
@@ -343,23 +342,41 @@ public class FileUtils {
    * @throws JSONException
    */
   public static void writeCommentCountProperty(Content content,
-      org.sakaiproject.nakamura.api.lite.Session session, JSONWriter writer) 
+      org.sakaiproject.nakamura.api.lite.Session session, JSONWriter writer, Repository repository) 
           throws StorageClientException, JSONException {
-    Content comments = null;
-    try {
-      comments = session.getContentManager().get(content.getPath() + "/comments");
-    } catch (org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    long commentCount = 0;
-    if (comments != null) {
-      for (@SuppressWarnings("unused")
-      Content comment : comments.listChildren()) {
-        commentCount++;
+
+    int commentCount = 0;
+    String COMMENTCOUNT = "commentCount";
+
+    if(content.hasProperty(COMMENTCOUNT)){
+      commentCount = (Integer)content.getProperty(COMMENTCOUNT);
+    } else {
+      // no commentCount property on Content, then evaluate count and add property
+      Content comments = null;
+      org.sakaiproject.nakamura.api.lite.Session adminSession = null;
+      try {
+        comments = session.getContentManager().get(content.getPath() + "/comments");
+        if (comments!=null){
+          commentCount = Iterables.size(comments.listChildPaths());
+        }
+        content.setProperty(COMMENTCOUNT, commentCount);
+        //save property
+        adminSession = repository.loginAdministrative();
+        ContentManager adminContentManager = adminSession.getContentManager();
+        adminContentManager.update(content);
+      } catch (org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException e) {
+        e.printStackTrace();
+      } finally {
+        if (adminSession != null) {
+          try {
+            adminSession.logout();
+          } catch (Exception e) {
+            log.error("Could not logout administrative session.");
+          }
+        }
       }
     }
-    writer.key("commentCount");
+    writer.key(COMMENTCOUNT);
     writer.value(commentCount);
   }
 
