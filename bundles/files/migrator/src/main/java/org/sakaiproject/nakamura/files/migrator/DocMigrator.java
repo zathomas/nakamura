@@ -17,6 +17,7 @@
  */
 package org.sakaiproject.nakamura.files.migrator;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -24,22 +25,25 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.jsoup.nodes.Element;
-import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.files.FileMigrationService;
+import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.resource.lite.LiteJsonImporter;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
+import org.sakaiproject.nakamura.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.StringWriter;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -54,7 +58,7 @@ public class DocMigrator implements FileMigrationService {
 
   protected void processStructure0(JSONObject subtree, JSONObject originalStructure, JSONObject newStructure) throws JSONException {
     Set<String> widgetsUsed = Sets.newHashSet();
-    for (Iterator<String> referenceIterator = subtree.keys(); referenceIterator.hasNext();) {
+    for (Iterator<String> referenceIterator = subtree.keys(); referenceIterator.hasNext(); ) {
       String reference = referenceIterator.next();
       pageMigrator.processPageReference(subtree, originalStructure, newStructure, widgetsUsed, reference);
     }
@@ -83,10 +87,23 @@ public class DocMigrator implements FileMigrationService {
       throw new RuntimeException("Could not determine requiresMigration with content " + content.getPath());
     }
   }
-  
+
+  @Override
+  public boolean isPageNode(Content content, ContentManager contentManager)
+      throws StorageClientException, AccessDeniedException {
+    if ( content != null && content.hasProperty("page")) {
+      String parentPath = PathUtils.getParentReference(content.getPath());
+      Content parent = contentManager.get(parentPath);
+      if ( parent != null ) {
+        return !(isNotSakaiDoc(parent));
+      }
+    }
+    return false;
+  }
+
   protected boolean requiresMigration(JSONObject subtree, Content originalStructure, ContentManager contentManager) throws JSONException {
     boolean requiresMigration = false;
-    for (Iterator<String> keysIterator = subtree.keys(); keysIterator.hasNext();) {
+    for (Iterator<String> keysIterator = subtree.keys(); keysIterator.hasNext(); ) {
       String key = keysIterator.next();
       if (!key.startsWith("_")) {
         JSONObject structureItem = subtree.getJSONObject(key);
@@ -94,7 +111,7 @@ public class DocMigrator implements FileMigrationService {
         if (!contentManager.exists(originalStructure.getPath() + "/" + ref + "/rows")) {
           return true;
         }
-       requiresMigration = requiresMigration(structureItem, originalStructure, contentManager); 
+        requiresMigration = requiresMigration(structureItem, originalStructure, contentManager);
       }
     }
     return requiresMigration;
@@ -108,7 +125,7 @@ public class DocMigrator implements FileMigrationService {
     Session adminSession = null;
     try {
       adminSession = repository.loginAdministrative();
-      JSONObject structure0 = new JSONObject((String)content.getProperty(STRUCTURE_ZERO));
+      JSONObject structure0 = new JSONObject((String) content.getProperty(STRUCTURE_ZERO));
       return !requiresMigration(structure0, content, adminSession.getContentManager());
     } catch (Exception e) {
       throw new SakaiDocMigrationException();
@@ -125,7 +142,7 @@ public class DocMigrator implements FileMigrationService {
 
   private boolean schemaVersionIsCurrent(Content content) {
     return (content.hasProperty(FilesConstants.SCHEMA_VERSION)
-        && StorageClientUtils.toInt(content.getProperty(FilesConstants.SCHEMA_VERSION)) >= CURRENT_SCHEMA_VERSION);
+      && StorageClientUtils.toInt(content.getProperty(FilesConstants.SCHEMA_VERSION)) >= CURRENT_SCHEMA_VERSION);
   }
 
   @Override
@@ -138,7 +155,7 @@ public class DocMigrator implements FileMigrationService {
     ExtendedJSONWriter stringJsonWriter = new ExtendedJSONWriter(stringWriter);
     Session adminSession = null;
     try {
-      ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, content, false,  -1);
+      ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, content, false, -1);
       adminSession = repository.loginAdministrative();
       JSONObject newPageStructure = createNewPageStructure(new JSONObject((String) content.getProperty(STRUCTURE_ZERO)), new JSONObject(stringWriter.toString()));
 
@@ -146,7 +163,7 @@ public class DocMigrator implements FileMigrationService {
       validateStructure(convertedStructure);
       LOGGER.debug("Generated new page structure. Saving content {}", content.getPath());
       LiteJsonImporter liteJsonImporter = new LiteJsonImporter();
-      liteJsonImporter.importContent(adminSession.getContentManager(), convertedStructure, content.getPath(), true, true, true, adminSession.getAccessControlManager(), Boolean.FALSE);
+      liteJsonImporter.importContent(adminSession.getContentManager(), convertedStructure, content.getPath(), true, true, false, adminSession.getAccessControlManager(), Boolean.FALSE);
     } catch (Exception e) {
       LOGGER.error(e.getMessage());
       throw new RuntimeException("Error while migrating " + content.getPath());
@@ -160,11 +177,79 @@ public class DocMigrator implements FileMigrationService {
       }
     }
   }
-  
+
+  @Override
+  public Content migrateSinglePage(Content documentContent, Content pageContent) {
+    try {
+      JSONObject documentJson = jsonFromContent(documentContent);
+      String ref = PathUtils.lastElement(pageContent.getPath());
+      documentJson.getJSONObject(ref).put("page", pageContent.getProperty("page"));
+      String contentId = documentJson.getString("_path");
+      Set<String> widgetsUsed = Sets.newHashSet();
+      JSONObject migratedPage = pageMigrator.migratePage(documentJson, contentId, widgetsUsed, ref);
+      for (Map.Entry pageContentEntry : pageContent.getProperties().entrySet()) {
+        if ("page".equals(pageContentEntry.getKey())) {
+          continue;
+        }
+        migratedPage.put((String) pageContentEntry.getKey(), pageContentEntry.getValue());
+      }
+      return contentFromJson(migratedPage);
+    } catch (JSONException e) {
+      LOGGER.error(e.getLocalizedMessage());
+      throw new RuntimeException("failed to migrate single page: " + e.getLocalizedMessage());
+    }
+  }
+
+  protected Content contentFromJson(JSONObject jsonObject) throws JSONException {
+    ImmutableMap.Builder<String, Object> propBuilder = ImmutableMap.builder();
+    for (Iterator<String> jsonKeys = jsonObject.keys(); jsonKeys.hasNext();) {
+      String key = jsonKeys.next();
+      Object value = jsonObject.get(key);
+      if (value instanceof JSONObject) {
+        continue;
+      } else if (value instanceof JSONArray) {
+        JSONArray array = (JSONArray)value;
+        if (array.length() > 0) {
+          Object[] outputArray = null;
+          Object zeroth = array.get(0);
+          if (zeroth instanceof String) {
+            outputArray = new String[array.length()];
+          } else if (zeroth instanceof Boolean) {
+            outputArray = new Boolean[array.length()];
+          } else if (zeroth instanceof Integer) {
+            outputArray = new Integer[array.length()];
+          } else if (zeroth instanceof Double) {
+            outputArray = new Double[array.length()];
+          } else {
+            outputArray = new Object[array.length()];
+          }
+          for (int i = 0; i < array.length(); i++) {
+            outputArray[i] = array.get(i);
+          }
+          value = outputArray;
+        }
+      }
+      if (!"version".equalsIgnoreCase(key)) {
+        propBuilder.put(key, value);
+      } else {
+        LOGGER.debug("Skipping the 'version' property, as we'll add our own.");
+      }
+    }
+    propBuilder.put("version", jsonObject.toString());
+    return new Content(jsonObject.getString("_path"), propBuilder.build());
+  }
+
+  protected JSONObject jsonFromContent(Content documentContent) throws JSONException {
+    StringWriter stringWriter = new StringWriter();
+    ExtendedJSONWriter stringJsonWriter = new ExtendedJSONWriter(stringWriter);
+    ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, documentContent, false, -1);
+    return new JSONObject(stringWriter.toString());
+  }
+
   protected Object convertArraysToObjects(Object json) throws JSONException {
     if (json instanceof JSONObject) {
-      JSONObject jsonObject = (JSONObject)json;
-      for (Iterator<String> keyIterator = jsonObject.keys(); keyIterator.hasNext();) {
+      JSONObject jsonObject = (JSONObject) json;
+      for (Iterator<String> keyIterator = jsonObject.keys(); keyIterator.hasNext(); ) {
         String key = keyIterator.next();
         if (objectIsArrayOfJSONObject(jsonObject.get(key))) {
           jsonObject.put(key, convertArrayToObject((JSONArray) jsonObject.get(key)));
@@ -174,20 +259,20 @@ public class DocMigrator implements FileMigrationService {
       }
       return jsonObject;
     } else if (objectIsArrayOfJSONObject(json)) {
-      return convertArrayToObject((JSONArray)json);
+      return convertArrayToObject((JSONArray) json);
     } else {
       return json;
     }
   }
 
   private boolean objectIsArrayOfJSONObject(Object json) throws JSONException {
-    return json instanceof JSONArray && ((JSONArray)json).length() > 0 && 
-      (((JSONArray)json).get(0) instanceof JSONObject || ((JSONArray)json).get(0) instanceof JSONArray);
+    return json instanceof JSONArray && ((JSONArray) json).length() > 0 &&
+      (((JSONArray) json).get(0) instanceof JSONObject || ((JSONArray) json).get(0) instanceof JSONArray);
   }
 
   protected JSONObject convertArrayToObject(JSONArray jsonArray) throws JSONException {
     JSONObject arrayObject = new JSONObject();
-    for(int i = 0; i < jsonArray.length(); i++) {
+    for (int i = 0; i < jsonArray.length(); i++) {
       Object value = convertArraysToObjects(jsonArray.get(i));
       arrayObject.put("__array__" + i + "__", convertArraysToObjects(jsonArray.get(i)));
     }

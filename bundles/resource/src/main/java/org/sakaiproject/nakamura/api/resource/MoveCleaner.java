@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.sling.servlets.post.Modification;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
-import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 
 /**
@@ -65,6 +64,6 @@ public interface MoveCleaner {
    *          The content manager used to move the data.
    * @return A list of modifications made when cleaning the moved data.
    */
-  List<Modification> clean(String fromPath, Content toContent, ContentManager cm)
+  List<Modification> clean(String fromPath, String toPath, ContentManager cm)
       throws StorageClientException, AccessDeniedException;
 }

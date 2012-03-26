@@ -37,6 +37,9 @@ import org.sakaiproject.nakamura.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
@@ -138,7 +141,10 @@ public class DocMigratorTest extends Assert {
     JSONObject migrated = docMigrator.createNewPageStructure(
         new JSONObject(doc.getString("structure0")), doc);
     LOGGER.info("Migrated kern2672=" + migrated.toString(2));
-    // TODO fix logic and write asserts to check it
+    assertEquals(2, migrated.getJSONObject("id4297137")
+      .getJSONArray("rows").getJSONObject(0)
+      .getJSONArray("columns").getJSONObject(0)
+      .getJSONArray("elements").length());
   }
 
   @Test
@@ -159,6 +165,65 @@ public class DocMigratorTest extends Assert {
         new JSONObject(doc.getString("structure0")), doc);
     LOGGER.info("Migrated kern2675=" + migrated.toString(2));
     // TODO fix logic and write asserts to check it
+  }
+  
+  @Test
+  public void test_content_from_json() throws Exception {
+    Content testContent = docMigrator.contentFromJson(readJSONFromFile("CommentSettingsNotHonored.json"));
+    assertEquals("kWlEwusoN", testContent.getPath());
+    assertEquals("i72NwGeREeG8G6WPjdVxzA+", testContent.getId());
+    assertTrue(testContent.getProperty("sakai:tags") instanceof String[]);
+  }
+
+
+  @Test
+  public void isPageNode() throws Exception {
+    final String DOC_PATH = "/p/12345test";
+    repository = new BaseMemoryRepository().getRepository();
+    docMigrator.repository = repository;
+    Session session = repository.loginAdministrative();
+    ContentManager contentManager = session.getContentManager();
+    AccessControlManager accessControlManager = session.getAccessControlManager();
+    JSONObject doc = readJSONFromFile("DocWithAdditionalPage.json");
+    LiteJsonImporter jsonImporter = new LiteJsonImporter();
+    jsonImporter.internalImportContent(contentManager, doc, DOC_PATH, true, 
+        accessControlManager);
+    Content docContent = contentManager.get(DOC_PATH);
+    assertTrue(docMigrator.fileContentNeedsMigration(docContent));
+    docMigrator.migrateFileContent(docContent);
+    docContent = contentManager.get(DOC_PATH);
+
+    Content subpage = contentManager.get(DOC_PATH + "/id2545619");
+    assertTrue(docMigrator.isPageNode(subpage, contentManager));
+    assertFalse(docMigrator.isPageNode(docContent, contentManager));
+
+  }
+  @Test
+  public void testPageInStructureZeroIsMissing() throws Exception {
+    // KERN-2687: structure0 contains a ref to a page (id1165301022) that's not present
+    JSONObject doc = readJSONFromFile("PageInStructureZeroIsMissing.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+    new JSONObject(doc.getString("structure0")), doc);
+    assertFalse(migrated.has("id1165301022"));
+  }
+
+  @Test
+  public void testDiscussionWithNoMessages() throws Exception {
+    // KERN-2678: migration blows up if we process a discussion widget without an "inbox" property
+    JSONObject doc = readJSONFromFile("GroupMigrationTest.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+      new JSONObject(doc.getString("structure0")), doc);
+  }
+  
+  @Test
+  public void testGroupMigration() throws Exception {
+    JSONObject group = readJSONFromFile("CoffeeNerdsGroup.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+      new JSONObject(group.getString("structure0")), group);
+    assertEquals(1, migrated.getJSONObject("id27903150")
+      .getJSONArray("rows").getJSONObject(0)
+      .getJSONArray("columns").getJSONObject(0)
+      .getJSONArray("elements").length());
   }
 
 }

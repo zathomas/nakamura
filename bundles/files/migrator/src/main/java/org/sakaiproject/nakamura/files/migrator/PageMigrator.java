@@ -140,7 +140,7 @@ public class PageMigrator {
     }
     LOGGER.debug("processing page {} from structure0", reference);
     String ref = structureItem.getString("_ref");
-    if (!originalStructure.has(ref) || !originalStructure.getJSONObject(ref).has("rows")) {
+    if (originalStructure.has(ref) && !originalStructure.getJSONObject(ref).has("rows")) {
       newStructure.put(ref, migratePage(originalStructure, newStructure.getString("_path"), widgetsUsed, ref));
     }
     docMigrator.processStructure0(structureItem, originalStructure, newStructure);
@@ -190,6 +190,9 @@ public class PageMigrator {
         if (numColumns > 1) {
           currentRow = addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
         }
+        if (!topLevelElement.hasClass("widget_inline")) {
+          currentHtmlBlock.select("div").first().appendChild(topLevelElement);
+        }
 
       } else {
         currentHtmlBlock.select("div").first().appendChild(topLevelElement);
@@ -235,15 +238,18 @@ public class PageMigrator {
   void migrateDiscussionWidget(String contentId, String ref, JSONObject currentPage, String widgetId) throws JSONException {
     String newMessageStorePath = contentId + "/" + ref + "/" + widgetId + "/discussion/message";
     String newAbsoluteMessageStorePath = "/p/" + newMessageStorePath;
-    JSONObject inbox = currentPage.getJSONObject(widgetId).getJSONObject("discussion").getJSONObject("message").getJSONObject("inbox");
-    for (Iterator<String> inboxIterator = inbox.keys(); inboxIterator.hasNext(); ) {
-      String inboxKey = inboxIterator.next();
-      if (inboxKey.startsWith("_")) {
-        continue;
+    JSONObject discussionMessageStore = currentPage.getJSONObject(widgetId).getJSONObject("discussion").getJSONObject("message");
+    if (discussionMessageStore.has("inbox")) {
+      JSONObject inbox = discussionMessageStore.getJSONObject("inbox");
+      for (Iterator<String> inboxIterator = inbox.keys(); inboxIterator.hasNext(); ) {
+        String inboxKey = inboxIterator.next();
+        if (inboxKey.startsWith("_")) {
+          continue;
+        }
+        inbox.getJSONObject(inboxKey).put("sakai:to", newAbsoluteMessageStorePath);
+        inbox.getJSONObject(inboxKey).put("sakai:writeto", newAbsoluteMessageStorePath);
+        inbox.getJSONObject(inboxKey).put("sakai:messagestore", newMessageStorePath + "/");
       }
-      inbox.getJSONObject(inboxKey).put("sakai:to", newAbsoluteMessageStorePath);
-      inbox.getJSONObject(inboxKey).put("sakai:writeto", newAbsoluteMessageStorePath);
-      inbox.getJSONObject(inboxKey).put("sakai:messagestore", newMessageStorePath + "/");
     }
   }
 
