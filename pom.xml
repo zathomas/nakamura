@@ -10,7 +10,7 @@
 	<groupId>org.sakaiproject.nakamura</groupId>
 	<artifactId>org.sakaiproject.nakamura.solr</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.4</version>
+	<version>1.4.1-SNAPSHOT</version>
 	<name>Sakai Nakamura :: Solr based search service.</name>
 	<description>A Solr bundle that embeds Solr 4 into OSGi and makes an embeded server available or references a remote server.</description>
 	<properties>
@@ -18,9 +18,9 @@
 		<maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
 	</properties>
 	<scm>
-		<connection>scm:git:git://github.com/ieb/solr.git</connection>
-		<developerConnection>scm:git:git@github.com:ieb/solr.git</developerConnection>
-		<url>http://github.com/ieb/solr/</url>
+		<connection>scm:git:git://github.com/sakaiproject/solr.git</connection>
+		<developerConnection>scm:git:git@github.com:sakaiproject/solr.git</developerConnection>
+		<url>http://github.com/sakaiproject/solr/</url>
 	</scm>
 	<profiles>
 		<profile>
@@ -258,7 +258,7 @@
 		<dependency>
 			<groupId>org.sakaiproject.nakamura</groupId>
 			<artifactId>org.sakaiproject.nakamura.core</artifactId>
-			<version>1.2</version>
+			<version>1.3.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.guava-osgi</groupId>
