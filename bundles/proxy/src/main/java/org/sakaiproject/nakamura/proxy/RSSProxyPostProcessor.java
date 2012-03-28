@@ -290,7 +290,7 @@ public class RSSProxyPostProcessor implements ProxyPostProcessor {
         if (writer != null) writer.close();
       } catch (XMLStreamException e) {
         // Not much we can do?
-        e.printStackTrace();
+        LOGGER.info(e.getMessage());
       }
     }
 

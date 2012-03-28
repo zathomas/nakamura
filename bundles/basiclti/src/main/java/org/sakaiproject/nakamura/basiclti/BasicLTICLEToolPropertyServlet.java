@@ -58,7 +58,7 @@ public class BasicLTICLEToolPropertyServlet extends SlingSafeMethodsServlet {
     } catch (JSONException e) {
       final Writer trace = new StringWriter();
       final PrintWriter pw = new PrintWriter(trace);
-      e.printStackTrace(pw);
+      LOG.error(e.getMessage(), e);
       response.sendError(500, trace.toString());
     }
   }

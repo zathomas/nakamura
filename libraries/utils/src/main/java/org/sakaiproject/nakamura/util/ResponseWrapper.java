@@ -55,8 +55,7 @@ public class ResponseWrapper extends SlingHttpServletResponseWrapper {
     try {
       osw = new OutputStreamWriter(boas, "UTF-8");
     } catch (UnsupportedEncodingException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      LOGGER.warn(e.getMessage());
     }
     pw = new PrintWriter(osw);
   }

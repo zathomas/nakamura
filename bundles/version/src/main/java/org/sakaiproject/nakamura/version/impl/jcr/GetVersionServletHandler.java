@@ -151,7 +151,7 @@ public class GetVersionServletHandler extends AbstractSafeMethodsServletResource
                   line = reader.readLine();
                 }
               } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.warn(e.getMessage());
               }
               finally {
                 try {
