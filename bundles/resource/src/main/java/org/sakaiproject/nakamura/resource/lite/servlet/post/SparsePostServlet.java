@@ -159,7 +159,7 @@ public class SparsePostServlet extends SlingAllMethodsServlet {
     postOperations.put(SlingPostConstants.OPERATION_COPY, new CopyOperation());
     // This operation has been made into an OSGi service to allow post processing handlers to be applied
     //postOperations.put(SlingPostConstants.OPERATION_MOVE, new MoveOperation());
-    postOperations.put(SlingPostConstants.OPERATION_DELETE, new DeleteOperation());
+    //postOperations.put(SlingPostConstants.OPERATION_DELETE, new DeleteOperation());
     postOperations.put(SlingPostConstants.OPERATION_NOP, new NopOperation());
     postOperations.put(SlingPostConstants.OPERATION_CHECKIN, new CheckinOperation());
     postOperations.put(SlingPostConstants.OPERATION_CHECKOUT, new CheckoutOperation());
