@@ -24,10 +24,7 @@
   <groupId>org.sakaiproject.nakamura</groupId>
   <packaging>bundle</packaging>
   <name>Sakai Nakamura Files: Sakai Doc Migrator</name>
-  <description>Implements interfaces used by content servlets to check Sakai docs for their data
-    format and migrate them if necessary.
-  </description>
-  <version>1.3-SNAPSHOT</version>
+  <description>Implements interfaces used by content servlets to check Sakai docs for their data format and migrate them if necessary.</description>
   <build>
     <plugins>
       <plugin>
@@ -113,17 +110,4 @@
       <artifactId>mockito-all</artifactId>
     </dependency>
   </dependencies>
-  <repositories>
-    <repository>
-      <id>sakai-releases</id>
-      <name>Sakai Releases</name>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <url>http://source.sakaiproject.org/maven2/</url>
-    </repository>
-  </repositories>
 </project>

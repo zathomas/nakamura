@@ -13,20 +13,6 @@
     <packaging>bundle</packaging>
     <name>Sakai Nakamura :: Upgrade Bundle</name>
     <description>Bundle that provides framework and management services for data upgrades.</description>
-    <repositories>
-        <repository>
-            <id>sakai-maven</id>
-            <name>Sakai Maven Repo</name>
-            <layout>default</layout>
-            <url>http://source.sakaiproject.org/maven2</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-        </repository>
-    </repositories>
 
     <build>
         <plugins>
@@ -48,41 +34,6 @@
                 </configuration>
             </plugin>
         </plugins>
-        <pluginManagement>
-          <plugins>
-            <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-            <plugin>
-              <groupId>org.eclipse.m2e</groupId>
-              <artifactId>lifecycle-mapping</artifactId>
-              <version>1.0.0</version>
-              <configuration>
-                <lifecycleMappingMetadata>
-                  <pluginExecutions>
-                    <pluginExecution>
-                      <pluginExecutionFilter>
-                        <groupId>
-                          org.apache.felix
-                        </groupId>
-                        <artifactId>
-                          maven-scr-plugin
-                        </artifactId>
-                        <versionRange>
-                          [1.7.2,)
-                        </versionRange>
-                        <goals>
-                          <goal>scr</goal>
-                        </goals>
-                      </pluginExecutionFilter>
-                      <action>
-                        <ignore />
-                      </action>
-                    </pluginExecution>
-                  </pluginExecutions>
-                </lifecycleMappingMetadata>
-              </configuration>
-            </plugin>
-          </plugins>
-        </pluginManagement>
     </build>
 
     <dependencies>
