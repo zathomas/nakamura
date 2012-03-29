@@ -35,6 +35,7 @@ import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
+import org.sakaiproject.nakamura.api.search.SearchUtil;
 import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.Result;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchBatchResultProcessor;
@@ -103,10 +104,13 @@ SolrSearchBatchResultProcessor {
       Content content;
       try {
         content = session.getContentManager().get(contentPath);
-        write.object();
-        ExtendedJSONWriter.writeValueMapInternals(write,result.getProperties());
-        FileUtils.writeCommentCountProperty(content, session, write, repository);
-        write.endObject();
+        if (content != null) {
+          write.object();
+          int traversalDepth = SearchUtil.getTraversalDepth(request, -1);
+          ExtendedJSONWriter.writeContentTreeToWriter(write, content, true, traversalDepth);
+          FileUtils.writeCommentCountProperty(content, session, write, repository);
+          write.endObject();
+        }
       } catch (StorageClientException e) {
         throw new JSONException(e);
       } catch (AccessDeniedException e) {
