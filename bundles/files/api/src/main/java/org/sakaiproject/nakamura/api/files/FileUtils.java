@@ -365,7 +365,7 @@ public class FileUtils {
         ContentManager adminContentManager = adminSession.getContentManager();
         adminContentManager.update(content);
       } catch (org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException e) {
-        e.printStackTrace();
+        log.error(e.getMessage(), e);
       } finally {
         if (adminSession != null) {
           try {
