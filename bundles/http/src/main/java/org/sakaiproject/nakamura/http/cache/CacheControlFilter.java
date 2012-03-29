@@ -126,7 +126,6 @@ public class CacheControlFilter implements Filter {
     HttpServletRequest srequest = (HttpServletRequest) request;
     HttpServletResponse sresponse = (HttpServletResponse) response;
     String path = srequest.getPathInfo();
-    TelemetryCounter.incrementValue("http","CacheControl", path);
     int respCode = 0;
     Map<String, String> headers = null;
     boolean withLastModfied = true;
@@ -165,6 +164,7 @@ public class CacheControlFilter implements Filter {
       if ( cacheAge > 0 ) {
         cachedResponseManager = new CachedResponseManager(srequest, cacheAge, getCache());
         if ( cachedResponseManager.isValid() ) {
+          TelemetryCounter.incrementValue("http", "CacheControlFilter-hit", path);
           cachedResponseManager.send(sresponse);
           return;
         }
@@ -175,9 +175,13 @@ public class CacheControlFilter implements Filter {
       if ( fresponse != null ) {
         chain.doFilter(request, fresponse);
         if ( cachedResponseManager != null ) {
+          TelemetryCounter.incrementValue("http", "CacheControlFilter-save", path);
           cachedResponseManager.save(fresponse.getResponseOperation());
+        } else {
+          TelemetryCounter.incrementValue("http", "CacheControlFilter-nosave", path);
         }
       } else {
+        TelemetryCounter.incrementValue("http", "CacheControlFilter-noop", path);
         chain.doFilter(request, response);
       }
     }
