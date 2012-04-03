@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.io.IOException;
 
 import org.apache.commons.lang.StringUtils;
@@ -176,14 +175,14 @@ public class NakamuraQueryComponent extends QueryComponent {
       .getLogger(NakamuraQueryComponent.class);
   private static final Set<String> cachedParams = ImmutableSet.of("readers"); //, "deletes");
 
-  private final ConcurrentHashMap<String, ConcurrentLRUCache<String, Query>> caches;
+  private final ConcurrentLRUCache<String, Query> filterCache;
 
   // used for unit testing because part of the call chain can't be mocked in
   // prepare(ResponseBuilder)
   boolean testing;
 
   public NakamuraQueryComponent() {
-    caches = new ConcurrentHashMap<String, ConcurrentLRUCache<String, Query>>();
+    filterCache = new ConcurrentLRUCache<String, Query>(16384, 512);
   }
 
   private ConstantScoreQuery buildFilterForPrincipals(final String[] principals) {
@@ -257,14 +256,6 @@ public class NakamuraQueryComponent extends QueryComponent {
     String principalsString = params.get(paramName);
     if (StringUtils.isNotBlank(principalsString)) {
 
-      // check for a cache and create one if necessary.
-      ConcurrentLRUCache<String, Query> filterCache = caches.get(paramName);
-      if (filterCache == null) {
-        filterCache = new ConcurrentLRUCache<String, Query>(16384, 512);
-        caches.put(paramName, filterCache);
-      }
-
-      // String[] principals = principalString.split(", *");
       String[] principals = StringUtils.split(principalsString, ",");
       Arrays.sort(principals);
 
@@ -274,8 +265,16 @@ public class NakamuraQueryComponent extends QueryComponent {
 
       // if the filter isn't cached, build a new one and cache it.
       if (f == null) {
-        f = buildFilterForPrincipals(principals);
-        filterCache.put(key, f);
+        synchronized (filterCache) {
+          // check again since there's a very tiny chance that another thread entered this
+          // sync block before we did and already added this key. it's cheaper to get
+          // twice than to wrapping in a sync on every call to this.
+          f = filterCache.get(key);
+          if (f == null) {
+            f = buildFilterForPrincipals(principals);
+            filterCache.put(key, f);
+          }
+        }
       }
 
       // add our filter to the response builder
