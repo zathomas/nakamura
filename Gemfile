@@ -9,3 +9,9 @@ group :preview_processor do
   gem "daemons"
   gem "term-extract"
 end
+
+group :acceptance_tests do
+  gem "cucumber"
+  gem "capybara"
+  gem "rspec"
+end
