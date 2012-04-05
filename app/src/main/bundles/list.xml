@@ -429,7 +429,7 @@ KERN-1187
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.core</artifactId>
-      <version>1.5-SNAPSHOT</version>
+      <version>1.5.1-SNAPSHOT</version>
     </bundle>
     <bundle>
       <groupId>com.googlecode.guava-osgi</groupId>
@@ -567,7 +567,7 @@ KERN-1187
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.solr</artifactId>
-      <version>1.4</version>
+      <version>1.5-SNAPSHOT</version>
     </bundle>
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
