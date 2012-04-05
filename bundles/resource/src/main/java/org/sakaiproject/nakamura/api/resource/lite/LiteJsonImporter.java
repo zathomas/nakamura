@@ -106,6 +106,11 @@ public class LiteJsonImporter {
         Object obj = json.get(key);
 
         String pathKey = getPathElement(key);
+        // KERN-2738 this importer needs to support Sling's someProp@TypeHint=Boolean convention
+        if (key.endsWith("@TypeHint") && json.has(pathKey)) {
+          key = pathKey + "@" + "Type" + obj.toString();
+          obj = json.get(pathKey);
+        }
         Class<?> typeHint = getElementType(key);
 
         if (obj instanceof JSONObject) {
