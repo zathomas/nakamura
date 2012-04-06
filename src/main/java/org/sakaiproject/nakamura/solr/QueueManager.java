@@ -698,7 +698,12 @@ public class QueueManager implements Runnable {
 
 	private boolean checkReaderOpen() throws IOException {
 		while (currentInFile == null) {
-			List<File> files = Lists.newArrayList(logDirectory.listFiles());
+		  File[] logDirFiles = logDirectory.listFiles();
+		  if (logDirFiles == null) {
+		    LOGGER.error("listFiles returned null. This can be caused by the OS running out of file handles or an IO problem.");
+		    throw new IOException("listFiles returned null. See log for details.");
+		  }
+			List<File> files = Lists.newArrayList(logDirFiles);
 			Collections.sort(files, new Comparator<File>() {
 
 				public int compare(File o1, File o2) {
