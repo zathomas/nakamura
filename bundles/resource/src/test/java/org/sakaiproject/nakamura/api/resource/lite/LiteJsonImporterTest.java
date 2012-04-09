@@ -34,6 +34,7 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AclModification.Operation;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
+import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.lite.BaseMemoryRepository;
 import org.sakaiproject.nakamura.lite.RepositoryImpl;
@@ -212,5 +213,23 @@ public class LiteJsonImporterTest {
       JSONObject json = new JSONObject(IOUtils.toString(getClass().getClassLoader().getResourceAsStream(testFile)));
       liteJsonImporter.importContent(contentManager, json, testFile, true, true, true, accessControlManager);
     }
+  }
+
+  @Test
+  public void testSlingTypeHint() throws Exception {
+    JSONObject json = new JSONObject("{\"beAwesome\":true, \"beAwesome@TypeHint\":\"Boolean\"}");
+    LiteJsonImporter liteJsonImporter = new LiteJsonImporter();
+    Session session = repository.loginAdministrative();
+    ContentManager contentManager = session.getContentManager();
+    AccessControlManager accessControlManager = session.getAccessControlManager();
+
+
+    String awesomePath = "/p/awesome-hint";
+    liteJsonImporter.importContent(contentManager, json, awesomePath, true, true, false, accessControlManager, Boolean.FALSE);
+    Content content = contentManager.get(awesomePath);
+    final String beAwesome = "beAwesome";
+    Object awesomeProperty = content.getProperty(beAwesome);
+    Assert.assertTrue(awesomeProperty instanceof Boolean);
+    Assert.assertEquals(Boolean.TRUE, content.getProperty(beAwesome));
   }
 }
