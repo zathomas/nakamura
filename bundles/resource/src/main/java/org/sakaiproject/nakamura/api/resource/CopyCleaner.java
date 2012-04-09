@@ -26,28 +26,28 @@ import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 
 /**
  * <p>
- * Clean up, reset or otherwise fix data after it has been moved.
+ * Clean up, reset or otherwise fix data after it has been copied.
  * </p>
  * <p>
  * This is often needed when content has a path reference to some other part of content
- * and after a move the path reference becomes invalid.
+ * and after a copy the path reference becomes invalid.
  * </p>
  * <p>
- * A move cleaner is intended to respond to the moving of content based on resource type.
+ * A copy cleaner is intended to respond to the copying of content based on resource type.
  * </p>
  */
-public interface MoveCleaner {
+public interface CopyCleaner {
 
   /**
-   * Clean some content after it has been moved. This method is guaranteed to receive the
-   * {@code fromPath} and {@code toPath} paths for every individual node that is moved in a move
-   * operation. In the case of a recursive tree move, all individual nodes that are moved therein
+   * Clean some content after it has been copied. This method is guaranteed to receive the
+   * {@code fromPath} and {@code toPath} paths for every individual node that is copied in a copy
+   * operation. In the case of a recursive tree copy, all individual nodes that are copied therein
    * will be passed through this method.
    *
    * @param fromPath
-   *          The path the data was moved from.
-   * @param toContent
-   *          The content where the data now lives.
+   *          The path the data was copied from.
+   * @param toPath
+   *          The path to which the content was copied.
    * @param cm
    *          The content manager used to move the data.
    * @return A list of modifications made when cleaning the moved data.
