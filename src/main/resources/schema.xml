@@ -500,7 +500,6 @@
    <!-- sakai groups -->
    <field name="title" type="text" indexed="true" stored="true" termVectors="true" />
    <field name="description" type="text" indexed="true" stored="true" />
-   <field name="external-course-id" type="text" indexed="true" stored="false" />
 
    <!-- sakai/activity -->
    <field name="timestamp" type="long" indexed="true" stored="false" />
