@@ -34,6 +34,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.osgi.service.event.Event;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
+import org.sakaiproject.nakamura.api.lite.StoreListener;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
@@ -47,7 +48,20 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
- * Handler to index sections of a profile.
+ * Handler to index sections of a User Profile.
+ *
+ * This class assumes that it will only be called for an event whose path
+ * has a resource of "sakai/user-profile" as its third element; for
+ * example, "a:USER_ID/public/authprofile". It also assumes that each profile
+ * section will start at a node directly beneath the user-profile parent and
+ * be stored as follows:
+ * <ul>
+ *   <li>"a:USER_ID/public/authprofile/sectiona/elements/someproperty"</li>
+ *   <li>"a:USER_ID/public/authprofile/sectiona/elements/someotherproperty"</li>
+ * </ul>
+ *
+ * Any changes to content-system-stored User Profile paths will need to be
+ * reflected in both the Profile module and this class.
  */
 @Component(immediate = true)
 public class ProfileIndexingHandler implements IndexingHandler {
@@ -78,44 +92,43 @@ public class ProfileIndexingHandler implements IndexingHandler {
   @Override
   public Collection<SolrInputDocument> getDocuments(RepositorySession repositorySession,
       Event event) {
+    List<SolrInputDocument> docs = Lists.newArrayList();
     // We expect the path to the indexed data to follow this pattern:
     // path=a:user1/public/authprofile/aboutme/elements/academicinterests
-
     String actualPath = String.valueOf(event.getProperty("path"));
-    String[] pathParts = StringUtils.split(actualPath, "/", 5);
-    // ensure we have at least enough path segments to find the section that was updated
-    if (pathParts.length < 3) {
-      return null;
-    }
+    String[] pathParts = StringUtils.split(actualPath, "/", 6);
 
     // don't index basic info as a separate profile document since that info is included
     // in the authorizable document
     if (pathParts.length == 4 && "basic".equals(pathParts[3])) {
-      return null;
+      return docs;
     }
 
-    List<SolrInputDocument> docs = Lists.newArrayList();
-    try {
-      Session session = repositorySession.adaptTo(Session.class);
-      ContentManager cm = session.getContentManager();
-      if (pathParts.length == 3) {
-        // looks like the sakai/auth-profile node itself is where the update happened so
-        // index each of the sections
-        String profilePath = StringUtils.join(pathParts, "/", 0, 3);
-        Iterator<String> sectionPaths = cm.listChildPaths(profilePath);
-        while (sectionPaths.hasNext()) {
-          String sectionPath = sectionPaths.next();
-          docs.add(processSection(sectionPath, pathParts[0].substring(2), cm));
+    // Since each User Profile section is indexed separately, no action is needed for
+    // changes to the parent node.
+    if (pathParts.length > 3) {
+      // don't index basic info as a separate profile document since that info is included
+      // in the authorizable document
+      if (!"basic".equals(pathParts[3])) {
+        // If the section or section/elements node has been deleted, then assume
+        // that getDeleteQueries will take care of matters. If an individual element
+        // within the section tree has been deleted, however, then re-indexing
+        // is called for.
+        if (!event.getTopic().endsWith(StoreListener.DELETE_TOPIC) ||
+            pathParts.length > 5) {
+          try {
+            // updated the section or further down so process the section
+            Session session = repositorySession.adaptTo(Session.class);
+            ContentManager cm = session.getContentManager();
+            String sectionPath = StringUtils.join(pathParts, "/", 0, Math.min(pathParts.length, 4));
+            docs.add(processSection(sectionPath, pathParts[0].substring(2), cm));
+          } catch (StorageClientException e) {
+            LOGGER.warn(e.getMessage(), e);
+          } catch (AccessDeniedException e) {
+            LOGGER.warn(e.getMessage(), e);
+          }
         }
-      } else {
-        // updated the section or further down so process just the section
-        String sectionPath = StringUtils.join(pathParts, "/", 0, Math.min(pathParts.length, 4));
-        docs.add(processSection(sectionPath, pathParts[0].substring(2), cm));
       }
-    } catch (StorageClientException e) {
-      LOGGER.warn(e.getMessage(), e);
-    } catch (AccessDeniedException e) {
-      LOGGER.warn(e.getMessage(), e);
     }
     return docs;
   }
@@ -129,10 +142,20 @@ public class ProfileIndexingHandler implements IndexingHandler {
   @Override
   public Collection<String> getDeleteQueries(RepositorySession respositorySession,
       Event event) {
-    String actualPath = String.valueOf(event.getProperty("path"));
-    String[] pathParts = StringUtils.split(actualPath, "/", 5);
-    String sectionPath = StringUtils.join(pathParts, "/", 0, Math.min(pathParts.length, 4));
-    return ImmutableList.of("id:" + ClientUtils.escapeQueryChars(sectionPath));
+    // If a Profile section (or Profile section/elements) node has been deleted, then the
+    // index of that section can also be deleted. If an individual element within
+    // the section was deleted, however, the Profile section just needs to be re-indexed.
+    // That should happen when the delete event is passed to getDocuments.
+    Collection<String> deleteQueries;
+    if (event.getTopic().endsWith(StoreListener.DELETE_TOPIC)) {
+      String actualPath = String.valueOf(event.getProperty("path"));
+      String[] pathParts = StringUtils.split(actualPath, "/", 6);
+      if ((pathParts.length == 4) || (pathParts.length == 5)) {
+        String sectionPath = StringUtils.join(pathParts, "/", 0, 4);
+        return ImmutableList.of("id:" + ClientUtils.escapeQueryChars(sectionPath));
+      }
+    }
+    return ImmutableList.of();
   }
 
   /**
