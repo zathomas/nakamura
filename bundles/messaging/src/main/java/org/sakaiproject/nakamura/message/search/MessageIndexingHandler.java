@@ -166,7 +166,7 @@ public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler 
           String authId = PathUtils.getAuthorizableId(content.getPath());
           Authorizable auth = am.findAuthorizable(authId);
           if (auth == null) {
-            LOGGER.warn("Unable to find auth (user,group) container for message [{}]; not indexing message for user,group searching", path);
+            LOGGER.info("Unable to find auth (user,group) container for message [{}]; not indexing message for user,group searching", path);
           } else {
             doc = new SolrInputDocument();
             doc.addField("title", content.getProperty("sakai:subject"));
