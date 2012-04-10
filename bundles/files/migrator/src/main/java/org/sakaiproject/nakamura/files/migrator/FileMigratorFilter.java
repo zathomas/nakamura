@@ -24,24 +24,20 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceWrapper;
-import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.sakaiproject.nakamura.api.files.FileMigrationService;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
-import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
-import org.sakaiproject.nakamura.api.resource.lite.SparseContentResource;
 import org.sakaiproject.nakamura.util.PathUtils;
-import org.sakaiproject.nakamura.util.RequestWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -49,9 +45,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Component
 @Service
@@ -75,7 +68,7 @@ public class FileMigratorFilter implements Filter {
 
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
-    pubspacePathPattern = Pattern.compile("^/~\\w+/(public/pubspace|private/privspace).*$");
+    pubspacePathPattern = Pattern.compile("^/~\\S+/(public/pubspace|private/privspace).*$");
   }
 
   @Override
@@ -127,7 +120,7 @@ public class FileMigratorFilter implements Filter {
   public void destroy() {
   }
 
-  private boolean isRequestForPrivspaceOrPubspace(HttpServletRequest request) {
+  boolean isRequestForPrivspaceOrPubspace(HttpServletRequest request) {
     Matcher matcher = pubspacePathPattern.matcher(request.getPathInfo());
     return "GET".equals(request.getMethod()) && matcher.matches();
   }
