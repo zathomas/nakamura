@@ -145,7 +145,7 @@ public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler 
     String path = (String) event.getProperty(IndexingHandler.FIELD_PATH);
 
     List<SolrInputDocument> documents = Lists.newArrayList();
-    if (!StringUtils.isBlank(path)) {
+    if (!StringUtils.isBlank(path) && !isTemporaryContent(path)) {
       try {
         Session session = repositorySession.adaptTo(Session.class);
         ContentManager cm = session.getContentManager();
@@ -259,4 +259,13 @@ public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler 
     return retval;
   }
 
+  /**
+   * Given the path of a piece of content, determine if the content is "temporary".
+   * 
+   * @param path The path of the content
+   * @return Whether or not the content is stored in a "temporary" path.
+   */
+  private boolean isTemporaryContent(String path) {
+    return !StringUtils.isEmpty(path) && path.contains("/tmp_");
+  }
 }
