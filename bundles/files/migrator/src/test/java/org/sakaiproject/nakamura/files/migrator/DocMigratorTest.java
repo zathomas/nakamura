@@ -226,4 +226,24 @@ public class DocMigratorTest extends Assert {
       .getJSONArray("elements").length());
   }
 
+
+  @Test
+  public void testPageWithUndefinedID() throws Exception {
+    // KERN-2674: comments widget settings not honored after migration
+    JSONObject doc = readJSONFromFile("PageWithUndefinedID.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+        new JSONObject(doc.getString("structure0")), doc);
+    LOGGER.info("Migrated kern2763=" + migrated.toString(2));
+    // TODO fix logic and write asserts to check it
+  }
+
+  @Test
+  public void testNoContentBeforeMigration() throws Exception {
+    // KERN-2674: comments widget settings not honored after migration
+    JSONObject doc = readJSONFromFile("NoContentBeforeMigration.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+        new JSONObject(doc.getString("structure0")), doc);
+    LOGGER.info("Migrated kern2765=" + migrated.toString(2));
+    // TODO fix logic and write asserts to check it
+  }
 }
