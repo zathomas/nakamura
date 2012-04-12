@@ -93,6 +93,26 @@ public class LiteJsonImporter {
    * @throws JSONException
    * @throws StorageClientException
    * @throws AccessDeniedException
+   *
+   * @todo Refactor this method and like methods with the following considerations:
+   *  <ul>
+   *    <li>create non-overlapping values for parameters:
+   *      <ul>
+   *        <li>// create pattern by picking 2^n values.</li>
+   *        <li>int CONTINUE = 1;</li>
+   *        <li>int REPLACE_PROPS = 2;</li>
+   *        <li>int REMOVE_TREE = 4;</li>
+   *        <li>int MERGE = 8;</li>
+   *      </ul>
+   *    </li>
+   *    <li>accept a bitmap for boolean parameters:
+   *      <ul>
+   *        <li>e.g. CONTINUE | REPLACE_PROPS | MERGE</li>
+   *        <li>e.g. CONTINUE | REPLACE_PROPS</li>
+   *      </ul>
+   *    </li>
+   *    <li>get rid of boolean parameters for bitmap</li>
+   *  </ul>
    */
   public void importContent(ContentManager contentManager, JSONObject json, String path,
       boolean continueIfExists, boolean replaceProperties, boolean removeTree, boolean merge,
