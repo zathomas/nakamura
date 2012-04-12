@@ -225,7 +225,7 @@ public class LiteJsonImporterTest {
 
 
     String awesomePath = "/p/awesome-hint";
-    liteJsonImporter.importContent(contentManager, json, awesomePath, true, true, false, accessControlManager, Boolean.FALSE);
+    liteJsonImporter.importContent(contentManager, json, awesomePath, true, true, false, true, accessControlManager, Boolean.FALSE);
     Content content = contentManager.get(awesomePath);
     final String beAwesome = "beAwesome";
     Object awesomeProperty = content.getProperty(beAwesome);

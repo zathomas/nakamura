@@ -20,14 +20,12 @@ package org.sakaiproject.nakamura.api.resource.lite;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.sakaiproject.nakamura.api.lite.RemoveProperty;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
-import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AclModification;
@@ -38,6 +36,7 @@ import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.util.ISO8601Date;
 import org.sakaiproject.nakamura.util.JcrUtils;
+import org.sakaiproject.nakamura.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,35 +66,104 @@ public class LiteJsonImporter {
     TYPES = b.build();
   }
   
-  public void importContent(ContentManager contentManager, JSONObject json,
-      String path, boolean continueIfExists, boolean replaceProperties, boolean removeTree, AccessControlManager accessControlManager, boolean withTouch) throws JSONException, StorageClientException, AccessDeniedException  {
-    if ( !continueIfExists && contentManager.get(path) != null) {
-      LOGGER.debug("replace=false and path exists, so discontinuing JSON import: " + path);
+  /**
+   * Import <code>json</code> to <code>path</code>. <code>continueIfExists</code> has to
+   * be true before <code>replaceProperties</code>, <code>removeTree</code> or
+   * <code>merge</code> are considered.
+   *
+   * @param contentManager
+   *          The content manager to perform operations with.
+   * @param json
+   *          The data to persist.
+   * @param path
+   *          The path where the data is persisted.
+   * @param continueIfExists
+   *          Whether to continue if data exists at <code>path</code>.
+   * @param replaceProperties
+   *          Whether to replace existing properties.
+   * @param removeTree
+   *          Whether to remove the tree at <code>path</code> before proceeding.
+   * @param merge
+   *          Whether to merge <code>json</code> with existing content or to replace the
+   *          content at <code>path</code> with <code>json</code>.
+   * @param accessControlManager
+   *          ACL manager to use when importing content.
+   * @param withTouch
+   *          Whether to update the modified time of the content when importing.
+   * @throws JSONException
+   * @throws StorageClientException
+   * @throws AccessDeniedException
+   *
+   * @todo Refactor this method and like methods with the following considerations:
+   *  <ul>
+   *    <li>create non-overlapping values for parameters:
+   *      <ul>
+   *        <li>// create pattern by picking 2^n values.</li>
+   *        <li>int CONTINUE = 1;</li>
+   *        <li>int REPLACE_PROPS = 2;</li>
+   *        <li>int REMOVE_TREE = 4;</li>
+   *        <li>int MERGE = 8;</li>
+   *      </ul>
+   *    </li>
+   *    <li>accept a bitmap for boolean parameters:
+   *      <ul>
+   *        <li>e.g. CONTINUE | REPLACE_PROPS | MERGE</li>
+   *        <li>e.g. CONTINUE | REPLACE_PROPS</li>
+   *      </ul>
+   *    </li>
+   *    <li>get rid of boolean parameters for bitmap</li>
+   *  </ul>
+   */
+  public void importContent(ContentManager contentManager, JSONObject json, String path,
+      boolean continueIfExists, boolean replaceProperties, boolean removeTree, boolean merge,
+      AccessControlManager accessControlManager, boolean withTouch) throws JSONException,
+      StorageClientException, AccessDeniedException {
+    if (!continueIfExists && contentManager.get(path) != null) {
+      LOGGER.debug("continueIfExists=false and path exists, so discontinuing JSON import to {}", path);
       return;
     }
     if ( removeTree ) {
       for ( Iterator<String> i = contentManager.listChildPaths(path); i.hasNext(); ) {
         String childPath = i.next();
         LOGGER.debug("Deleting {} ",childPath);
-        StorageClientUtils.deleteTree(contentManager, childPath);
+        contentManager.delete(childPath, true);
         LOGGER.debug("Done Deleting {} ",childPath);
       }
     }
-    internalImportContent(contentManager, json, path, replaceProperties, accessControlManager, withTouch);
+    internalImportContent(contentManager, json, path, !merge, replaceProperties, accessControlManager, withTouch);
   }
-  
-  public void importContent(ContentManager contentManager, JSONObject json,
-      String path, boolean continueIfExists, boolean replaceProperties, boolean removeTree, AccessControlManager accessControlManager) throws JSONException, StorageClientException, AccessDeniedException  {
-    importContent(contentManager, json, path, continueIfExists, replaceProperties, removeTree, accessControlManager, Boolean.TRUE);
+
+  public void importContent(ContentManager contentManager, JSONObject json, String path,
+      boolean continueIfExists, boolean replaceProperties, boolean removeTree,
+      AccessControlManager accessControlManager) throws JSONException,
+      StorageClientException, AccessDeniedException {
+    importContent(contentManager, json, path, continueIfExists, replaceProperties, removeTree, true, accessControlManager, true);
   }
 
   public void internalImportContent(ContentManager contentManager, JSONObject json,
-      String path, boolean replaceProperties, AccessControlManager accessControlManager) throws JSONException, StorageClientException, AccessDeniedException {
-    internalImportContent(contentManager, json, path, replaceProperties, accessControlManager, Boolean.TRUE);
+      String path, boolean replace, boolean replaceProperties,
+      AccessControlManager accessControlManager) throws JSONException,
+      StorageClientException, AccessDeniedException {
+    internalImportContent(contentManager, json, path, replace, replaceProperties, accessControlManager, true);
   }
 
   public void internalImportContent(ContentManager contentManager, JSONObject json,
-      String path, boolean replaceProperties, AccessControlManager accessControlManager, boolean withTouch) throws JSONException, StorageClientException, AccessDeniedException {
+      String path, boolean replace, boolean replaceProperties,
+      AccessControlManager accessControlManager, boolean withTouch) throws JSONException,
+      StorageClientException, AccessDeniedException {
+
+    // delete absent paths if we're replacing content
+    if (replace) {
+      Iterator<String> childPaths = contentManager.listChildPaths(path);
+      while (childPaths.hasNext()) {
+        String childPath = childPaths.next();
+        // check that the path isn't an object. we only have to prune for missing objects.
+        if (json.optJSONObject(PathUtils.lastElement(childPath)) == null) {
+          contentManager.delete(childPath, true);
+        }
+      }
+    }
+
     Iterator<String> keys = json.keys();
     Map<String, Object> properties = new HashMap<String, Object>();
     List<AclModification> modifications = Lists.newArrayList();
@@ -125,10 +193,11 @@ public class LiteJsonImporter {
             Operation op = getOperation(acl.getString("operation"));
             modifications.add(new AclModification(AclModification.denyKey(pathKey), bitmap, op));
           } else if ( key.endsWith("@Delete") ) {
-            StorageClientUtils.deleteTree(contentManager, path + "/" + pathKey);
+            contentManager.delete(path + "/" + pathKey, true);
           } else {
             // need to do somethingwith delete here
-            internalImportContent(contentManager, (JSONObject) obj, path + "/" + pathKey, replaceProperties, accessControlManager, withTouch);
+            internalImportContent(contentManager, (JSONObject) obj, path + "/" + pathKey,
+                replace, replaceProperties, accessControlManager, withTouch);
           }
         } else if (obj instanceof JSONArray) {
           if ( key.endsWith("@Delete") ) {
@@ -149,7 +218,11 @@ public class LiteJsonImporter {
     }
     Content content = contentManager.get(path);
     if (content == null) {
-      contentManager.update(new Content(path, properties), withTouch);
+      if (replace) {
+        contentManager.replace(new Content(path, properties), withTouch);
+      } else {
+        contentManager.update(new Content(path, properties), withTouch);
+      }
       LOGGER.debug("Created Node {} {}",path,properties);
     } else {
       for (Entry<String, Object> e : properties.entrySet()) {
@@ -158,7 +231,11 @@ public class LiteJsonImporter {
           content.setProperty(e.getKey(), e.getValue());
         }
       }
-      contentManager.update(content, withTouch);
+      if (replace) {
+        contentManager.replace(content, withTouch);
+      } else {
+        contentManager.update(content, withTouch);
+      }
     }
     if ( modifications.size() > 0 ) {
       accessControlManager.setAcl(Security.ZONE_CONTENT, path, modifications.toArray(new AclModification[modifications.size()]));

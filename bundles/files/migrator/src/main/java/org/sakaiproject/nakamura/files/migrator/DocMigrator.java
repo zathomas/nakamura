@@ -163,7 +163,7 @@ public class DocMigrator implements FileMigrationService {
       validateStructure(convertedStructure);
       LOGGER.debug("Generated new page structure. Saving content {}", content.getPath());
       LiteJsonImporter liteJsonImporter = new LiteJsonImporter();
-      liteJsonImporter.importContent(adminSession.getContentManager(), convertedStructure, content.getPath(), true, true, false, adminSession.getAccessControlManager(), Boolean.FALSE);
+      liteJsonImporter.importContent(adminSession.getContentManager(), convertedStructure, content.getPath(), true, true, false, true, adminSession.getAccessControlManager(), Boolean.FALSE);
     } catch (Exception e) {
       LOGGER.error(e.getMessage());
       throw new RuntimeException("Error while migrating " + content.getPath());
