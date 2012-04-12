@@ -226,4 +226,17 @@ public class DocMigratorTest extends Assert {
       .getJSONArray("elements").length());
   }
 
+  @Test
+  public void testBlockImageLeft() throws Exception {
+    JSONObject group = readJSONFromFile("BlockLeft.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+      new JSONObject(group.getString("structure0")), group);
+    assertEquals(1, migrated.getJSONObject("id9733210")
+      .getJSONArray("rows").getJSONObject(0)
+      .getJSONArray("columns").length());
+    assertEquals(2, migrated.getJSONObject("id9733210")
+      .getJSONArray("rows").getJSONObject(1)
+      .getJSONArray("columns").length());
+  }
+
 }

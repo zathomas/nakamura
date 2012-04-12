@@ -83,9 +83,9 @@ public class PageMigrator {
     }
   }
 
-  protected JSONObject addRowToPage(JSONObject row, JSONObject page, int columnsForNextRow, Element htmlElement) throws JSONException {
+  protected JSONObject addRowToPage(JSONObject row, JSONObject page, int columnsForNextRow, Element htmlElement, int columnIndex) throws JSONException {
     if (!isEmpty(htmlElement)) {
-      generateNewCell(null, "htmlblock", page, row, 0, generateHtmlBlock(htmlElement.html()));
+      generateNewCell(null, "htmlblock", page, row, columnIndex, generateHtmlBlock(htmlElement.html()));
     }
     boolean rowHasContent = false;
     for (int i = 0; i < row.getJSONArray("columns").length(); i++) {
@@ -171,25 +171,26 @@ public class PageMigrator {
     currentPage.put("rows", new JSONArray());
     JSONObject currentRow = generateEmptyRow(1);
     Elements topLevelElements = page.select("body").first().children();
+    boolean rowHasLeftColumn = false;
     for (Element topLevelElement : topLevelElements) {
       if (topLevelElement.select(".widget_inline").size() > 0) {
-        addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.select("body").first());
+        addRowToPage(currentRow, currentPage, 0, currentHtmlBlock.select("body").first(), 0);
         currentHtmlBlock = Jsoup.parse(EMPTY_DIV);
         int numColumns = 1;
         int leftSideColumn = topLevelElement.select(".widget_inline.block_image_left").size() > 0 ? 1 : 0;
+        if (leftSideColumn > 0) {
+          rowHasLeftColumn = true;
+        }
         numColumns += leftSideColumn;
         int rightSideColumn = topLevelElement.select(".widget_inline.block_image_right").size() > 0 ? 1 : 0;
         numColumns += rightSideColumn;
         if (numColumns > 1) {
-          currentRow = addRowToPage(currentRow, currentPage, numColumns, currentHtmlBlock.select("body").first());
+          currentRow = addRowToPage(currentRow, currentPage, numColumns, currentHtmlBlock.select("body").first(), leftSideColumn);
         }
         for (Element widgetElement : topLevelElement.select(".widget_inline")) {
           extractWidget(originalStructure, contentId, widgetsUsed, ref, currentPage, currentRow, leftSideColumn, widgetElement);
         }
 
-        if (numColumns > 1) {
-          currentRow = addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
-        }
         if (!topLevelElement.hasClass("widget_inline")) {
           currentHtmlBlock.select("div").first().appendChild(topLevelElement);
         }
@@ -198,7 +199,7 @@ public class PageMigrator {
         currentHtmlBlock.select("div").first().appendChild(topLevelElement);
       }
     }
-    addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first());
+    addRowToPage(currentRow, currentPage, 1, currentHtmlBlock.select("body").first(), rowHasLeftColumn ? 1 : 0);
     ensureRowPresent(currentPage);
 
     return currentPage;
