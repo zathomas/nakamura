@@ -239,4 +239,16 @@ public class DocMigratorTest extends Assert {
       .getJSONArray("columns").length());
   }
 
+  @Test
+  public void testElementsInOrder() throws Exception {
+    JSONObject group = readJSONFromFile("OutOfOrder.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+      new JSONObject(group.getString("structure0")), group);
+    assertEquals("remotecontent", migrated.getJSONObject("id9244742")
+      .getJSONArray("rows").getJSONObject(0)
+      .getJSONArray("columns").getJSONObject(0)
+      .getJSONArray("elements").getJSONObject(2)
+      .getString("type"));
+  }
+
 }
