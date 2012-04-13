@@ -22,6 +22,8 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.PropertyMigrator;
 import org.sakaiproject.nakamura.api.lite.Repository;
@@ -55,13 +57,45 @@ public class UndefinedSakaiDocPageFixer implements PropertyMigrator {
     if (page != null && pathObj != null) {
       String path = pathObj.toString();
       if ("undefined".equals(PathUtils.lastElement(path))) {
-        LOGGER.info("We have an content node called undefined with a page prop at " + properties.get("_path"));
         Session session = null;
         try {
           session = repository.loginAdministrative();
           Content parent = session.getContentManager().get(PathUtils.getParentReference(path));
           if (parent != null) {
-            LOGGER.info("Got the parent of an undefined page node: " + parent.getPath());
+            LOGGER.debug("Got the parent of an undefined page node: " + parent.getPath());
+            Object structureObj = parent.getProperty(DocMigrator.STRUCTURE_ZERO);
+            if (structureObj != null) {
+              // parent is a real sakaidoc
+              JSONObject structure0 = new JSONObject(structureObj.toString());
+              JSONObject undefinedObj = structure0.getJSONObject("undefined");
+              if (undefinedObj == null) {
+                // undefined ref not yet on structure0, so add it
+                undefinedObj = new JSONObject();
+                undefinedObj.put("_ref", "undefined");
+                undefinedObj.put("_title", "Untitled Page");
+                undefinedObj.put("_order", 0);
+                undefinedObj.put("_canSubedit", true);
+                undefinedObj.put("_canEdit", true);
+                undefinedObj.put("_poolpath", "/p/" + PathUtils.lastElement(path));
+                JSONObject main = new JSONObject();
+                main.put("_ref", "undefined");
+                main.put("_order", 0);
+                main.put("_title", "Untitled Page");
+                main.put("_childCount", 0);
+                main.put("_canSubedit", true);
+                main.put("_canEdit", true);
+                main.put("_poolpath", "/p/" + PathUtils.lastElement(path));
+                main.put("_id", "main");
+                undefinedObj.put("main", main);
+                structure0.put("undefined", undefinedObj);
+
+                parent.setProperty("structure0", structure0.toString());
+                LOGGER.info("Updating new structure0 data for sakai doc at path "
+                    + parent.getPath() + ":" + parent.getProperty("structure0").toString());
+                // session.getContentManager().update(parent);
+
+              }
+            }
           }
         } catch (AccessDeniedException e) {
           LOGGER.error("admin session denied access?", e);
@@ -69,6 +103,8 @@ public class UndefinedSakaiDocPageFixer implements PropertyMigrator {
           LOGGER.error("storage client pool exception", e);
         } catch (StorageClientException e) {
           LOGGER.error("StorageClientException", e);
+        } catch (JSONException e) {
+          LOGGER.error("Invalid json data in structure0?", e);
         } finally {
           if (session != null) {
             try {
