@@ -51,6 +51,8 @@ public class UndefinedSakaiDocPageFixer implements PropertyMigrator {
 
   @Override
   public boolean migrate(String rowID, Map<String, Object> properties) {
+    // KERN-2763: Some sakaidocs have a subnode called "undefined" not referenced in the structure0.
+    // this fixes up those nodes so they're not orphaned.
     boolean handled = false;
     Object page = properties.get(PAGE_PROP);
     Object pathObj = properties.get("_path");
@@ -67,7 +69,12 @@ public class UndefinedSakaiDocPageFixer implements PropertyMigrator {
             if (structureObj != null) {
               // parent is a real sakaidoc
               JSONObject structure0 = new JSONObject(structureObj.toString());
-              JSONObject undefinedObj = structure0.getJSONObject("undefined");
+              JSONObject undefinedObj = null;
+              try {
+                structure0.getJSONObject("undefined");
+              } catch (JSONException ignored) {
+                // it doesn't exist
+              }
               if (undefinedObj == null) {
                 // undefined ref not yet on structure0, so add it
                 undefinedObj = new JSONObject();
@@ -76,7 +83,7 @@ public class UndefinedSakaiDocPageFixer implements PropertyMigrator {
                 undefinedObj.put("_order", 0);
                 undefinedObj.put("_canSubedit", true);
                 undefinedObj.put("_canEdit", true);
-                undefinedObj.put("_poolpath", "/p/" + PathUtils.lastElement(path));
+                undefinedObj.put("_poolpath", "/p/" + PathUtils.lastElement(parent.getPath()));
                 JSONObject main = new JSONObject();
                 main.put("_ref", "undefined");
                 main.put("_order", 0);
@@ -84,7 +91,7 @@ public class UndefinedSakaiDocPageFixer implements PropertyMigrator {
                 main.put("_childCount", 0);
                 main.put("_canSubedit", true);
                 main.put("_canEdit", true);
-                main.put("_poolpath", "/p/" + PathUtils.lastElement(path));
+                main.put("_poolpath", "/p/" + PathUtils.lastElement(parent.getPath()));
                 main.put("_id", "main");
                 undefinedObj.put("main", main);
                 structure0.put("undefined", undefinedObj);
@@ -92,8 +99,10 @@ public class UndefinedSakaiDocPageFixer implements PropertyMigrator {
                 parent.setProperty("structure0", structure0.toString());
                 LOGGER.info("Updating new structure0 data for sakai doc at path "
                     + parent.getPath() + ":" + parent.getProperty("structure0").toString());
-                // session.getContentManager().update(parent);
 
+                // save changes to the parent
+                session.getContentManager().update(parent);
+                handled = true;
               }
             }
           }
