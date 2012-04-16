@@ -491,9 +491,11 @@
    <field name="name" type="text_ci" indexed="true" stored="true" termVectors="true" />
    <field name="firstName" type="text" indexed="true" stored="true" />
    <field name="lastName" type="text" indexed="true" stored="true" />
-   <field name="email" type="text" indexed="true" stored="true" />
+   <field name="email" type="text_ci" indexed="true" stored="true" />
    <field name="type" type="string" indexed="true" stored="true" termVectors="true" />
    <field name="group" type="string" indexed="true" stored="true" multiValued="true" />
+   <field name="profile" type="text" indexed="true" stored="false" multiValued="true" />
+   <field name="exclude" type="boolean" indexed="true" stored="false" />
 
    <!-- sakai groups -->
    <field name="title" type="text" indexed="true" stored="true" termVectors="true" />
