@@ -158,8 +158,12 @@ public class LiteJsonImporter {
       while (childPaths.hasNext()) {
         String childPath = childPaths.next();
         // check that the path isn't an object. we only have to prune for missing objects.
-        if (json.optJSONObject(PathUtils.lastElement(childPath)) == null) {
-          contentManager.delete(childPath, true);
+        String nodeName = PathUtils.lastElement(childPath);
+        if (json.optJSONObject(nodeName) == null) {
+          // do not delete the child (regardless of its type) if it is said to be ignored.
+          if (json.opt(String.format("%s@Ignore", nodeName)) == null) {
+            contentManager.delete(childPath, true);
+          }
         }
       }
     }
@@ -194,6 +198,8 @@ public class LiteJsonImporter {
             modifications.add(new AclModification(AclModification.denyKey(pathKey), bitmap, op));
           } else if ( key.endsWith("@Delete") ) {
             contentManager.delete(path + "/" + pathKey, true);
+          } else if (key.endsWith("@Ignore")) {
+            // we're simply ignoring the subtree here, no need to do anything, just don't recurse.
           } else {
             // need to do somethingwith delete here
             internalImportContent(contentManager, (JSONObject) obj, path + "/" + pathKey,
@@ -202,6 +208,8 @@ public class LiteJsonImporter {
         } else if (obj instanceof JSONArray) {
           if ( key.endsWith("@Delete") ) {
             properties.put(pathKey, new RemoveProperty());
+          } else if (key.endsWith("@Ignore")) {
+            // we're simply ignoring the array here. no need to do anything.
           } else {
             // This represents a multivalued property
             JSONArray arr = (JSONArray) obj;
@@ -210,6 +218,8 @@ public class LiteJsonImporter {
         } else {
           if ( key.endsWith("@Delete") ) {
             properties.put(pathKey, new RemoveProperty());
+          } else if (key.endsWith("@Ignore")) {
+            // we're simply ignoring the property here. no need to do anything.
           } else {
             properties.put(pathKey, getObject(obj, typeHint));
           }
