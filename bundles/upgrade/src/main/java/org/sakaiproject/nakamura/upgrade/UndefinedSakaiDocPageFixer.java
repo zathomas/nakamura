@@ -24,6 +24,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.sakaiproject.nakamura.api.files.FileMigrationService;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.PropertyMigrator;
 import org.sakaiproject.nakamura.api.lite.Repository;
@@ -31,7 +32,6 @@ import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
-import org.sakaiproject.nakamura.files.migrator.DocMigrator;
 import org.sakaiproject.nakamura.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +65,7 @@ public class UndefinedSakaiDocPageFixer implements PropertyMigrator {
           Content parent = session.getContentManager().get(PathUtils.getParentReference(path));
           if (parent != null) {
             LOGGER.debug("Got the parent of an undefined page node: " + parent.getPath());
-            Object structureObj = parent.getProperty(DocMigrator.STRUCTURE_ZERO);
+            Object structureObj = parent.getProperty(FileMigrationService.STRUCTURE_ZERO);
             if (structureObj != null) {
               // parent is a real sakaidoc
               JSONObject structure0 = new JSONObject(structureObj.toString());
