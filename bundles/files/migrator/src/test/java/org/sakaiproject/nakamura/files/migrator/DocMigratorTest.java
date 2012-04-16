@@ -92,6 +92,11 @@ public class DocMigratorTest extends Assert {
     JSONObject newStructure = docMigrator.createNewPageStructure(structure0, oldStructure);
     JSONObject convertedStructure = (JSONObject) docMigrator.convertArraysToObjects(newStructure);
     docMigrator.validateStructure(convertedStructure);
+    assertEquals("googlemaps", newStructure.getJSONObject("id9642791")
+      .getJSONObject("rows").getJSONObject("__array__0__")
+      .getJSONObject("columns").getJSONObject("__array__0__")
+      .getJSONObject("elements").getJSONObject("__array__1__")
+      .getString("type"));
   }
   
   @Test
