@@ -37,9 +37,6 @@ import org.sakaiproject.nakamura.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
@@ -92,6 +89,11 @@ public class DocMigratorTest extends Assert {
     JSONObject newStructure = docMigrator.createNewPageStructure(structure0, oldStructure);
     JSONObject convertedStructure = (JSONObject) docMigrator.convertArraysToObjects(newStructure);
     docMigrator.validateStructure(convertedStructure);
+    assertEquals("googlemaps", newStructure.getJSONObject("id9642791")
+      .getJSONObject("rows").getJSONObject("__array__0__")
+      .getJSONObject("columns").getJSONObject("__array__0__")
+      .getJSONObject("elements").getJSONObject("__array__1__")
+      .getString("type"));
   }
   
   @Test
@@ -119,7 +121,8 @@ public class DocMigratorTest extends Assert {
     AccessControlManager accessControlManager = session.getAccessControlManager();
     JSONObject crobyPubspace = readJSONFromFile("CrobyPubspace.json");
     LiteJsonImporter jsonImporter = new LiteJsonImporter();
-    jsonImporter.internalImportContent(contentManager, crobyPubspace, CROBY_PUBSPACE_PATH, true, accessControlManager);
+    jsonImporter.importContent(contentManager, crobyPubspace, CROBY_PUBSPACE_PATH, true,
+        true, false, true, accessControlManager, true);
     Content crobyPubspaceContent = contentManager.get(CROBY_PUBSPACE_PATH);
     assertTrue(docMigrator.fileContentNeedsMigration(crobyPubspaceContent));
     docMigrator.migrateFileContent(crobyPubspaceContent);
@@ -186,8 +189,8 @@ public class DocMigratorTest extends Assert {
     AccessControlManager accessControlManager = session.getAccessControlManager();
     JSONObject doc = readJSONFromFile("DocWithAdditionalPage.json");
     LiteJsonImporter jsonImporter = new LiteJsonImporter();
-    jsonImporter.internalImportContent(contentManager, doc, DOC_PATH, true, 
-        accessControlManager);
+    jsonImporter.importContent(contentManager, doc, DOC_PATH, true, true, false, true,
+        accessControlManager, true);
     Content docContent = contentManager.get(DOC_PATH);
     assertTrue(docMigrator.fileContentNeedsMigration(docContent));
     docMigrator.migrateFileContent(docContent);
@@ -224,6 +227,31 @@ public class DocMigratorTest extends Assert {
       .getJSONArray("rows").getJSONObject(0)
       .getJSONArray("columns").getJSONObject(0)
       .getJSONArray("elements").length());
+  }
+
+  @Test
+  public void testBlockImageLeft() throws Exception {
+    JSONObject group = readJSONFromFile("BlockLeft.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+      new JSONObject(group.getString("structure0")), group);
+    assertEquals(1, migrated.getJSONObject("id9733210")
+      .getJSONArray("rows").getJSONObject(0)
+      .getJSONArray("columns").length());
+    assertEquals(2, migrated.getJSONObject("id9733210")
+      .getJSONArray("rows").getJSONObject(1)
+      .getJSONArray("columns").length());
+  }
+
+  @Test
+  public void testElementsInOrder() throws Exception {
+    JSONObject group = readJSONFromFile("OutOfOrder.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+      new JSONObject(group.getString("structure0")), group);
+    assertEquals("remotecontent", migrated.getJSONObject("id9244742")
+      .getJSONArray("rows").getJSONObject(0)
+      .getJSONArray("columns").getJSONObject(0)
+      .getJSONArray("elements").getJSONObject(2)
+      .getString("type"));
   }
 
 }
