@@ -23,7 +23,10 @@ import org.sakaiproject.nakamura.api.lite.content.ContentManager;
  * specific language governing permissions and limitations under the License.
  */
 public interface FileMigrationService {
+
   public static final int CURRENT_SCHEMA_VERSION = 2;
+
+  public static final String STRUCTURE_ZERO = FilesConstants.STRUCTURE_FIELD_STEM + "0";
 
   boolean fileContentNeedsMigration(Content content);
 
