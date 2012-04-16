@@ -89,6 +89,11 @@ public class DocMigratorTest extends Assert {
     JSONObject newStructure = docMigrator.createNewPageStructure(structure0, oldStructure);
     JSONObject convertedStructure = (JSONObject) docMigrator.convertArraysToObjects(newStructure);
     docMigrator.validateStructure(convertedStructure);
+    assertEquals("googlemaps", newStructure.getJSONObject("id9642791")
+      .getJSONObject("rows").getJSONObject("__array__0__")
+      .getJSONObject("columns").getJSONObject("__array__0__")
+      .getJSONObject("elements").getJSONObject("__array__1__")
+      .getString("type"));
   }
   
   @Test
@@ -235,6 +240,18 @@ public class DocMigratorTest extends Assert {
     assertEquals(2, migrated.getJSONObject("id9733210")
       .getJSONArray("rows").getJSONObject(1)
       .getJSONArray("columns").length());
+  }
+
+  @Test
+  public void testElementsInOrder() throws Exception {
+    JSONObject group = readJSONFromFile("OutOfOrder.json");
+    JSONObject migrated = docMigrator.createNewPageStructure(
+      new JSONObject(group.getString("structure0")), group);
+    assertEquals("remotecontent", migrated.getJSONObject("id9244742")
+      .getJSONArray("rows").getJSONObject(0)
+      .getJSONArray("columns").getJSONObject(0)
+      .getJSONArray("elements").getJSONObject(2)
+      .getString("type"));
   }
 
 }
