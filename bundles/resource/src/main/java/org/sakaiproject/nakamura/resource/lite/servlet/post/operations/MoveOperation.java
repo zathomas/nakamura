@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.servlets.post.Modification;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
@@ -48,6 +49,7 @@ import org.sakaiproject.nakamura.util.PathUtils;
 @Property(name = "sling.post.operation", value = "move")
 public class MoveOperation extends AbstractSparsePostOperation {
   private static final String REPLACE_PAR = ":replace";
+  private static final String KEEP_DEST_HISTORY_PAR = ":keepDestHistory";
   private static final String DEST_PAR = ":dest";
 
   private CopyOnWriteArrayList<MoveCleaner> moveCleaners;
@@ -67,9 +69,11 @@ public class MoveOperation extends AbstractSparsePostOperation {
       throws StorageClientException, AccessDeniedException {
 
     boolean replace = Boolean.parseBoolean(request.getParameter(REPLACE_PAR));
+    boolean keepDestHistory = PropertiesUtil.toBoolean(
+        request.getParameter(KEEP_DEST_HISTORY_PAR), true);
     String from = contentPath;
     String to = PathUtils.toUserContentPath(request.getParameter(DEST_PAR));
-    List<ActionRecord> moves = contentManager.move(from, to, replace);
+    List<ActionRecord> moves = contentManager.move(from, to, replace, keepDestHistory);
     for (int i = 0; i < moves.size(); i++) {
       ActionRecord move = moves.get(i);
       changes.add(Modification.onMoved(move.getFrom(), move.getTo()));
