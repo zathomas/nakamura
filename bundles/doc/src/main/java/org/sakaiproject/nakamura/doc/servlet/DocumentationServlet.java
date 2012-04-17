@@ -17,7 +17,9 @@
  */
 package org.sakaiproject.nakamura.doc.servlet;
 
+import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -44,7 +46,8 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Creates documentation by tracking servlets and inspecting some annotations.
  */
-@SlingServlet(methods = "GET", paths = "/system/doc/servlet")
+@Service(value = DocumentationServlet.class)
+@SlingServlet(generateComponent = true, methods = "GET", paths = "/system/doc/servlet")
 @ServiceDocumentation(name = "Servlet documentation",
     okForVersion = "1.2",
     description = "Provides auto documentation of servlets registered with OSGi. Documentation will use the "
@@ -88,10 +91,7 @@ public class DocumentationServlet extends SlingSafeMethodsServlet {
   protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
       throws ServletException, IOException {
     RequestParameter p = request.getRequestParameter("p");
-    if (p == null) {
-      sendIndex(response);
-    } else {
-
+    if (p != null) {
       ServletDocumentation doc =
         servletDocumentationRegistry.getServletDocumentation().get(p.getString());
       if (doc == null) {
@@ -107,13 +107,11 @@ public class DocumentationServlet extends SlingSafeMethodsServlet {
    * @param response
    * @throws IOException
    */
-  private void sendIndex(SlingHttpServletResponse response) throws IOException {
-    PrintWriter writer = response.getWriter();
-    writer.append(DocumentationConstants.HTML_HEADER);
-    writer.append("<h1>List of Services</h1>");
+  public void writeIndex(PrintWriter writer) throws IOException {
+    writer.append("<h1><a name=\"servlets\">Servlets</a></h1>");
     writer.append("<table>");
     writer.append("<thead>");
-    writer.append("<th>Name</th>");
+    writer.append("<th>Name/Description</th>");
     writer.append("<th>Bundle</th>");
     writer.append("<th>Binding</th>");
     writer.append("<th>Pattern</th>");
@@ -145,7 +143,6 @@ public class DocumentationServlet extends SlingSafeMethodsServlet {
     }
     writer.append("</tbody>");
     writer.append("</table>");
-    writer.append(DocumentationConstants.HTML_FOOTER);
   }
 
   /**
