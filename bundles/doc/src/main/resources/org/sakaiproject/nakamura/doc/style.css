@@ -46,3 +46,7 @@ a:visited
 .parameter-name { display:block; }
 
 ul.documentation-list li span.path, ul.documentation-list li span.short-description {display:block; font-size:0.8em; margin-left:5px }
+
+table { border-collapse: collapse; }
+
+tbody td { margin: 0; padding: 5; border: 1px solid #000; }
