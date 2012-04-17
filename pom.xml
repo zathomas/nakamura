@@ -1279,13 +1279,6 @@
         <version>1.5-SNAPSHOT</version>
         <scope>provided</scope>
       </dependency>
-
-      <dependency>
-        <groupId>org.sakaiproject.nakamura</groupId>
-        <artifactId>org.sakaiproject.nakamura.postgresqlwrapper</artifactId>
-        <version>1.2-SNAPSHOT</version>
-      </dependency>
-
     </dependencies>
   </dependencyManagement>
 </project>
