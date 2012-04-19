@@ -390,7 +390,9 @@ import javax.servlet.http.HttpServletResponse;
       List<String> addManagers = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":manager")));
       List<String> addEditors = Arrays.asList(StorageClientUtils.nonNullStringArray(request.getParameterValues(":editor")));
 
-      if (!accessControlManager.can(thisUser, Security.ZONE_CONTENT, pooledContent.getPath(), Permissions.CAN_WRITE)) {
+      //Checking for non-managers
+      if (!accessControlManager.can(thisUser, Security.ZONE_CONTENT, pooledContent.getPath(), Permissions.CAN_WRITE) 
+          || !accessControlManager.can(thisUser, Security.ZONE_CONTENT, pooledContent.getPath(), Permissions.CAN_WRITE_ACL)) {
         if (!addManagers.isEmpty()) {
           response.sendError(SC_FORBIDDEN, "Non-managers may not add managers to content.");
           return;
