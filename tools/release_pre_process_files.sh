@@ -7,26 +7,27 @@ fi
 set -o nounset
 set -o errexit
 cversion=$1
+nversion=$2
 
 
 function simple_replace {
-    sed "s/$cversion-SNAPSHOT/$cversion/" $1 > $1.new
+    sed "s/$cversion-SNAPSHOT/$nversion/" $1 > $1.new
     restore $1
 }
 
 function ux_tag_replace {
-    sed "s/\<ux\>$cversion-SNAPSHOT\<\/ux\>/\<ux\>$cversion\<\/ux\>/" $1 > $1.new
+    sed "s/\<ux\>$cversion-SNAPSHOT\<\/ux\>/\<ux\>$nversion\<\/ux\>/" $1 > $1.new
     restore $1
 }
 
 function artifact_version_replace {
-    perl -pi.bak -e "undef $/; s/($1<\/artifactId>\n\s+<version)>$cversion-SNAPSHOT/\$1>$cversion/" $2
+    perl -pi.bak -e "undef $/; s/($1<\/artifactId>\n\s+<version)>$cversion-SNAPSHOT/\$1>$nversion/" $2
     rm $2.bak
     git add $2
 }
 
 function tag_replace {
-    sed "s/\>$cversion-SNAPSHOT\</\>$cversion\</" $1 > $1.new
+    sed "s/\>$cversion-SNAPSHOT\</\>$nversion\</" $1 > $1.new
     restore $1
 }
 
@@ -35,7 +36,7 @@ function restore {
     git add $1
 }
 
-echo "Moving config files from $cversion-SNAPSHOT to $cversion"
+echo "Moving config files from $cversion-SNAPSHOT to $nversion"
 ux_tag_replace app/pom.xml
 artifact_version_replace org.sakaiproject.nakamura.jetty-config app/pom.xml
 simple_replace tools/version
@@ -50,5 +51,5 @@ for file in $otherpoms
   done
 
 
-git commit -m "release_pre_process: Moving config files from $cversion-SNAPSHOT to $cversion"
+git commit -m "release_pre_process: Moving config files from $cversion-SNAPSHOT to $nversion"
 
