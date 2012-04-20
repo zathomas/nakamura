@@ -50,7 +50,6 @@ import java.util.Set;
 @Component(enabled = true)
 public class DocMigrator implements FileMigrationService {
   private static final Logger LOGGER = LoggerFactory.getLogger(DocMigrator.class);
-  protected static final String STRUCTURE_ZERO = FilesConstants.STRUCTURE_FIELD_STEM + "0";
 
   @Reference
   protected Repository repository;
