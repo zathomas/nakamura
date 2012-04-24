@@ -156,8 +156,8 @@ public class SparsePostServlet extends SlingAllMethodsServlet {
     modifyOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
 
     // other predefined operations
-    postOperations.put(SlingPostConstants.OPERATION_COPY, new CopyOperation());
-    // This operation has been made into an OSGi service to allow post processing handlers to be applied
+    // These operations have been made into an OSGi service to allow post processing handlers to be applied
+    //postOperations.put(SlingPostConstants.OPERATION_COPY, new CopyOperation());
     //postOperations.put(SlingPostConstants.OPERATION_MOVE, new MoveOperation());
     //postOperations.put(SlingPostConstants.OPERATION_DELETE, new DeleteOperation());
     postOperations.put(SlingPostConstants.OPERATION_NOP, new NopOperation());
