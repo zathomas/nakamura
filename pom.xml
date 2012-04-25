@@ -113,6 +113,7 @@
         <module>bundles/upgrade</module>
         <module>bundles/lom</module>
         <module>bundles/content-packaging</module>
+        <module>bundles/postgresqlwrapper</module>
         <module>testscripts</module>
       </modules>
     </profile>

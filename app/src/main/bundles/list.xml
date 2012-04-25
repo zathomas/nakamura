@@ -373,47 +373,11 @@ KERN-1187
 
 <!-- Start of Sakai Bundles, add new Sakai bundles below this point at the appropriate run level  -->
    <startLevel level="1">
-    <!-- begin database SPI (Service Provider Interface) bundles for sparsemapcontent -->
-    
-    <!-- Generic JDBC SPI bundle -->
-    <!--
-    	You will need to deploy a JDBC driver bundle (e.g., mysql connector, ojdbc14) to the
-    	conainer with this bundle. By default, Apache Derby is already provided and enabled.
-    -->
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
-      <artifactId>org.sakaiproject.nakamura.jdbc-driver</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <artifactId>org.sakaiproject.nakamura.postgresqlwrapper</artifactId>
+      <version>1.3-SNAPSHOT</version>
     </bundle>
-    
-    <!-- Non-Derby JDBC driver bundle wrappers -->
-    <!--bundle>
-    	<groupId>org.sakaiproject.nakamura</groupId>
-    	<artifactId>org.sakaiproject.nakamura.mysqljdbc</artifactId>
-    	<version>1.3-SNAPSHOT</version>
-    </bundle-->
-    <!--bundle>
-    	<groupId>org.sakaiproject.nakamura</groupId>
-    	<artifactId>org.sakaiproject.nakamura.postgresqljdbc</artifactId>
-    	<version>1.3-SNAPSHOT</version>
-    </bundle-->
-    <!--bundle>
-    	<groupId>org.sakaiproject.nakamura</groupId>
-    	<artifactId>org.sakaiproject.nakamura.ojdbc</artifactId>
-    	<version>1.3-SNAPSHOT</version>
-    </bundle-->
-
-	<!-- MongoDB Java Client Bundle and SPI Bundle -->
-	<!--bundle>
-      <groupId>org.mongodb</groupId>
-      <artifactId>mongo-java-driver</artifactId>
-      <version>2.7.2</version>
-	</bundle>
-    <bundle>
-      <groupId>org.sakaiproject.nakamura</groupId>
-      <artifactId>org.sakaiproject.nakamura.mongo-driver</artifactId>
-      <version>0.1-SNAPSHOT</version>
-    </bundle-->
 
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
