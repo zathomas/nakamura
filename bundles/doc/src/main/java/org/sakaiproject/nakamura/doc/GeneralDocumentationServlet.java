@@ -99,6 +99,8 @@ public class GeneralDocumentationServlet extends SlingSafeMethodsServlet {
   private void sendIndex(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
     PrintWriter writer = response.getWriter();
     Session session = request.getResourceResolver().adaptTo(Session.class);
+    response.setContentType("text/html");
+    response.setCharacterEncoding("UTF-8");
 
     try {
       writer.append(DocumentationConstants.HTML_HEADER);
