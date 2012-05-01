@@ -38,6 +38,8 @@ import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceParameter;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.doc.ServiceSelector;
+import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
 import org.slf4j.Logger;
@@ -123,15 +125,6 @@ public class ConnectionServlet extends SlingAllMethodsServlet {
   }
 
 
-  /**
-   * {@inheritDoc}
-   * 
-   * @throws IOException
-   * 
-   * @see org.sakaiproject.nakamura.resource.AbstractVirtualPathServlet#preDispatch(org.apache.sling.api.SlingHttpServletRequest,
-   *      org.apache.sling.api.SlingHttpServletResponse,
-   *      org.apache.sling.api.resource.Resource, org.apache.sling.api.resource.Resource)
-   */
   @SuppressWarnings("unchecked")
   @Override
   protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
@@ -166,7 +159,8 @@ public class ConnectionServlet extends SlingAllMethodsServlet {
     try {
       // Do the connection.
       LOGGER.debug("Connection {} {} ",new Object[]{user,targetUserId});
-      connectionManager.connect(request.getParameterMap(), request.getResource(), user, targetUserId, operation);
+      Session session = StorageClientUtils.adaptToSession(request.getResource().getResourceResolver().adaptTo(javax.jcr.Session.class));
+      connectionManager.connect(request.getParameterMap(), session, user, targetUserId, operation);
     } catch (ConnectionException e) {
       if ( e.getCode() == 200 ) {
         PrintWriter writer = response.getWriter();

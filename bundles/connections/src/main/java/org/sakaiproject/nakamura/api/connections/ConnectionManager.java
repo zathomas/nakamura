@@ -18,8 +18,6 @@
 package org.sakaiproject.nakamura.api.connections;
 
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.commons.json.JSONException;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
@@ -39,7 +37,7 @@ public interface ConnectionManager {
    * After an invitation is sent, the current user loses access rights
    * to the target user's view of the connection.
    * @param requestParameters properties (if any) to add to both sides of the connection
-   * @param resource a Sling resource (like a JCR node) which represents the path to the contacts node (the base of the connections storage)
+   * @param session a Sling session for the current user
    * @param thisUser the id of the user sending the invitation.
    * @param otherUser the id of the user we are connecting to
    * @param operation the operation to perform when connecting (accept, reject, etc.)
@@ -49,7 +47,7 @@ public interface ConnectionManager {
    *         invitation)
    * @throws ConnectionException 
    */
-  boolean connect(Map<String, String[]> requestParameters, Resource resource,
+  boolean connect(Map<String, String[]> requestParameters, Session session,
       String thisUser, String otherUser,
       ConnectionOperation operation)
       throws ConnectionException;
@@ -73,7 +71,7 @@ public interface ConnectionManager {
   /**
    * Get connection details to <code>otherUser</code> from <code>thisUser</code>
    *
-   * @param request
+   * @param session
    * @param thisUser
    * @param otherUser
    * @return
@@ -95,5 +93,5 @@ public interface ConnectionManager {
    */
   boolean writeConnectionInfo(ExtendedJSONWriter writer, Session session,
       String thisUser, String otherUser) throws AccessDeniedException,
-      StorageClientException, JSONException;
+      StorageClientException, ConnectionException;
 }

@@ -99,7 +99,7 @@ public class ConnectionManagerImplTest {
     props.put(ConnectionConstants.SAKAI_CONNECTION_TYPES, new String[] { "foo" });
     props.put("random", new String[] { "israndom" });
 
-    connectionManager.handleInvitation(props, null, fromNode, toNode);
+    connectionManager.handleInvitation(props, fromNode, toNode);
 
     String[] fromValues = (String[]) fromNode.getProperty(ConnectionConstants.SAKAI_CONNECTION_TYPES);
 

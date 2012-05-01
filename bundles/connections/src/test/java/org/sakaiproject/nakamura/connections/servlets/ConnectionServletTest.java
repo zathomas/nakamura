@@ -18,9 +18,7 @@
 package org.sakaiproject.nakamura.connections.servlets;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -35,6 +33,7 @@ import org.osgi.service.event.EventAdmin;
 import org.sakaiproject.nakamura.api.connections.ConnectionException;
 import org.sakaiproject.nakamura.api.connections.ConnectionManager;
 import org.sakaiproject.nakamura.api.connections.ConnectionOperation;
+import org.sakaiproject.nakamura.api.lite.SessionAdaptable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -83,17 +82,21 @@ public class ConnectionServletTest {
   }
 
   @Test
-  public void testSuccesfullInvite() throws IOException, ConnectionException {
-    setTargetUserId("bob", request);
-    setSelector("invite", request);
-    when(request.getParameterMap()).thenReturn(null);
+  public void testSuccessfulInvite() throws IOException, ConnectionException {
+    SlingHttpServletRequest aRequest = mock(SlingHttpServletRequest.class, RETURNS_DEEP_STUBS);
+    setTargetUserId("bob", aRequest);
+    setSelector("invite", aRequest);
+    when(aRequest.getRemoteUser()).thenReturn("alice");
+    when(aRequest.getParameterMap()).thenReturn(null);
+    javax.jcr.Session jcrSession = mock(javax.jcr.Session.class, withSettings().extraInterfaces(SessionAdaptable.class));
+    when(aRequest.getResource().getResourceResolver().adaptTo(javax.jcr.Session.class)).thenReturn(jcrSession);
     when(
         connectionManager.connect(null, null, "alice", "bob", ConnectionOperation.invite))
         .thenThrow(new ConnectionException(200, "done"));
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintWriter w = new PrintWriter(baos);
     when(response.getWriter()).thenReturn(w);
-    servlet.doPost(request, response);
+    servlet.doPost(aRequest, response);
     w.flush();
     String s = baos.toString("UTF-8");
     assertEquals(
@@ -111,14 +114,18 @@ public class ConnectionServletTest {
 
   @Test
   public void testFailure() throws ConnectionException, IOException {
-    setTargetUserId("bob", request);
-    setSelector("invite", request);
-    when(request.getParameterMap()).thenReturn(null);
+    SlingHttpServletRequest aRequest = mock(SlingHttpServletRequest.class, RETURNS_DEEP_STUBS);
+    setTargetUserId("bob", aRequest);
+    setSelector("invite", aRequest);
+    when(aRequest.getRemoteUser()).thenReturn("alice");
+    when(aRequest.getParameterMap()).thenReturn(null);
+    javax.jcr.Session jcrSession = mock(javax.jcr.Session.class, withSettings().extraInterfaces(SessionAdaptable.class));
+    when(aRequest.getResource().getResourceResolver().adaptTo(javax.jcr.Session.class)).thenReturn(jcrSession);
     when(
         connectionManager.connect(null, null, "alice", "bob", ConnectionOperation.invite))
         .thenThrow(new ConnectionException(400, "failed"));
 
-    servlet.doPost(request, response);
+    servlet.doPost(aRequest, response);
     verify(response).sendError(400, "failed");
   }
 

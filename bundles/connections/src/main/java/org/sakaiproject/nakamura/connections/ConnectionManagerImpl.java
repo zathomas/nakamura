@@ -43,7 +43,6 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.json.JSONException;
 import org.sakaiproject.nakamura.api.connections.ConnectionConstants;
 import org.sakaiproject.nakamura.api.connections.ConnectionException;
@@ -127,16 +126,16 @@ public class ConnectionManagerImpl implements ConnectionManager {
   }
 
   /**
-   * @param pending
-   * @param invited
-   * @return
+   * @param thisState the first ConnectionState of the StatePair
+   * @param otherState the second ConnectionState of the StatePair
+   * @return a StatePair object consisting of the two provided ConnectionStates
    */
   private static StatePair sp(ConnectionState thisState, ConnectionState otherState) {
     return new StatePairFinal(thisState, otherState);
   }
 
   /**
-   * @return
+   * @return a TransitionKey object consisting of these two states and this operation
    */
   private static TransitionKey tk(ConnectionState thisState, ConnectionState otherState,
       ConnectionOperation operation) {
@@ -146,11 +145,9 @@ public class ConnectionManagerImpl implements ConnectionManager {
   /**
    * Check to see if a userId is actually a valid one
    *
-   * @param session
-   *          the JCR session
-   * @param userId
-   *          the userId to check
-   * @return
+   * @param session the sparsemap session
+   * @param userId the userId to check
+   * @return the Authorizable represented by this userId
    */
   protected Authorizable checkValidUserId(Session session, String userId)
       throws ConnectionException {
@@ -205,16 +202,13 @@ public class ConnectionManagerImpl implements ConnectionManager {
   /**
    * {@inheritDoc}
    *
-   * @see org.sakaiproject.nakamura.api.connections.ConnectionManager#connect(org.apache.sling.api.resource.Resource,
-   *      java.lang.String,
-   *      org.sakaiproject.nakamura.api.connections.ConnectionConstants.ConnectionOperation,
-   *      java.lang.String)
+   * @see org.sakaiproject.nakamura.api.connections.ConnectionManager#connect(java.util.Map,
+   * org.sakaiproject.nakamura.api.lite.Session,
+   * String, String, org.sakaiproject.nakamura.api.connections.ConnectionOperation)
    */
-  public boolean connect(Map<String, String[]> requestParameters, Resource resource,
+  public boolean connect(Map<String, String[]> requestParameters, Session session,
       String thisUserId, String otherUserId, ConnectionOperation operation)
       throws ConnectionException {
-
-    Session session = StorageClientUtils.adaptToSession(resource.getResourceResolver().adaptTo(javax.jcr.Session.class));
 
     if (thisUserId.equals(otherUserId)) {
       throw new ConnectionException(
@@ -254,7 +248,7 @@ public class ConnectionManagerImpl implements ConnectionManager {
       // user's view of the connection, including relationship types
       // that differ from those viewed by the inviting user.
       if (operation == ConnectionOperation.invite) {
-        handleInvitation(requestParameters, adminSession, thisNode, otherNode);
+        handleInvitation(requestParameters, thisNode, otherNode);
       }
 
       // KERN-763 : Connections need to be "stored" in groups.
@@ -307,29 +301,32 @@ public class ConnectionManagerImpl implements ConnectionManager {
   /**
    * {@inheritDoc}
    *
-   * @see org.sakaiproject.nakamura.api.connections.ConnectionManager#getConnectionDetails(org.apache.sling.api.SlingHttpServletRequest,
-   *      java.lang.String, java.lang.String)
+   * @see org.sakaiproject.nakamura.api.connections.ConnectionManager#getConnectionDetails(
+   *  org.sakaiproject.nakamura.api.lite.Session, java.lang.String, java.lang.String)
    */
   public Content getConnectionDetails(Session session, String thisUser, String otherUser)
       throws StorageClientException, AccessDeniedException {
     String connPath = ConnectionUtils.getConnectionPath(thisUser, otherUser);
     ContentManager cm = session.getContentManager();
 
-    Content connection = cm.get(connPath);
-    return connection;
+    return cm.get(connPath);
   }
 
   public boolean writeConnectionInfo(ExtendedJSONWriter exWriter, Session session,
       String thisUser, String otherUser) throws AccessDeniedException,
-      StorageClientException, JSONException {
+      StorageClientException, ConnectionException {
     //add contact information if appropriate
     Content connection = getConnectionDetails(session, thisUser, otherUser);
     if (connection != null) {
       // add sakai:state and sakai:types
-      exWriter.key(SAKAI_CONNECTION_STATE);
-      exWriter.value(connection.getProperty(SAKAI_CONNECTION_STATE), false);
-      exWriter.key(SAKAI_CONNECTION_TYPES);
-      exWriter.value(connection.getProperty(SAKAI_CONNECTION_TYPES), false);
+      try {
+        exWriter.key(SAKAI_CONNECTION_STATE);
+        exWriter.value(connection.getProperty(SAKAI_CONNECTION_STATE), false);
+        exWriter.key(SAKAI_CONNECTION_TYPES);
+        exWriter.value(connection.getProperty(SAKAI_CONNECTION_TYPES), false);
+      } catch (JSONException e) {
+        throw new ConnectionException(500, e);
+      }
     }
     return connection != null;
   }
@@ -342,7 +339,7 @@ public class ConnectionManagerImpl implements ConnectionManager {
    * @param otherAu
    *          The {@link Authorizable authorizable} who needs to be removed from the
    *          contact group.
-   * @param adminSession
+   * @param session
    *          A session that can be used to modify a group.
    * @throws StorageClientException 
    * @throws AccessDeniedException 
@@ -390,8 +387,8 @@ public class ConnectionManagerImpl implements ConnectionManager {
   /**
    * {@inheritDoc}
    *
-   * @see org.sakaiproject.nakamura.api.connections.ConnectionManager#getConnectedUsers(java.lang.String,
-   *      org.sakaiproject.nakamura.api.connections.ConnectionState)
+   * @see org.sakaiproject.nakamura.api.connections.ConnectionManager#getConnectedUsers(org.sakaiproject.nakamura.api.lite.Session,
+   *      java.lang.String, org.sakaiproject.nakamura.api.connections.ConnectionState)
    */
   public List<String> getConnectedUsers(Session session, String user, ConnectionState state) {
     List<String> connections = Lists.newArrayList();
@@ -446,8 +443,7 @@ public class ConnectionManagerImpl implements ConnectionManager {
     return contentManager.get(nodePath);
   }
 
-  protected void handleInvitation(Map<String, String[]> requestProperties,
-      Session session, Content fromNode, Content toNode)  {
+  protected void handleInvitation(Map<String, String[]> requestProperties, Content fromNode, Content toNode)  {
     Set<String> toRelationships = new HashSet<String>();
     Set<String> fromRelationships = new HashSet<String>();
     Map<String, Object> sharedProperties = new HashMap<String, Object>();
@@ -482,8 +478,8 @@ public class ConnectionManagerImpl implements ConnectionManager {
   /**
    * Add property values as individual strings or as string arrays.
    *
-   * @param node
-   * @param properties
+   * @param node the Content node to add properties to
+   * @param properties the map of properties to be added to the Content node
    */
   protected void addArbitraryProperties(Content node, Map<String, Object> properties) {
     for (Entry<String, Object> param : properties.entrySet()) {
