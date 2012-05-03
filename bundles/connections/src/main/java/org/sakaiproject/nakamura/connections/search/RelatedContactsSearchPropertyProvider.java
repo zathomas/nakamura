@@ -116,7 +116,7 @@ public class RelatedContactsSearchPropertyProvider implements SolrSearchProperty
       if (myTags!= null) {
         allTags.addAll(Arrays.asList(myTags));
       }
-      final List<String> myConnections = connectionManager.getConnectedUsers(request, me,
+      final List<String> myConnections = connectionManager.getConnectedUsers(session, me,
           ConnectionState.ACCEPTED);
       if (myConnections != null) {
         for (final String myConnection : myConnections) {

@@ -20,6 +20,7 @@ package org.sakaiproject.nakamura.connections;
 import static org.sakaiproject.nakamura.api.connections.ConnectionConstants.SAKAI_CONNECTION_STATE;
 
 import org.sakaiproject.nakamura.api.connections.ConnectionState;
+import org.sakaiproject.nakamura.api.connections.ContactConnection;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 
 import java.text.MessageFormat;
@@ -71,11 +72,11 @@ public class StatePairFinal implements StatePair {
   
   /**
    * {@inheritDoc}
-   * @see org.sakaiproject.nakamura.connections.StatePair#transition(org.sakaiproject.nakamura.api.lite.content.Content, org.sakaiproject.nakamura.api.lite.content.Content)
+   * @see org.sakaiproject.nakamura.connections.StatePair#transition(org.sakaiproject.nakamura.api.connections.ContactConnection, org.sakaiproject.nakamura.api.connections.ContactConnection)
    */
-  public void transition(Content thisNode, Content otherNode) {
-    thisNode.setProperty(SAKAI_CONNECTION_STATE, thisState.toString());
-    otherNode.setProperty(SAKAI_CONNECTION_STATE,otherState.toString());
+  public void transition(ContactConnection thisNode, ContactConnection otherNode) {
+    thisNode.setConnectionState(thisState);
+    otherNode.setConnectionState(otherState);
   }
 
 }

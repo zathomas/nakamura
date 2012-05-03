@@ -142,7 +142,7 @@ public class RelatedContactsSearchBatchResultProcessor implements
     final Session session = StorageClientUtils.adaptToSession(request
         .getResourceResolver().adaptTo(javax.jcr.Session.class));
     final String user = session.getUserId();
-    final List<String> connectedUsers = connectionManager.getConnectedUsers(request,
+    final List<String> connectedUsers = connectionManager.getConnectedUsers(StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class)),
         session.getUserId(), ConnectionState.ACCEPTED);
     final long nitems = SolrSearchUtil.longRequestParameter(request,
         PARAMS_ITEMS_PER_PAGE, DEFAULT_PAGED_ITEMS);

@@ -17,11 +17,10 @@
  */
 package org.sakaiproject.nakamura.api.connections;
 
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
-import org.sakaiproject.nakamura.api.lite.content.Content;
+import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 
 import java.util.List;
@@ -52,34 +51,10 @@ public interface ConnectionManager {
       ConnectionOperation operation)
       throws ConnectionException;
 
-  /**
-   * This will get the listing of all users which this user is connected to
-   * optionally limited by state of the connection
-   * 
-   * @param user the id of the user to get connections for
-   * @param state [OPTIONAL] if null then all connections are returned regardless of state, otherwise
-   * the connections are only returned when they match the indicated state
-   * @return a list of user ids for all users connected to the given user (with the given state)
-   * @throws IllegalStateException if there is a failure in the system
-   */
-  List<String> getConnectedUsers(SlingHttpServletRequest request, String user, ConnectionState state);
 
   List<String> getConnectedUsers(
       Session session, String actor,
-      ConnectionState accepted);
-
-  /**
-   * Get connection details to <code>otherUser</code> from <code>thisUser</code>
-   *
-   * @param session
-   * @param thisUser
-   * @param otherUser
-   * @return
-   * @throws StorageClientException
-   * @throws AccessDeniedException
-   */
-  Content getConnectionDetails(Session session, String thisUser, String otherUser)
-      throws StorageClientException, AccessDeniedException;
+      ConnectionState accepted) throws ConnectionException;
 
   /**
    * Writes out connection information between two users. If needed to be wrapped in an

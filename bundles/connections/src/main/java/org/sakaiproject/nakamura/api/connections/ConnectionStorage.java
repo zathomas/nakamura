@@ -17,55 +17,18 @@
  */
 package org.sakaiproject.nakamura.api.connections;
 
-/**
- * 
- */
-public class ConnectionException extends RuntimeException {
+import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 
-  /**
-   *
-   */
-  private static final long serialVersionUID = -4812533559726881910L;
-  private int code = 500;
+import java.util.List;
 
-  /**
-   * 
-   */
-  public ConnectionException(int code) {
-    super();
-    this.code = code;
-  }
+public interface ConnectionStorage {
 
-  /**
-   * @param message
-   */
-  public ConnectionException(int code, String message) {
-    super(message);
-    this.code = code;
-  }
+  ContactConnection getOrCreateContactConnection(Authorizable thisAu, Authorizable otherAu) throws ConnectionException;
 
-  /**
-   * @param cause
-   */
-  public ConnectionException(int code, Throwable cause) {
-    super(cause);
-    this.code = code;
-  }
+  void saveContactConnectionPair(ContactConnection thisNode, ContactConnection otherNode) throws ConnectionException;
 
-  /**
-   * @param message
-   * @param cause
-   */
-  public ConnectionException(int code, String message, Throwable cause) {
-    super(message, cause);
-    this.code = code;
-  }
-  
-  /**
-   * @return the code
-   */
-  public int getCode() {
-    return code;
-  }
+  ContactConnection getContactConnection(Authorizable thisUser, Authorizable otherUser) throws ConnectionException;
 
+  List<String> getConnectedUsers(Session session, String userId, ConnectionState state) throws ConnectionException;
 }

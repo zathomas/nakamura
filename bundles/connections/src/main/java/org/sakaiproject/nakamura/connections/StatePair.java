@@ -17,8 +17,7 @@
  */
 package org.sakaiproject.nakamura.connections;
 
-import org.sakaiproject.nakamura.api.lite.content.Content;
-
+import org.sakaiproject.nakamura.api.connections.ContactConnection;
 
 /**
  * 
@@ -28,8 +27,7 @@ public interface StatePair {
   /**
    * @param thisNode
    * @param otherNode
-   * @throws RepositoryException 
    */
-  void transition(Content thisNode, Content otherNode);
+  void transition(ContactConnection thisNode, ContactConnection otherNode);
 
 }

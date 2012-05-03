@@ -48,7 +48,7 @@ public class ConnectionUtils {
   public static String getConnectionPath(Authorizable user, Authorizable targetUser, String remainderPath ) {
       return getConnectionPath(user.getId(), targetUser.getId(), remainderPath);
     }
-  private static String getConnectionPath(String user, String targetUser, 
+  public static String getConnectionPath(String user, String targetUser,
       String remainderPath) {
     StringBuilder sb = new StringBuilder();
     sb.append(getConnectionPathBase(user));
@@ -81,7 +81,7 @@ public class ConnectionUtils {
    * @param au
    *          The <code>authorizable</code> to get the connection folder for.
    * @return The absolute path to the connection folder in a user his home folder. ex:
-   *         /_user/j/jo/joh/john/johndoe/contacts
+   *         /~johndoe/contacts
    */
   public static String getConnectionPathBase(Authorizable au) {
     return LitePersonalUtils.getHomePath(au.getId()) + "/" + CONTACT_STORE_NAME;

@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.sakaiproject.nakamura.api.connections.ConnectionConstants;
 import org.sakaiproject.nakamura.api.connections.ConnectionException;
 import org.sakaiproject.nakamura.api.connections.ConnectionState;
-import org.sakaiproject.nakamura.api.lite.ClientPoolException;
+import org.sakaiproject.nakamura.api.connections.ContactConnection;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
@@ -36,15 +36,16 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.AclModification.Operatio
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
-import org.sakaiproject.nakamura.api.lite.content.Content;
-import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.lite.BaseMemoryRepository;
 import org.sakaiproject.nakamura.lite.RepositoryImpl;
+import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -54,41 +55,49 @@ public class ConnectionManagerImplTest {
 
   private ConnectionManagerImpl connectionManager;
   private RepositoryImpl repository;
+  private SparseMapConnectionStorage connectionStorage;
 
   @Before
-  public void setUp() throws ClientPoolException, StorageClientException, AccessDeniedException, ClassNotFoundException, IOException {
+  public void setUp() throws StorageClientException, AccessDeniedException, ClassNotFoundException, IOException {
     BaseMemoryRepository baseMemoryRepository = new BaseMemoryRepository();
     repository = baseMemoryRepository.getRepository();
     connectionManager = new ConnectionManagerImpl();
-    connectionManager.repository = repository;
+    connectionStorage = new SparseMapConnectionStorage();
+    connectionStorage.repository = repository;
+    connectionManager.connectionStorage = connectionStorage;
   }
 
   @Test
-  public void testAddArbitraryProperties() throws ClientPoolException, StorageClientException, AccessDeniedException {
+  public void testAddArbitraryProperties() throws ConnectionException, StorageClientException, AccessDeniedException {
     Session session = repository.loginAdministrative();
-    session.getContentManager().update(new Content("/path/to/connection/node", null));  
-    Content node = session.getContentManager().get("/path/to/connection/node");
+    session.getAuthorizableManager().createUser("bob", "bob", "test", null);
+    session.getAuthorizableManager().createUser("alice", "alice", "test", null);
     
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put("alfa", new String[] { "a" });
     properties.put("beta", new String[] { "a", "b" });
     properties.put("charlie", "c");
-
-    connectionManager.addArbitraryProperties(node, properties);
-    
-    Assert.assertArrayEquals((String[])node.getProperty("alfa"), new String[]{"a"});
-    Assert.assertArrayEquals((String[])node.getProperty("beta"), new String[]{"a","b"});
-    assertEquals(node.getProperty("charlie"), "c");
+    Authorizable alice = session.getAuthorizableManager().findAuthorizable("alice");
+    Authorizable bob = session.getAuthorizableManager().findAuthorizable("bob");
+    ContactConnection contactConnectionA = new ContactConnection(null, null, "alice", "bob", "Bob", "Barker", properties);
+    ContactConnection contactConnectionB = new ContactConnection(null, null, "bob", "alice", "Alice", "Annie", null);
+    connectionStorage.saveContactConnectionPair(contactConnectionA, contactConnectionB);
+    ContactConnection connectionForAliceAndBob = connectionStorage.getContactConnection(alice, bob);
+    Assert.assertArrayEquals((String[])connectionForAliceAndBob.getProperty("alfa"), new String[]{"a"});
+    Assert.assertArrayEquals((String[])connectionForAliceAndBob.getProperty("beta"), new String[]{"a","b"});
+    assertEquals(connectionForAliceAndBob.getProperty("charlie"), "c");
   }
 
   @Test
-  public void testHandleInvitation() throws ClientPoolException, StorageClientException, AccessDeniedException  {
+  public void testHandleInvitation() throws ConnectionException, StorageClientException, AccessDeniedException  {
     Session session = repository.loginAdministrative();
-    ContentManager contentManager = session.getContentManager();
-    contentManager.update(new Content("a:alice/contacts/bob", null));  
-    Content fromNode = contentManager.get("a:alice/contacts/bob");
-    contentManager.update(new Content("a:bob/contacts/alice", null));  
-    Content toNode = contentManager.get("a:bob/contacts/alice");
+    session.getAuthorizableManager().createUser("bob", "bob", "test", null);
+    session.getAuthorizableManager().createUser("alice", "alice", "test", null);
+    Authorizable alice = session.getAuthorizableManager().findAuthorizable("alice");
+    Authorizable bob = session.getAuthorizableManager().findAuthorizable("bob");
+
+    ContactConnection fromConnection = connectionStorage.getOrCreateContactConnection(alice, bob);
+    ContactConnection toConnection = connectionStorage.getOrCreateContactConnection(bob, alice);
 
     Map<String, String[]> props = new HashMap<String, String[]>();
 
@@ -99,23 +108,23 @@ public class ConnectionManagerImplTest {
     props.put(ConnectionConstants.SAKAI_CONNECTION_TYPES, new String[] { "foo" });
     props.put("random", new String[] { "israndom" });
 
-    connectionManager.handleInvitation(props, fromNode, toNode);
+    connectionManager.handleInvitation(props, fromConnection, toConnection);
 
-    String[] fromValues = (String[]) fromNode.getProperty(ConnectionConstants.SAKAI_CONNECTION_TYPES);
+    Set<String> fromValues = fromConnection.getConnectionTypes();
 
-    String[] toValues = (String[]) toNode.getProperty(ConnectionConstants.SAKAI_CONNECTION_TYPES);
+    Set<String> toValues = toConnection.getConnectionTypes();
 
-    assertEquals(3, fromValues.length);
+    assertEquals(3, fromValues.size());
     int j = 0;
     // order may not be what we expect it to be
-    for ( int i = 0; i < 3; i++ ) {
-      if ( "foo".equals(fromValues[i])) {
+    for(String connectionType : fromValues) {
+      if ( "foo".equals(connectionType)) {
         j = j|1;
       }
-      if ( "Lecturer".equals(fromValues[i])) {
+      if ( "Lecturer".equals(connectionType)) {
         j = j|2;
       }
-      if ( "Supervisor".equals(fromValues[i])) {
+      if ( "Supervisor".equals(connectionType)) {
         j = j|4;
       }
     }
@@ -123,17 +132,17 @@ public class ConnectionManagerImplTest {
     Assert.assertTrue((j&1)==1);
     Assert.assertTrue((j&2)==2);
     Assert.assertTrue((j&4)==4);
-    assertEquals(3, toValues.length);
+    assertEquals(3, toValues.size());
 
     j = 0;
-    for ( int i = 0; i < 3; i++ ) {
-      if ( "foo".equals(toValues[i])) {
+    for (String connectionType : toValues) {
+      if ( "foo".equals(connectionType)) {
         j = j|1;
       }
-      if ( "Student".equals(toValues[i])) {
+      if ( "Student".equals(connectionType)) {
         j = j|2;
       }
-      if ( "Supervised".equals(toValues[i])) {
+      if ( "Supervised".equals(connectionType)) {
         j = j|4;
       }
     }
@@ -142,8 +151,8 @@ public class ConnectionManagerImplTest {
     Assert.assertTrue((j&4)==4);
 
 
-    String fromRandomValues = (String) fromNode.getProperty("random");
-    String toRandomValues =  (String) toNode.getProperty("random");
+    String fromRandomValues = (String) fromConnection.getProperty("random");
+    String toRandomValues =  (String) toConnection.getProperty("random");
 
     assertEquals("israndom", fromRandomValues);
     assertEquals("israndom", toRandomValues);
@@ -176,7 +185,7 @@ public class ConnectionManagerImplTest {
   }
 
   @Test
-  public void testCheckValidUserId() throws ConnectionException, ClientPoolException, StorageClientException, AccessDeniedException {
+  public void testCheckValidUserId() throws ConnectionException, StorageClientException, AccessDeniedException {
     Session session = repository.loginAdministrative();
     session.getAuthorizableManager().createUser("bob", "bob", "test", null);
     session.getAuthorizableManager().createUser("alice", "alice", "test", null);
@@ -187,36 +196,20 @@ public class ConnectionManagerImplTest {
   }
 
   @Test
-  public void testGetConnectionState() throws ConnectionException, ClientPoolException, StorageClientException, AccessDeniedException {
+  public void testGetConnectionState() throws ConnectionException, StorageClientException, AccessDeniedException {
     // Passing in null
     try {
-      final ConnectionState state = connectionManager.getConnectionState(null);
+      ContactConnection nullContactConnection = new ContactConnection(null, null, null, null, null, null, null);
+      final ConnectionState state = nullContactConnection.getConnectionState();
       assertEquals("Passing in null should return ConnectionState.NONE",
           ConnectionState.NONE, state);
     } catch (Exception e) {
       fail("Passing in null should return ConnectionState.NONE.");
     }
-
-    Session session = repository.loginAdministrative();
-    session.getContentManager().update(new Content("/path/to/connection/node", null));  
-    Content node = session.getContentManager().get("/path/to/connection/node");
-
-    ConnectionState state = connectionManager.getConnectionState(node);
-    assertEquals(ConnectionState.NONE, state);
-
-    // Passing in node with state property.
-    node.setProperty(ConnectionConstants.SAKAI_CONNECTION_STATE, "ACCEPTED");
-    state = connectionManager.getConnectionState(node);
-    assertEquals(ConnectionState.ACCEPTED, state);
-
-    // Passing in node with wrong state property.
-    node.setProperty(ConnectionConstants.SAKAI_CONNECTION_STATE, "fubar");
-    state = connectionManager.getConnectionState(node);
-    assertEquals(ConnectionState.NONE, state);
   }
 
   @Test
-  public void testDeepGetCreateNodeExisting() throws ClientPoolException, StorageClientException, AccessDeniedException {
+  public void testDeepGetCreateNodeExisting() throws StorageClientException, AccessDeniedException, ConnectionException {
     Session session = repository.loginAdministrative();
     session.getAuthorizableManager().createUser("bob", "bob", "test", null);
     session.getAuthorizableManager().createUser("alice", "alice", "test", null);
@@ -231,12 +224,13 @@ public class ConnectionManagerImplTest {
     Authorizable from = session.getAuthorizableManager().findAuthorizable("bob");
     Authorizable to = session.getAuthorizableManager().findAuthorizable("alice");
     
-    Content result = connectionManager.getOrCreateConnectionNode(session, from, to);
-    assertEquals("a:bob/contacts/alice", result.getPath());
+    ContactConnection result = connectionStorage.getOrCreateContactConnection(from, to);
+    assertEquals("bob", result.getFromUserId());
+    assertEquals("alice", result.getToUserId());
   }
 
   @Test
-  public void testDeepGetCreateNodeExistingBase() throws AccessDeniedException, StorageClientException  {
+  public void testDeepGetCreateNodeExistingBase() throws AccessDeniedException, StorageClientException, ConnectionException {
     Session session = repository.loginAdministrative();
     session.getAuthorizableManager().createUser("bob", "bob", "test", null);
     session.getAuthorizableManager().createUser("alice", "alice", "test", null);
@@ -252,9 +246,20 @@ public class ConnectionManagerImplTest {
     Authorizable to = session.getAuthorizableManager().findAuthorizable("alice");
 
 
-    Content result = connectionManager.getOrCreateConnectionNode(session, from, to);
-    assertEquals("a:bob/contacts/alice", result.getPath());
-    assertEquals(ConnectionConstants.SAKAI_CONTACT_RT, result.getProperty("sling:resourceType"));
+    ContactConnection result = connectionStorage.getOrCreateContactConnection(from, to);
+    assertEquals("bob", result.getFromUserId());
+    assertEquals("alice", result.getToUserId());
     assertEquals("a:alice/public/authprofile", result.getProperty("reference"));
+  }
+
+  @Test
+  public void testCanWriteDetailsForNonexistentConnection() throws Exception {
+    Session session = repository.loginAdministrative();
+    session.getAuthorizableManager().createUser("bob", "bob", "test", null);
+    session.getAuthorizableManager().createUser("alice", "alice", "test", null);
+    // note that alice and bob are NOT connected.
+    StringWriter output = new StringWriter();
+    connectionManager.writeConnectionInfo(new ExtendedJSONWriter(output), session, "bob", "alice");
+    assertEquals("", output.toString());
   }
 }
