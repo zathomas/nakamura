@@ -284,6 +284,9 @@ public class LiteUpdateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
         session = session.getRepository().loginAdministrative();
       }
 
+      if (Boolean.parseBoolean(String.valueOf(authorizable.getProperty("sakai:pseudoGroup")))) {
+        authorizableCountChanger.notify(GROUP_MEMBERS_PROP, (String)authorizable.getProperty("sakai:parent-group-id"));
+      }
       authorizableCountChanger.notify(GROUP_MEMBERS_PROP, authorizable.getId());
 
       String groupPath = LiteAuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
