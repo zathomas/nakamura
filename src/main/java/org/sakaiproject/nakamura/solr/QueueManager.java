@@ -210,15 +210,15 @@ public class QueueManager implements Runnable {
 				Event loadEvent = null;
 				try {
 					loadEvent = readEvent();
-				} catch (Throwable t) {
+				} catch (Exception e) {
 					if (running) {
 						LOGGER.warn("Unreadable Event at {} {} ",
 								currentInFile, lineNo);
-						LOGGER.warn("Reported exception follows:", t);
+						LOGGER.warn("Reported exception follows:", e);
 					} else {
 						LOGGER.debug("Unreadable Event at {} {} ",
 								currentInFile, lineNo);
-						LOGGER.debug("Reported exception follows:", t);
+						LOGGER.debug("Reported exception follows:", e);
 					}
 				}
 				Map<String, Event> events = Maps.newLinkedHashMap();
@@ -250,10 +250,10 @@ public class QueueManager implements Runnable {
 					loadEvent = null;
 					try {
 						loadEvent = readEvent();
-					} catch (Throwable t) {
+					} catch (Exception e) {
 						LOGGER.warn("Unreadable Event at {} {} ",
 								currentInFile, lineNo);
-						LOGGER.warn("Reported exception follows:", t);
+						LOGGER.warn("Reported exception follows:", e);
 					}
 				}
 				if (events.size() > 0) {
@@ -326,9 +326,9 @@ public class QueueManager implements Runnable {
 											needsCommit = true;
 										}
 									}
-								} catch (Throwable t) {
-									 if ( t instanceof SolrServerException && t.getCause() instanceof ConnectException ) {
-										throw (SolrServerException)t;
+								} catch (Exception e) {
+									 if ( e instanceof SolrServerException && e.getCause() instanceof ConnectException ) {
+										throw (SolrServerException)e;
 								     }
 									 LOGGER.error(
 											"{} Failed to process event {}, {} cause follows, event ignored for "
@@ -336,7 +336,7 @@ public class QueueManager implements Runnable {
 													+ "this log message from the code) ",
 											new Object[] { contentIndexHandler,
 													event, path });
-									LOGGER.error(t.getMessage(), t);
+									LOGGER.error(e.getMessage(), e);
 									if (docs != null) {
 										for (SolrInputDocument d : docs) {
 											LOGGER.error("Failed Doc {} ", d);
@@ -403,7 +403,7 @@ public class QueueManager implements Runnable {
 		            backoff = 0;
 					rollback();
 				}
-			} catch (Throwable e) {
+			} catch (Exception e) {
 				if (running) {
 					LOGGER.warn(e.getMessage(), e);
 					try {
