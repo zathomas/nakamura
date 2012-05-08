@@ -386,7 +386,7 @@ public class QueueManager implements Runnable {
 								backoff);
 						}
 						rollback();
-						Thread.sleep(1000 * backoff);
+						Thread.sleep(1000L * backoff);
 					} else {
 						LOGGER.warn(
 								" Batch Operation completed with Errors, the index may have lost data, please FIX ASAP. "
