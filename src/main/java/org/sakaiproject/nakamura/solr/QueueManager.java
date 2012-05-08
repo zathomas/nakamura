@@ -84,13 +84,11 @@ public class QueueManager implements Runnable {
 		}
 		logDirectory = new File(queueHome, "indexq" + this.queueName);
 		positionFile = new File(queueHome, "indexqpos" + this.queueName);
-		if (!logDirectory.isDirectory()) {
-			if (!logDirectory.mkdirs()) {
-				LOGGER.warn("Failed to create {} ",
-						logDirectory.getAbsolutePath());
-				throw new IOException("Faild to create Indexing Log directory "
-						+ logDirectory.getAbsolutePath());
-			}
+		if (!logDirectory.isDirectory() && !logDirectory.mkdirs()) {
+      LOGGER.warn("Failed to create {} ",
+          logDirectory.getAbsolutePath());
+      throw new IOException("Faild to create Indexing Log directory "
+          + logDirectory.getAbsolutePath());
 		}
 		this.nearRealTime = nearRealTime;
 		this.batchDelay = batchDelay;
@@ -317,13 +315,11 @@ public class QueueManager implements Runnable {
 									docs = contentIndexHandler.getDocuments(
 											repositorySession, event);
 
-									if (service != null) {
-										if (docs != null && docs.size() > 0) {
-											LOGGER.debug("Adding Docs {} ",
-													docs);
-											service.add(docs);
-											needsCommit = true;
-										}
+									if (service != null && docs != null && docs.size() > 0) {
+                    LOGGER.debug("Adding Docs {} ",
+                        docs);
+                    service.add(docs);
+                    needsCommit = true;
 									}
 								} catch (Exception e) {
 									 if ( e instanceof SolrServerException && e.getCause() instanceof ConnectException ) {
@@ -747,35 +743,33 @@ public class QueueManager implements Runnable {
 	}
 
 	private void waitForWriter() throws IOException {
-		if (isRunning()) {
-			// just incase we have to wait for a while for the lock, get the
-			// last modified now,
-			// so we can see if its modified since we started waiting.
-			if (getBatchTTL() > 0) {
-				synchronized (waitingForFileLock) {
-					try {
-						LOGGER.debug(
-								"Waiting for more data read:{} written:{} ",
-								nread, nwrite);
-						if (nread > nwrite) {
-							// reset counters if were catching up
-							nread = nwrite;
-							// +1 because an event was written which makes
-							// nwrite nread+1 when there are
-							// none left
-						} else if (nread + 1 < nwrite) {
-							LOGGER.debug(
-									"Possible event loss, waiting to read when there are more events written read:{} written:{}",
-									nread, nwrite);
-						}
-						long wait = getBatchTTL();
-						if (wait > 0) {
-							waitingForFileLock.wait(wait);
-						}
-					} catch (InterruptedException e) {
-					}
-				}
-			}
+    // just incase we have to wait for a while for the lock, get the
+    // last modified now,
+    // so we can see if its modified since we started waiting.
+		if (isRunning() && getBatchTTL() > 0) {
+      synchronized (waitingForFileLock) {
+        try {
+          LOGGER.debug(
+              "Waiting for more data read:{} written:{} ",
+              nread, nwrite);
+          if (nread > nwrite) {
+            // reset counters if were catching up
+            nread = nwrite;
+            // +1 because an event was written which makes
+            // nwrite nread+1 when there are
+            // none left
+          } else if (nread + 1 < nwrite) {
+            LOGGER.debug(
+                "Possible event loss, waiting to read when there are more events written read:{} written:{}",
+                nread, nwrite);
+          }
+          long wait = getBatchTTL();
+          if (wait > 0) {
+            waitingForFileLock.wait(wait);
+          }
+        } catch (InterruptedException e) {
+        }
+      }
 		}
 		if (!isRunning()) {
 			throw new IOException(

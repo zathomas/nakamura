@@ -243,12 +243,10 @@ public class EmbeddedSolrClient implements SolrClient {
 	}
 
 	private void deployStream(File destDir, String target, InputStream in) throws IOException {
-		if (!destDir.isDirectory()) {
-			if (!destDir.mkdirs()) {
-				LOGGER.warn(
-						"Unable to create dest dir {} for {}, may cause later problems ",
-						destDir, target);
-			}
+		if (!destDir.isDirectory() && !destDir.mkdirs()) {
+      LOGGER.warn(
+          "Unable to create dest dir {} for {}, may cause later problems ",
+          destDir, target);
 		}
 		File destFile = new File(destDir, target);
 		if (!destFile.exists()) {

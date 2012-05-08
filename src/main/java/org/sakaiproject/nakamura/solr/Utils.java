@@ -53,13 +53,11 @@ public class Utils {
 			throws IOException {
 		String slingHomePath = bundleContext.getProperty("sling.home");
 		File solrHome = new File(slingHomePath, "solr");
-		if (!solrHome.isDirectory()) {
-			if (!solrHome.mkdirs()) {
-				LOGGER.info(
-						"verifyConfiguration: Cannot create Solr home {}, failed creating default configuration ",
-						solrHome.getAbsolutePath());
-				return null;
-			}
+		if (!solrHome.isDirectory() && !solrHome.mkdirs()) {
+      LOGGER.info(
+          "verifyConfiguration: Cannot create Solr home {}, failed creating default configuration ",
+          solrHome.getAbsolutePath());
+      return null;
 		}
 		return solrHome.getAbsolutePath();
 	}

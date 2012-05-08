@@ -338,12 +338,10 @@ public class MultiMasterSolrClient implements SolrClient {
 	}
 
 	private void deployFile(File destDir, String target) throws IOException {
-		if (!destDir.isDirectory()) {
-			if (!destDir.mkdirs()) {
-				LOGGER.warn(
-						"Unable to create dest dir {} for {}, may cause later problems ",
-						destDir, target);
-			}
+		if (!destDir.isDirectory() && !destDir.mkdirs()) {
+      LOGGER.warn(
+          "Unable to create dest dir {} for {}, may cause later problems ",
+          destDir, target);
 		}
 		File destFile = new File(destDir, target);
 		if (!destFile.exists()) {
