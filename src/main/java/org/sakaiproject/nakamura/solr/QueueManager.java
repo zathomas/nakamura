@@ -136,7 +136,9 @@ public class QueueManager implements Runnable {
 		boolean notify = false;
 		synchronized (eventWriterSync) {
 			if (eventWriter != null) {
-				LOGGER.debug("Writer closing {} ", currentFile.getName());
+        if (currentFile != null) {
+				  LOGGER.debug("Writer closing {} ", currentFile.getName());
+        }
 				nwrite++;
 				eventWriter.append(END);
 				eventWriter.flush();
