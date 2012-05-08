@@ -503,13 +503,21 @@ public class QueueManager implements Runnable {
 						positionFile);
 			}
 		} else {
-			FileWriter position = new FileWriter(positionFile);
-			position.write(URLEncoder.encode(currentInFile.getAbsolutePath(),
-					"UTF8"));
-			position.write(",");
-			position.write(String.valueOf(lineNo));
-			position.write("\n");
-			position.close();
+			FileWriter position = null;
+
+      try {
+        position = new FileWriter(positionFile);
+        position.write(URLEncoder.encode(currentInFile.getAbsolutePath(),
+     					"UTF8"));
+        position.write(",");
+        position.write(String.valueOf(lineNo));
+        position.write("\n");
+      }
+      finally {
+			  if (position != null) {
+          position.close();
+        }
+      }
 		}
 	}
 

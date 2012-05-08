@@ -346,12 +346,30 @@ public class MultiMasterSolrClient implements SolrClient {
 		}
 		File destFile = new File(destDir, target);
 		if (!destFile.exists()) {
-			InputStream in = Utils.class.getClassLoader().getResourceAsStream(
-					target);
-			OutputStream out = new FileOutputStream(destFile);
-			IOUtils.copy(in, out);
-			out.close();
-			in.close();
+			InputStream in = null;
+			OutputStream out = null;
+
+      try {
+        in = Utils.class.getClassLoader().getResourceAsStream(
+        					target);
+        out = new FileOutputStream(destFile);
+			  IOUtils.copy(in, out);
+      }
+      finally {
+        if (out != null) {
+          try {
+            out.close();
+          } catch (Exception e) {
+          }
+        }
+
+        if (in != null) {
+          try {
+            in.close();
+          } catch (Exception e) {
+          }
+        }
+      }
 		}
 	}
 

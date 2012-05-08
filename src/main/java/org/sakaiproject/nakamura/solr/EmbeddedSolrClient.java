@@ -251,11 +251,28 @@ public class EmbeddedSolrClient implements SolrClient {
 		}
 		File destFile = new File(destDir, target);
 		if (!destFile.exists()) {
-			OutputStream out = new FileOutputStream(destFile);
-			IOUtils.copy(in, out);
-			out.close();
-			in.close();
-			LOGGER.info("Saved Config file {} to {} ", target, destFile.getAbsolutePath());
+			OutputStream out = null;
+
+      try {
+        out = new FileOutputStream(destFile);
+        IOUtils.copy(in, out);
+      }
+      finally {
+        if (out != null) {
+          try {
+            out.close();
+          } catch (Exception e) {
+          }
+        }
+
+        if (in != null) {
+          try {
+            in.close();
+          } catch (Exception e) {
+          }
+        }
+      }
+ 			LOGGER.info("Saved Config file {} to {} ", target, destFile.getAbsolutePath());
 		}
 	}
 
