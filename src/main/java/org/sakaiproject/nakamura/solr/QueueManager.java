@@ -179,7 +179,6 @@ public class QueueManager implements Runnable {
 			int i = 1;
 			for (String p : properties) {
 				op[i] = URLEncoder.encode(p, UTF8);
-				;
 				i++;
 				op[i] = URLEncoder.encode(String.valueOf(event.getProperty(p)), UTF8);
 				i++;
