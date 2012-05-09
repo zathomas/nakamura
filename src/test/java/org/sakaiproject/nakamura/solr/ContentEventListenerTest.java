@@ -197,7 +197,7 @@ public class ContentEventListenerTest {
     }
   }
   @Test
-  public void testDefaultConfiguration() throws Exception {
+  public void testTtl() throws Exception {
     String queueDefn[] = new String[] {
        "name=loafing;batch-delay=200;batched-index-size=100;near-real-time=false",
        "name=moderate;batch-delay=100;batched-index-size=100;near-real-time=false",
