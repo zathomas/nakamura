@@ -43,6 +43,7 @@ import com.google.common.collect.Sets;
 public class QueueManager implements Runnable {
 
 	private static final String END = "--end--";
+  private static final String UTF8 = "UTF8";
 
 	private static final Logger LOGGER = LoggerFactory
 			.getLogger(QueueManager.class);
@@ -174,14 +175,13 @@ public class QueueManager implements Runnable {
 			}
 			String[] properties = event.getPropertyNames();
 			String[] op = new String[properties.length * 2 + 1];
-			op[0] = URLEncoder.encode(event.getTopic(), "UTF8");
+			op[0] = URLEncoder.encode(event.getTopic(), UTF8);
 			int i = 1;
 			for (String p : properties) {
-				op[i] = URLEncoder.encode(p, "UTF8");
+				op[i] = URLEncoder.encode(p, UTF8);
 				;
 				i++;
-				op[i] = URLEncoder.encode(String.valueOf(event.getProperty(p)),
-						"UTF8");
+				op[i] = URLEncoder.encode(String.valueOf(event.getProperty(p)), UTF8);
 				i++;
 			}
 			eventWriter.append(StringUtils.join(op, ',')).append('\n');
@@ -507,8 +507,7 @@ public class QueueManager implements Runnable {
 
       try {
         position = new FileWriter(positionFile);
-        position.write(URLEncoder.encode(currentInFile.getAbsolutePath(),
-     					"UTF8"));
+        position.write(URLEncoder.encode(currentInFile.getAbsolutePath(),UTF8));
         position.write(",");
         position.write(String.valueOf(lineNo));
         position.write("\n");
@@ -528,8 +527,7 @@ public class QueueManager implements Runnable {
 				position = new BufferedReader(new FileReader(positionFile));
 				String[] filePos = StringUtils.split(position.readLine(), ',');
 				if (filePos != null && filePos.length == 2) {
-					currentInFile = new File(URLDecoder.decode(filePos[0],
-							"UTF8"));
+					currentInFile = new File(URLDecoder.decode(filePos[0],UTF8));
 					if (currentInFile.exists()) {
 						lineNo = Integer.parseInt(filePos[1]);
 						loadPosition(currentInFile, lineNo);
@@ -557,10 +555,10 @@ public class QueueManager implements Runnable {
 				if (parts.length > 0) {
 					Dictionary<String, Object> dict = new Hashtable<String, Object>();
 					for (int i = 1; i < parts.length; i += 2) {
-						dict.put(URLDecoder.decode(parts[i], "UTF8"),
-								URLDecoder.decode(parts[i + 1], "UTF8"));
+						dict.put(URLDecoder.decode(parts[i], UTF8),
+								URLDecoder.decode(parts[i + 1], UTF8));
 					}
-					return new Event(URLDecoder.decode(parts[0], "UTF8"), dict);
+					return new Event(URLDecoder.decode(parts[0], UTF8), dict);
 				}
 			}
 		}
