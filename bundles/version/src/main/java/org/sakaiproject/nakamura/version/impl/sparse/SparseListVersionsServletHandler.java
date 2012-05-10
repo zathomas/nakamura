@@ -157,8 +157,16 @@ public class SparseListVersionsServletHandler extends AbstractSafeMethodsServlet
           write.key(FilesConstants.POOLED_CONTENT_FILENAME);
           write.value(vContent.getProperty(FilesConstants.POOLED_CONTENT_FILENAME));
         }
-        // collect users for output after revisions
-        users.add((String) vContent.getProperty(Content.LASTMODIFIED_BY_FIELD));
+        if (vContent.hasProperty(FilesConstants.POOLED_CONTENT_CREATED_FOR)) {
+          write.key(FilesConstants.POOLED_CONTENT_CREATED_FOR);
+          write.value(vContent.getProperty(FilesConstants.POOLED_CONTENT_CREATED_FOR));
+          // collect users for output after revisions
+          users.add((String) vContent.getProperty(FilesConstants.POOLED_CONTENT_CREATED_FOR));
+        } else {
+          // collect users for output after revisions
+          // POOLED_CONTENT_CREATED_FOR won't exist for pages so we use LASTMODIFIED_BY instead
+          users.add((String) vContent.getProperty(Content.LASTMODIFIED_BY_FIELD));
+        }
         write.endObject();
       }
       write.endObject(); // versions
