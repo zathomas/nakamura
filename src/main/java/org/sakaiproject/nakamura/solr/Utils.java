@@ -94,7 +94,7 @@ public class Utils {
         if (property == null) {
             return defaultArray;
 
-        } else if (property instanceof String) {
+        } else if (property instanceof String && !((String)property).isEmpty()) {
             return ((String) property).split("\\|");
 
         } else if (property instanceof String[]) {
