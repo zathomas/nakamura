@@ -66,7 +66,8 @@ public class EmbeddedSolrClient implements SolrClient {
 
 	private static final String LOGGER_KEY = "org.sakaiproject.nakamura.logger";
 	private static final String LOGGER_VAL = "org.apache.solr";
-	/**
+  public static final String NAKAMURA = "nakamura";
+  /**
 	 * According to the doc, this is thread safe and must be shared between all
 	 * threads.
 	 */
@@ -133,7 +134,7 @@ public class EmbeddedSolrClient implements SolrClient {
 
 		System.setProperty("solr.solr.home", solrHome);
 		File solrHomeFile = new File(solrHome);
-		File coreDir = new File(solrHomeFile, "nakamura");
+		File coreDir = new File(solrHomeFile, NAKAMURA);
 		File coreConfigDir = new File(solrHomeFile,"config");
 		ClassLoader contextClassloader = Thread.currentThread()
 				.getContextClassLoader();
@@ -154,11 +155,11 @@ public class EmbeddedSolrClient implements SolrClient {
 			IndexSchema schema = new IndexSchema(config, schemaLocation,
 					schemaSource);
 			CoreDescriptor coreDescriptor = new CoreDescriptor(coreContainer,
-					"nakamura", coreDir.getAbsolutePath() + "nakamura");
-			nakamuraCore = new SolrCore("nakamura", coreDir.getAbsolutePath(),
+         NAKAMURA, coreDir.getAbsolutePath() + NAKAMURA);
+			nakamuraCore = new SolrCore(NAKAMURA, coreDir.getAbsolutePath(),
 					config, schema, coreDescriptor);
-			coreContainer.register("nakamura", nakamuraCore, false);
-			server = new EmbeddedSolrServer(coreContainer, "nakamura");
+			coreContainer.register(NAKAMURA, nakamuraCore, false);
+			server = new EmbeddedSolrServer(coreContainer, NAKAMURA);
 			LoggerFactory.getLogger(this.getClass()).info("Contans cores {} ",
 					coreContainer.getCoreNames());
 			this.enabled = true;
@@ -242,20 +243,35 @@ public class EmbeddedSolrClient implements SolrClient {
 	}
 
 	private void deployStream(File destDir, String target, InputStream in) throws IOException {
-		if (!destDir.isDirectory()) {
-			if (!destDir.mkdirs()) {
-				LOGGER.warn(
-						"Unable to create dest dir {} for {}, may cause later problems ",
-						destDir, target);
-			}
+		if (!destDir.isDirectory() && !destDir.mkdirs()) {
+      LOGGER.warn(
+          "Unable to create dest dir {} for {}, may cause later problems ",
+          destDir, target);
 		}
 		File destFile = new File(destDir, target);
 		if (!destFile.exists()) {
-			OutputStream out = new FileOutputStream(destFile);
-			IOUtils.copy(in, out);
-			out.close();
-			in.close();
-			LOGGER.info("Saved Config file {} to {} ", target, destFile.getAbsolutePath());
+			OutputStream out = null;
+
+      try {
+        out = new FileOutputStream(destFile);
+        IOUtils.copy(in, out);
+      }
+      finally {
+        if (out != null) {
+          try {
+            out.close();
+          } catch (Exception e) {
+          }
+        }
+
+        if (in != null) {
+          try {
+            in.close();
+          } catch (Exception e) {
+          }
+        }
+      }
+ 			LOGGER.info("Saved Config file {} to {} ", target, destFile.getAbsolutePath());
 		}
 	}
 

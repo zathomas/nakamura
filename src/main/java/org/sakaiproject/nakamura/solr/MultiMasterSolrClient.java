@@ -105,8 +105,9 @@ public class MultiMasterSolrClient implements SolrClient {
 
 	private static final String LOGGER_KEY = "org.sakaiproject.nakamura.logger";
 	private static final String LOGGER_VAL = "org.apache.solr";
+  public static final String NAKAMURA = "nakamura";
 
-	/**
+  /**
 	 * According to the doc, this is thread safe and must be shared between all
 	 * threads.
 	 */
@@ -176,7 +177,7 @@ public class MultiMasterSolrClient implements SolrClient {
 
 		System.setProperty("solr.solr.home", solrHome);
 		File solrHomeFile = new File(solrHome);
-		File coreDir = new File(solrHomeFile, "nakamura");
+		File coreDir = new File(solrHomeFile, NAKAMURA);
 		// File coreConfigDir = new File(solrHomeFile,"conf");
 		deployFile(solrHomeFile, "solr.xml");
 		// deployFile(coreConfigDir,"solrconfig.xml");
@@ -196,10 +197,10 @@ public class MultiMasterSolrClient implements SolrClient {
 			SolrConfig config = new NakamuraSolrConfig(loader, configLocation,
 					configSource);
 			IndexSchema schema = new IndexSchema(config, null, schemaSource);
-			nakamuraCore = new SolrCore("nakamura", coreDir.getAbsolutePath(),
+			nakamuraCore = new SolrCore(NAKAMURA, coreDir.getAbsolutePath(),
 					config, schema, null);
-			coreContainer.register("nakamura", nakamuraCore, false);
-			server = new EmbeddedSolrServer(coreContainer, "nakamura");
+			coreContainer.register(NAKAMURA, nakamuraCore, false);
+			server = new EmbeddedSolrServer(coreContainer, NAKAMURA);
 			LoggerFactory.getLogger(this.getClass()).info("Contans cores {} ",
 					coreContainer.getCoreNames());
 		} finally {
@@ -337,21 +338,37 @@ public class MultiMasterSolrClient implements SolrClient {
 	}
 
 	private void deployFile(File destDir, String target) throws IOException {
-		if (!destDir.isDirectory()) {
-			if (!destDir.mkdirs()) {
-				LOGGER.warn(
-						"Unable to create dest dir {} for {}, may cause later problems ",
-						destDir, target);
-			}
+		if (!destDir.isDirectory() && !destDir.mkdirs()) {
+      LOGGER.warn(
+          "Unable to create dest dir {} for {}, may cause later problems ",
+          destDir, target);
 		}
 		File destFile = new File(destDir, target);
 		if (!destFile.exists()) {
-			InputStream in = Utils.class.getClassLoader().getResourceAsStream(
-					target);
-			OutputStream out = new FileOutputStream(destFile);
-			IOUtils.copy(in, out);
-			out.close();
-			in.close();
+			InputStream in = null;
+			OutputStream out = null;
+
+      try {
+        in = Utils.class.getClassLoader().getResourceAsStream(
+        					target);
+        out = new FileOutputStream(destFile);
+			  IOUtils.copy(in, out);
+      }
+      finally {
+        if (out != null) {
+          try {
+            out.close();
+          } catch (Exception e) {
+          }
+        }
+
+        if (in != null) {
+          try {
+            in.close();
+          } catch (Exception e) {
+          }
+        }
+      }
 		}
 	}
 

@@ -43,6 +43,7 @@ import com.google.common.collect.Sets;
 public class QueueManager implements Runnable {
 
 	private static final String END = "--end--";
+  private static final String UTF8 = "UTF8";
 
 	private static final Logger LOGGER = LoggerFactory
 			.getLogger(QueueManager.class);
@@ -83,13 +84,11 @@ public class QueueManager implements Runnable {
 		}
 		logDirectory = new File(queueHome, "indexq" + this.queueName);
 		positionFile = new File(queueHome, "indexqpos" + this.queueName);
-		if (!logDirectory.isDirectory()) {
-			if (!logDirectory.mkdirs()) {
-				LOGGER.warn("Failed to create {} ",
-						logDirectory.getAbsolutePath());
-				throw new IOException("Faild to create Indexing Log directory "
-						+ logDirectory.getAbsolutePath());
-			}
+		if (!logDirectory.isDirectory() && !logDirectory.mkdirs()) {
+      LOGGER.warn("Failed to create {} ",
+          logDirectory.getAbsolutePath());
+      throw new IOException("Faild to create Indexing Log directory "
+          + logDirectory.getAbsolutePath());
 		}
 		this.nearRealTime = nearRealTime;
 		this.batchDelay = batchDelay;
@@ -174,14 +173,12 @@ public class QueueManager implements Runnable {
 			}
 			String[] properties = event.getPropertyNames();
 			String[] op = new String[properties.length * 2 + 1];
-			op[0] = URLEncoder.encode(event.getTopic(), "UTF8");
+			op[0] = URLEncoder.encode(event.getTopic(), UTF8);
 			int i = 1;
 			for (String p : properties) {
-				op[i] = URLEncoder.encode(p, "UTF8");
-				;
+				op[i] = URLEncoder.encode(p, UTF8);
 				i++;
-				op[i] = URLEncoder.encode(String.valueOf(event.getProperty(p)),
-						"UTF8");
+				op[i] = URLEncoder.encode(String.valueOf(event.getProperty(p)), UTF8);
 				i++;
 			}
 			eventWriter.append(StringUtils.join(op, ',')).append('\n');
@@ -210,15 +207,15 @@ public class QueueManager implements Runnable {
 				Event loadEvent = null;
 				try {
 					loadEvent = readEvent();
-				} catch (Throwable t) {
+				} catch (Exception e) {
 					if (running) {
 						LOGGER.warn("Unreadable Event at {} {} ",
 								currentInFile, lineNo);
-						LOGGER.warn("Reported exception follows:", t);
+						LOGGER.warn("Reported exception follows:", e);
 					} else {
 						LOGGER.debug("Unreadable Event at {} {} ",
 								currentInFile, lineNo);
-						LOGGER.debug("Reported exception follows:", t);
+						LOGGER.debug("Reported exception follows:", e);
 					}
 				}
 				Map<String, Event> events = Maps.newLinkedHashMap();
@@ -250,10 +247,10 @@ public class QueueManager implements Runnable {
 					loadEvent = null;
 					try {
 						loadEvent = readEvent();
-					} catch (Throwable t) {
+					} catch (Exception e) {
 						LOGGER.warn("Unreadable Event at {} {} ",
 								currentInFile, lineNo);
-						LOGGER.warn("Reported exception follows:", t);
+						LOGGER.warn("Reported exception follows:", e);
 					}
 				}
 				if (events.size() > 0) {
@@ -318,17 +315,15 @@ public class QueueManager implements Runnable {
 									docs = contentIndexHandler.getDocuments(
 											repositorySession, event);
 
-									if (service != null) {
-										if (docs != null && docs.size() > 0) {
-											LOGGER.debug("Adding Docs {} ",
-													docs);
-											service.add(docs);
-											needsCommit = true;
-										}
+									if (service != null && docs != null && docs.size() > 0) {
+                    LOGGER.debug("Adding Docs {} ",
+                        docs);
+                    service.add(docs);
+                    needsCommit = true;
 									}
-								} catch (Throwable t) {
-									 if ( t instanceof SolrServerException && t.getCause() instanceof ConnectException ) {
-										throw (SolrServerException)t;
+								} catch (Exception e) {
+									 if ( e instanceof SolrServerException && e.getCause() instanceof ConnectException ) {
+										throw (SolrServerException)e;
 								     }
 									 LOGGER.error(
 											"{} Failed to process event {}, {} cause follows, event ignored for "
@@ -336,7 +331,7 @@ public class QueueManager implements Runnable {
 													+ "this log message from the code) ",
 											new Object[] { contentIndexHandler,
 													event, path });
-									LOGGER.error(t.getMessage(), t);
+									LOGGER.error(e.getMessage(), e);
 									if (docs != null) {
 										for (SolrInputDocument d : docs) {
 											LOGGER.error("Failed Doc {} ", d);
@@ -386,7 +381,7 @@ public class QueueManager implements Runnable {
 								backoff);
 						}
 						rollback();
-						Thread.sleep(1000 * backoff);
+						Thread.sleep(1000L * backoff);
 					} else {
 						LOGGER.warn(
 								" Batch Operation completed with Errors, the index may have lost data, please FIX ASAP. "
@@ -403,7 +398,7 @@ public class QueueManager implements Runnable {
 		            backoff = 0;
 					rollback();
 				}
-			} catch (Throwable e) {
+			} catch (Exception e) {
 				if (running) {
 					LOGGER.warn(e.getMessage(), e);
 					try {
@@ -503,13 +498,20 @@ public class QueueManager implements Runnable {
 						positionFile);
 			}
 		} else {
-			FileWriter position = new FileWriter(positionFile);
-			position.write(URLEncoder.encode(currentInFile.getAbsolutePath(),
-					"UTF8"));
-			position.write(",");
-			position.write(String.valueOf(lineNo));
-			position.write("\n");
-			position.close();
+			FileWriter position = null;
+
+      try {
+        position = new FileWriter(positionFile);
+        position.write(URLEncoder.encode(currentInFile.getAbsolutePath(),UTF8));
+        position.write(",");
+        position.write(String.valueOf(lineNo));
+        position.write("\n");
+      }
+      finally {
+			  if (position != null) {
+          position.close();
+        }
+      }
 		}
 	}
 
@@ -520,8 +522,7 @@ public class QueueManager implements Runnable {
 				position = new BufferedReader(new FileReader(positionFile));
 				String[] filePos = StringUtils.split(position.readLine(), ',');
 				if (filePos != null && filePos.length == 2) {
-					currentInFile = new File(URLDecoder.decode(filePos[0],
-							"UTF8"));
+					currentInFile = new File(URLDecoder.decode(filePos[0],UTF8));
 					if (currentInFile.exists()) {
 						lineNo = Integer.parseInt(filePos[1]);
 						loadPosition(currentInFile, lineNo);
@@ -549,10 +550,10 @@ public class QueueManager implements Runnable {
 				if (parts.length > 0) {
 					Dictionary<String, Object> dict = new Hashtable<String, Object>();
 					for (int i = 1; i < parts.length; i += 2) {
-						dict.put(URLDecoder.decode(parts[i], "UTF8"),
-								URLDecoder.decode(parts[i + 1], "UTF8"));
+						dict.put(URLDecoder.decode(parts[i], UTF8),
+								URLDecoder.decode(parts[i + 1], UTF8));
 					}
-					return new Event(URLDecoder.decode(parts[0], "UTF8"), dict);
+					return new Event(URLDecoder.decode(parts[0], UTF8), dict);
 				}
 			}
 		}
@@ -742,35 +743,33 @@ public class QueueManager implements Runnable {
 	}
 
 	private void waitForWriter() throws IOException {
-		if (isRunning()) {
-			// just incase we have to wait for a while for the lock, get the
-			// last modified now,
-			// so we can see if its modified since we started waiting.
-			if (getBatchTTL() > 0) {
-				synchronized (waitingForFileLock) {
-					try {
-						LOGGER.debug(
-								"Waiting for more data read:{} written:{} ",
-								nread, nwrite);
-						if (nread > nwrite) {
-							// reset counters if were catching up
-							nread = nwrite;
-							// +1 because an event was written which makes
-							// nwrite nread+1 when there are
-							// none left
-						} else if (nread + 1 < nwrite) {
-							LOGGER.debug(
-									"Possible event loss, waiting to read when there are more events written read:{} written:{}",
-									nread, nwrite);
-						}
-						long wait = getBatchTTL();
-						if (wait > 0) {
-							waitingForFileLock.wait(wait);
-						}
-					} catch (InterruptedException e) {
-					}
-				}
-			}
+    // just incase we have to wait for a while for the lock, get the
+    // last modified now,
+    // so we can see if its modified since we started waiting.
+		if (isRunning() && getBatchTTL() > 0) {
+      synchronized (waitingForFileLock) {
+        try {
+          LOGGER.debug(
+              "Waiting for more data read:{} written:{} ",
+              nread, nwrite);
+          if (nread > nwrite) {
+            // reset counters if were catching up
+            nread = nwrite;
+            // +1 because an event was written which makes
+            // nwrite nread+1 when there are
+            // none left
+          } else if (nread + 1 < nwrite) {
+            LOGGER.debug(
+                "Possible event loss, waiting to read when there are more events written read:{} written:{}",
+                nread, nwrite);
+          }
+          long wait = getBatchTTL();
+          if (wait > 0) {
+            waitingForFileLock.wait(wait);
+          }
+        } catch (InterruptedException e) {
+        }
+      }
 		}
 		if (!isRunning()) {
 			throw new IOException(

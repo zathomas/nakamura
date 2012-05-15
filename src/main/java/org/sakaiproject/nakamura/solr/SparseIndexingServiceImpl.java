@@ -67,6 +67,7 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
       .getLogger(SparseIndexingServiceImpl.class);
   // these are the names of system properites.
   private static final Set<String> SYSTEM_PROPERTIES = ImmutableSet.of(FIELD_ID, FIELD_READERS);
+  public static final String SLING_RESOURCE_TYPE = "sling:resourceType";
 
   @Reference
   protected TopicIndexer contentIndexer;
@@ -148,8 +149,8 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
       for (String principal : principals) {
         doc.addField(FIELD_READERS, principal);
       }
-      if ( content.hasProperty("sling:resourceType")) {
-        doc.setField(FIELD_RESOURCE_TYPE, content.getProperty("sling:resourceType"));
+      if ( content.hasProperty(SLING_RESOURCE_TYPE)) {
+        doc.setField(FIELD_RESOURCE_TYPE, content.getProperty(SLING_RESOURCE_TYPE));
       }
       String path = content.getPath();
       // we don't overwrite the id field if it has been provided
@@ -214,8 +215,8 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
             Content c = contentManager.get(path);
             LOGGER.debug("Checking Content at {} got {} ", path, c);
             if (c != null) {
-              if (c.hasProperty("sling:resourceType")) {
-                String resourceType = (String) c.getProperty("sling:resourceType");
+              if (c.hasProperty(SLING_RESOURCE_TYPE)) {
+                String resourceType = (String) c.getProperty(SLING_RESOURCE_TYPE);
                 IndexingHandler handler = indexers.get(resourceType);
                 if (handler != null) {
                   LOGGER.debug("Handler of type {} found {} for {} from {} ", new Object[] {

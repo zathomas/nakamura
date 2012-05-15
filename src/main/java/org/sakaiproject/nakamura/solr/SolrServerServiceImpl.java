@@ -26,18 +26,22 @@ import com.google.common.collect.Maps;
 @Service(value = SolrServerService.class)
 @References(
 		value={
-				@Reference(target="(client-name=embedded)",name="embeddedClient", cardinality=ReferenceCardinality.MANDATORY_UNARY,policy=ReferencePolicy.STATIC,strategy=ReferenceStrategy.EVENT,bind="bind",unbind="unbind",referenceInterface=SolrClient.class),
-				@Reference(target="(client-name=remote)",name="remoteClient", cardinality=ReferenceCardinality.MANDATORY_UNARY,policy=ReferencePolicy.STATIC,strategy=ReferenceStrategy.EVENT,bind="bind",unbind="unbind",referenceInterface=SolrClient.class),
-				@Reference(target="(client-name=multi)",name="splitClient", cardinality=ReferenceCardinality.MANDATORY_UNARY,policy=ReferencePolicy.STATIC,strategy=ReferenceStrategy.EVENT,bind="bind",unbind="unbind",referenceInterface=SolrClient.class),
-				@Reference(target="(client-name=multiremote)",name="multiRemoteClient", cardinality=ReferenceCardinality.MANDATORY_UNARY,policy=ReferencePolicy.STATIC,strategy=ReferenceStrategy.EVENT,bind="bind",unbind="unbind",referenceInterface=SolrClient.class),
-				@Reference(name="optionalClient", cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,policy=ReferencePolicy.DYNAMIC,strategy=ReferenceStrategy.EVENT,bind="bind",unbind="unbind",referenceInterface=SolrClient.class)
+				@Reference(target="(client-name=embedded)",name="embeddedClient", cardinality=ReferenceCardinality.MANDATORY_UNARY,policy=ReferencePolicy.STATIC,strategy=ReferenceStrategy.EVENT,bind=SolrServerServiceImpl.BIND,unbind=SolrServerServiceImpl.UNBIND,referenceInterface=SolrClient.class),
+				@Reference(target="(client-name=remote)",name="remoteClient", cardinality=ReferenceCardinality.MANDATORY_UNARY,policy=ReferencePolicy.STATIC,strategy=ReferenceStrategy.EVENT,bind=SolrServerServiceImpl.BIND,unbind=SolrServerServiceImpl.UNBIND,referenceInterface=SolrClient.class),
+				@Reference(target="(client-name=multi)",name="splitClient", cardinality=ReferenceCardinality.MANDATORY_UNARY,policy=ReferencePolicy.STATIC,strategy=ReferenceStrategy.EVENT,bind=SolrServerServiceImpl.BIND,unbind=SolrServerServiceImpl.UNBIND,referenceInterface=SolrClient.class),
+				@Reference(target="(client-name=multiremote)",name="multiRemoteClient", cardinality=ReferenceCardinality.MANDATORY_UNARY,policy=ReferencePolicy.STATIC,strategy=ReferenceStrategy.EVENT,bind=SolrServerServiceImpl.BIND,unbind=SolrServerServiceImpl.UNBIND,referenceInterface=SolrClient.class),
+				@Reference(name="optionalClient", cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,policy=ReferencePolicy.DYNAMIC,strategy=ReferenceStrategy.EVENT,bind=SolrServerServiceImpl.BIND,unbind=SolrServerServiceImpl.UNBIND,referenceInterface=SolrClient.class)
 		})
 public class SolrServerServiceImpl implements SolrServerService, SolrClientListener {
 
 	
 	@Property(value=SolrClient.EMBEDDED, description="embedded|remote|multi|other")
 	private static final String SOLR_IMPL = "solr-impl";
-	private SolrClient server;
+
+  public static final String BIND = "bind";
+  public static final String UNBIND = "unbind";
+  
+  private SolrClient server;
 	private Map<String, SolrClient> servers = Maps.newConcurrentMap();
 	
 	

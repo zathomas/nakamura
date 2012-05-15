@@ -25,7 +25,10 @@ public abstract class IterableWrapper<T> implements Iterable<T> {
   private Object[] array;
 
   public IterableWrapper(Object[] v) {
-    this.array = v;
+    if (v != null) {
+      array = new Object[v.length];
+      System.arraycopy(v, 0, array, 0, v.length);
+    }
   }
 
   public Iterator<T> iterator() {
