@@ -23,7 +23,6 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -44,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -52,8 +52,6 @@ public class BatchHelper {
 
   private static final Logger LOGGER = LoggerFactory
       .getLogger(BatchHelper.class);
-
-  private static final Long EXPIRES_OFFSET_MS = 24 * 60 * 60 * 1000L;  // 24 hours
 
   protected static final String REQUESTS_PARAMETER = "requests";
 
@@ -111,9 +109,6 @@ public class BatchHelper {
       write.endObject();
       response.setContentType("application/json");
       response.setCharacterEncoding("UTF-8");
-      if (HttpConstants.METHOD_GET.equals(request.getMethod() )) {
-        response.setDateHeader("Expires", System.currentTimeMillis() + EXPIRES_OFFSET_MS);
-      }
       response.getWriter().write(sw.getBuffer().toString());
     } catch (JSONException e) {
       LOGGER.warn("Failed to create a JSON response");
