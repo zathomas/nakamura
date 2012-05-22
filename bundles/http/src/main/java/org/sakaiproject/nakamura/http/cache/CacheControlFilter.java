@@ -183,7 +183,6 @@ public class CacheControlFilter implements Filter {
           TelemetryCounter.incrementValue("http", "CacheControlFilter-nosave", cacheKey);
         }
       } else {
-        TelemetryCounter.incrementValue("http", "CacheControlFilter-noop", cacheKey);
         chain.doFilter(request, response);
       }
     }
