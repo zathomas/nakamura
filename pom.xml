@@ -114,6 +114,7 @@
         <module>bundles/lom</module>
         <module>bundles/content-packaging</module>
         <module>bundles/postgresqlwrapper</module>
+        <module>bundles/solr</module>
         <module>testscripts</module>
       </modules>
     </profile>

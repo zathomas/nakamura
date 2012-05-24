@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Properties;
 
@@ -144,7 +145,7 @@ public class QueueManagerTest {
       props.setProperty("path", "event" + i + "path");
       props.setProperty("field1", "event" + i + "field1value");
       props.setProperty("field2", "event" + i + "field2value");
-      indexEvent = new Event("topic" + i, props);
+      indexEvent = new Event("topic" + i, (Dictionary)props);
       qMgr.saveEvent(indexEvent);
     }
   }
