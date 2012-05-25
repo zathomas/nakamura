@@ -100,12 +100,16 @@ public class CacheControlFilter implements Filter {
   @Property(intValue=5)
   private static final String FILTER_PRIORITY_CONF = "filter.priority";
 
-  
+  @Property(boolValue=false)
+  private static final String DISABLE_CACHE_FOR_UI_DEV = "disable.cache.for.dev.mode";
+
   @Reference 
   protected CacheManagerService cacheManagerService;
   
   @Reference
   protected ExtHttpService extHttpService;
+
+  private boolean disableForDevMode;
 
   /**
    * {@inheritDoc}
@@ -270,8 +274,13 @@ public class CacheControlFilter implements Filter {
 
     int filterPriority = PropertiesUtil.toInteger(properties.get(FILTER_PRIORITY_CONF),0);
 
-    extHttpService.registerFilter(this, ".*", null, filterPriority, null);
+    disableForDevMode = PropertiesUtil.toBoolean(properties.get(DISABLE_CACHE_FOR_UI_DEV), false);
 
+    if ( disableForDevMode ) {
+      extHttpService.unregisterFilter(this);
+    } else {
+      extHttpService.registerFilter(this, ".*", null, filterPriority, null);
+    }
 
   }
 
