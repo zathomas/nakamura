@@ -64,6 +64,14 @@
       <artifactId>jackrabbit-api</artifactId>
     </dependency>
     <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>servlet-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.activity.api</artifactId>
       <version>1.4.0-SNAPSHOT</version>
@@ -80,6 +88,10 @@
       <artifactId>org.sakaiproject.nakamura.connections</artifactId>
       <version>1.4.0-SNAPSHOT</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.sakaiproject.nakamura</groupId>
+        <artifactId>org.sakaiproject.nakamura.core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>

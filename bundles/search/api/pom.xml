@@ -60,6 +60,14 @@
       <artifactId>org.sakaiproject.nakamura.solr</artifactId>
     </dependency>
     <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>servlet-api</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.utils</artifactId>
 	  <version>1.4.0-SNAPSHOT</version>	  
