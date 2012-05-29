@@ -100,10 +100,12 @@ public class CacheControlFilter implements Filter {
   @Property(intValue=5)
   private static final String FILTER_PRIORITY_CONF = "filter.priority";
 
-  @Property(boolValue=false)
+  @Property(boolValue=false, label = "Disable Cache Filter",
+            description = "When selected, disables the caching filter completely. Disabling cache is not recommended in a production environment.")
   private static final String DISABLE_CACHE_FOR_UI_DEV = "disable.cache.for.dev.mode";
   
-  @Property(boolValue=true)
+  @Property(boolValue=true, label = "Bypass Cache for http://localhost",
+            description = "When selected, caching will be disabled for 'localhost' and '127.0.0.1', but enabled for all other hosts. Useful for developers.")
   private static final String BYPASS_CACHE_FOR_LOCALHOST = "bypass.cache.for.localhost";
 
   @Reference 
