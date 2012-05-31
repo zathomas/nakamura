@@ -53,7 +53,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@Component(immediate = true, metatype = true, enabled = true)
+@Component()
 @Service
 @Properties(value = {
     @Property(name = "service.description", value = "Nakamura Cache-Control Filter"),

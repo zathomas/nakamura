@@ -40,7 +40,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@Component(immediate = true, metatype = true, enabled = true)
+@Component()
 @Properties(value = {
     @Property(name = "service.description", value = "Nakamura Dynamic Response Cache"),
     @Property(name = "service.vendor", value = "The Sakai Foundation")})
