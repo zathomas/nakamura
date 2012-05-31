@@ -59,15 +59,12 @@ public class DiskDocumentResult implements ExternalDocumentResult {
     } catch (FileNotFoundException e) {
       return null;
     } catch (IOException e) {
-      return null;
-    } finally {
-      if (in != null) {
-        try {
-          in.close();
-        } catch(IOException e) {
-          // just ignore this and let the return happen
-        }
+      try {
+        in.close();
+      } catch (IOException e1) {
+        // let go, man. let it go.
       }
+      return null;
     }
   }
 
