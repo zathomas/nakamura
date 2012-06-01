@@ -52,7 +52,7 @@ public class LaunchNakamura extends javax.swing.JFrame {
   public static final int APP_NOT_RUNNING = 0;
   private static String[] savedArgs;
   private int runStatus = APP_NOT_RUNNING; // 0 for off, 1 for on.
-  private static final String localhostURL = "http://localhost:8080/dev/";
+  private static final String localhostURL = "http://localhost:8080/";
 
   /** Creates new form LaunchNakamura */
   public LaunchNakamura() {
