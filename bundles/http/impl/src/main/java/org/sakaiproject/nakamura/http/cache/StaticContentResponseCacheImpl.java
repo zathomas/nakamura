@@ -53,63 +53,48 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@Component()
+@Component(metatype = true, label = "%staticcontentresponsecache.name",
+    description = "%staticcontentresponsecache.description")
 @Service
 @Properties(value = {
-    @Property(name = "service.description", value = "Nakamura Cache-Control Filter"),
-    @Property(name = "sakai.cache.paths", value = {
-        "dev;31536000",
-        "devwidgets;31536000"},
-        description = "List of subpaths and max age for all content under subpath in seconds, setting to 0 makes it non cacheing"),
-    @Property(name = "sakai.cache.patterns", value = {
-        "root;.*(js|css)$;172800",
-        "root;.*html$;172800",
-        "var;^/var/search/public/.*$;900",
-        "var;^/var/widgets.json$;172800"},
-        description = "List of path prefixes followed by a regex. If the prefix starts with a root: it means files in the root folder that match the pattern."),
+    @Property(name = "service.description", value = "Nakamura Static Response Cache"),
     @Property(name = "service.vendor", value = "The Sakai Foundation")})
 public class StaticContentResponseCacheImpl implements Filter, StaticContentResponseCache {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StaticContentResponseCacheImpl.class);
 
-  /**
-   * map of expiry times for whole subtrees
-   */
-  private Map<String, CacheConfig> subPaths;
-
-  /**
-   * map of patterns by subtree
-   */
-  private Map<String, Map<Pattern, CacheConfig>> subPathPatterns;
-
-  /**
-   * list of patterns for the root resources
-   */
-  private Map<Pattern, CacheConfig> rootPathPatterns;
-
+  @Property(value = {
+      "root;.*(js|css)$;172800",
+      "root;.*html$;172800",
+      "var;^/var/search/public/.*$;900",
+      "var;^/var/widgets.json$;172800"})
   static final String SAKAI_CACHE_PATTERNS = "sakai.cache.patterns";
 
+  @Property(value = {
+      "dev;31536000",
+      "devwidgets;31536000"})
   static final String SAKAI_CACHE_PATHS = "sakai.cache.paths";
 
-  /**
-   * Priority of this filter, higher number means sooner
-   */
   @Property(intValue = 5)
-  private static final String FILTER_PRIORITY_CONF = "filter.priority";
+  static final String FILTER_PRIORITY_CONF = "filter.priority";
 
-  @Property(boolValue = false, label = "Disable Cache Filter",
-      description = "When selected, disables the caching filter completely. Disabling cache is not recommended in a production environment.")
-  private static final String DISABLE_CACHE_FOR_UI_DEV = "disable.cache.for.dev.mode";
+  @Property(boolValue = false)
+  static final String DISABLE_CACHE_FOR_UI_DEV = "disable.cache.for.dev.mode";
 
-  @Property(boolValue = true, label = "Bypass Cache for http://localhost",
-      description = "When selected, caching will be disabled for 'localhost' and '127.0.0.1', but enabled for all other hosts. Useful for developers.")
-  private static final String BYPASS_CACHE_FOR_LOCALHOST = "bypass.cache.for.localhost";
+  @Property(boolValue = true)
+  static final String BYPASS_CACHE_FOR_LOCALHOST = "bypass.cache.for.localhost";
 
   @Reference
   protected ExtHttpService extHttpService;
 
   @Reference
   protected CacheManagerService cacheManagerService;
+
+  private Map<String, CacheConfig> subPaths;
+
+  private Map<String, Map<Pattern, CacheConfig>> subPathPatterns;
+
+  private Map<Pattern, CacheConfig> rootPathPatterns;
 
   private Cache<CachedResponse> cache;
 

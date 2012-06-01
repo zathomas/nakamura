@@ -40,19 +40,18 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@Component()
+@Component(metatype = true, label = "%dynamiccontentresponsecache.name",
+    description = "%dynamiccontentresponsecache.description")
 @Properties(value = {
     @Property(name = "service.description", value = "Nakamura Dynamic Response Cache"),
     @Property(name = "service.vendor", value = "The Sakai Foundation")})
 @Service
 public class DynamicContentResponseCacheImpl implements DynamicContentResponseCache {
 
-  @Property(boolValue = false, label = "Disable Dynamic Content Cache",
-      description = "When selected, disables the dynamic content cache completely. Disabling cache is not recommended in a production environment.")
+  @Property(boolValue = false)
   static final String DISABLE_CACHE_FOR_UI_DEV = "disable.cache.for.dev.mode";
 
-  @Property(boolValue = true, label = "Bypass Dynamic Content Cache for http://localhost",
-      description = "When selected, dynamic content caching will be disabled for 'localhost' and '127.0.0.1', but enabled for all other hosts. Useful for developers.")
+  @Property(boolValue = true)
   static final String BYPASS_CACHE_FOR_LOCALHOST = "bypass.cache.for.localhost";
 
   @Reference
