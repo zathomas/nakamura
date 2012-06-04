@@ -69,6 +69,27 @@ def process_as_image?(extension)
   ['.png', '.jpg', '.gif', '.psd', '.jpeg'].include? extension
 end
 
+# GIF/PNG files should generate thumbnails with their according extension
+# JPG/JPEG/PSD files should use the .jpg extension
+def output_extension(extension)
+  if extension == ".gif" || extension == ".png"
+    extension
+  else
+    ".jpg"
+  end
+end
+
+# Give back the correct mimetype for an extension
+def related_mimetype(extension)
+  if extension == ".gif"
+    "image/gif"
+  elsif extension == ".png"
+    "image/png"
+  else
+    "image/jpeg"
+  end
+end
+
 # HTML pages only need the first "page"
 def only_first_page?(extension)
   ['.htm', '.html', '.xhtml', '.txt'].include? extension
@@ -124,9 +145,10 @@ end
 
 # Post the file to the server.
 # 1 based index! (necessity for the docpreviewer 3akai-ux widget), e.g: id.pagex-large.jpg
-def post_file_to_server id, content, size, page_count
-  @s.execute_file_post @s.url_for("system/pool/createfile.#{id}.page#{page_count}-#{size}"), "thumbnail", "thumbnail", content, "image/jpeg"
-  alt_url = @s.url_for("p/#{id}/page#{page_count}.#{size}.jpg")
+def post_file_to_server id, content, size, page_count, extension = ".jpg"
+
+  @s.execute_file_post @s.url_for("system/pool/createfile.#{id}.page#{page_count}-#{size}"), "thumbnail", "thumbnail", content, related_mimetype(extension)
+  alt_url = @s.url_for("p/#{id}/page#{page_count}.#{size}" + extension)
   @s.execute_post alt_url, {"sakai:excludeSearch" => true}
   log "Uploaded image to curl #{alt_url}"
 end
@@ -273,14 +295,15 @@ def main()
         File.open(filename, 'wb') { |f| f.write content_file.body }
 
         if process_as_image? extension
+          extension = output_extension extension
           page_count = 1
-          filename_thumb = 'thumb.jpg'
+          filename_thumb = 'thumb' + extension
 
           content = resize_and_write_file filename, filename_thumb, 900
-          post_file_to_server id, content, :normal, page_count
+          post_file_to_server id, content, :normal, page_count, extension
 
           content = resize_and_write_file filename, filename_thumb, 180, 225
-          post_file_to_server id, content, :small, page_count
+          post_file_to_server id, content, :small, page_count, extension
 
           FileUtils.rm_f DOCS_DIR + "/#{filename_thumb}"
         else
