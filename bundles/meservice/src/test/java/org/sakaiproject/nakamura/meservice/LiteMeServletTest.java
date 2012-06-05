@@ -68,4 +68,10 @@ public class LiteMeServletTest {
     
   }
 
+  @Test
+  public void testNothingForNow() {
+    // I assume someone will add test coverage in the future; otherwise I would just
+    // remove the entire class.
+  }
+
 }
