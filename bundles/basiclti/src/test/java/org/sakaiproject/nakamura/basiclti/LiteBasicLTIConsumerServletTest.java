@@ -62,6 +62,8 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.user.UserConstants;
+import org.sakaiproject.nakamura.api.util.LocaleUtils;
+import org.sakaiproject.nakamura.util.LocaleUtilsImpl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -70,6 +72,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -85,6 +88,7 @@ public class LiteBasicLTIConsumerServletTest {
   LiteBasicLTIConsumerServlet liteBasicLTIConsumerServlet;
   protected transient LiteBasicLTIContextIdResolver contextIdResolver;
   protected transient VirtualToolDataProvider virtualToolDataProvider;
+  protected transient LocaleUtils localeUtils;
   String[] selectors;
   String contentPath;
   String adminContentPath;
@@ -166,11 +170,13 @@ public class LiteBasicLTIConsumerServletTest {
     anonymous = false;
     virtualToolDataProvider = new CLEVirtualToolDataProvider();
     contextIdResolver = new LiteDefaultContextIdResolver();
+    localeUtils = new LocaleUtilsImpl();
     liteBasicLTIConsumerServlet = new LiteBasicLTIConsumerServlet();
     liteBasicLTIConsumerServlet.sparseRepository = sparseRepository;
     liteBasicLTIConsumerServlet.contextIdResolver = contextIdResolver;
     liteBasicLTIConsumerServlet.eventAdmin = eventAdmin;
     liteBasicLTIConsumerServlet.virtualToolDataProvider = virtualToolDataProvider;
+    liteBasicLTIConsumerServlet.localeUtils = localeUtils;
     when(request.getRequestPathInfo()).thenReturn(requestPathInfo);
     when(requestPathInfo.getSelectors()).thenReturn(selectors);
     when(requestPathInfo.getExtension()).thenReturn("json");
@@ -1238,6 +1244,28 @@ public class LiteBasicLTIConsumerServletTest {
     } else {
       verify(writer, times(1)).write(contains("name=\"custom_debug\" value=\"false\""));
     }
+    // KERN-2890 Add timezone and locale support to LTI consumer launch payloads
+    final TimeZone tz = TimeZone.getDefault();
+    verify(writer, times(1)).write(contains("name=\"custom_locale\" value=\"en_US\""));
+    verify(writer, times(1)).write(
+        contains("name=\"custom_locale_country\" value=\"US\""));
+    verify(writer, times(1)).write(
+        contains("name=\"custom_locale_displaycountry\" value=\"United States\""));
+    verify(writer, times(1)).write(
+        contains("name=\"custom_locale_displaylanguage\" value=\"English\""));
+    verify(writer, times(1)).write(
+        contains("name=\"custom_locale_displayname\" value=\"English (United States)\""));
+    verify(writer, times(1)).write(
+        contains("name=\"custom_locale_iso3country\" value=\"USA\""));
+    verify(writer, times(1)).write(
+        contains("name=\"custom_locale_iso3language\" value=\"eng\""));
+    verify(writer, times(1)).write(
+        contains("name=\"custom_locale_language\" value=\"en\""));
+    verify(writer, times(1)).write(
+        contains("name=\"custom_timezone\" value=\"" + tz.getID() + "\""));
+    verify(writer, times(1)).write(
+        contains("name=\"custom_tz\" value=\"" + tz.getID() + "\""));
+    verify(writer, times(1)).write(contains("name=\"custom_tz_offset\""));
   }
 
   private void verifyRenderedJson(final boolean shouldIncludeAdminContent)
