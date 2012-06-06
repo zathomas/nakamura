@@ -484,21 +484,16 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
       // KERN-2890 Add timezone and locale support
       final Map<String, Object> azProperties = localeUtils.getProperties(az);
       final Locale locale = localeUtils.getLocale(azProperties);
-      launchProps.put("locale", locale.toString());
-      launchProps.put("locale.country", locale.getCountry());
-      launchProps.put("locale.displayCountry", locale.getDisplayCountry(locale));
-      launchProps.put("locale.displayLanguage", locale.getDisplayLanguage(locale));
-      launchProps.put("locale.displayName", locale.getDisplayName(locale));
-      launchProps.put("locale.displayVariant", locale.getDisplayVariant(locale));
-      launchProps.put("locale.language", locale.getLanguage());
-      launchProps.put("locale.variant", locale.getVariant());
-      launchProps.put("locale.ISO3Country", localeUtils.getIso3Country(locale));
-      launchProps.put("locale.ISO3Language", localeUtils.getIso3Language(locale));
+      launchProps.put("ext_locale", locale.toString());
+      launchProps.put("ext_locale_iso3", localeUtils.getIso3Language(locale) + "_"
+          + localeUtils.getIso3Country(locale));
 
       final TimeZone timezone = localeUtils.getTimeZone(azProperties);
-      launchProps.put("tz", timezone.getID());
-      launchProps.put("tz.offset", String.valueOf(localeUtils.getOffset(timezone)));
-      launchProps.put("timezone", timezone.getID());
+      final int offset = localeUtils.getOffset(timezone);
+      launchProps.put("ext_tz", timezone.getID());
+      launchProps.put("ext_tz_offset", String.valueOf(offset));
+      launchProps.put("ext_timezone", timezone.getID());
+      launchProps.put("ext_timezone_offset", String.valueOf(offset));
 
       final boolean debug = (Boolean) effectiveSettings.get(DEBUG);
       // might be useful for the remote end to know if debug is enabled...
