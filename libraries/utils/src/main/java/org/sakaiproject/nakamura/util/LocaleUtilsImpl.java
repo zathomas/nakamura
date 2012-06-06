@@ -62,8 +62,8 @@ public class LocaleUtilsImpl implements LocaleUtils {
   protected static final Pattern LOCALE_REGEX = Pattern.compile(String.format(
       LOCALE_PATTERN, LANGUAGE_PATTERN, COUNTRY_PATTERN));
 
-  protected String defaultLanguage;
-  protected String defaultCountry;
+  protected String defaultLanguage = DEFAULT_LANGUAGE;
+  protected String defaultCountry = DEFAULT_COUNTRY;
 
   /**
    * {@inheritDoc}
@@ -175,9 +175,9 @@ public class LocaleUtilsImpl implements LocaleUtils {
   @Modified
   protected void activate(final Map<?, ?> props) {
     defaultLanguage = PropertiesUtil.toString(props.get(LOCALE_LANGUAGE_PROP),
-        DEFAULT_LANGUAGE);
+        defaultLanguage);
     defaultCountry = PropertiesUtil.toString(props.get(LOCALE_COUNTRY_PROP),
-        DEFAULT_COUNTRY).toUpperCase();
+        defaultCountry).toUpperCase();
   }
 
   /**
