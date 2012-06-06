@@ -34,7 +34,6 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.params.CommonParams;
 import org.perf4j.aop.Profiled;
-import org.sakaiproject.nakamura.api.connections.ConnectionConstants;
 import org.sakaiproject.nakamura.api.connections.ConnectionManager;
 import org.sakaiproject.nakamura.api.doc.BindingType;
 import org.sakaiproject.nakamura.api.doc.ServiceBinding;
@@ -51,7 +50,6 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.message.LiteMessagingService;
 import org.sakaiproject.nakamura.api.message.MessagingException;
-import org.sakaiproject.nakamura.api.messagebucket.MessageBucketService;
 import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
@@ -66,6 +64,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -120,6 +119,9 @@ import javax.servlet.http.HttpServletResponse;
 public class LiteMeServlet extends SlingSafeMethodsServlet {
   private static final long serialVersionUID = -3786472219389695181L;
   private static final Logger LOG = LoggerFactory.getLogger(LiteMeServlet.class);
+
+  private static final String PROFILE_ELEMENTS[] = {UserConstants.USER_FIRSTNAME_PROPERTY,
+    UserConstants.USER_LASTNAME_PROPERTY, UserConstants.USER_EMAIL_PROPERTY, UserConstants.USER_PICTURE};
 
   @Reference
   protected transient LiteMessagingService messagingService;
@@ -193,9 +195,14 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       ExtendedJSONWriter writer = new ExtendedJSONWriter(w);
       writer.object(); // start output object
 
-      // Dump this user his info
-      Map<String, Object> counts = writeProfile(au, writer);
+      writer.key("userid");
+      writer.value(userId);
 
+      Map<String, Object> userProps = basicUserInfoService.getProperties(au);
+      Map<String, Object> counts = (Map<String, Object>)userProps.remove(UserConstants.COUNTS_PROP);
+
+      // Dump this user his info
+      writeProfile(userProps, writer);
       writeLocale(writer, localeUtils.getProperties(au), request);
 
       writeCounts(request, response, session, au, writer, counts);
@@ -227,20 +234,27 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
   }
 
   /**
-   * @param au
+   * @param props
    * @param writer
    * @return
    * @throws JSONException
    */
-  protected Map<String, Object> writeProfile(Authorizable au, ExtendedJSONWriter writer)
+  protected void writeProfile(Map<String, Object> props, ExtendedJSONWriter writer)
       throws JSONException {
+    writer.key("homePath");
+    writer.value(props.get("homePath"));
     writer.key("profile");
-    Map<String, Object> props = basicUserInfoService.getProperties(au);
-    // remove the counts to be displayed further down
-    Map<String, Object> counts = (Map<String, Object>) props.remove(UserConstants.COUNTS_PROP);
-    ValueMap profile = new ValueMapDecorator(props);
-    writer.valueMap(profile);
-    return counts;
+
+    Map<String, Object> filteredProps = new HashMap<String, Object>();
+
+    for (String profileElement : PROFILE_ELEMENTS) {
+      if (props.containsKey(profileElement)) {
+        filteredProps.put(profileElement, props.get(profileElement));
+      }
+    }
+
+    ValueMap profileMap = new ValueMapDecorator (filteredProps);
+    writer.valueMap(profileMap);
   }
 
   /**
@@ -255,7 +269,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
   protected void writeCounts(SlingHttpServletRequest request,
       SlingHttpServletResponse response, Session session, Authorizable au,
       ExtendedJSONWriter writer, Map<String, Object> counts) throws JSONException,
-      SolrSearchException, IOException, ServletException {//, URISyntaxException {
+      SolrSearchException, IOException {
     writer.key(UserConstants.COUNTS_PROP);
     writer.object(); // start "counts"
 
@@ -308,13 +322,12 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
   /**
    * Writes a JSON Object that contains the unread messages for a user.
    *
-   * @param writer
-   *          The writer
    * @param session
    *          A JCR session to perform queries with. This session needs read access on the
    *          authorizable's message box.
    * @param au
    *          An authorizable to look up the messages for.
+   * @param request
    * @throws JSONException
    * @throws RepositoryException
    * @throws MessagingException
