@@ -246,7 +246,7 @@ public class LiteMeServletTest {
     expectedKeys.add("content");
     expectedKeys.add("contacts");
     expectedKeys.add("memberships");
-    //expectedKeys.add("collections");
+    expectedKeys.add("collections");
     expectedKeys.add("unreadmessages");
 
     assertJSONKeys(expectedKeys, countsJSON);

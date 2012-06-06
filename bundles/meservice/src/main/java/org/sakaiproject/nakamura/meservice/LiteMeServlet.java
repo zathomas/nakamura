@@ -274,13 +274,28 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     writer.object(); // start "counts"
 
     writer.key("content");
-    writer.value(counts.get(UserConstants.CONTENT_ITEMS_PROP));
+    if (counts != null && counts.containsKey(UserConstants.CONTENT_ITEMS_PROP)) {
+      writer.value(counts.get(UserConstants.CONTENT_ITEMS_PROP));
+    } else {
+      writer.value(0);
+    }
 
     writer.key("contacts");
-    writer.value(counts.get(UserConstants.CONTACTS_PROP));
+    if (counts != null && counts.containsKey(UserConstants.CONTACTS_PROP)) {
+      writer.value(counts.get(UserConstants.CONTACTS_PROP));
+    } else {
+      writer.value(0);
+    }
 
     writer.key("memberships");
-    writer.value(counts.get(UserConstants.GROUP_MEMBERSHIPS_PROP));
+    if (counts != null && counts.containsKey(UserConstants.GROUP_MEMBERSHIPS_PROP)) {
+      writer.value(counts.get(UserConstants.GROUP_MEMBERSHIPS_PROP));
+    } else {
+      writer.value(0);
+    }
+
+    writer.key("collections");
+    writer.value(getCollectionsCount());
 
     /*
      * TODO unreadmessages and collections come from solr queries. If possible, these
@@ -317,6 +332,19 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
 //    writer.value(collectionsCount);
 
     writer.endObject(); // end "counts"
+  }
+
+  protected long getCollectionsCount() {
+/*
+    StringBuffer sb = new StringBuffer();
+    Map<String, Object> options = new HashMap<String, Object>();
+
+    Query q = new Query(sb.toString(), options);
+
+    SolrSearchResultSet resultSet = searchServiceFactory.getSearchResultSet(
+            request, query, false);
+            */
+    return 0;
   }
 
   /**
