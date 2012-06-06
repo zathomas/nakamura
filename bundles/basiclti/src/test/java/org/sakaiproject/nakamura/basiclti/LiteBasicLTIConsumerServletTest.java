@@ -1141,8 +1141,6 @@ public class LiteBasicLTIConsumerServletTest {
         contains("name=\"custom_simple_key\" value=\"custom_simple_value\""));
     verify(writer, times(1)).write(
         contains("name=\"launch_presentation_document_target\" value=\"iframe\""));
-    verify(writer, times(1)).write(
-        contains("name=\"launch_presentation_locale\" value=\"en\""));
     if (hasEmail) {
       if (releaseEmail) {
         verify(writer, times(1))
@@ -1246,9 +1244,10 @@ public class LiteBasicLTIConsumerServletTest {
     }
     // KERN-2890 Add timezone and locale support to LTI consumer launch payloads
     final TimeZone tz = TimeZone.getDefault();
-    verify(writer, times(1)).write(contains("name=\"ext_locale\" value=\"en_US\""));
-    verify(writer, times(1))
-        .write(contains("name=\"ext_locale_iso3\" value=\"eng_USA\""));
+    verify(writer, times(1)).write(
+        contains("name=\"launch_presentation_locale\" value=\"en_US\""));
+    verify(writer, times(1)).write(
+        contains("name=\"ext_launch_presentation_locale_iso3\" value=\"eng_USA\""));
     verify(writer, times(1)).write(
         contains("name=\"ext_tz\" value=\"" + tz.getID() + "\""));
     verify(writer, times(1)).write(

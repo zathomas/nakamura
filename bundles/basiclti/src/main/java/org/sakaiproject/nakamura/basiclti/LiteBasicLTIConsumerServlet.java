@@ -462,8 +462,6 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
         }
       }
 
-      launchProps.put(LAUNCH_PRESENTATION_LOCALE, request.getLocale().toString());
-
       // we will always launch in an iframe for the time being
       launchProps.put(LAUNCH_PRESENTATION_DOCUMENT_TARGET, "iframe");
 
@@ -484,9 +482,9 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
       // KERN-2890 Add timezone and locale support
       final Map<String, Object> azProperties = localeUtils.getProperties(az);
       final Locale locale = localeUtils.getLocale(azProperties);
-      launchProps.put("ext_locale", locale.toString());
-      launchProps.put("ext_locale_iso3", localeUtils.getIso3Language(locale) + "_"
-          + localeUtils.getIso3Country(locale));
+      launchProps.put(LAUNCH_PRESENTATION_LOCALE, locale.toString());
+      launchProps.put("ext_" + LAUNCH_PRESENTATION_LOCALE + "_iso3",
+          localeUtils.getIso3Language(locale) + "_" + localeUtils.getIso3Country(locale));
 
       final TimeZone timezone = localeUtils.getTimeZone(azProperties);
       final int offset = localeUtils.getOffset(timezone);
