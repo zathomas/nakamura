@@ -89,6 +89,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.user.UserConstants;
+import org.sakaiproject.nakamura.api.util.LocaleUtils;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
 import org.slf4j.Logger;
@@ -102,8 +103,10 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 
 import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
@@ -151,6 +154,9 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
   // TODO eventually needs to be a list of providers not just a single provider.
   @Reference
   protected transient VirtualToolDataProvider virtualToolDataProvider;
+
+  @Reference
+  protected transient LocaleUtils localeUtils;
 
   // global properties used for every tool launch
   /**
@@ -474,6 +480,25 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
           launchProps.put(EXTERNAL_COURSE_ID, externalCourseId);
         }
       }
+
+      // KERN-2890 Add timezone and locale support
+      final Map<String, Object> azProperties = localeUtils.getProperties(az);
+      final Locale locale = localeUtils.getLocale(azProperties);
+      launchProps.put("locale", locale.toString());
+      launchProps.put("locale.country", locale.getCountry());
+      launchProps.put("locale.displayCountry", locale.getDisplayCountry(locale));
+      launchProps.put("locale.displayLanguage", locale.getDisplayLanguage(locale));
+      launchProps.put("locale.displayName", locale.getDisplayName(locale));
+      launchProps.put("locale.displayVariant", locale.getDisplayVariant(locale));
+      launchProps.put("locale.language", locale.getLanguage());
+      launchProps.put("locale.variant", locale.getVariant());
+      launchProps.put("locale.ISO3Country", localeUtils.getIso3Country(locale));
+      launchProps.put("locale.ISO3Language", localeUtils.getIso3Language(locale));
+
+      final TimeZone timezone = localeUtils.getTimeZone(azProperties);
+      launchProps.put("tz", timezone.getID());
+      launchProps.put("tz.offset", String.valueOf(localeUtils.getOffset(timezone)));
+      launchProps.put("timezone", timezone.getID());
 
       final boolean debug = (Boolean) effectiveSettings.get(DEBUG);
       // might be useful for the remote end to know if debug is enabled...
