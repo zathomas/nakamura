@@ -192,6 +192,12 @@
     </dependency>  
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>org.sakaiproject.nakamura.templates</artifactId>
+      <version>1.4.0-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject.nakamura</groupId>
       <artifactId>org.sakaiproject.nakamura.locking</artifactId>
       <version>1.5.0-SNAPSHOT</version>
       <scope>provided</scope>

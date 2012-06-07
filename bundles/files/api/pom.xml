@@ -23,7 +23,7 @@
         <configuration>
           <instructions>
             <Bundle-Category> sakai-nakamura </Bundle-Category>
-            <Export-Package> org.sakaiproject.nakamura.api.files.* </Export-Package>
+            <Export-Package> org.sakaiproject.nakamura.api.files.*, org.sakaiproject.nakamura.api.files.search.* </Export-Package>
             <Embed-Transitive>true</Embed-Transitive>
             <Embed-Dependency />
           </instructions>

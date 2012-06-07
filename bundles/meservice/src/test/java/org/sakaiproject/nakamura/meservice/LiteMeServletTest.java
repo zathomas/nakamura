@@ -40,16 +40,15 @@ import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.sakaiproject.nakamura.api.connections.ConnectionManager;
+import org.sakaiproject.nakamura.api.files.search.CollectionCountService;
 import org.sakaiproject.nakamura.api.http.cache.DynamicContentResponseCache;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.SessionAdaptable;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
-import org.sakaiproject.nakamura.api.message.LiteMessagingService;
-import org.sakaiproject.nakamura.api.search.solr.Query;
+import org.sakaiproject.nakamura.api.message.search.UnreadMessageCountService;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
-import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.api.util.LocaleUtils;
@@ -64,14 +63,9 @@ import javax.servlet.http.HttpServletResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class LiteMeServletTest {
   LiteMeServlet meServlet;
-  @Mock
-  LiteMessagingService messagingService;
 
   @Mock
   ConnectionManager connectionManager;
-
-  @Mock
-  SolrSearchServiceFactory searchServiceFactory;
 
   @Mock
   BasicUserInfoService basicUserInfoService;
@@ -82,15 +76,21 @@ public class LiteMeServletTest {
   @Mock
   LocaleUtils localeUtils;
 
+  @Mock
+  CollectionCountService collectionCountService;
+
+  @Mock
+  UnreadMessageCountService unreadMessageCountService;
+
   @Before
   public void setUp() {
     meServlet = new LiteMeServlet();
-    meServlet.messagingService = messagingService;
     meServlet.connectionManager = connectionManager;
-    meServlet.searchServiceFactory = searchServiceFactory;
     meServlet.basicUserInfoService = basicUserInfoService;
     meServlet.dynamicContentResponseCache = dynamicContentResponseCache;
     meServlet.localeUtils = localeUtils;
+    meServlet.collectionCountService = collectionCountService;
+    meServlet.unreadMessageCountService = unreadMessageCountService;
   }
 
   @Test
@@ -118,6 +118,8 @@ public class LiteMeServletTest {
     StringWriter writer = new StringWriter();
     PrintWriter wrappedWriter = new PrintWriter(writer);
 
+    when(collectionCountService.getCollectionCount(any(SlingHttpServletRequest.class))).thenReturn(10l);
+    when(unreadMessageCountService.getUnreadMessageCount(any(SlingHttpServletRequest.class))).thenReturn(10l);
     when(dynamicContentResponseCache.send304WhenClientHasFreshETag(anyString(), any(HttpServletRequest.class),
        any(HttpServletResponse.class))).thenReturn(false);
 
@@ -172,12 +174,8 @@ public class LiteMeServletTest {
 
     when(basicUserInfoService.getProperties(any(Authorizable.class))).thenReturn(userProps);
 
-    when(messagingService.getFullPathToStore(anyString(), any(Session.class))).thenReturn("bogusPath");
-
     SolrSearchResultSet msgSet = mock(SolrSearchResultSet.class);
     when(msgSet.getSize()).thenReturn((long)5);
-    when(searchServiceFactory.getSearchResultSet(any(SlingHttpServletRequest.class), any(Query.class), anyBoolean())).thenReturn(
-       msgSet);
 
     meServlet.doGet(request, response);
 

@@ -17,22 +17,15 @@
  */
 package org.sakaiproject.nakamura.meservice;
 
-import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.PARAMS_ITEMS_PER_PAGE;
-
-import com.google.common.collect.ImmutableMap;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
-import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.solr.client.solrj.util.ClientUtils;
-import org.apache.solr.common.params.CommonParams;
 import org.perf4j.aop.Profiled;
 import org.sakaiproject.nakamura.api.connections.ConnectionManager;
 import org.sakaiproject.nakamura.api.doc.BindingType;
@@ -42,18 +35,16 @@ import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceParameter;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.http.cache.DynamicContentResponseCache;
+import org.sakaiproject.nakamura.api.files.search.CollectionCountService;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
-import org.sakaiproject.nakamura.api.message.LiteMessagingService;
 import org.sakaiproject.nakamura.api.message.MessagingException;
-import org.sakaiproject.nakamura.api.search.solr.Query;
+import org.sakaiproject.nakamura.api.message.search.UnreadMessageCountService;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
-import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
-import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.api.util.LocaleUtils;
@@ -124,16 +115,16 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     UserConstants.USER_LASTNAME_PROPERTY, UserConstants.USER_EMAIL_PROPERTY, UserConstants.USER_PICTURE};
 
   @Reference
-  protected transient LiteMessagingService messagingService;
-
-  @Reference
   protected transient ConnectionManager connectionManager;
 
   @Reference
-  protected SolrSearchServiceFactory searchServiceFactory;
+  protected BasicUserInfoService basicUserInfoService;
 
   @Reference
-  protected BasicUserInfoService basicUserInfoService;
+  protected CollectionCountService collectionCountService;
+
+  @Reference
+  protected UnreadMessageCountService unreadMessageCountService;
 
   @Reference
   protected DynamicContentResponseCache dynamicContentResponseCache;
@@ -205,7 +196,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       writeProfile(userProps, writer);
       writeLocale(writer, localeUtils.getProperties(au), request);
 
-      writeCounts(request, response, session, au, writer, counts);
+      writeCounts(request, writer, counts);
 
       dynamicContentResponseCache.recordResponse(UserConstants.USER_RESPONSE_CACHE, request, response);
 
@@ -259,15 +250,12 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
 
   /**
    * @param request
-   * @param session
-   * @param au
    * @param writer
    * @param counts
    * @throws JSONException
    * @throws SolrSearchException
    */
   protected void writeCounts(SlingHttpServletRequest request,
-      SlingHttpServletResponse response, Session session, Authorizable au,
       ExtendedJSONWriter writer, Map<String, Object> counts) throws JSONException,
       SolrSearchException, IOException {
     writer.key(UserConstants.COUNTS_PROP);
@@ -295,94 +283,41 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     }
 
     writer.key("collections");
-    writer.value(getCollectionsCount());
+    writer.value(getCollectionsCount(request));
 
     /*
      * TODO unreadmessages and collections come from solr queries. If possible, these
      * should be stored on the authorizable to save recalculating them every time.
      */
     writer.key("unreadmessages");
-    writer.value(getUnreadMessageCount(session, au, request));
-
-    // this is just nasty. we should move away from http calls and just call solr directly
-    // if we can't store on the authorizable.
-//    writer.key("collections");
-//    JSONObject json = new JSONObject();
-//    json.put("url", "/var/search/pool/auth-all.json");
-//    json.put("method", "GET");
-//
-//    // /var/search/pool/auth-all.json?
-//    //   mimetype=x-sakai/collection
-//    //   page=0
-//    //   items=0
-//    JSONObject params = new JSONObject();
-//    params.put("_charset_", "utf-8");
-//    params.put("page", 0);
-//    params.put("items", 0);
-//
-//    json.put("parameters", params);
-//
-//    RequestInfo requestInfo = new RequestInfo(json);
-//    RequestWrapper requestWrapper = new RequestWrapper(request, requestInfo);
-//    ResponseWrapper responseWrapper = new ResponseWrapper(response);
-//    request.getRequestDispatcher(requestInfo.getUrl()).forward(requestWrapper, responseWrapper);
-//    String jsonStr = responseWrapper.getDataAsString();
-//    JSONObject jsonCount = new JSONObject(jsonStr);
-//    int collectionsCount = jsonCount.getInt("count");
-//    writer.value(collectionsCount);
+    writer.value(getUnreadMessageCount(request));
 
     writer.endObject(); // end "counts"
   }
 
-  protected long getCollectionsCount() {
-/*
-    StringBuffer sb = new StringBuffer();
-    Map<String, Object> options = new HashMap<String, Object>();
-
-    Query q = new Query(sb.toString(), options);
-
-    SolrSearchResultSet resultSet = searchServiceFactory.getSearchResultSet(
-            request, query, false);
-            */
-    return 0;
+  protected long getCollectionsCount(SlingHttpServletRequest request) {
+    try {
+      return collectionCountService.getCollectionCount(request);
+    } catch (Exception e) {
+      LOG.error ("unable to get collection count", e);
+      return 0;
+    }
   }
 
   /**
    * Writes a JSON Object that contains the unread messages for a user.
    *
-   * @param session
-   *          A JCR session to perform queries with. This session needs read access on the
-   *          authorizable's message box.
-   * @param au
-   *          An authorizable to look up the messages for.
    * @param request
+   *
    * @throws JSONException
    * @throws RepositoryException
    * @throws MessagingException
    * @throws SolrSearchException
    */
-  protected long getUnreadMessageCount(Session session, Authorizable au,
-      SlingHttpServletRequest request) throws JSONException, MessagingException,
-      SolrSearchException {
-    // We don't do queries for anonymous users. (Possible ddos hole).
-    String userID = au.getId();
-    if (UserConstants.ANON_USERID.equals(userID)) {
-      return 0;
-    }
+  protected long getUnreadMessageCount(SlingHttpServletRequest request)
+     throws JSONException, MessagingException, SolrSearchException {
 
-    String store = messagingService.getFullPathToStore(au.getId(), session);
-    store = ISO9075.encodePath(store);
-    String queryString = "messagestore:" + ClientUtils.escapeQueryChars(store) + " AND type:internal AND messagebox:inbox AND read:false";
-    final Map<String, Object> queryOptions = ImmutableMap.of(
-        PARAMS_ITEMS_PER_PAGE, (Object) "0",
-        CommonParams.START, "0"
-    );
-    Query query = new Query(queryString, queryOptions);
-    LOG.debug("Submitting Query {} ", query);
-    SolrSearchResultSet resultSet = searchServiceFactory.getSearchResultSet(
-        request, query, false);
-    long count = resultSet.getSize();
-    return count;
+    return unreadMessageCountService.getUnreadMessageCount(request);
   }
 
   /**
