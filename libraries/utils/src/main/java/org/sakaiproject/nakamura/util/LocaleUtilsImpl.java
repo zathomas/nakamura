@@ -227,7 +227,7 @@ public class LocaleUtilsImpl implements LocaleUtils {
     int daylightSavingsOffset = timezone.inDaylightTime(new Date()) ? timezone
         .getDSTSavings() : 0;
     int offset = timezone.getRawOffset() + daylightSavingsOffset;
-    return offset;
+    return offset / 3600000;
   }
 
 }
