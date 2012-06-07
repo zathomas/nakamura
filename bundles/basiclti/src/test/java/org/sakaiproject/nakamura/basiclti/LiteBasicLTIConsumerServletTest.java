@@ -1141,8 +1141,6 @@ public class LiteBasicLTIConsumerServletTest {
         contains("name=\"custom_simple_key\" value=\"custom_simple_value\""));
     verify(writer, times(1)).write(
         contains("name=\"launch_presentation_document_target\" value=\"iframe\""));
-    verify(writer, times(1)).write(
-        contains("name=\"launch_presentation_locale\" value=\"en\""));
     if (hasEmail) {
       if (releaseEmail) {
         verify(writer, times(1))
@@ -1246,26 +1244,19 @@ public class LiteBasicLTIConsumerServletTest {
     }
     // KERN-2890 Add timezone and locale support to LTI consumer launch payloads
     final TimeZone tz = TimeZone.getDefault();
-    verify(writer, times(1)).write(contains("name=\"custom_locale\" value=\"en_US\""));
     verify(writer, times(1)).write(
-        contains("name=\"custom_locale_country\" value=\"US\""));
+        contains("name=\"launch_presentation_locale\" value=\"en_US\""));
     verify(writer, times(1)).write(
-        contains("name=\"custom_locale_displaycountry\" value=\"United States\""));
+        contains("name=\"ext_launch_presentation_locale_iso3\" value=\"eng_USA\""));
     verify(writer, times(1)).write(
-        contains("name=\"custom_locale_displaylanguage\" value=\"English\""));
+        contains("name=\"ext_tz\" value=\"" + tz.getID() + "\""));
     verify(writer, times(1)).write(
-        contains("name=\"custom_locale_displayname\" value=\"English (United States)\""));
+        contains("name=\"ext_timezone\" value=\"" + tz.getID() + "\""));
     verify(writer, times(1)).write(
-        contains("name=\"custom_locale_iso3country\" value=\"USA\""));
+        contains("name=\"ext_tz_offset\" value=\"" + localeUtils.getOffset(tz) + "\""));
     verify(writer, times(1)).write(
-        contains("name=\"custom_locale_iso3language\" value=\"eng\""));
-    verify(writer, times(1)).write(
-        contains("name=\"custom_locale_language\" value=\"en\""));
-    verify(writer, times(1)).write(
-        contains("name=\"custom_timezone\" value=\"" + tz.getID() + "\""));
-    verify(writer, times(1)).write(
-        contains("name=\"custom_tz\" value=\"" + tz.getID() + "\""));
-    verify(writer, times(1)).write(contains("name=\"custom_tz_offset\""));
+        contains("name=\"ext_timezone_offset\" value=\"" + localeUtils.getOffset(tz)
+            + "\""));
   }
 
   private void verifyRenderedJson(final boolean shouldIncludeAdminContent)
