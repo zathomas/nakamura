@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 
 import org.mockito.runners.MockitoJUnitRunner;
+import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.SessionAdaptable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
@@ -34,14 +35,13 @@ import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
-import org.sakaiproject.nakamura.templates.velocity.VelocityTemplateService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CollectionCountServiceImplTest {
 
   CollectionCountServiceImpl collectionCountService;
 
-  MeManagerViewerSearchPropertyProvider propProvider;
+  LibraryContentQueryHandler queryHandler;
 
   @Mock
   SolrSearchServiceFactory searchServiceFactory;
@@ -67,17 +67,15 @@ public class CollectionCountServiceImplTest {
   @Mock
   SolrSearchResultSet resultSet;
 
-  class MyVelocityTemplateService extends VelocityTemplateService {
-    MyVelocityTemplateService() throws Exception {
-      activate(null);
-    }
-  }
+  @Mock
+  Repository repository;
 
   @Test
   public void testCollectionCount() throws Exception {
 
     collectionCountService = new CollectionCountServiceImpl();
-    propProvider = new MeManagerViewerSearchPropertyProvider();
+    queryHandler = new LibraryContentQueryHandler();
+    queryHandler.repository = repository;
 
     javax.jcr.Session jcrSession = mock(javax.jcr.Session.class, withSettings().extraInterfaces(SessionAdaptable.class));
 
@@ -101,9 +99,10 @@ public class CollectionCountServiceImplTest {
 
     when(searchServiceFactory.getSearchResultSet(any(SlingHttpServletRequest.class), any(Query.class))).thenReturn(resultSet);
 
+    when(repository.loginAdministrative()).thenReturn(session);
+    
     collectionCountService.searchServiceFactory = searchServiceFactory;
-    collectionCountService.templateService = new MyVelocityTemplateService();
-    collectionCountService.propProvider = propProvider;
+    collectionCountService.queryHandler = queryHandler;
 
     assertEquals(10, collectionCountService.getCollectionCount(request));
   }
