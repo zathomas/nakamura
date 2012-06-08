@@ -66,7 +66,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -197,7 +196,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       // Dump this user his info
       Map<String, Object> counts = writeProfile(au, writer);
 
-      writeLocale(writer, getProperties(au), request);
+      writeLocale(writer, localeUtils.getProperties(au), request);
 
       writeCounts(request, response, session, au, writer, counts);
 
@@ -396,68 +395,5 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     write.endObject();
 
     write.endObject(); // end "locale"
-  }
-
-  /**
-   * Get a valid {@link Locale}. Checks <code>properties</code> for a locale setting.
-   * Defaults to the server configured language and country code.
-   *
-   * @param properties
-   * @return
-   */
-  protected Locale getLocale(Map<String, Object> properties) {
-    /* Get the correct locale */
-    String localeLanguage = defaultLanguage;
-    String localeCountry = defaultCountry;
-    if (properties.containsKey(LOCALE_FIELD)) {
-      String localeProp = String.valueOf(properties.get(LOCALE_FIELD));
-      Matcher localeMatcher = LOCALE_REGEX.matcher(localeProp);
-      if (localeMatcher.matches()) {
-        localeLanguage = localeMatcher.group(1);
-        if (localeMatcher.groupCount() == 3 && localeMatcher.group(3) != null) {
-          localeCountry = localeMatcher.group(3).toUpperCase();
-        } else {
-          localeCountry = "";
-        }
-      } else {
-        LOG.info("Using default locale [{}_{}] instead of locale setting [{}]",
-            new Object[] { localeLanguage, localeCountry, localeProp });
-      }
-    } else {
-      LOG.info("Using default locale [{}_{}]; no locale setting found", new Object[] {
-          localeLanguage, localeCountry });
-    }
-
-    Locale locale = new Locale(localeLanguage, localeCountry);
-    return locale;
-  }
-
-  private Map<String, Object> getProperties(Authorizable authorizable) {
-    Map<String, Object> result = new HashMap<String, Object>();
-    if (authorizable != null) {
-      for (String propName : authorizable.getSafeProperties().keySet()) {
-        if (propName.startsWith("rep:")) {
-          continue;
-        }
-        Object o = authorizable.getProperty(propName);
-        if ( o instanceof Object[] ) {
-          Object[] values = (Object[]) o;
-          switch (values.length) {
-          case 0:
-            continue;
-          case 1:
-            result.put(propName, values[0]);
-            break;
-          default: {
-            String valueString = Joiner.on(',').join(values);
-            result.put(propName, valueString);
-          }
-          }
-        } else {
-          result.put(propName, o);
-        }
-      }
-    }
-    return result;
   }
 }
