@@ -19,7 +19,7 @@ package org.sakaiproject.nakamura.api.message.search;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 
-public interface UnreadMessageCountService {
+public interface MessageCountService {
 
   /**
    * Find the unread message count for the remote user.

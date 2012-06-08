@@ -28,7 +28,7 @@ import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.message.LiteMessagingService;
-import org.sakaiproject.nakamura.api.message.search.UnreadMessageCountService;
+import org.sakaiproject.nakamura.api.message.search.MessageCountService;
 import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
@@ -41,9 +41,9 @@ import java.util.Map;
 
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.PARAMS_ITEMS_PER_PAGE;
 
-public class UnreadMessageCountServiceImpl implements UnreadMessageCountService {
+public class MessageCountServiceImpl implements MessageCountService {
 
-  protected static final Logger LOGGER = LoggerFactory.getLogger(UnreadMessageCountServiceImpl.class);
+  protected static final Logger LOGGER = LoggerFactory.getLogger(MessageCountServiceImpl.class);
 
   @Reference
   protected SolrSearchServiceFactory searchServiceFactory;

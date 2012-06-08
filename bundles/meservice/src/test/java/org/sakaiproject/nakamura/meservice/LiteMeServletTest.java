@@ -47,7 +47,7 @@ import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.SessionAdaptable;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
-import org.sakaiproject.nakamura.api.message.search.UnreadMessageCountService;
+import org.sakaiproject.nakamura.api.message.search.MessageCountService;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
@@ -80,7 +80,7 @@ public class LiteMeServletTest {
   CollectionCountService collectionCountService;
 
   @Mock
-  UnreadMessageCountService unreadMessageCountService;
+  MessageCountService messageCountService;
 
   @Before
   public void setUp() {
@@ -90,7 +90,7 @@ public class LiteMeServletTest {
     meServlet.dynamicContentResponseCache = dynamicContentResponseCache;
     meServlet.localeUtils = localeUtils;
     meServlet.collectionCountService = collectionCountService;
-    meServlet.unreadMessageCountService = unreadMessageCountService;
+    meServlet.messageCountService = messageCountService;
   }
 
   @Test
@@ -119,7 +119,7 @@ public class LiteMeServletTest {
     PrintWriter wrappedWriter = new PrintWriter(writer);
 
     when(collectionCountService.getCollectionCount(any(SlingHttpServletRequest.class))).thenReturn(10l);
-    when(unreadMessageCountService.getUnreadMessageCount(any(SlingHttpServletRequest.class))).thenReturn(10l);
+    when(messageCountService.getUnreadMessageCount(any(SlingHttpServletRequest.class))).thenReturn(10l);
     when(dynamicContentResponseCache.send304WhenClientHasFreshETag(anyString(), any(HttpServletRequest.class),
        any(HttpServletResponse.class))).thenReturn(false);
 

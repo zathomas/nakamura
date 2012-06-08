@@ -43,7 +43,7 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.message.MessagingException;
-import org.sakaiproject.nakamura.api.message.search.UnreadMessageCountService;
+import org.sakaiproject.nakamura.api.message.search.MessageCountService;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
@@ -132,7 +132,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
   protected CollectionCountService collectionCountService;
 
   @Reference
-  protected UnreadMessageCountService unreadMessageCountService;
+  protected MessageCountService messageCountService;
 
   @Reference
   protected DynamicContentResponseCache dynamicContentResponseCache;
@@ -325,7 +325,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
   protected long getUnreadMessageCount(SlingHttpServletRequest request)
      throws JSONException, MessagingException, SolrSearchException {
 
-    return unreadMessageCountService.getUnreadMessageCount(request);
+    return messageCountService.getUnreadMessageCount(request);
   }
 
   /**
