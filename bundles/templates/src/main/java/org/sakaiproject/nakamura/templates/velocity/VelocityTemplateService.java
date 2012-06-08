@@ -72,10 +72,6 @@ public class VelocityTemplateService implements TemplateService, TemplateNodeSou
     } catch (IOException e) {
       LOGGER.error(e.getMessage(), e);
     }
-    catch (Exception e)
-    {
-      System.err.println (e.getMessage());
-    }
     return templateWriter.toString();
   }
 

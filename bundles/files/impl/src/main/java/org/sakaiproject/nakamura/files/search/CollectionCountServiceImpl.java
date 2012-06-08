@@ -1,3 +1,20 @@
+/**
+ * Licensed to the Sakai Foundation (SF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The SF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package org.sakaiproject.nakamura.files.search;
 
 import org.apache.commons.lang.StringUtils;
@@ -21,6 +38,9 @@ import java.util.Map;
 @Service
 public class CollectionCountServiceImpl implements CollectionCountService{
 
+  /**
+   * Query adapted from the auth-all.json query
+   */
   protected static final String COLLECTION_COUNT_QUERY =
      "resourceType:sakai/pooled-content AND ((manager:(${au}) OR editor:(${au}) OR viewer:(${au})) OR (showalways:true AND (manager:(${all}) OR editor:(${all}) OR viewer:(${all}))))${_q}";
 
@@ -38,6 +58,10 @@ public class CollectionCountServiceImpl implements CollectionCountService{
   @Override
   public long getCollectionCount(SlingHttpServletRequest request) {
 
+    /*
+      This logic is basically a truncated version of the logic preformed by SolrSearchServlet. Efforts are underway
+      under KERN-2880 to decouple that logic so this sort of duplicate code/logic is unnecessary.
+     */
     Query query;
     Map<String, String> propertiesMap = new HashMap<String, String>();
 
