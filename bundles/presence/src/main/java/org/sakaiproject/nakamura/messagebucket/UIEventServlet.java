@@ -79,7 +79,12 @@ public class UIEventServlet extends HttpServlet {
       throws ServletException, IOException {
     String token = request.getParameter("token");
     try {
-      MessageBucket mb =  bucketService.getBucket(token);
+      final MessageBucket mb = bucketService.getBucket(token);
+      if (mb == null) {
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+            "Could not find MessageBucket");
+        return;
+      }
        mb.bind(token, request);
       try {
       synchronized (mb) {

@@ -28,7 +28,7 @@ public interface MessageBucketService {
   /**
    * Get the bucket identified by the token.
    * @param token
-   * @return
+   * @return Returns a null bucket if the token is null.
    * @throws MessageBucketException
    */
   MessageBucket getBucket(String token) throws MessageBucketException;

@@ -30,6 +30,8 @@ import org.sakaiproject.nakamura.api.messagebucket.MessageBucket;
 import org.sakaiproject.nakamura.api.messagebucket.MessageBucketException;
 import org.sakaiproject.nakamura.api.messagebucket.MessageBucketService;
 import org.sakaiproject.nakamura.util.Signature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.security.SignatureException;
@@ -46,7 +48,9 @@ import javax.servlet.http.HttpServletRequest;
 @Component(immediate = true, metatype = true)
 @Service(value=MessageBucketService.class)
 public class UntrustedMessageBucketServiceImpl implements MessageBucketService {
-
+  private static final Logger LOG = LoggerFactory
+      .getLogger(UntrustedMessageBucketServiceImpl.class);
+  private static final int TOKEN_PARTS_LENGTH = 4;
   private static final String DEFAULT_URL_PATTERN = "http://localhost:8080/system/uievent/default?token={3}&server={6}&user={7}";
   private static final String BUCKETURLPATTERN_CONFIG = "bucketurlpattern";
   private String sharedSecret;
@@ -58,24 +62,36 @@ public class UntrustedMessageBucketServiceImpl implements MessageBucketService {
   
   @Activate
   public void activate(Map<String, Object> properties) {
+    LOG.debug("activate(Map<String, Object> {})", properties);
+    // FIXME investigate what a better shared secret should be?
     sharedSecret = String.valueOf(System.currentTimeMillis()); // not that secure !
     urlPattern = PropertiesUtil.toString(properties.get(BUCKETURLPATTERN_CONFIG), DEFAULT_URL_PATTERN);
   }
 
-  public MessageBucket getBucket(String token) throws MessageBucketException {
-    String key = getKey(token);
-    if (key == null) {
-      throw new MessageBucketException("Invalid Token " + token);
-    }
-    MessageBucket mb = messageBuckets.get(key);
-    if (mb == null) {
-      mb = new MessageBucketImpl();
-      messageBuckets.put(key, mb);
+  /**
+   * {@inheritDoc}
+   * 
+   * @see org.sakaiproject.nakamura.api.messagebucket.MessageBucketService#getBucket(java.lang.String)
+   */
+  public MessageBucket getBucket(final String token) throws MessageBucketException {
+    LOG.debug("getBucket(String {})", token);
+    MessageBucket mb = null;
+    if (token != null) {
+      String key = getKey(token);
+      if (key == null) {
+        throw new MessageBucketException("Invalid Token " + token);
+      }
+      mb = messageBuckets.get(key);
+      if (mb == null) {
+        mb = new MessageBucketImpl();
+        messageBuckets.put(key, mb);
+      }
     }
     return mb;
   }
 
   public String getToken(String userId, String context) throws MessageBucketException {
+    LOG.debug("getToken(String {}, String {})", userId, context);
     try {
       String timeStamp = Long.toHexString(System.currentTimeMillis());
       String hmac = Signature.calculateRFC2104HMAC(userId + ";" + timeStamp + ";"
@@ -90,23 +106,30 @@ public class UntrustedMessageBucketServiceImpl implements MessageBucketService {
   }
 
   public String getKey(String token) throws MessageBucketException {
-    try {
-      String bareToken = new String(Base64.decodeBase64(token), "UTF8");
-      String[] parts = StringUtils.split(bareToken, ";", 4);
-      String hmac = Signature.calculateRFC2104HMAC(parts[0] + ";" + parts[1] + ";"
-          + parts[2], sharedSecret);
-      if (hmac.equals(parts[3])) {
-        return parts[0] + "-" + parts[2];
+    LOG.debug("getKey(String {})", token);
+    String key = null;
+    if (token != null) {
+      try {
+        String bareToken = new String(Base64.decodeBase64(token), "UTF8");
+        String[] parts = StringUtils.split(bareToken, ";", TOKEN_PARTS_LENGTH);
+        if (parts.length == TOKEN_PARTS_LENGTH) {
+          String hmac = Signature.calculateRFC2104HMAC(parts[0] + ";" + parts[1] + ";"
+              + parts[2], sharedSecret);
+          if (hmac.equals(parts[3])) {
+            key = parts[0] + "-" + parts[2];
+          }
+        }
+      } catch (UnsupportedEncodingException e) {
+        throw new MessageBucketException(e.getMessage(), e);
+      } catch (SignatureException e) {
+        throw new MessageBucketException(e.getMessage(), e);
       }
-      return null;
-    } catch (UnsupportedEncodingException e) {
-      throw new MessageBucketException(e.getMessage(), e);
-    } catch (SignatureException e) {
-      throw new MessageBucketException(e.getMessage(), e);
     }
+    return key;
   }
-  
+
   public String getBucketUrl(HttpServletRequest request, String context) throws MessageBucketException {
+    LOG.debug("getBucketUrl(HttpServletRequest request, String {})", context);
     String[] trackingCookies = clusterService.getRequestTrackingCookie(request);
     if ( trackingCookies != null ) {
       for(String trackingCookie : trackingCookies) {
