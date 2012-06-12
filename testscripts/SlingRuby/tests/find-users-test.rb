@@ -15,7 +15,7 @@ class TC_FindUsersTest < Test::Unit::TestCase
     m = uniqueness()
     @qs = m.to_i.to_s(36)
     @tagqs = "directory/#{@qs.reverse}"
-    res = @s.execute_post(@s.url_for("/tags/#{@tagqs}"), {
+    res = @s.create_node("/tags/#{@tagqs}", {
         "sakai:tag-name" => @tagqs,
         "sling:resourceType" => "sakai/tag",
         "_charset_" => "utf-8"
