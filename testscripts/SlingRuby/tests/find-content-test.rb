@@ -54,7 +54,7 @@ class TC_FindContentTest < Test::Unit::TestCase
   end
   def create_content_with_widgetdata(filename, description, widgetstring)
     res = @fm.upload_pooled_file(filename, description, 'text/plain')
-    @log.info(res.body)
+    @log.debug(res.body)
     assert_equal("201",res.code,res.body)
     json = JSON.parse(res.body)
     poolid = json[filename]["poolId"]
@@ -83,11 +83,11 @@ class TC_FindContentTest < Test::Unit::TestCase
   end
   def get_tag_facets(searchjson)
     tags = []
-    @log.info(searchjson["facet_fields"])
-    @log.info(searchjson["facet_fields"][0])
-    @log.info(searchjson["facet_fields"][0]["tagname"])
+    @log.debug(searchjson["facet_fields"])
+    @log.debug(searchjson["facet_fields"][0])
+    @log.debug(searchjson["facet_fields"][0]["tagname"])
     searchjson["facet_fields"][0]["tagname"].map { |e|
-        @log.info("#{e}, keys = #{e.keys}")
+        @log.debug("#{e}, keys = #{e.keys}")
         tags.concat(e.keys)
     }
     tags
@@ -104,12 +104,12 @@ class TC_FindContentTest < Test::Unit::TestCase
   def do_content_all
     # WARNING: This won't work if the test system has hundreds of matches.
     res = @s.execute_get(@s.url_for("/var/search/pool/all.tidy.json"), {
-        "q" => "*",
+        "q" => "",
         "page" => "0",
         "items" => "400"
     })
     assert_equal('200', res.code, "Find all with wildcard: #{res}\n#{res.body}")
-    @log.info("wildcard: #{res}\n#{res.body}")
+    @log.debug("wildcard: #{res}\n#{res.body}")
     json = JSON.parse(res.body)
     allids = [@id_description, @id_widget, @id_nomatch, @id_tag, @id_descriptionandtag, @id_descriptionandwidget]
     foundids = get_content_ids(json)
@@ -125,7 +125,7 @@ class TC_FindContentTest < Test::Unit::TestCase
         "items" => "400"
     })
     assert_equal('200', res.code, "Find all with simple query: #{res}\n#{res.body}")
-    @log.info("simple query: #{res.body}")
+    @log.debug("simple query: #{res.body}")
     json = JSON.parse(res.body)
     allids = [@id_description, @id_widget, @id_descriptionandtag, @id_descriptionandwidget]
     foundids = get_content_ids(json)
@@ -142,7 +142,7 @@ class TC_FindContentTest < Test::Unit::TestCase
         "items" => "400"
     })
     assert_equal('200', res.code, "Find all with tag query: #{res}\n#{res.body}")
-    @log.info("tag query: #{res.body}")
+    @log.debug("tag query: #{res.body}")
     json = JSON.parse(res.body)
     allids = [@id_tag, @id_descriptionandtag]
     foundids = get_content_ids(json)
