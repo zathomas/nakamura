@@ -32,8 +32,8 @@ import org.apache.solr.common.params.FacetParams;
 import org.sakaiproject.nakamura.api.search.SearchUtil;
 
 public abstract class DomainObjectSearchQueryHandler {
-  private static Map<String, Object> QUERY_OPTIONS_MAP = ImmutableMap.of(
-      FacetParams.FACET, (Object) Boolean.TRUE,
+  private static Map<String, Object> QUERY_OPTIONS_MAP = ImmutableMap.<String, Object> of(
+      FacetParams.FACET, Boolean.TRUE,
       FacetParams.FACET_FIELD, "tagname",
       FacetParams.FACET_MINCOUNT, 1
   );
@@ -70,7 +70,8 @@ public abstract class DomainObjectSearchQueryHandler {
   }
 
   /**
-   * Set up standard query option values.
+   * Set up standard query option values and then give subclasses a chance
+   * to refine it.
    */
   public void configureQuery(Map<String, String> parametersMap, Query query) {
     Map<String, Object> queryOptions = query.getOptions();
@@ -93,6 +94,9 @@ public abstract class DomainObjectSearchQueryHandler {
 
     // Configure default faceting.
     queryOptions.putAll(QUERY_OPTIONS_MAP);
+
+    // And now let the domain-specific code have its say.
+    refineQuery(parametersMap, query);
   }
 
   /**
@@ -152,6 +156,12 @@ public abstract class DomainObjectSearchQueryHandler {
       }
     }
     return propertiesMap;
+  }
+
+  /**
+   * Add domain-specific options to the query configuration.
+   */
+  public void refineQuery(Map<String, String> parametersMap, Query query) {
   }
 
   /**

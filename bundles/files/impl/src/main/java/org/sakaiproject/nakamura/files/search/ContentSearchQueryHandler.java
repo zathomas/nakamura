@@ -64,8 +64,8 @@ public class ContentSearchQueryHandler extends DomainObjectSearchQueryHandler
   private static final Logger LOGGER = LoggerFactory.getLogger(ContentSearchQueryHandler.class);
   private static final String Q_FORMAT =
       "(content:(%s) OR filename:(%<s) OR description:(%<s) OR ngram:(%<s) OR edgengram:(%<s) OR widgetdata:(%<s))";
-  private static Map<String, Object> QUERY_OPTIONS_MAP = ImmutableMap.of(
-      GroupParams.GROUP, (Object) Boolean.TRUE,
+  private static Map<String, Object> QUERY_OPTIONS_MAP = ImmutableMap.<String, Object> of(
+      GroupParams.GROUP, Boolean.TRUE,
       GroupParams.GROUP_FIELD, "returnpath",
       GroupParams.GROUP_TOTAL_COUNT, Boolean.TRUE
   );
@@ -120,14 +120,13 @@ public class ContentSearchQueryHandler extends DomainObjectSearchQueryHandler
   }
 
   @Override
-  public void configureQuery(Map<String, String> parametersMap, Query query) {
-    super.configureQuery(parametersMap, query);
-    query.getOptions().putAll(QUERY_OPTIONS_MAP);
+  public String getResourceTypeClause(Map<String, String> parametersMap) {
+    return "resourceType:(sakai/pooled-content OR sakai/widget-data)";
   }
 
   @Override
-  public String getResourceTypeClause(Map<String, String> parametersMap) {
-    return "resourceType:(sakai/pooled-content OR sakai/widget-data)";
+  public void refineQuery(Map<String, String> parametersMap, Query query) {
+    query.getOptions().putAll(QUERY_OPTIONS_MAP);
   }
 
   @Override

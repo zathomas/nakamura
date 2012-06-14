@@ -54,8 +54,8 @@ public class UsersSearchQueryHandler extends DomainObjectSearchQueryHandler
   private static final Logger LOGGER = LoggerFactory.getLogger(UsersSearchQueryHandler.class);
   private static final String Q_FORMAT =
       "name:(%s) OR firstName:(%<s) OR lastName:(%<s) OR email:(%<s) OR ngram:(%<s) OR edgengram:(%<s)";
-  private static Map<String, Object> FULLPROFILE_QUERY_OPTIONS_MAP = ImmutableMap.of(
-      GroupParams.GROUP, (Object) Boolean.TRUE,
+  private static Map<String, Object> FULLPROFILE_QUERY_OPTIONS_MAP = ImmutableMap.<String, Object> of(
+      GroupParams.GROUP, Boolean.TRUE,
       GroupParams.GROUP_FIELD, "returnpath",
       GroupParams.GROUP_TOTAL_COUNT, Boolean.TRUE
   );
@@ -93,18 +93,6 @@ public class UsersSearchQueryHandler extends DomainObjectSearchQueryHandler
   }
 
   @Override
-  public void configureQuery(Map<String, String> parametersMap, Query query) {
-    super.configureQuery(parametersMap, query);
-    Map<String, Object> queryOptions = query.getOptions();
-
-    // If both Authorizable and Profile records will be searched, collapse them
-    // into a single result for a single person.
-    if (isFullProfile(parametersMap)) {
-      queryOptions.putAll(FULLPROFILE_QUERY_OPTIONS_MAP);
-    }
-  }
-
-  @Override
   public String getResourceTypeClause(Map<String, String> parametersMap) {
     // fq=type:u&fq=resourceType:(authorizable OR profile)
     StringBuilder sb = new StringBuilder("type:u AND resourceType:(authorizable");
@@ -113,6 +101,15 @@ public class UsersSearchQueryHandler extends DomainObjectSearchQueryHandler
     }
     sb.append(")");
     return sb.toString();
+  }
+
+  @Override
+  public void refineQuery(Map<String, String> parametersMap, Query query) {
+    // If both Authorizable and Profile records will be searched, collapse them
+    // into a single result for a single person.
+    if (isFullProfile(parametersMap)) {
+      query.getOptions().putAll(FULLPROFILE_QUERY_OPTIONS_MAP);
+    }
   }
 
   @Override
