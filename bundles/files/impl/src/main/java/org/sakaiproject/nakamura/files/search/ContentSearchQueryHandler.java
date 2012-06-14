@@ -15,7 +15,7 @@
   * KIND, either express or implied. See the License for the
   * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.user.search;
+package org.sakaiproject.nakamura.files.search;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Formatter;
@@ -29,7 +29,15 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.solr.common.params.GroupParams;
+import org.sakaiproject.nakamura.api.files.FileUtils;
+import org.sakaiproject.nakamura.api.lite.Repository;
+import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.StorageClientException;
+import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
+import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
+import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.search.SearchConstants;
+import org.sakaiproject.nakamura.api.search.SearchUtil;
 import org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler;
 import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.Result;
@@ -37,6 +45,8 @@ import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchPropertyProvider;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultProcessor;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
+import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
+import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,37 +56,37 @@ import org.slf4j.LoggerFactory;
     SolrSearchResultProcessor.class
 })
 @Properties({
-    @Property(name = SearchConstants.REG_PROVIDER_NAMES, value="UsersSearchQueryHandler"),
-    @Property(name = SearchConstants.REG_PROCESSOR_NAMES, value = "UsersSearchQueryHandler")
+    @Property(name = SearchConstants.REG_PROVIDER_NAMES, value="ContentSearchQueryHandler"),
+    @Property(name = SearchConstants.REG_PROCESSOR_NAMES, value = "ContentSearchQueryHandler")
 })
-public class UsersSearchQueryHandler extends DomainObjectSearchQueryHandler
+public class ContentSearchQueryHandler extends DomainObjectSearchQueryHandler
     implements SolrSearchPropertyProvider, SolrSearchResultProcessor {
-  private static final Logger LOGGER = LoggerFactory.getLogger(UsersSearchQueryHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ContentSearchQueryHandler.class);
   private static final String Q_FORMAT =
-      "name:(%s) OR firstName:(%<s) OR lastName:(%<s) OR email:(%<s) OR ngram:(%<s) OR edgengram:(%<s)";
-  private static Map<String, Object> FULLPROFILE_QUERY_OPTIONS_MAP = ImmutableMap.<String, Object> of(
+      "(content:(%s) OR filename:(%<s) OR description:(%<s) OR ngram:(%<s) OR edgengram:(%<s) OR widgetdata:(%<s))";
+  private static Map<String, Object> QUERY_OPTIONS_MAP = ImmutableMap.<String, Object> of(
       GroupParams.GROUP, Boolean.TRUE,
       GroupParams.GROUP_FIELD, "returnpath",
       GroupParams.GROUP_TOTAL_COUNT, Boolean.TRUE
   );
 
   public enum REQUEST_PARAMS {
-    fullprofile,
-    q
+    q,
+    mimetype
+  }
+  public enum TEMPLATE_PROPS {
+    _q
   }
 
-  /**
-   * For now, we delegate JSON handling to the Authorizable-result writer which currently
-   * resides in the Presence module. However, after refactoring that processor's Presence and
-   * Connections dependencies into their own result-writing services, we should finally be
-   * able to relocate its logic to this module.
-   */
-  @Reference(target = "(sakai.search.processor=Profile)")
-  SolrSearchResultProcessor profileNodeSearchResultProcessor;
+  @Reference
+  SolrSearchServiceFactory searchServiceFactory;
+
+  @Reference
+  Repository repository;
 
   @Override
-  public void loadUserProperties(SlingHttpServletRequest request, Map<String, String> parametersMap) {
-    parametersMap.put("_q", configureQString(parametersMap));
+  public void loadUserProperties(SlingHttpServletRequest request, Map<String, String> propertiesMap) {
+    propertiesMap.put(TEMPLATE_PROPS._q.toString(), configureQString(propertiesMap));
   }
 
   @Override
@@ -84,32 +94,39 @@ public class UsersSearchQueryHandler extends DomainObjectSearchQueryHandler
     LOGGER.debug("Input Query configuration = {}", query);
     Map<String, String> parametersMap = loadParametersMap(request);
     configureQuery(parametersMap, query);
-    return profileNodeSearchResultProcessor.getSearchResultSet(request, query);
+    return searchServiceFactory.getSearchResultSet(request, query);
   }
 
   @Override
   public void writeResult(SlingHttpServletRequest request, JSONWriter write, Result result) throws JSONException {
-    profileNodeSearchResultProcessor.writeResult(request, write, result);
+    final Session session = StorageClientUtils.adaptToSession(request
+        .getResourceResolver().adaptTo(javax.jcr.Session.class));
+    String contentPath = result.getPath();
+    Content content;
+    try {
+      content = session.getContentManager().get(contentPath);
+      if (content != null) {
+        write.object();
+        int traversalDepth = SearchUtil.getTraversalDepth(request, -1);
+        ExtendedJSONWriter.writeContentTreeToWriter(write, content, true, traversalDepth);
+        FileUtils.writeCommentCountProperty(content, session, write, repository);
+        write.endObject();
+      }
+    } catch (StorageClientException e) {
+      throw new JSONException(e);
+    } catch (AccessDeniedException e) {
+      LOGGER.error("can't access " + contentPath ,e);
+    }
   }
 
   @Override
   public String getResourceTypeClause(Map<String, String> parametersMap) {
-    // fq=type:u&fq=resourceType:(authorizable OR profile)
-    StringBuilder sb = new StringBuilder("type:u AND resourceType:(authorizable");
-    if (isFullProfile(parametersMap)) {
-      sb.append(" OR profile");
-    }
-    sb.append(")");
-    return sb.toString();
+    return "resourceType:(sakai/pooled-content OR sakai/widget-data)";
   }
 
   @Override
   public void refineQuery(Map<String, String> parametersMap, Query query) {
-    // If both Authorizable and Profile records will be searched, collapse them
-    // into a single result for a single person.
-    if (isFullProfile(parametersMap)) {
-      query.getOptions().putAll(FULLPROFILE_QUERY_OPTIONS_MAP);
-    }
+    query.getOptions().putAll(QUERY_OPTIONS_MAP);
   }
 
   @Override
@@ -120,23 +137,16 @@ public class UsersSearchQueryHandler extends DomainObjectSearchQueryHandler
       if (qBuilder.length() > 0) {
         qBuilder.append(" AND ");
       }
-      qBuilder.append("(");
       (new Formatter(qBuilder)).format(Q_FORMAT, qParam);
-      if (isFullProfile(parametersMap)) {
-        qBuilder.append(" OR profile:(").append(qParam).append(")");
+    }
+    // MimeType filter.
+    String mimeTypeParam = getSearchParam(parametersMap, REQUEST_PARAMS.mimetype.toString());
+    if (mimeTypeParam != null) {
+      if (qBuilder.length() > 0) {
+        qBuilder.append(" AND ");
       }
-      qBuilder.append(")");
+      qBuilder.append("mimeType:").append(mimeTypeParam);
     }
     return qBuilder;
-  }
-
-  /**
-   * Even if a full profile search has been requested, there is no need to
-   * include Profile records unless the client specified a text search.
-   * A full wildcard search can be confined to Authorizable records.
-   */
-  private boolean isFullProfile(Map<String, String> parametersMap) {
-    return ("true".equals(parametersMap.get(REQUEST_PARAMS.fullprofile.toString())) &&
-        (getSearchParam(parametersMap, REQUEST_PARAMS.q.toString()) != null));
   }
 }
