@@ -14,6 +14,7 @@ require "cgi"
 Dir.chdir(File.dirname(__FILE__))
 MAIN_DIR = Dir.getwd
 DOCS_DIR = "#{MAIN_DIR}/docs"
+PDFS_DIR = "#{MAIN_DIR}/pdfs"
 PREV_DIR = "#{MAIN_DIR}/previews"
 LOGS_DIR = "#{MAIN_DIR}/logs"
 
@@ -153,6 +154,11 @@ def post_file_to_server id, content, size, page_count, extension = ".jpg"
   log "Uploaded image to curl #{alt_url}"
 end
 
+def post_pdf_to_server id, content
+  @s.execute_file_post @s.url_for("system/pool/createfile.#{id}.#{id}-processed"), "thumbnail", "thumbnail", content, "application/pdf"
+  log @s.url_for("p/#{id}/#{id}.processed.pdf")
+end
+
 @loggers = []
 
 def log msg, level = :info
@@ -252,6 +258,7 @@ def main()
   # Create some temporary directories.
   Dir.mkdir DOCS_DIR unless File.directory? DOCS_DIR
   Dir.mkdir PREV_DIR unless File.directory? PREV_DIR
+  Dir.mkdir PDFS_DIR unless File.directory? PDFS_DIR
 
   # Create a temporary file in the DOCS_DIR for all the pending files and outputs all the filenames in the terminal.
   Dir.chdir DOCS_DIR
@@ -390,12 +397,66 @@ def main()
 
           FileUtils.remove_dir PREV_DIR + "/#{id}"
         end
-
         # Pass on the page_count
         @s.execute_post @s.url_for("p/#{id}"), {"sakai:pagecount" => page_count, "sakai:hasPreview" => "true"}
 
         # Change to the documents directory otherwise we won't find the next file.
         Dir.chdir DOCS_DIR
+      end
+
+      #SAKAI TO PDF
+      # We check if mimetype is sakaidoc
+      if(mime_type == "x-sakai/document")
+        if (File.exist?("../wkhtmltopdf"))
+          # Go to PDF Dir
+          Dir.chdir PDFS_DIR
+
+          #delay in secs
+          $delay = "20"
+
+          #filename with extension
+          filename_p = id + ".pdf"
+
+          # We parse the structure data to var structure (we do not need the rest)
+          structure = JSON.parse meta['structure0']
+
+          # Create var and add beginning of code line to run
+          line = "../wkhtmltopdf "
+
+          # Go through structure and add the pagelink for each page id
+          structure.each do |page|
+            link = "content#l=" + page[0] + "&p=" + id
+            link = @s.url_for(link)
+            link = "'" + link + "' "
+            line += link
+          end
+
+          # Fetch cookie value to get access to all content
+          # USERNAME PASSWORD SERVER
+          $username = "admin"
+          auth = "../auth.sh " + $username + " " + $pw + " " + $preview_referer
+          cookietoken = `#{auth}`
+
+          # Append end of line containing arguments for print css, delay and authentication
+          line += filename_p + " --print-media-type --redirect-delay " + $delay + "000 --cookie 'sakai-trusted-authn' " + cookietoken
+
+          # Run the command line (run wkhtmltopdf)
+          `#{line}`
+
+          # We read the content from the pdf in the PDF directory
+          content = open(filename_p, 'rb') { |f| f.read }
+
+          # We post it to server through this function
+          post_pdf_to_server id, content
+          @s.execute_post @s.url_for("p/#{id}"), {"sakai:processing_failed" => "false"}
+          #Change dir
+          Dir.chdir DOCS_DIR
+        else
+          @s.execute_post @s.url_for("p/#{id}"), {"sakai:processing_failed" => "true"}
+          log "PDF Converter (wkhtmltopdf) not present in directory"
+          log "Cannot convert Sakai document to PDF"
+          log "Continuing without conversion"
+        end
       end
     rescue Exception => msg
       # Output a timestamp + the error message whenever an exception is raised
@@ -409,6 +470,7 @@ def main()
     end
   end
 
+  FileUtils.remove_dir PDFS_DIR
   FileUtils.remove_dir PREV_DIR
   FileUtils.remove_dir DOCS_DIR
 end
@@ -431,6 +493,7 @@ if opt['help'] || ( not(opt['server'] && opt['password']) )
   usage()
 else
   setup(opt['server'], opt['password'])
+  $pw = opt['password']
   $preview_referer = opt['server']
   interval = opt['interval'] || 15
   interval = Integer(interval)
