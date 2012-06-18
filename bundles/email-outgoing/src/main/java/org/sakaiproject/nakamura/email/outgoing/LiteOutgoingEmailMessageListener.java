@@ -376,10 +376,10 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
           .debug("Checking for sakai:templatePath and sakai:templateParams properties on the outgoing message's node.");
       if (contentNode.hasProperty(MessageConstants.PROP_TEMPLATE_PATH)
           && contentNode.hasProperty(MessageConstants.PROP_TEMPLATE_PARAMS)) {
-        Map<String, String> parameters = getTemplateProperties((String) contentNode
-            .getProperty(MessageConstants.PROP_TEMPLATE_PARAMS));
-        String templatePath = (String) contentNode
-            .getProperty(MessageConstants.PROP_TEMPLATE_PATH);
+        Map<String, String> parameters = getTemplateProperties(contentNode
+            .getProperty(MessageConstants.PROP_TEMPLATE_PARAMS).toString());
+        String templatePath = contentNode
+            .getProperty(MessageConstants.PROP_TEMPLATE_PATH).toString();
         LOGGER.debug("Got the path '{0}' to the template for this outgoing message.",
             templatePath);
         Node templateNode = session.getNode(templatePath);
@@ -405,8 +405,8 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     }
 
     if (contentNode.hasProperty(MessageConstants.PROP_SAKAI_SUBJECT)) {
-      email.setSubject((String) contentNode
-          .getProperty(MessageConstants.PROP_SAKAI_SUBJECT));
+      email.setSubject(contentNode
+          .getProperty(MessageConstants.PROP_SAKAI_SUBJECT).toString());
     }
 
     ContentManager contentManager = sparseSession.getContentManager();
@@ -414,8 +414,8 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
       String description = null;
       if (contentNode.hasProperty(StorageClientUtils.getAltField(
           MessageConstants.PROP_SAKAI_ATTACHMENT_DESCRIPTION, streamId))) {
-        description = (String) contentNode.getProperty(StorageClientUtils.getAltField(
-            MessageConstants.PROP_SAKAI_ATTACHMENT_DESCRIPTION, streamId));
+        description = contentNode.getProperty(StorageClientUtils.getAltField(
+            MessageConstants.PROP_SAKAI_ATTACHMENT_DESCRIPTION, streamId)).toString();
       }
       LiteEmailDataSource ds = new LiteEmailDataSource(contentManager, contentNode,
           streamId);
