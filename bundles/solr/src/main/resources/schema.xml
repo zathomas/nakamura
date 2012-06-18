@@ -488,6 +488,9 @@
    <field name="hasPreview" type="string" indexed="true" stored="true" />
    <field name="showalways" type="boolean" indexed="true" stored="false" />
 
+   <!-- sakai activity -->
+   <field name="routes" type="string" indexed="true" stored="false" multiValued="true" />
+
    <!-- sakai users -->
    <field name="name" type="text_ci" indexed="true" stored="true" termVectors="true" />
    <field name="firstName" type="text" indexed="true" stored="true" />

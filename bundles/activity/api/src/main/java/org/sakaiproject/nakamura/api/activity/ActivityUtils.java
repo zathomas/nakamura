@@ -19,13 +19,17 @@ package org.sakaiproject.nakamura.api.activity;
 
 import static org.sakaiproject.nakamura.api.activity.ActivityConstants.EVENT_TOPIC;
 
+import com.google.common.collect.Maps;
+
 import org.apache.commons.lang.StringUtils;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
+import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.sakaiproject.nakamura.util.PathUtils;
-
-import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -41,6 +45,8 @@ import java.util.Map;
  */
 public class ActivityUtils {
 
+  private static Logger LOGGER = LoggerFactory.getLogger(ActivityUtils.class);
+  
   private static SecureRandom random = null;
 
   @SuppressWarnings("rawtypes")
@@ -51,6 +57,16 @@ public class ActivityUtils {
     return new Event(EVENT_TOPIC, (Dictionary) map);
   }
 
+  public static void logout(Session session) {
+    if (session != null) {
+      try {
+        session.logout();
+      } catch (StorageClientException e) {
+        LOGGER.warn("Failed to log out of admin session.", e);
+      }
+    }
+  }
+  
   /**
    * Returns the path to the activity feed for a user.
    *
@@ -125,7 +141,7 @@ public class ActivityUtils {
     id.append(randomHash);
     return id.toString();
   }
-
+  
   /**
    * Post an activity event. processed by activity listeners.
    * @param eventAdmin 
