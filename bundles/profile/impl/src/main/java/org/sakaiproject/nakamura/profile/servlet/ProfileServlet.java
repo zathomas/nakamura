@@ -85,8 +85,6 @@ import javax.servlet.http.HttpServletResponse;
     ProfileConstants.GROUP_PROFILE_RT, ProfileConstants.USER_PROFILE_RT })
 public class ProfileServlet extends SlingSafeMethodsServlet {
 
-  private static final String TIDY = "tidy";
-
   /**
    *
    */
@@ -120,7 +118,7 @@ public class ProfileServlet extends SlingSafeMethodsServlet {
       ValueMap map = profileService.getProfileMap(profileContent, jcrSession);
       String profileUserId = map.get("userid", String.class);
       ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
-      writer.setTidy(isTidy(request));
+      writer.maybeSetTidy(request);
       writer.object();
       ExtendedJSONWriter.writeValueMapInternals(writer, map);
       connMgr.writeConnectionInfo(writer, session, currUser, profileUserId);
@@ -142,12 +140,4 @@ public class ProfileServlet extends SlingSafeMethodsServlet {
     }
   }
 
-  private boolean isTidy(SlingHttpServletRequest req) {
-    for (String selector : req.getRequestPathInfo().getSelectors()) {
-      if (TIDY.equals(selector)) {
-        return true;
-      }
-    }
-    return false;
-  }
 }

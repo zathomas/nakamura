@@ -193,6 +193,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       }
       PrintWriter w = response.getWriter();
       ExtendedJSONWriter writer = new ExtendedJSONWriter(w);
+      writer.maybeSetTidy(request);
       writer.object();
       // User info
       writer.key("user");

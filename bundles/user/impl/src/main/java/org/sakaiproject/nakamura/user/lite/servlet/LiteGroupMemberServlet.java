@@ -138,7 +138,7 @@ public class LiteGroupMemberServlet extends SlingSafeMethodsServlet {
 
     List<String> selectors = Arrays.asList(request.getRequestPathInfo().getSelectors());
     ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
-    writer.setTidy(selectors.contains("tidy"));
+    writer.maybeSetTidy(request);
 
     // Get the sorting order, default is ascending or the natural sorting order (which is
     // null for a TreeMap.)

@@ -30,12 +30,10 @@ import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SAKA
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SAKAI_RESULTPROCESSOR;
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SAKAI_SEARCHRESPONSEDECORATOR;
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.SEARCH_PATH_PREFIX;
-import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.TIDY;
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.TOTAL;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -82,7 +80,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import javax.jcr.Node;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
@@ -259,7 +256,7 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
         response.setCharacterEncoding("UTF-8");
 
         ExtendedJSONWriter write = new ExtendedJSONWriter(response.getWriter());
-        write.setTidy(isTidy(request));
+        write.maybeSetTidy(request);
 
         write.object();
         write.key(PARAMS_ITEMS_PER_PAGE);
@@ -520,19 +517,6 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
     }
 
     return propertiesMap;
-  }
-
-  /**
-   * True if our request wants the "tidy" pretty-printed format Copied from
-   * org.apache.sling.servlets.get.impl.helpers.JsonRendererServlet
-   */
-  protected boolean isTidy(SlingHttpServletRequest req) {
-    for (String selector : req.getRequestPathInfo().getSelectors()) {
-      if (TIDY.equals(selector)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private String[] getStringArrayProp(Node queryNode, String propName) throws RepositoryException {

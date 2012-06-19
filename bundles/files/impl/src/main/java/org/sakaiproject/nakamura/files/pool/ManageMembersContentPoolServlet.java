@@ -263,18 +263,16 @@ import javax.servlet.http.HttpServletResponse;
 
 
       boolean detailed = false;
-      boolean tidy = false;
       for (String selector : request.getRequestPathInfo().getSelectors()) {
         if ("detailed".equals(selector)) {
           detailed = true;
-        } else if ("tidy".equals(selector)) {
-          tidy = true;
+          break;
         }
       }
 
       // Loop over the sets and output it.
       ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
-      writer.setTidy(tidy);
+      writer.maybeSetTidy(request);
       writer.object();
       writer.key("managers");
       writer.array();

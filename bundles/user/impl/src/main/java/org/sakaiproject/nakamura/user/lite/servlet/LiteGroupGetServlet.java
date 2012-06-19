@@ -109,6 +109,7 @@ public class LiteGroupGetServlet extends SlingSafeMethodsServlet {
       response.setCharacterEncoding("UTF-8");
 
       ExtendedJSONWriter write = new ExtendedJSONWriter(response.getWriter());
+      write.maybeSetTidy(request);
       write.object();
       ValueMap groupProps = resource.adaptTo(ValueMap.class);
       if (groupProps != null)

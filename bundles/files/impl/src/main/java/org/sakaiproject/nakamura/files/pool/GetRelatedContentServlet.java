@@ -125,7 +125,7 @@ public class GetRelatedContentServlet extends SlingSafeMethodsServlet {
     ContentManager contentManager = resource.adaptTo(ContentManager.class);
     try {
       ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
-      writer.setTidy(selectors.contains("tidy"));
+      writer.maybeSetTidy(request);
       writer.array();
 
       if (content.hasProperty(SAKAI_TAGS)) {

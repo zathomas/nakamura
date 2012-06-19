@@ -79,15 +79,12 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
     Resource resource = request.getResource();
 
     // Check selectors.
-    boolean isTidy = false;
     int recursion = 0;
     String[] selectors = request.getRequestPathInfo().getSelectors();
     if (selectors != null) {
       for (int i = 0; i < selectors.length; i++) {
         String selector = selectors[i];
-        if ("tidy".equals(selector)) {
-          isTidy = true;
-        } else if (i == (selectors.length - 1)) {
+        if (i == (selectors.length - 1)) {
           if ("infinity".equals(selector)) {
             recursion = -1;
           } else {
@@ -105,7 +102,7 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
     response.setContentType("application/json");
     response.setCharacterEncoding("UTF-8");
     ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
-    writer.setTidy(isTidy);
+    writer.maybeSetTidy(request);
     try {
       Content content = resource.adaptTo(Content.class);
       ContentManager contentManager = resource.adaptTo(ContentManager.class);

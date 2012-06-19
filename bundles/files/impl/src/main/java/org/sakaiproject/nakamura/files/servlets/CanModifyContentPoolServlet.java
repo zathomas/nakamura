@@ -105,9 +105,7 @@ public class CanModifyContentPoolServlet extends SlingSafeMethodsServlet {
 
         response.setContentType("application/json");
         final ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
-        final List<String> selectors = Arrays.asList(request.getRequestPathInfo()
-            .getSelectors());
-        writer.setTidy(selectors.contains("tidy"));
+        writer.maybeSetTidy(request);
         writer.object(); // root object
         writer.key(request.getRequestPathInfo().getResourcePath());
         writer.value(canModifyNode);

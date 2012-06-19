@@ -143,17 +143,6 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
     Resource resource = request.getResource();
     Content poolContent = resource.adaptTo(Content.class);
 
-    boolean isTidy = false;
-    String[] selectors = request.getRequestPathInfo().getSelectors();
-    if (selectors != null) {
-      for (int i = 0; i < selectors.length; i++) {
-        String selector = selectors[i];
-        if ("tidy".equals(selector)) {
-          isTidy = true;
-        }
-      }
-    }
-
     try {
       ContentManager contentManager = resource.adaptTo(ContentManager.class);
       Session session = resource.adaptTo(Session.class);
@@ -187,7 +176,7 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
       }
 
       ExtendedJSONWriter w = new ExtendedJSONWriter(response.getWriter());
-      w.setTidy(isTidy);
+      w.maybeSetTidy(request);
       w.object();
       w.key(COMMENTS);
       w.array();

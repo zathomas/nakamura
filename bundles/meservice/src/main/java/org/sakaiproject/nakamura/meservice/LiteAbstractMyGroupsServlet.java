@@ -150,11 +150,10 @@ public abstract class LiteAbstractMyGroupsServlet extends SlingSafeMethodsServle
       long page = longRequestParameter(request, PARAMS_PAGE, 0);
       long offset = page * nitems;
 
-      List<String> selectors = Arrays.asList(request.getRequestPathInfo().getSelectors());
       response.setContentType("application/json");
       response.setCharacterEncoding("UTF-8");
       ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
-      writer.setTidy(selectors.contains("tidy"));
+      writer.maybeSetTidy(request);
 
       writer.object();
       writer.key(PARAMS_ITEMS_PER_PAGE);

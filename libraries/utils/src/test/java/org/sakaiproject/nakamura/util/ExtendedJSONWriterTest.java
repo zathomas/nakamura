@@ -21,11 +21,15 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -540,6 +544,20 @@ public class ExtendedJSONWriterTest {
 
   protected void replay() {
     org.easymock.EasyMock.replay(mocks.toArray());
+  }
+
+  @Test
+  public void maybeSetTidy() {
+    SlingHttpServletRequest req = createMock(SlingHttpServletRequest.class);
+    RequestPathInfo requestPathInfo = createMock(RequestPathInfo.class);
+    expect(req.getRequestPathInfo()).andReturn(requestPathInfo).anyTimes();
+    expect(requestPathInfo.getSelectors()).andReturn(new String[] { "tidy"}).anyTimes();
+    replay();
+    StringWriter writer = new StringWriter();
+    ExtendedJSONWriter ext = new ExtendedJSONWriter(writer);
+    Assert.assertFalse(ext.isTidy());
+    ext.maybeSetTidy(req);
+    assertTrue(ext.isTidy());
   }
 
 }
