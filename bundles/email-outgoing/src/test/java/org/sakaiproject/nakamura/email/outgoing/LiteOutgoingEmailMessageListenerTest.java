@@ -3,6 +3,16 @@ package org.sakaiproject.nakamura.email.outgoing;
 
 import static org.mockito.Mockito.when;
 
+import java.net.ConnectException;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import javax.jcr.Session;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
+import javax.jms.Message;
+
 import org.apache.commons.mail.EmailException;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
@@ -16,17 +26,6 @@ import org.sakaiproject.nakamura.api.lite.SessionAdaptable;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.message.MessageConstants;
-
-import java.net.ConnectException;
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import javax.jcr.Session;
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.Message;
 
 
 @RunWith(MockitoJUnitRunner.class)
@@ -57,15 +56,14 @@ public class LiteOutgoingEmailMessageListenerTest {
     LiteOutgoingEmailMessageListener liteOutgoingEmailMessageListener = new LiteOutgoingEmailMessageListener();
 
     //activate
-    Dictionary<String, Object> properties = new Hashtable<String, Object>();
+    HashMap<String, Object> properties = new HashMap<String, Object>();
     properties.put("sakai.email.maxRetries", 100);
     properties.put("sakai.email.retryIntervalMinutes", 100);
-    when(componentContext.getProperties()).thenReturn(properties);
     when(connFactoryService.getDefaultConnectionFactory()).thenReturn(connectionFactory);
     when(connectionFactory.createConnection()).thenReturn(connection);
     when(connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE)).thenThrow(new JMSException("test"));
     liteOutgoingEmailMessageListener.connFactoryService = connFactoryService;
-    liteOutgoingEmailMessageListener.activate(componentContext);
+    liteOutgoingEmailMessageListener.activate(properties);
 
     //mock jcr session
     Session adminSession = Mockito.mock(javax.jcr.Session.class, Mockito.withSettings().extraInterfaces(SessionAdaptable.class));
