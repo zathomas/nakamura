@@ -189,7 +189,6 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
                 + SEARCH_PATH_PREFIX);
         return;
       }
-      TelemetryCounter.incrementValue("search", "SolrSearchServlet", resource.getPath());
       Node node = resource.adaptTo(Node.class);
       if (node != null && node.hasProperty(SAKAI_QUERY_TEMPLATE)) {
         // KERN-1147 Respond better when all parameters haven't been provided for a query

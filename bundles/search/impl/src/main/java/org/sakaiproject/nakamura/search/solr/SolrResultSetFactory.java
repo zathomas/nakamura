@@ -198,6 +198,7 @@ public class SolrResultSetFactory implements ResultSetFactory {
       long tquery = System.currentTimeMillis();
       QueryResponse response = solrServer.query(solrQuery, queryMethod);
       tquery = System.currentTimeMillis() - tquery;
+      TelemetryCounter.incrementValue("search","SEARCH_PERFORMED",request.getResource().getPath());
       try {
         if ( tquery > verySlowQueryThreshold ) {
           SLOW_QUERY_LOGGER.error("Very slow solr query {} ms {} ",tquery, URLDecoder.decode(solrQuery.toString(),"UTF-8"));
