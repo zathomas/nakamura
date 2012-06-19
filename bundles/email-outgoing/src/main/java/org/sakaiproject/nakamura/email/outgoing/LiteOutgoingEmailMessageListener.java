@@ -27,6 +27,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Job;
@@ -34,6 +35,7 @@ import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.ComponentException;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.sakaiproject.nakamura.api.activemq.ConnectionFactoryService;
@@ -58,7 +60,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -87,6 +88,25 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
   private static final Logger LOGGER = LoggerFactory
       .getLogger(LiteOutgoingEmailMessageListener.class);
 
+  /**
+   * Value to set operation mode to 'send'. Messages are sent out via smtp. This is the
+   * default working mode.
+   */
+  private static final String OP_SEND = "send";
+  /**
+   * Value to set operation mode to 'log'. Messages are logged but not sent.
+   */
+  private static final String OP_LOG = "log";
+  /**
+   * Value to set operation mode to 'noop'. Messages are not logged nor sent out; a basic
+   * log entry is recorded for each attempt to send.
+   */
+  private static final String OP_NOOP = "noop";
+  /**
+   * Value to set operation mode to 'disabled'. Service does not listen for JMS messages
+   * at all and logging does not happen on each send request.
+   */
+  private static final String OP_DISABLED = "disabled";
 
   @Property(value = "localhost")
   private static final String SMTP_SERVER = "sakai.smtp.server";
@@ -108,6 +128,13 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
   private static final String REPLY_AS_ADDRESS = "sakai.email.replyAsAddress";
   @Property(value = "Sakai OAE")
   private static final String REPLY_AS_NAME = "sakai.email.replyAsName";
+  @Property(options = {
+      @PropertyOption(name = OP_SEND, value = "Send"),
+      @PropertyOption(name = OP_LOG, value = "Log"),
+      @PropertyOption(name = OP_NOOP, value = "Noop"),
+      @PropertyOption(name = OP_DISABLED, value = "Disabled")
+  })
+  private static final String OPERATION_MODE = "sakai.email.operation.mode";
 
   protected static final String QUEUE_NAME = "org/sakaiproject/nakamura/message/email/outgoing";
 
@@ -148,7 +175,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
   private Integer retryInterval;
   private String replyAsAddress;
   private String replyAsName;
-
+  private String operationMode;
 
   public LiteOutgoingEmailMessageListener() {
   }
@@ -159,6 +186,11 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
 
   @SuppressWarnings("unchecked")
   public void onMessage(Message message) {
+    // only have to check for 'noop' since 'disabled' doesn't listen on JMS
+    if (OP_NOOP.equals(operationMode)) {
+      LOGGER.info("Emailing sending is not enabled [noop].");
+      return;
+    }
     try {
       LOGGER.debug("Started handling email jms message.");
 
@@ -207,18 +239,24 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
                         sparseSession);
 
                     setOptions(email);
-                    if (LOGGER.isDebugEnabled()) {
-                      // build wrapped meesage in order to log it
+                    if (LOGGER.isDebugEnabled() || OP_LOG.equals(operationMode)) {
+                      // build wrapped message in order to log it
                       email.buildMimeMessage();
                       logEmail(email);
                     }
-                    email.send();
+                    if (OP_SEND.equals(operationMode)) {
+                      email.send();
+                    } else {
+                      LOGGER.info("Email sending is not enabled [{}]", operationMode);
+                    }
                   } catch (EmailException e) {
+                    // noop & disabled will never reach here. We continue to let log &
+                    // send trigger rescheduling
                     String exMessage = e.getMessage();
                     Throwable cause = e.getCause();
 
                     setError(messageContent, exMessage);
-                    LOGGER.warn("Unable to send email: " + exMessage);
+                    LOGGER.warn("Exception building/sending email: " + exMessage);
 
                     // Get the SMTP error code
                     // There has to be a better way to do this
@@ -539,10 +577,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
 
   @Activate
   @Modified
-  protected void activate(ComponentContext ctx) {
-    @SuppressWarnings("rawtypes")
-    Dictionary props = ctx.getProperties();
-
+  protected void activate(Map<?, ?> props) {
     Integer _maxRetries = PropertiesUtil.toInteger(props.get(MAX_RETRIES), -1);
     if (_maxRetries > -1 ) {
       if (diff(maxRetries, _maxRetries)) {
@@ -607,6 +642,12 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
     authUser = PropertiesUtil.toString(props.get(SMTP_AUTH_USER), "");
     authPass = PropertiesUtil.toString(props.get(SMTP_AUTH_PASS), "");
 
+    operationMode = PropertiesUtil.toString(props.get(OPERATION_MODE), OP_SEND);
+    if (OP_DISABLED.equals(operationMode)) {
+      LOGGER.info("Email sending is completely disabled and not connected to JMS. Set to 'noop' to see a log entry per message send request.");
+      return;
+    }
+
     try {
       connection = connFactoryService.getDefaultConnectionFactory().createConnection();
       Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -622,6 +663,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
         } catch (JMSException e1) {
         }
       }
+      throw new ComponentException(e.getMessage(), e);
     }
   }
 
@@ -665,7 +707,11 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       try {
         mimeMessage.writeTo(new FilterOutputStream(baos));
-        LOGGER.debug("Email content = \n" + baos.toString());
+        if (OP_LOG.equals(operationMode)) {
+          LOGGER.info("Email content = \n" + baos.toString());
+        } else {
+          LOGGER.debug("Email content = \n" + baos.toString());
+        }
       } catch (IOException e) {
         LOGGER.error("failed to log email", e);
       } catch (MessagingException e) {
