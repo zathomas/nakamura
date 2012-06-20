@@ -39,6 +39,7 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
+import org.sakaiproject.nakamura.util.ServletUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,7 +103,7 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
     response.setContentType("application/json");
     response.setCharacterEncoding("UTF-8");
     ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
-    writer.maybeSetTidy(request);
+    writer.setTidy(ServletUtils.isTidy(request));
     try {
       Content content = resource.adaptTo(Content.class);
       ContentManager contentManager = resource.adaptTo(ContentManager.class);

@@ -546,18 +546,4 @@ public class ExtendedJSONWriterTest {
     org.easymock.EasyMock.replay(mocks.toArray());
   }
 
-  @Test
-  public void maybeSetTidy() {
-    SlingHttpServletRequest req = createMock(SlingHttpServletRequest.class);
-    RequestPathInfo requestPathInfo = createMock(RequestPathInfo.class);
-    expect(req.getRequestPathInfo()).andReturn(requestPathInfo).anyTimes();
-    expect(requestPathInfo.getSelectors()).andReturn(new String[] { "tidy"}).anyTimes();
-    replay();
-    StringWriter writer = new StringWriter();
-    ExtendedJSONWriter ext = new ExtendedJSONWriter(writer);
-    Assert.assertFalse(ext.isTidy());
-    ext.maybeSetTidy(req);
-    assertTrue(ext.isTidy());
-  }
-
 }

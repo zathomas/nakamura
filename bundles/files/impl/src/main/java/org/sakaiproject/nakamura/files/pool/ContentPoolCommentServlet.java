@@ -55,6 +55,7 @@ import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
+import org.sakaiproject.nakamura.util.ServletUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -176,7 +177,7 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
       }
 
       ExtendedJSONWriter w = new ExtendedJSONWriter(response.getWriter());
-      w.maybeSetTidy(request);
+      w.setTidy(ServletUtils.isTidy(request));
       w.object();
       w.key(COMMENTS);
       w.array();

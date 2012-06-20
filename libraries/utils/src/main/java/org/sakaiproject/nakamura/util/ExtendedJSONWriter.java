@@ -17,7 +17,6 @@
  */
 package org.sakaiproject.nakamura.util;
 
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
@@ -29,7 +28,6 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -431,18 +429,6 @@ public class ExtendedJSONWriter extends JSONWriter {
 
     if (!objectInProgress) {
       write.endObject();
-    }
-  }
-
-  public void maybeSetTidy(SlingHttpServletRequest request) {
-    if (request == null || request.getRequestPathInfo() == null || request.getRequestPathInfo().getSelectors() == null) {
-      return;
-    }
-    for (String selector : request.getRequestPathInfo().getSelectors()) {
-      if ("tidy".equals(selector)) {
-        this.setTidy(true);
-        break;
-      }
     }
   }
 

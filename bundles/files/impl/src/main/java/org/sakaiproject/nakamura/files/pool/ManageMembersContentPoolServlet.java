@@ -66,6 +66,7 @@ import org.sakaiproject.nakamura.api.user.AuthorizableCountChanger;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
+import org.sakaiproject.nakamura.util.ServletUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -272,7 +273,7 @@ import javax.servlet.http.HttpServletResponse;
 
       // Loop over the sets and output it.
       ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
-      writer.maybeSetTidy(request);
+      writer.setTidy(ServletUtils.isTidy(request));
       writer.object();
       writer.key("managers");
       writer.array();

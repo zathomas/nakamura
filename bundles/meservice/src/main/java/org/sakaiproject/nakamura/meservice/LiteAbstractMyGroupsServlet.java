@@ -37,12 +37,12 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.profile.ProfileService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
+import org.sakaiproject.nakamura.util.ServletUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -153,7 +153,7 @@ public abstract class LiteAbstractMyGroupsServlet extends SlingSafeMethodsServle
       response.setContentType("application/json");
       response.setCharacterEncoding("UTF-8");
       ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
-      writer.maybeSetTidy(request);
+      writer.setTidy(ServletUtils.isTidy(request));
 
       writer.object();
       writer.key(PARAMS_ITEMS_PER_PAGE);

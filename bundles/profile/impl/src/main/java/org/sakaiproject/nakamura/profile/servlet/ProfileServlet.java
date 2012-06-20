@@ -40,6 +40,7 @@ import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.profile.ProfileConstants;
 import org.sakaiproject.nakamura.api.profile.ProfileService;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
+import org.sakaiproject.nakamura.util.ServletUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,7 +119,7 @@ public class ProfileServlet extends SlingSafeMethodsServlet {
       ValueMap map = profileService.getProfileMap(profileContent, jcrSession);
       String profileUserId = map.get("userid", String.class);
       ExtendedJSONWriter writer = new ExtendedJSONWriter(response.getWriter());
-      writer.maybeSetTidy(request);
+      writer.setTidy(ServletUtils.isTidy(request));
       writer.object();
       ExtendedJSONWriter.writeValueMapInternals(writer, map);
       connMgr.writeConnectionInfo(writer, session, currUser, profileUserId);
