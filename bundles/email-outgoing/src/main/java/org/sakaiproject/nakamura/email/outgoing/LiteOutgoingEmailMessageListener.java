@@ -35,7 +35,6 @@ import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.ComponentException;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.sakaiproject.nakamura.api.activemq.ConnectionFactoryService;
@@ -92,51 +91,52 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
    * Value to set operation mode to 'send'. Messages are sent out via smtp. This is the
    * default working mode.
    */
-  private static final String OP_SEND = "send";
+  static final String OP_SEND = "send";
   /**
    * Value to set operation mode to 'log'. Messages are logged but not sent.
    */
-  private static final String OP_LOG = "log";
+  static final String OP_LOG = "log";
   /**
    * Value to set operation mode to 'noop'. Messages are not logged nor sent out; a basic
    * log entry is recorded for each attempt to send.
    */
-  private static final String OP_NOOP = "noop";
+  static final String OP_NOOP = "noop";
   /**
    * Value to set operation mode to 'disabled'. Service does not listen for JMS messages
    * at all and logging does not happen on each send request.
    */
-  private static final String OP_DISABLED = "disabled";
+  static final String OP_DISABLED = "disabled";
 
   @Property(value = "localhost")
-  private static final String SMTP_SERVER = "sakai.smtp.server";
+  static final String SMTP_SERVER = "sakai.smtp.server";
   @Property(intValue = 25)
-  private static final String SMTP_PORT = "sakai.smtp.port";
+  static final String SMTP_PORT = "sakai.smtp.port";
   @Property(boolValue = false)
-  private static final String SMTP_USE_TLS = "sakai.smtp.tls";
+  static final String SMTP_USE_TLS = "sakai.smtp.tls";
   @Property(boolValue = false)
-  private static final String SMTP_USE_SSL = "sakai.smtp.ssl";
+  static final String SMTP_USE_SSL = "sakai.smtp.ssl";
   @Property
-  private static final String SMTP_AUTH_USER = "sakai.smtp.auth.user";
+  static final String SMTP_AUTH_USER = "sakai.smtp.auth.user";
   @Property
-  private static final String SMTP_AUTH_PASS = "sakai.smtp.auth.pass";
+  static final String SMTP_AUTH_PASS = "sakai.smtp.auth.pass";
   @Property(intValue = 240)
-  private static final String MAX_RETRIES = "sakai.email.maxRetries";
+  static final String MAX_RETRIES = "sakai.email.maxRetries";
   @Property(intValue = 30)
-  private static final String RETRY_INTERVAL = "sakai.email.retryIntervalMinutes";
+  static final String RETRY_INTERVAL = "sakai.email.retryIntervalMinutes";
   @Property(value = "no-reply@example.com")
-  private static final String REPLY_AS_ADDRESS = "sakai.email.replyAsAddress";
+  static final String REPLY_AS_ADDRESS = "sakai.email.replyAsAddress";
   @Property(value = "Sakai OAE")
-  private static final String REPLY_AS_NAME = "sakai.email.replyAsName";
+  static final String REPLY_AS_NAME = "sakai.email.replyAsName";
   @Property(options = {
       @PropertyOption(name = OP_SEND, value = "Send"),
       @PropertyOption(name = OP_LOG, value = "Log"),
       @PropertyOption(name = OP_NOOP, value = "Noop"),
       @PropertyOption(name = OP_DISABLED, value = "Disabled")
   })
-  private static final String OPERATION_MODE = "sakai.email.operation.mode";
+  static final String OPERATION_MODE = "sakai.email.operation.mode";
 
-  protected static final String QUEUE_NAME = "org/sakaiproject/nakamura/message/email/outgoing";
+  static final String QUEUE_NAME = "org/sakaiproject/nakamura/message/email/outgoing";
+  
 
   @Reference
   protected SlingRepository repository;
@@ -163,6 +163,11 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
   public static final String CONTENT_PATH_PROPERTY = "contentPath";
 
   public static final String RECIPIENTS = "recipients";
+
+  /**
+   * String template for required but not-set service properties.
+   */
+  private static final String NOT_SET_TMPL = "%s not set";
 
   private Connection connection = null;
   private String smtpServer;
@@ -222,8 +227,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
             // validate the message
             if (messageContent != null) {
               if (messageContent.hasProperty(MessageConstants.PROP_SAKAI_MESSAGEBOX)
-                  && (MessageConstants.BOX_OUTBOX.equals(messageContent
-                      .getProperty(MessageConstants.PROP_SAKAI_MESSAGEBOX)) 
+                  && (MessageConstants.BOX_OUTBOX.equals(messageContent.getProperty(MessageConstants.PROP_SAKAI_MESSAGEBOX))
                       || MessageConstants.BOX_PENDING.equals(messageContent.getProperty(MessageConstants.PROP_SAKAI_MESSAGEBOX)))) {
                 if (messageContent.hasProperty(MessageConstants.PROP_SAKAI_MESSAGEERROR)) {
                   // We're retrying this message, so clear the errors
@@ -577,14 +581,14 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
 
   @Activate
   @Modified
-  protected void activate(Map<?, ?> props) {
+  protected void activate(Map<?, ?> props) throws JMSException {
     Integer _maxRetries = PropertiesUtil.toInteger(props.get(MAX_RETRIES), -1);
     if (_maxRetries > -1 ) {
       if (diff(maxRetries, _maxRetries)) {
         maxRetries = _maxRetries;
       }
     } else {
-      LOGGER.error("Maximum times to retry messages not set.");
+      throw new IllegalArgumentException(String.format(NOT_SET_TMPL, MAX_RETRIES));
     }
 
     Integer _retryInterval = PropertiesUtil.toInteger(props.get(RETRY_INTERVAL), -1);
@@ -593,7 +597,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
         retryInterval = _retryInterval;
       }
     } else {
-      LOGGER.error("SMTP retry interval not set.");
+      throw new IllegalArgumentException(String.format(NOT_SET_TMPL, RETRY_INTERVAL));
     }
 
     if (maxRetries * retryInterval < 4320 /* minutes in 3 days */) {
@@ -607,7 +611,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
         smtpPort = _smtpPort;
       }
     } else {
-      LOGGER.error("Invalid port set for SMTP");
+      throw new IllegalArgumentException("Invalid port set for SMTP");
     }
 
     String _smtpServer = PropertiesUtil.toString(props.get(SMTP_SERVER), "");
@@ -616,7 +620,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
         smtpServer = _smtpServer;
       }
     } else {
-      LOGGER.error("No SMTP server set");
+      throw new IllegalArgumentException(String.format(NOT_SET_TMPL, SMTP_SERVER));
     }
 
     String _replyAsAddress = PropertiesUtil.toString(props.get(REPLY_AS_ADDRESS), "");
@@ -625,7 +629,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
         replyAsAddress = _replyAsAddress;
       }
     } else {
-      LOGGER.error("No reply-as email address set");
+      throw new IllegalArgumentException(String.format(NOT_SET_TMPL, REPLY_AS_ADDRESS));
     }
 
     String _replyAsName = PropertiesUtil.toString(props.get(REPLY_AS_NAME), "");
@@ -634,7 +638,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
         replyAsName = _replyAsName;
       }
     } else {
-      LOGGER.error("No reply-as email name set");
+      throw new IllegalArgumentException(String.format(NOT_SET_TMPL, REPLY_AS_NAME));
     }
 
     useTls = PropertiesUtil.toBoolean(props.get(SMTP_USE_TLS), false);
@@ -663,7 +667,7 @@ public class LiteOutgoingEmailMessageListener implements MessageListener {
         } catch (JMSException e1) {
         }
       }
-      throw new ComponentException(e.getMessage(), e);
+      throw e;
     }
   }
 
