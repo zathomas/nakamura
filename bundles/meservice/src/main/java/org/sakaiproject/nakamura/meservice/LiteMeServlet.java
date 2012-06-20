@@ -68,6 +68,7 @@ import org.sakaiproject.nakamura.api.util.LocaleUtils;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.sakaiproject.nakamura.util.PathUtils;
+import org.sakaiproject.nakamura.util.ServletUtils;
 import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,6 +194,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       }
       PrintWriter w = response.getWriter();
       ExtendedJSONWriter writer = new ExtendedJSONWriter(w);
+      writer.setTidy(ServletUtils.isTidy(request));
       writer.object();
       // User info
       writer.key("user");
