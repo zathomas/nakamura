@@ -163,6 +163,7 @@ public class QoSFilter implements Filter {
       if (accepted) {
         chain.doFilter(request, response);
       } else {
+        LOGGER.warn("QoS filter rejecting request");
         ((HttpServletResponse) response)
             .sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       }
