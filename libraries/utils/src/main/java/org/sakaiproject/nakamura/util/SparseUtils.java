@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -15,21 +15,30 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.api.activity;
+package org.sakaiproject.nakamura.util;
+
+import org.sakaiproject.nakamura.api.lite.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Utilities for interacting with SparseMapContent
  */
-public interface ActivityRoute {
+public class SparseUtils {
+
+  private final static Logger LOGGER = LoggerFactory.getLogger(SparseUtils.class);
 
   /**
-   * @return The user ids who should be able to read the activity.
+   * Log out of the given session, swallowing any tossed exceptions.
+   * 
+   * @param session
    */
-  public String[] getReaders();
+  public static void logoutQuietly(Session session) {
+    try {
+      session.logout();
+    } catch (Exception e) {
+      LOGGER.warn("Error logging out of session, but swallowing exception.", e);
+    }
+  }
   
-  /**
-   * @return The destination for an activity.
-   */
-  public String getDestination();
-
 }
