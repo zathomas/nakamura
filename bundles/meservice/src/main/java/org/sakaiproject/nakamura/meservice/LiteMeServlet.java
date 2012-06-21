@@ -54,8 +54,6 @@ import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.message.LiteMessagingService;
 import org.sakaiproject.nakamura.api.message.MessagingException;
-import org.sakaiproject.nakamura.api.messagebucket.MessageBucketException;
-import org.sakaiproject.nakamura.api.messagebucket.MessageBucketService;
 import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.Result;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
@@ -104,7 +102,6 @@ import javax.servlet.http.HttpServletResponse;
       "        \"subjects\": [],\n" +
       "        \"superUser\": false\n" +
       "    },\n" +
-      "    \"eventbus\": \"http://localhost:8080/system/uievent/default?token=YW5vbnltb3VzOzEzMGYzMmU3NDM3O2RlZmF1bHQ7ZXdLeUlvQ3phUnNXRlBXMHFyVFlsKzFQVkMwPQ&server=2324-Zachs-Mac.local&user=anonymous\",\n" +
       "    \"profile\": {\n" +
       "        \"basic\": {\n" +
       "            \"access\": \"everybody\",\n" +
@@ -141,9 +138,6 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
 
   @Reference
   protected transient ConnectionManager connectionManager;
-
-  @Reference
-  protected MessageBucketService messageBucketService;
 
   @Reference
   protected SolrSearchServiceFactory searchServiceFactory;
@@ -199,18 +193,6 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       // User info
       writer.key("user");
       writeUserJSON(writer, session, au, request);
-
-      try {
-        String messageBucketUrl = messageBucketService.getBucketUrl(request, "default");
-        if ( messageBucketUrl != null) {
-          writer.key("eventbus");
-          writer.value(messageBucketUrl);
-        }
-      } catch ( MessageBucketException e) {
-        LOG.warn("Failed to create message bucket URL {} "+e.getMessage());
-        LOG.debug("Failed to create message bucket URL {} "+e.getMessage(),e);
-
-      }
 
       // Dump this user his info
       writer.key("profile");
