@@ -16,11 +16,6 @@
  * specific language governing permissions and limitations under the License.
  */
 package org.sakaiproject.nakamura.meservice;
-import static junit.framework.Assert.assertEquals;
-
-import java.util.Collections;
-import java.util.Locale;
-import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,12 +24,8 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.sakaiproject.nakamura.api.connections.ConnectionManager;
 import org.sakaiproject.nakamura.api.message.LiteMessagingService;
-import org.sakaiproject.nakamura.api.messagebucket.MessageBucketService;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
-import org.sakaiproject.nakamura.meservice.LiteMeServlet;
-
-import com.google.common.collect.ImmutableMap;
 
 /**
  *
@@ -49,9 +40,6 @@ public class LiteMeServletTest {
   ConnectionManager connectionManager;
 
   @Mock
-  MessageBucketService messageBucketService;
-
-  @Mock
   SolrSearchServiceFactory searchServiceFactory;
 
   @Mock
@@ -62,7 +50,6 @@ public class LiteMeServletTest {
     meServlet = new LiteMeServlet();
     meServlet.messagingService = messagingService;
     meServlet.connectionManager = connectionManager;
-    meServlet.messageBucketService = messageBucketService;
     meServlet.searchServiceFactory = searchServiceFactory;
     meServlet.basicUserInfoService = basicUserInfoService;
     
