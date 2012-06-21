@@ -48,6 +48,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.user.UserConstants;
+import org.sakaiproject.nakamura.util.SparseUtils;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
 
 import java.io.IOException;
@@ -162,7 +163,7 @@ public class ActivityServiceImpl implements ActivityService {
         adminSession.getAccessControlManager().setAcl(Security.ZONE_CONTENT, activtyNode.getPath(), readerAcls);
       }
     } finally {
-      ActivityUtils.logout(adminSession);
+      SparseUtils.logoutQuietly(adminSession);
     }
     
     // store the activity node

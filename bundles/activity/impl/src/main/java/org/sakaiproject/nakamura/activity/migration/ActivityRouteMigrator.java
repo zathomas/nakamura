@@ -23,7 +23,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.sakaiproject.nakamura.api.activity.ActivityConstants;
-import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.PropertyMigrator;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -38,6 +37,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
+import org.sakaiproject.nakamura.util.SparseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,7 +109,7 @@ public class ActivityRouteMigrator implements PropertyMigrator {
         } catch (AccessDeniedException e) {
           LOGGER.warn("Skipping migration of activity record '"+path+"' due to exception.", e);
         } finally {
-          close(session);
+          SparseUtils.logoutQuietly(session);
         } 
       }
     }
@@ -144,14 +144,4 @@ public class ActivityRouteMigrator implements PropertyMigrator {
     return ImmutableMap.of(PropertyMigrator.OPTION_RUNONCE, Boolean.TRUE.toString());
   }
   
-  private void close(Session session) {
-    if (session != null) {
-      try {
-        session.logout();
-      } catch (ClientPoolException e) {
-        LOGGER.error("Error logging out of admin session", e);
-      }
-    }
-  }
-
 }
