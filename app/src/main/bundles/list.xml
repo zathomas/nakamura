@@ -746,5 +746,10 @@ KERN-1187
       <artifactId>org.sakaiproject.nakamura.content-packaging</artifactId>
       <version>1.4.0-SNAPSHOT</version>
     </bundle>
+    <bundle>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>org.sakaiproject.nakamura.robots.txt</artifactId>
+      <version>1.4.0-SNAPSHOT</version>
+    </bundle>
    </startLevel>
 </bundles>
