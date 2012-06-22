@@ -330,9 +330,9 @@ public class ResourceProxyServlet extends SlingAllMethodsServlet implements Opti
     } catch (IOException e) {
       throw e;
     } catch (ProxyClientException e) {
-      response.sendError(500, e.getMessage());
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
     } catch (RepositoryException e) {
-      response.sendError(500, e.getMessage());
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
