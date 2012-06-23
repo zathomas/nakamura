@@ -28,19 +28,7 @@ import static org.sakaiproject.nakamura.email.outgoing.LiteOutgoingEmailMessageL
 import static org.sakaiproject.nakamura.email.outgoing.LiteOutgoingEmailMessageListener.SMTP_PORT;
 import static org.sakaiproject.nakamura.email.outgoing.LiteOutgoingEmailMessageListener.SMTP_SERVER;
 
-import java.net.ConnectException;
-import java.net.ServerSocket;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
+import com.google.common.collect.ImmutableMap;
 
 import org.apache.commons.mail.EmailException;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -59,9 +47,21 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
+import org.subethamail.wiser.Wiser;
 
-import com.dumbster.smtp.SimpleSmtpServer;
-import com.google.common.collect.ImmutableMap;
+import java.net.ConnectException;
+import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
 
 
 @RunWith(MockitoJUnitRunner.class)
@@ -92,7 +92,7 @@ public class LiteOutgoingEmailMessageListenerTest {
 
   Session adminSession;
   LiteOutgoingEmailMessageListener listener;
-  SimpleSmtpServer smtpServer;
+  Wiser smtpServer;
   int smtpPort;
   Content messageContent;
 
@@ -112,12 +112,15 @@ public class LiteOutgoingEmailMessageListenerTest {
     ServerSocket ss = new ServerSocket(0);
     smtpPort = ss.getLocalPort();
     ss.close();
-    smtpServer = SimpleSmtpServer.start(smtpPort);
+    
+    smtpServer = new Wiser();
+    smtpServer.setPort(smtpPort);
+    smtpServer.start();
   }
 
   @After
   public void tearDown() throws Exception {
-    if (!smtpServer.isStopped()) {
+    if (smtpServer != null) {
       smtpServer.stop();
     }
   }
@@ -148,6 +151,7 @@ public class LiteOutgoingEmailMessageListenerTest {
     listener.activate(props);
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   public void testEmailServerDown() throws Exception {
     activateListener(listener, null);
@@ -174,7 +178,7 @@ public class LiteOutgoingEmailMessageListenerTest {
         ImmutableMap.of(OPERATION_MODE, (Object) OP_DISABLED));
     // make sure we don't even try to connect to JMS
     verify(connFactoryService, never()).getDefaultConnectionFactory();
-    assertEquals(0, smtpServer.getReceivedEmailSize());
+    assertEquals(0, smtpServer.getMessages().size());
   }
 
   @Test
@@ -187,7 +191,7 @@ public class LiteOutgoingEmailMessageListenerTest {
     listener.onMessage(message);
     // verify that the message isn't touched
     verifyZeroInteractions(message);
-    assertEquals(0, smtpServer.getReceivedEmailSize());
+    assertEquals(0, smtpServer.getMessages().size());
   }
 
   @Test
@@ -203,7 +207,7 @@ public class LiteOutgoingEmailMessageListenerTest {
     // verify that a retry is not scheduled.
     verify(listenerSpy, never()).scheduleRetry(any(Content.class));
     verify(listenerSpy, never()).scheduleRetry(anyInt(), any(Content.class));
-    assertEquals(0, smtpServer.getReceivedEmailSize());
+    assertEquals(0, smtpServer.getMessages().size());
   }
 
   @Test
@@ -211,7 +215,7 @@ public class LiteOutgoingEmailMessageListenerTest {
     setupMessageContent();
     activateListener(listener, null);
     listener.onMessage(message);
-    assertEquals(1, smtpServer.getReceivedEmailSize());
+    assertEquals(1, smtpServer.getMessages().size());
   }
 
   // ---------- Helper methods -------------------------------------------------

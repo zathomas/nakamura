@@ -155,9 +155,8 @@
       <artifactId>slf4j-nop</artifactId>
     </dependency>
     <dependency>
-      <groupId>dumbster</groupId>
-      <artifactId>dumbster</artifactId>
-      <version>1.6</version>
+    	<groupId>org.subethamail</groupId>
+    	<artifactId>subethasmtp-wiser</artifactId>
     </dependency>
   </dependencies>
 </project>
