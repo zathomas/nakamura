@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
@@ -32,11 +34,14 @@ import org.apache.solr.common.params.FacetParams;
 import org.sakaiproject.nakamura.api.search.SearchUtil;
 
 public abstract class DomainObjectSearchQueryHandler {
+
   private static Map<String, Object> QUERY_OPTIONS_MAP = ImmutableMap.<String, Object> of(
       FacetParams.FACET, Boolean.TRUE,
       FacetParams.FACET_FIELD, "tagname",
       FacetParams.FACET_MINCOUNT, 1
   );
+
+  private static Pattern TWO_OR_MORE_STARS = Pattern.compile("\\*{2,}");
 
   public enum DEFAULT_REQUEST_PARAMS {
     q,
@@ -126,6 +131,10 @@ public abstract class DomainObjectSearchQueryHandler {
    */
   public String getSearchParam(Map<String, String> parametersMap, String key) {
     String param = StringUtils.stripToNull(parametersMap.get(key));
+    // solr hates long sequences of asterisks, so compress repeated *'s to single *
+    if ( param != null ) {
+      param = TWO_OR_MORE_STARS.matcher(param).replaceAll("*");
+    }
     if ("*".equals(param) || "*:*".equals(param)) {
       return null;
     } else {
