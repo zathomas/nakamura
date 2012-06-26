@@ -66,48 +66,33 @@ public class ReprocessImagesMigrator implements PropertyMigrator {
   @Override
   public boolean migrate(String rowId, Map<String, Object> properties) {
     boolean changeMade = false;
-    Session adminSession = null;
-    try {
-      adminSession = sparseRepository.loginAdministrative();
-      ContentManager contentManager = adminSession.getContentManager();
-      if (isImage(properties) &&
-          (isNotJpeg((String) properties.get(Content.MIMETYPE_FIELD)) || isSmall(properties, contentManager))) {
-        setNeedsProcessingFlag((String) properties.get(Content.PATH_FIELD), contentManager);
-        changeMade = true;
-      }
-    } catch (Exception e) {
-      LOGGER.error("Failed to do migration on content.", e);
-    } finally {
-      SparseUtils.logoutQuietly(adminSession);
+    if (properties != null && isImage(properties) &&
+        (isNotJpeg((String) properties.get(Content.MIMETYPE_FIELD)) || isSmall(properties))) {
+      properties.put(FilesConstants.POOLED_NEEDS_PROCESSING, Boolean.TRUE);
+      changeMade = true;
     }
     return changeMade;
   }
 
-  private boolean isSmall(Map<String, Object> contentProperties, ContentManager contentManager) {
+  private boolean isSmall(Map<String, Object> contentProperties) {
     boolean isSmall = false;
     String imagePath = (String) contentProperties.get(Content.PATH_FIELD);
+    Session adminSession = null;
     try {
+      adminSession = sparseRepository.loginAdministrative();
+      ContentManager contentManager = adminSession.getContentManager();
       InputStream inputStream = contentManager.getInputStream(imagePath);
       byte[] bytes = IOUtils.getInputStreamBytes(inputStream);
       ImageInfo info = Sanselan.getImageInfo(bytes);
       isSmall = info.getWidth() < PREVIEW_PROCESSOR_NORMAL_WIDTH;
     } catch (Exception e) {
       LOGGER.error("Error determining image size of {}", imagePath);
+    } finally {
+      if (adminSession == null) {
+        SparseUtils.logoutQuietly(adminSession);
+      }
     }
     return isSmall;
-  }
-
-  private void setNeedsProcessingFlag(String contentPath, ContentManager contentManager) {
-    if (contentPath == null) {
-      return;
-    }
-    try {
-      Content content = contentManager.get(contentPath);
-      content.setProperty(FilesConstants.POOLED_NEEDS_PROCESSING, Boolean.TRUE);
-      contentManager.update(content);
-    } catch (Exception e) {
-      LOGGER.error("Failed to update 'needsprocessing' flag for content '{}'", contentPath);
-    }
   }
 
   private boolean isNotJpeg(String mimeType) {
