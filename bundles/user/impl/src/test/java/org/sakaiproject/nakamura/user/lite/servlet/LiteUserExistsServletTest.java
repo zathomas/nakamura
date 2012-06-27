@@ -42,6 +42,7 @@ import org.sakaiproject.nakamura.user.lite.resource.RepositoryHelper;
 import org.sakaiproject.nakamura.util.parameters.ContainerRequestParameter;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -90,6 +91,7 @@ public class LiteUserExistsServletTest {
     
     servlet = new LiteUserExistsServlet();
     servlet.userFinder = userFinder;
+    servlet.restrictedUsernamePattern = Pattern.compile(LiteUserExistsServlet.RESTRICTED_USERNAME_REGEX_DEFAULT, Pattern.CASE_INSENSITIVE);
 
   }  
   @Test
@@ -118,5 +120,11 @@ public class LiteUserExistsServletTest {
     when(userFinder.userExists("foo")).thenReturn(false);
     servlet.doGet(request, httpResponse);
     verify(httpResponse).sendError(eq(HttpServletResponse.SC_NOT_FOUND)); 
+
+    reqParam = new ContainerRequestParameter("Admin", "utf-8");
+    when(request.getRequestParameter("userid")).thenReturn(reqParam);
+    when(userFinder.userExists("Admin")).thenReturn(false);
+    servlet.doGet(request, httpResponse);
+    verify(httpResponse).sendError(eq(HttpServletResponse.SC_CONFLICT));
   }
 }
