@@ -1,7 +1,8 @@
 {
-  "sakai:query-template": 'path:${_userMessagePath} AND resourceType:sakai/message',
+  "sakai:query-template": 'path:${_userMessagePath}',
   "sakai:query-template-options": {
-      "sort": "${sortOn} ${sortOrder}"
+    "fq" : "resourceType:sakai/message",
+    "sort": "${sortOn} ${sortOrder}"
   },
   "sakai:query-template-defaults": {
     "sortOn": "_created",
