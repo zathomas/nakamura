@@ -37,6 +37,9 @@ import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceParameter;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.doc.ServiceSelector;
+import org.sakaiproject.nakamura.api.lite.Repository;
+import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.user.UserFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,10 +127,14 @@ public class LiteUserExistsServlet extends SlingSafeMethodsServlet {
   @Reference
   protected UserFinder userFinder;
 
+  @Reference
+  protected Repository repository;
+
   @Override
   protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
       throws ServletException, IOException {
     long start = System.currentTimeMillis();
+    Session session;
     try {
       RequestParameter idParam = request.getRequestParameter("userid");
       if (idParam == null) {
@@ -139,21 +146,28 @@ public class LiteUserExistsServlet extends SlingSafeMethodsServlet {
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, "The 'userid' parameter must not be blank.");
         return;
       }
+
+      session = repository.loginAdministrative();
+      AuthorizableManager am = session.getAuthorizableManager();
+
       String id = idParam.getString();
       LOGGER.debug("Checking for existence of {}", id);
       // finding by id but in AuthorizableManager users are created with id and name being the same string
-      if (userFinder.userExists(id)) {
+      if (userFinder.userExists(id) || am.findAuthorizable(id) != null) {
         response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-      } else if (restrictedUsernamePattern.matcher(id).matches()){
+      }
+      else if (restrictedUsernamePattern.matcher(id).matches()){
         response.sendError(HttpServletResponse.SC_CONFLICT);
       } else {
         response.sendError(HttpServletResponse.SC_NOT_FOUND);
       }
+      session.logout();
     } catch (Exception e) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getLocalizedMessage());
       return;
     } finally {
       LOGGER.debug("checking for existence took {} ms", System.currentTimeMillis() - start);
+      session = null;
       if (delayMs > 0) {
         long remainingTime = delayMs - (System.currentTimeMillis() - start);
         if (remainingTime > 0) {
