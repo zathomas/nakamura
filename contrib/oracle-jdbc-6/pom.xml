@@ -167,6 +167,9 @@ xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLS
         </profile>
         <profile>
             <id>11.2.0.3</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -176,7 +179,7 @@ xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLS
                         <extensions>true</extensions>
                         <configuration>
                             <instructions>
-                                <!-- <Embed-Dependency>oracle.jdbc;inline=true</Embed-Dependency> -->
+                                <Embed-Dependency>oracle.jdbc;inline=true</Embed-Dependency> 
                                 <Export-Package>oracle.*</Export-Package>
                                 <Import-Package> oracle.i18n.text;resolution:=optional,
                                 oracle.i18n.text.converter;resolution:=optional,
