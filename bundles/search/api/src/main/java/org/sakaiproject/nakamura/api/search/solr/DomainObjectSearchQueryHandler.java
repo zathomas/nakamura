@@ -85,8 +85,16 @@ public abstract class DomainObjectSearchQueryHandler
   }
 
   @Reference
-  SolrSearchServiceFactory searchServiceFactory;
+  protected SolrSearchServiceFactory searchServiceFactory;
 
+  public DomainObjectSearchQueryHandler() {
+    
+  }
+  
+  public DomainObjectSearchQueryHandler(SolrSearchServiceFactory searchServiceFactory) {
+    this.searchServiceFactory = searchServiceFactory;
+  }
+  
   /**
    * Return the search clause corresponding to the domain object. This will
    * typically be used as a Filter Query and as a fallback replacement for
