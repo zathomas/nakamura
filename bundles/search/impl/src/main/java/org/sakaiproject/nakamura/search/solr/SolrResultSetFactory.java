@@ -35,9 +35,9 @@ import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.GroupParams;
+import org.perf4j.aop.Profiled;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
@@ -181,16 +181,14 @@ public class SolrResultSetFactory implements ResultSetFactory {
         }
       }
       long tquery = System.currentTimeMillis();
-      QueryResponse response = solrServer.query(solrQuery, queryMethod);
+      QueryResponse response = doSolrQuery(request, solrServer, solrQuery);
       tquery = System.currentTimeMillis() - tquery;
       TelemetryCounter.incrementValue("search","SEARCH_PERFORMED",request.getResource().getPath());
       try {
         if ( tquery > verySlowQueryThreshold ) {
-          SLOW_QUERY_LOGGER.error("Very slow solr query {} ms {} ",tquery, URLDecoder.decode(solrQuery.toString(),"UTF-8"));
-          TelemetryCounter.incrementValue("search","VERYSLOW",request.getResource().getPath());
+          logVerySlow(request, solrQuery, tquery);
         } else if ( tquery > slowQueryThreshold ) {
-          SLOW_QUERY_LOGGER.warn("Slow solr query {} ms {} ",tquery, URLDecoder.decode(solrQuery.toString(),"UTF-8"));
-          TelemetryCounter.incrementValue("search", "SLOW", request.getResource().getPath());
+          logSlow(request, solrQuery, tquery);
         }
       } catch (UnsupportedEncodingException e) {
       }
@@ -227,6 +225,28 @@ public class SolrResultSetFactory implements ResultSetFactory {
     }
   }
 
+  @Profiled(tag="search:ResultSet:performed:{$0.resource.path}", el=true)
+  private QueryResponse doSolrQuery(SlingHttpServletRequest request, SolrServer solrServer,
+      SolrQuery solrQuery) throws SolrServerException {
+    return solrServer.query(solrQuery, queryMethod);
+  }
+  
+  @Profiled(tag="search:ResultSet:slow:{$0.resource.path}", el=true)
+  private void logSlow(SlingHttpServletRequest request, SolrQuery solrQuery, long time)
+      throws UnsupportedEncodingException {
+    SLOW_QUERY_LOGGER.error("Slow solr query {} ms {} ", time,
+        URLDecoder.decode(solrQuery.toString(),"UTF-8"));
+    TelemetryCounter.incrementValue("search","SLOW",request.getResource().getPath());
+  }
+  
+  @Profiled(tag="search:ResultSet:veryslow:{$0.resource.path}", el=true)
+  private void logVerySlow(SlingHttpServletRequest request, SolrQuery solrQuery, long time)
+      throws UnsupportedEncodingException {
+    SLOW_QUERY_LOGGER.error("Very slow solr query {} ms {} ", time,
+        URLDecoder.decode(solrQuery.toString(),"UTF-8"));
+    TelemetryCounter.incrementValue("search","VERYSLOW",request.getResource().getPath());
+  }
+  
   /**
    * @param request
    * @param query
