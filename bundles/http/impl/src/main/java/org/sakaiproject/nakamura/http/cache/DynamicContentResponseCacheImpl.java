@@ -102,11 +102,15 @@ public class DynamicContentResponseCacheImpl implements DynamicContentResponseCa
       return;
     }
     String key = buildCacheKey(cacheCategory, userID);
-    if (!cache.containsKey(key)) {
-      return;
+    if (cache.containsKey(key)) {
+      cache.remove(key);
+      TelemetryCounter.incrementValue("http", "DynamicContentResponseCache-invalidation", cacheCategory);
     }
-    cache.remove(key);
-    TelemetryCounter.incrementValue("http", "DynamicContentResponseCache-invalidation", cacheCategory);
+    String wildcardKey = buildCacheKey("*", userID);
+    if (cache.containsKey(wildcardKey)) {
+      cache.remove(wildcardKey);
+      TelemetryCounter.incrementValue("http", "DynamicContentResponseCache-invalidation", "*");
+    }
   }
 
   @Override
