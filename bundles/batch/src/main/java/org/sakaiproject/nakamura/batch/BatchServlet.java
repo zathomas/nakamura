@@ -17,6 +17,7 @@
  */
 package org.sakaiproject.nakamura.batch;
 
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -63,8 +64,9 @@ public class BatchServlet extends SlingAllMethodsServlet {
   private static final long serialVersionUID = 419598445499567027L;
 
   protected static final String REQUESTS_PARAMETER = "requests";
-  
-  private BatchHelper helper = new BatchHelper();
+
+  @Reference
+  BatchHelper helper;
 
   /**
    * {@inheritDoc}

@@ -17,6 +17,11 @@
  */
 package org.sakaiproject.nakamura.batch;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -27,6 +32,7 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.io.JSONWriter;
+import org.sakaiproject.nakamura.api.http.cache.DynamicContentResponseCache;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.util.RequestInfo;
 import org.sakaiproject.nakamura.util.RequestWrapper;
@@ -49,12 +55,17 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+@Component()
+@Service(value = BatchHelper.class)
 public class BatchHelper {
 
   private static final Logger LOGGER = LoggerFactory
       .getLogger(BatchHelper.class);
 
   protected static final String REQUESTS_PARAMETER = "requests";
+
+  @Reference
+  protected DynamicContentResponseCache dynamicContentResponseCache;
 
 
   /**
@@ -76,6 +87,7 @@ public class BatchHelper {
     // Grab the JSON block out of it and convert it to RequestData objects we can use.
 
     List<RequestInfo> batchedRequests = new ArrayList<RequestInfo>();
+    boolean cacheEligible = true;
     try {
       JSONArray arr = new JSONArray(jsonRequest);
       for (int i = 0; i < arr.length(); i++) {
@@ -83,6 +95,8 @@ public class BatchHelper {
         RequestInfo r = new RequestInfo(obj);
         if ( allowModify || r.isSafe() ) {
           batchedRequests.add(r);
+        } else {
+          cacheEligible = false;
         }
       }
     } catch (MalformedURLException e) {
@@ -101,6 +115,13 @@ public class BatchHelper {
       return;
     }
 
+    // don't process further if request can be cached and client gave us a fresh etag
+    if ( cacheEligible ) {
+      if ( dynamicContentResponseCache.send304WhenClientHasFreshETag("*", request, response)) {
+        return;
+      }
+    }
+
     // Loop over the requests and handle each one.
     try {
       StringWriter sw = new StringWriter();
@@ -117,6 +138,9 @@ public class BatchHelper {
       response.setContentType("application/json");
       response.setCharacterEncoding("UTF-8");
       response.getWriter().write(sw.getBuffer().toString());
+      if ( cacheEligible ) {
+        dynamicContentResponseCache.recordResponse("*", request, response);
+      }
     } catch (JSONException e) {
       LOGGER.warn("Failed to create a JSON response");
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
