@@ -51,7 +51,6 @@
         <configuration>
           <instructions>
             <Bundle-Category>sakai-nakamura</Bundle-Category>
-            <Import-Package>!org.apache.sling.servlets.post.impl.helper,*</Import-Package>
             <Private-Package>
               org.sakaiproject.nakamura.user.*,
               org.apache.sling.jackrabbit.usermanager.*
