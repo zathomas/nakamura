@@ -17,7 +17,6 @@
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-scr-plugin</artifactId>
-				<version>1.4.4</version>
 				<dependencies>
 					<dependency>
 						<groupId>org.slf4j</groupId>
