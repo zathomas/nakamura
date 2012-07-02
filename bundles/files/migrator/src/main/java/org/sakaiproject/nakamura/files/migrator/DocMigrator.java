@@ -246,7 +246,9 @@ public class DocMigrator implements FileMigrationService {
   protected JSONObject jsonFromContent(Content documentContent) throws JSONException {
     StringWriter stringWriter = new StringWriter();
     ExtendedJSONWriter stringJsonWriter = new ExtendedJSONWriter(stringWriter);
-    ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, documentContent, false, -1);
+    if (documentContent != null) {
+      ExtendedJSONWriter.writeContentTreeToWriter(stringJsonWriter, documentContent, false, -1);
+    }
     return new JSONObject(stringWriter.toString());
   }
 
