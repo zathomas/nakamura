@@ -465,6 +465,7 @@ import javax.servlet.http.HttpServletResponse;
             Authorizable viewer = authorizableManager.findAuthorizable(name);
             if (viewer != null && !accessControlManager.can(thisUser, Security.ZONE_AUTHORIZABLES, name, Permissions.CAN_WRITE)) {
               response.sendError(SC_FORBIDDEN, "Non-managers may not remove any viewer other than themselves or a group which they manage.");
+              return;
             }
           }
         }
