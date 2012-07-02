@@ -401,9 +401,7 @@ public class FileUtils {
     Content commentContent = null;
     try {
       commentContent = session.getContentManager().get(content.getPath() + "/comments");
-      if (commentContent != null) {
-        ExtendedJSONWriter.writeContentTreeToWriter(writer, commentContent, true, 2);
-      }
+      ExtendedJSONWriter.writeContentTreeToWriter(writer, commentContent, true, 2); 
     } catch (org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException e) {
       writer.value(false);
     } finally {

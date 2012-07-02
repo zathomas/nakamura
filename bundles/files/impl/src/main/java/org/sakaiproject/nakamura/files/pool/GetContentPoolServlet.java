@@ -128,9 +128,7 @@ public class GetContentPoolServlet extends SlingSafeMethodsServlet implements Op
 
   private void writeContentResponse(int recursion, ExtendedJSONWriter writer, Content content, ContentManager contentManager) throws Exception {
     Content contentToWrite = migrateFileContent(content, contentManager);
-    if (contentToWrite != null) {
-      ExtendedJSONWriter.writeContentTreeToWriter(writer, contentToWrite, false,  recursion);
-    }
+    ExtendedJSONWriter.writeContentTreeToWriter(writer, contentToWrite, false,  recursion);
   }
 
   private Content migrateFileContent(Content content, ContentManager contentManager) throws StorageClientException, AccessDeniedException {
