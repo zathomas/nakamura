@@ -53,8 +53,7 @@ import java.util.Iterator;
 @Component(immediate = true, metatype=true)
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
-    @Property(name = SolrSearchConstants.REG_BATCH_PROCESSOR_NAMES, value = "PooledContentFiles"),
-    @Property(name = SolrSearchBatchResultProcessor.DEFAULT_BATCH_PROCESSOR_PROP, boolValue = true)
+    @Property(name = SolrSearchConstants.REG_BATCH_PROCESSOR_NAMES, value = "PooledContentFiles")
 })
 @Service(value = SolrSearchBatchResultProcessor.class)
 public class PooledContentSearchBatchResultProcessor implements
