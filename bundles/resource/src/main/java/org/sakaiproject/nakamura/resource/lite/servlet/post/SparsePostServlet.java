@@ -381,30 +381,6 @@ public class SparsePostServlet extends SlingAllMethodsServlet {
   protected void deactivate(ComponentContext context) {
     dateParser = null;
     this.componentContext = null;
-    
-    synchronized (delayedPostOperations) {
-      delayedPostOperations.clear();
-    }
-    
-    synchronized (postOperations) {
-      postOperations.clear();
-    }
-    
-    synchronized (delayedPostProcessors) {
-      delayedPostProcessors.clear();
-    }
-    
-    synchronized (postProcessors) {
-      postProcessors.clear();
-    }
-    
-    synchronized (delayedNodeNameGenerators) {
-      delayedNodeNameGenerators.clear();
-    }
-    
-    synchronized (nodeNameGenerators) {
-      nodeNameGenerators.clear();
-    }
   }
 
   protected void bindPostOperation(ServiceReference ref) {

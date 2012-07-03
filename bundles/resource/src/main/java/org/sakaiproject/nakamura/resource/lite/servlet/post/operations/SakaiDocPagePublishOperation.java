@@ -60,7 +60,7 @@ import java.util.regex.Pattern;
  *  another, but there is no time to develop a new generic operation like this</li>
  * </ul>
  */
-@Component(immediate=true)
+@Component
 @Service(value = SparsePostOperation.class)
 @Property(name = "sling.post.operation", value = "publish-sakaidoc-page")
 public class SakaiDocPagePublishOperation extends MoveOperation {
