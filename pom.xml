@@ -738,6 +738,11 @@
           <version>2.5.1</version>
           <configuration>
             <aggregate>true</aggregate>
+            <instrumentation>
+            <excludes>
+              <exclude>bundles/postgresqlwrapper/**/*.class</exclude>
+            </excludes>
+            </instrumentation>
           </configuration>
       </plugin>
       <!-- <plugin>
