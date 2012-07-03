@@ -17,9 +17,6 @@
  */
 package org.sakaiproject.nakamura.mailman.impl;
 
-
-import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.api.security.user.User;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.event.Event;
@@ -29,8 +26,6 @@ import org.sakaiproject.nakamura.testutils.easymock.AbstractEasyMockTest;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-
-import javax.jcr.RepositoryException;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -82,11 +77,8 @@ public class MailmanGroupManagerTest extends AbstractEasyMockTest {
   }
 
   @Test
-  public void testHandleGroupJoin() throws MailmanException, RepositoryException {
+  public void testHandleGroupJoin() throws MailmanException{
     String groupName = "g-testgroup";
-    Group dummyGroup = createDummyGroup(groupName);
-    String user = "testuser";
-    User dummyUser = createDummyUser(user);
     String testAddress = "test@test.com";
     String topic = "org/apache/sling/jackrabbit/usermanager/event/join";
     Dictionary<String,Object> properties = new Hashtable<String, Object>();
@@ -99,11 +91,8 @@ public class MailmanGroupManagerTest extends AbstractEasyMockTest {
   }
 
   @Test
-  public void testHandleGroupPart() throws MailmanException, RepositoryException {
+  public void testHandleGroupPart() throws MailmanException {
     String groupName = "g-testgroup";
-    Group dummyGroup = createDummyGroup(groupName);
-    String user = "testuser";
-    User dummyUser = createDummyUser(user);
     String testAddress = "test@test.com";
     String topic = "org/apache/sling/jackrabbit/usermanager/event/part";
     Dictionary<String,Object> properties = new Hashtable<String, Object>();
@@ -113,19 +102,5 @@ public class MailmanGroupManagerTest extends AbstractEasyMockTest {
 
     when(mailmanManager.removeMember(groupName, null, testAddress)).thenReturn(Boolean.TRUE);
     groupManager.handleEvent(event);
-  }
-
-  private Group createDummyGroup(String groupName) throws RepositoryException {
-    Group group = mock(Group.class);
-    when(group.getID()).thenReturn(groupName);
-    when(group.isGroup()).thenReturn(Boolean.TRUE);
-    return group;
-  }
-
-  private User createDummyUser(String userName) throws RepositoryException {
-    User user = mock(User.class);
-    when(user.getID()).thenReturn(userName);
-    when(user.isGroup()).thenReturn(Boolean.FALSE);
-    return user;
   }
 }
