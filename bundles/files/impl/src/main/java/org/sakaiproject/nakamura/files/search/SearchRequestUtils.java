@@ -31,7 +31,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- *
+ * Provides common functionality for extracting information about a search request that
+ * is used for Pooled Content searches.
  */
 public class SearchRequestUtils {
   

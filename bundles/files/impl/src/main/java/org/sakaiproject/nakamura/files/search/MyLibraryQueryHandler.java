@@ -40,7 +40,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
+ * The {@code MyLibraryQueryHandler} backs the searching functionality for querying
+ * content that belongs in users' My Library page.
  */
 @Component(inherit=true)
 @Service(value={ SolrSearchResultProcessor.class, SolrSearchPropertyProvider.class })

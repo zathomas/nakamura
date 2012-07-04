@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 /**
- *
+ * Provides default functionality for pooled-content search entry-points.
  */
 @Component(componentAbstract=true, inherit=true)
 public abstract class AbstractContentSearchQueryHandler extends DomainObjectSearchQueryHandler
@@ -54,16 +54,20 @@ public abstract class AbstractContentSearchQueryHandler extends DomainObjectSear
 
   @Reference
   protected Repository repository;
-  
+
   public AbstractContentSearchQueryHandler() {
     
   }
-  
+
   public AbstractContentSearchQueryHandler(SolrSearchServiceFactory searchServiceFactory, Repository repository) {
     super(searchServiceFactory);
     this.repository = repository;
   }
   
+  /**
+   * {@inheritDoc}
+   * @see org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler#getSearchResultSet(org.apache.sling.api.SlingHttpServletRequest, org.sakaiproject.nakamura.api.search.solr.Query)
+   */
   @Override
   public SolrSearchResultSet getSearchResultSet(SlingHttpServletRequest request, Query query) throws SolrSearchException {
     LOGGER.debug("Input Query configuration = {}", query);
@@ -72,6 +76,10 @@ public abstract class AbstractContentSearchQueryHandler extends DomainObjectSear
     return searchServiceFactory.getSearchResultSet(request, query);
   }
   
+  /**
+   * {@inheritDoc}
+   * @see org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler#writeResult(org.sakaiproject.nakamura.api.lite.Session, java.util.Map, org.apache.sling.commons.json.io.JSONWriter, org.sakaiproject.nakamura.api.search.solr.Result)
+   */
   @Override
   public void writeResult(Session session, Map<String, String> parametersMap, JSONWriter jsonWriter, Result result)
       throws JSONException {

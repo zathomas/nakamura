@@ -48,7 +48,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * The {@code MeQueryHandler} backs the search functionality for the role-based content
+ * search entry-points. Specifically:
+ * <p><ul>
+ * <li>/var/search/pool/me/manager-all.json (DEPRECATED)</li>
+ * <li>/var/search/pool/me/manager.json (DEPRECATED)</li>
+ * <li>/var/search/pool/me/viewer-all.json (DEPRECATED)</li>
+ * <li>/var/search/pool/me/viewer.json (DEPRECATED)</li>
+ * <li>/var/search/pool/me/role.json</li>
+ * </ul>
  */
 @Service(value={ SolrSearchPropertyProvider.class, SolrSearchResultProcessor.class })
 @Component(inherit=true)
