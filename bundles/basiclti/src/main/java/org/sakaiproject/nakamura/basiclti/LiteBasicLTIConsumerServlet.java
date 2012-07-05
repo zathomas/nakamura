@@ -51,6 +51,7 @@ import static org.sakaiproject.nakamura.api.basiclti.BasicLTIAppConstants.RELEAS
 import static org.sakaiproject.nakamura.api.basiclti.BasicLTIAppConstants.TOPIC_BASICLTI_ACCESSED;
 import static org.sakaiproject.nakamura.api.basiclti.BasicLTIAppConstants.TOPIC_BASICLTI_LAUNCHED;
 import static org.sakaiproject.nakamura.api.basiclti.BasicLTIAppConstants.TOPIC_BASICLTI_REMOVED;
+import static org.sakaiproject.nakamura.basiclti.LiteBasicLTIServletUtils.getNodePath;
 import static org.sakaiproject.nakamura.basiclti.LiteBasicLTIServletUtils.sensitiveKeys;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -359,8 +360,8 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
         return;
       }
 
-      // e.g. /sites/foo/_widgets/id944280073/basiclti
-      launchProps.put(RESOURCE_LINK_ID, node.getPath());
+      // e.g. mvw0Gmalaa/id1987761/id3490751/basiclti
+      launchProps.put(RESOURCE_LINK_ID, getNodePath(node));
 
       final AuthorizableManager userManager = session.getAuthorizableManager();
       final org.sakaiproject.nakamura.api.lite.authorizable.Authorizable az = userManager
