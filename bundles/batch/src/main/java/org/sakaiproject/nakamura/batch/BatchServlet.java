@@ -39,30 +39,30 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-@SlingServlet(methods = {"POST"}, generateService = true, paths = {"/system/batch"})
+@SlingServlet(methods = { "POST" }, generateService = true, paths = { "/system/batch" })
 @ServiceDocumentation(name = "BatchServlet", okForVersion = "1.2",
     shortDescription = "Bundles multiple requests into a single response.",
     description = "Allows multiple requests to be executed in a single request.",
     bindings = @ServiceBinding(type = BindingType.PATH, bindings = "/system/batch"),
     methods = {
-        @ServiceMethod(name = "POST",
-            description = "Get multiple request responses into a single response. It can do GET, POST and DELETE everything is defined in the json block.",
-            parameters = @ServiceParameter(
-                name = "requests",
-                description = "A JSON string representing a request. <br />Example:" +
-                    "<pre>[{  \"url\" : \"/foo/bar\",  \"method\" : \"POST\",  \"parameters\" : {    \"val\" : 123,    \"val@TypeHint\" : \"Long\"  }},{  \"url\" : \"/~admin/public/authprofile.json\",  \"method\" : \"GET\"}]</pre>"
-            ),
-            response = {
-                @ServiceResponse(code = 200,
-                    description = {
-                        "All requests are successful. <br />",
-                        "A JSON array is returned containing an object for each resource. Example:",
-                        "<pre>[\n",
-                        "{\"url\": \"/~admin/public/authprofile.json\",\n \"body\": \"{\"user\"...\",\n \"success\":true, \"status\": 200,\n \"headers\":{\"Content-Type\":\"application/json\"}\n} \n]</pre>"
-                    }),
-                @ServiceResponse(code = 400, description = "The JSON object for the 'requests' parameter was malformed."),
-                @ServiceResponse(code = 500, description = "Unable to get and parse all requests.")
-            })
+      @ServiceMethod(name = "POST",
+        description = "Get multiple request responses into a single response. It can do GET, POST and DELETE everything is defined in the json block.",
+        parameters = @ServiceParameter(
+          name = "requests",
+          description = "A JSON string representing a request. <br />Example:" +
+            "<pre>[{  \"url\" : \"/foo/bar\",  \"method\" : \"POST\",  \"parameters\" : {    \"val\" : 123,    \"val@TypeHint\" : \"Long\"  }},{  \"url\" : \"/~admin/public/authprofile.json\",  \"method\" : \"GET\"}]</pre>"
+        ),
+        response = {
+          @ServiceResponse(code = 200,
+            description = {
+              "All requests are successful. <br />",
+              "A JSON array is returned containing an object for each resource. Example:",
+              "<pre>[\n",
+              "{\"url\": \"/~admin/public/authprofile.json\",\n \"body\": \"{\"user\"...\",\n \"success\":true, \"status\": 200,\n \"headers\":{\"Content-Type\":\"application/json\"}\n} \n]</pre>"
+            }),
+          @ServiceResponse(code = 400, description = "The JSON object for the 'requests' parameter was malformed."),
+          @ServiceResponse(code = 500, description = "Unable to get and parse all requests.")
+        })
     })
 public class BatchServlet extends SlingAllMethodsServlet {
 
@@ -84,7 +84,7 @@ public class BatchServlet extends SlingAllMethodsServlet {
    */
   @Override
   protected void doGet(SlingHttpServletRequest request,
-                       SlingHttpServletResponse response) throws ServletException, IOException {
+      SlingHttpServletResponse response) throws ServletException, IOException {
     batchRequest(request, response, false);
   }
 
@@ -96,7 +96,7 @@ public class BatchServlet extends SlingAllMethodsServlet {
    */
   @Override
   protected void doPost(SlingHttpServletRequest request,
-                        SlingHttpServletResponse response) throws ServletException, IOException {
+      SlingHttpServletResponse response) throws ServletException, IOException {
     batchRequest(request, response, true);
   }
 
@@ -108,7 +108,7 @@ public class BatchServlet extends SlingAllMethodsServlet {
    */
   @Override
   protected void doDelete(SlingHttpServletRequest request,
-                          SlingHttpServletResponse response) throws ServletException, IOException {
+      SlingHttpServletResponse response) throws ServletException, IOException {
     response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
   }
 
@@ -120,7 +120,7 @@ public class BatchServlet extends SlingAllMethodsServlet {
    */
   @Override
   protected void doPut(SlingHttpServletRequest request,
-                       SlingHttpServletResponse response) throws ServletException, IOException {
+      SlingHttpServletResponse response) throws ServletException, IOException {
     response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
   }
 
@@ -130,10 +130,10 @@ public class BatchServlet extends SlingAllMethodsServlet {
    * @param request
    * @param response
    * @throws IOException
-   * @throws ServletException
+   * @throws ServletException 
    */
   protected void batchRequest(SlingHttpServletRequest request,
-                              SlingHttpServletResponse response, boolean allowModify) throws IOException, ServletException {
+      SlingHttpServletResponse response, boolean allowModify) throws IOException, ServletException {
     // Grab the JSON block out of it and convert it to RequestData objects we can use.
     String json = request.getParameter(REQUESTS_PARAMETER);
 
