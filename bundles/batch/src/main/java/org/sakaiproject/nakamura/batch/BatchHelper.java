@@ -18,8 +18,6 @@
 package org.sakaiproject.nakamura.batch;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingException;
@@ -37,7 +35,6 @@ import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.util.RequestInfo;
 import org.sakaiproject.nakamura.util.RequestWrapper;
 import org.sakaiproject.nakamura.util.ResponseWrapper;
-import org.sakaiproject.nakamura.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
-
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -62,36 +58,19 @@ public class BatchHelper {
   private static final Logger LOGGER = LoggerFactory
       .getLogger(BatchHelper.class);
 
-  protected static final String REQUESTS_PARAMETER = "requests";
-
   @Reference
   protected DynamicContentResponseCache dynamicContentResponseCache;
 
-
-  /**
-   * Takes the original request and starts the batching.
-   *
-   * @param request
-   * @param response
-   * @throws IOException
-   * @throws ServletException 
-   */
   protected void batchRequest(SlingHttpServletRequest request,
-      SlingHttpServletResponse response, String jsonRequest, boolean allowModify) throws IOException, ServletException {
-
-    if (StringUtils.isEmpty(jsonRequest)) {
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "You must send the requests parameter");
-      return;
-    }
+      SlingHttpServletResponse response, JSONArray requestsJSON, boolean allowModify) throws IOException, ServletException {
 
     // Grab the JSON block out of it and convert it to RequestData objects we can use.
 
     List<RequestInfo> batchedRequests = new ArrayList<RequestInfo>();
     boolean cacheEligible = true;
     try {
-      JSONArray arr = new JSONArray(jsonRequest);
-      for (int i = 0; i < arr.length(); i++) {
-        JSONObject obj = arr.getJSONObject(i);
+      for (int i = 0; i < requestsJSON.length(); i++) {
+        JSONObject obj = requestsJSON.getJSONObject(i);
         RequestInfo r = new RequestInfo(obj);
         if ( allowModify || r.isSafe() ) {
           batchedRequests.add(r);
@@ -110,8 +89,8 @@ public class BatchHelper {
       return;
     } catch (JSONException e) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-          "Failed to parse the " + REQUESTS_PARAMETER + " parameter");
-      LOGGER.warn("Failed to parse the " + REQUESTS_PARAMETER + " parameter");
+          "Failed to parse the requestsJSON object");
+      LOGGER.warn("Failed to parse the requestsJSON object");
       return;
     }
 
