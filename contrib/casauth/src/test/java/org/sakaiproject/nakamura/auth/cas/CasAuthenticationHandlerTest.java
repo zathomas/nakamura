@@ -119,7 +119,7 @@ public class CasAuthenticationHandlerTest {
   public void dropCredentialsWithLogoutUrl() throws IOException {
     authnHandler.dropCredentials(request, response);
 
-    verify(request).setAttribute(Authenticator.LOGIN_RESOURCE, "http://localhost/cas/logout");
+    verify(response).sendRedirect("http://localhost/cas/logout");
   }
 
   @Test
@@ -128,7 +128,7 @@ public class CasAuthenticationHandlerTest {
 
     authnHandler.dropCredentials(request, response);
 
-    verify(request).setAttribute(Authenticator.LOGIN_RESOURCE, "http://localhost/cas/logout");
+    verify(response).sendRedirect("http://localhost/cas/logout");
   }
 
   @Test
