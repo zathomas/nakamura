@@ -136,7 +136,6 @@
         <!-- to build oracle you must download and install oracle.jar first  <module>contrib/oracle-jdbc</module> -->
         <!-- <module>contrib/sitejoin</module> -->
         <module>contrib/rootconfig</module>
-        <module>contrib/robots.txt</module>
        </modules>
     </profile>
     <profile>
