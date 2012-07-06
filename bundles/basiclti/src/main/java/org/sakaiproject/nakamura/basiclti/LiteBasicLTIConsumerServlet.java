@@ -98,6 +98,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -343,6 +345,15 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
             new IllegalArgumentException(LTI_URL + " cannot be null"), response);
         return;
       }
+      try {
+        new URL(ltiUrl);
+      } catch (MalformedURLException e) {
+        sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, LTI_URL
+            + " malformed URL", new IllegalArgumentException(LTI_URL + " malformed URL"),
+            response);
+        return;
+      }
+
       // LTI_SECRET
       final String ltiSecret = (String) effectiveSettings.get(LTI_SECRET);
       if (ltiSecret == null || "".equals(ltiSecret)) {

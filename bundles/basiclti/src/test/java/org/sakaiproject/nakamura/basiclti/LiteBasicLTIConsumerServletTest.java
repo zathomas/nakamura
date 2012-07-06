@@ -697,6 +697,24 @@ public class LiteBasicLTIConsumerServletTest {
   }
 
   /**
+   * Edge case where LTI URL is malformed.
+   * {@link LiteBasicLTIConsumerServlet#doGet(SlingHttpServletRequest, SlingHttpServletResponse)}
+   * 
+   * @throws Exception
+   */
+  @Test
+  public void testDoGetDoLaunchMalformedLtiUrl() throws Exception {
+    setupWidgetUseCase();
+    setUpLaunchUseCase();
+    contentProperties.put(LTI_URL, ".");
+
+    liteBasicLTIConsumerServlet.doGet(request, response);
+
+    verify(response).sendError(eq(HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
+        anyString());
+  }
+
+  /**
    * Edge case where LTI key is null.
    * {@link LiteBasicLTIConsumerServlet#doGet(SlingHttpServletRequest, SlingHttpServletResponse)}
    * 
