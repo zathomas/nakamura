@@ -93,11 +93,9 @@
         <module>bundles/activity/api</module>
         <module>bundles/activity/impl</module>
         <module>bundles/cluster</module>
-        <module>bundles/chat</module>
         <module>bundles/doc</module>
         <module>bundles/docproxy</module>
         <module>bundles/woodstox</module>
-        <module>bundles/calendar</module>
         <module>bundles/authz</module>
         <module>bundles/basiclti</module>
         <module>bundles/profile/api</module>
