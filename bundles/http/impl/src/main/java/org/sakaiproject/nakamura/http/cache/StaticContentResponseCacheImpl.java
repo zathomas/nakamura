@@ -63,11 +63,12 @@ public class StaticContentResponseCacheImpl implements Filter, StaticContentResp
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StaticContentResponseCacheImpl.class);
 
+  // /var/widgets - 2 hour expiry as per KERN-2993
   @Property(value = {
       "root;.*(js|css)$;172800",
       "root;.*html$;172800",
       "var;^/var/search/public/.*$;900",
-      "var;^/var/widgets.json$;172800"})
+      "var;^/var/widgets.json$;7200"})
   static final String SAKAI_CACHE_PATTERNS = "sakai.cache.patterns";
 
   @Property(value = {
