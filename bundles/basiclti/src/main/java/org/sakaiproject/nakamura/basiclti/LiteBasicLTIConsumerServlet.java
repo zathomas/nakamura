@@ -345,12 +345,20 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
             new IllegalArgumentException(LTI_URL + " cannot be null"), response);
         return;
       }
+      URL url = null;
       try {
-        new URL(ltiUrl);
+        url = new URL(ltiUrl);
       } catch (MalformedURLException e) {
         sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, LTI_URL
             + " malformed URL", new IllegalArgumentException(LTI_URL + " malformed URL"),
             response);
+        return;
+      }
+      // KERN-2990 ensure we are not launching into ourself!
+      if (url.getPath().contains(node.getPath())) {
+        sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, LTI_URL
+            + " cannot launch into itself", new IllegalArgumentException(LTI_URL
+            + " cannot launch into itself"), response);
         return;
       }
 
