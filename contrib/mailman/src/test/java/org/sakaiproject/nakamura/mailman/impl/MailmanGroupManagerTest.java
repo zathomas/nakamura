@@ -25,16 +25,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.event.Event;
 import org.sakaiproject.nakamura.api.lite.Repository;
+import org.sakaiproject.nakamura.api.lite.Session;
+import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
+import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
-import org.sakaiproject.nakamura.api.personal.PersonalConstants;
 import org.sakaiproject.nakamura.api.user.AuthorizableEvent;
 import org.sakaiproject.nakamura.api.user.AuthorizableEvent.Operation;
 import org.sakaiproject.nakamura.mailman.MailmanManager;
 import org.sakaiproject.nakamura.testutils.easymock.AbstractEasyMockTest;
-import org.sakaiproject.nakamura.util.LitePersonalUtils;
 
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 
 public class MailmanGroupManagerTest extends AbstractEasyMockTest {
@@ -53,21 +55,23 @@ public class MailmanGroupManagerTest extends AbstractEasyMockTest {
   }
 
   @Test
-  public void testHandleGroupAdd() throws MailmanException {
-    String groupName = "g-testgroup";
+  public void testHandleGroupAdd() throws Exception {
+    groupManager.listManagementPassword = "pwd";
+    String groupId = "g-testgroup";
     String topic = "org/apache/sling/jackrabbit/usermanager/event/create";
     Dictionary<String,Object> properties = new Hashtable<String, Object>();
-    properties.put(AuthorizableEvent.OPERATION, Operation.create);
-    properties.put(AuthorizableEvent.PRINCIPAL_NAME, groupName);
-    properties.put(AuthorizableEvent.TOPIC, topic);
+    properties.put("type","group");
+    properties.put("path", groupId);
     Event event = new Event(topic, properties);
 
-    mailmanManager.createList(groupName, groupName + "@example.com");
+    mailmanManager.createList(groupId, "pwd");
     replay();
+
     groupManager.handleEvent(event);
     verify();
   }
 
+  /* MailmanGroupManager provides no path to the delete/remove list logic
   @Test
   public void testHandleGroupRemove() throws MailmanException {
     String groupName = "g-testgroup";
@@ -83,89 +87,69 @@ public class MailmanGroupManagerTest extends AbstractEasyMockTest {
     groupManager.handleEvent(event);
     verify();
   }
+  */
 
   @Test
-  public void testHandleGroupJoin() throws MailmanException {
-    String groupName = "g-testgroup";
-    Group dummyGroup = createDummyGroup(groupName);
-    String user = "testuser";
-    User dummyUser = createDummyUser(user);
-    EasyMock.replay(dummyUser);
+  public void testHandleGroupJoin() throws Exception {
+    String groupId = "g-testgroup";
+    String userId = "testuser";
     String testAddress = "test@test.com";
-    addUserEmailExpectation(dummyUser, testAddress);
+
+    mockGroupAndUserRepository(userId, groupId, testAddress);
+
     String topic = "org/apache/sling/jackrabbit/usermanager/event/join";
     Dictionary<String,Object> properties = new Hashtable<String, Object>();
-    properties.put(AuthorizableEvent.OPERATION, Operation.join);
-    properties.put(AuthorizableEvent.PRINCIPAL_NAME, groupName);
-    properties.put(AuthorizableEvent.TOPIC, topic);
-    properties.put(AuthorizableEvent.USER, dummyUser);
-    properties.put(AuthorizableEvent.GROUP, dummyGroup);
+    properties.put("type","group");
+    properties.put("path", groupId);
+    properties.put("added","testuser");
     Event event = new Event(topic, properties);
 
-    expect(mailmanManager.addMember(groupName, null, testAddress)).andReturn(true);
+    expect(mailmanManager.addMember(groupId, "", testAddress)).andReturn(true);
+    expect(mailmanManager.addMember("g", "", testAddress)).andReturn(true);
     replay();
+    groupManager.activate(new HashMap<String, String>());
+
     groupManager.handleEvent(event);
     verify();
   }
 
   @Test
-  public void testHandleGroupPart() throws MailmanException {
-    String groupName = "g-testgroup";
-    Group dummyGroup = createDummyGroup(groupName);
-    String user = "testuser";
-    User dummyUser = createDummyUser(user);
-    EasyMock.replay(dummyUser);
+  public void testHandleGroupPart() throws Exception {
+    String groupId = "g-testgroup";
+    String userId = "testuser";
     String testAddress = "test@test.com";
-    addUserEmailExpectation(dummyUser, testAddress);
     String topic = "org/apache/sling/jackrabbit/usermanager/event/part";
+
+    mockGroupAndUserRepository(userId, groupId, testAddress);
+
     Dictionary<String,Object> properties = new Hashtable<String, Object>();
-    properties.put(AuthorizableEvent.OPERATION, Operation.part);
-    properties.put(AuthorizableEvent.PRINCIPAL_NAME, groupName);
-    properties.put(AuthorizableEvent.TOPIC, topic);
-    properties.put(AuthorizableEvent.USER, dummyUser);
-    properties.put(AuthorizableEvent.GROUP, dummyGroup);
+    properties.put("type","group");
+    properties.put("path", groupId);
+    properties.put("removed","testuser");
     Event event = new Event(topic, properties);
 
-    expect(mailmanManager.removeMember(groupName, null, testAddress)).andReturn(true);
+    expect(mailmanManager.removeMember(userId, "", testAddress)).andReturn(true);
     replay();
+    groupManager.activate(new HashMap<String, String>());
+
     groupManager.handleEvent(event);
     verify();
   }
 
-  private void addUserEmailExpectation(User user, String testAddress) {
-/*
-    String profileNodePath = LitePersonalUtils.getProfilePath(user.getId());
+  private void mockGroupAndUserRepository(String userId, String groupId, String testAddress)  throws Exception {
+    groupManager.repository = createMock(Repository.class);
     Session session = createMock(Session.class);
-    Node node = createMock(Node.class);
-    Property property = createMock(Property.class);
-    expect(slingRepository.loginAdministrative(null)).andReturn(session);
-    expect(session.getItem(eq(profileNodePath))).andReturn(node);
-    expect(node.hasProperty(eq(PersonalConstants.EMAIL_ADDRESS))).andReturn(true).times(2);
-    expect(node.getProperty(eq(PersonalConstants.EMAIL_ADDRESS))).andReturn(property);
+    AuthorizableManager authzMgr = createMock(AuthorizableManager.class);
+    Authorizable user = createMock(User.class);
+    Authorizable group = createMock(Group.class);
 
-    PropertyDefinition propDef = createMock(PropertyDefinition.class);
-    expect(propDef.isMultiple()).andReturn(false);
-    expect(property.getDefinition()).andReturn(propDef);
-
-    Value value = createMock(Value.class);
-    expect(value.getString()).andReturn(testAddress);
-    expect(property.getValue()).andReturn(value);
-
-    session.logout();
-*/
-  }
-
-  private Group createDummyGroup(String groupName) {
-    Group group = createMock(Group.class);
-    expect(group.getId()).andReturn(groupName).anyTimes();
-    expect(group.isGroup()).andReturn(true).anyTimes();
-    return group;
-  }
-
-  private User createDummyUser(String userName) {
-    User user = EasyMock.createNiceMock(User.class);
-    expect(user.getId()).andReturn(userName).anyTimes();
+    expect(groupManager.repository.loginAdministrative()).andReturn(session).anyTimes();
+    expect(session.getAuthorizableManager()).andReturn(authzMgr).anyTimes();
+    expect(authzMgr.findAuthorizable(eq(userId))).andReturn(user).anyTimes();
+    expect(user.getProperty(eq("email"))).andReturn(testAddress).anyTimes();
     expect(user.isGroup()).andReturn(false).anyTimes();
-    return user;
+    expect(authzMgr.findAuthorizable(eq(groupId))).andReturn(group).anyTimes();
+    expect(group.getId()).andReturn(groupId).anyTimes();
+    expect(group.isGroup()).andReturn(true).anyTimes();
   }
 }
