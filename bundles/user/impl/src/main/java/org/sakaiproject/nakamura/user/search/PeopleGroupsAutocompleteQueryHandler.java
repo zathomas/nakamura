@@ -17,8 +17,6 @@
  */
 package org.sakaiproject.nakamura.user.search;
 
-import java.util.Formatter;
-import java.util.Map;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -41,6 +39,8 @@ import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 @Component
 @Properties({
@@ -73,16 +73,14 @@ public class PeopleGroupsAutocompleteQueryHandler extends DomainObjectSearchQuer
   }
 
   @Override
-  public StringBuilder refineQString(Map<String, String> parametersMap, StringBuilder qBuilder) {
+  public String buildCustomQString(Map<String, String> parametersMap) {
     // Did the client specify a text search?
+    String customQuery = null;
     String qParam = getSearchParam(parametersMap, REQUEST_PARAMS.q.toString());
     if (qParam != null) {
-      if (qBuilder.length() > 0) {
-        qBuilder.append(" AND ");
-      }
-      (new Formatter(qBuilder)).format(Q_FORMAT, qParam);
+      customQuery = String.format(Q_FORMAT, qParam);
     }
-    return qBuilder;
+    return customQuery;
   }
 
   @Override

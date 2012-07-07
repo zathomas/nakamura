@@ -4,8 +4,8 @@
     "role": "manager"
   },
   "sling:resourceType": "sakai/solr-search",
-  "sakai:propertyprovider": ["Me"],
-  "sakai:resultprocessor": "Me",
+  "sakai:propertyprovider": ["AccessScopedContentQueryHandler"],
+  "sakai:resultprocessor": "AccessScopedContentQueryHandler",
   "sakai:title": "(DEPRECATED - use /var/search/pool/me/role.json with no 'q' parameter and role=manager) Pooled Content - Me - Manager - All",
   "sakai:shortDescription": "Searches through all the files where the current user is a manager.",
   "sakai:parameters" : [

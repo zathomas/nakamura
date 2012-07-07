@@ -22,6 +22,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.solr.common.params.CommonParams;
+import org.apache.solr.common.params.GroupParams;
 import org.sakaiproject.nakamura.api.files.FileUtils;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -40,6 +42,7 @@ import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -52,6 +55,17 @@ public abstract class AbstractContentSearchQueryHandler extends DomainObjectSear
   private final static Logger LOGGER = LoggerFactory.getLogger(
       AbstractContentSearchQueryHandler.class);
 
+  private final static String Q_TEMPLATE = "(content:(%s) OR filename:(%<s) OR " +
+      "tag:(%<s) OR description:(%<s) OR ngram:(%<s) OR edgengram:(%<s) OR widgetdata:(%<s))";
+
+  public enum REQUEST_PARAMETERS {
+    q,
+    mimetype,
+    levels,
+    userid,
+    role
+  }
+  
   @Reference
   protected Repository repository;
 
@@ -62,6 +76,49 @@ public abstract class AbstractContentSearchQueryHandler extends DomainObjectSear
   public AbstractContentSearchQueryHandler(SolrSearchServiceFactory searchServiceFactory, Repository repository) {
     super(searchServiceFactory);
     this.repository = repository;
+  }
+  
+  /**
+   * {@inheritDoc}
+   * @see org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler#getResourceTypeClause(java.util.Map)
+   */
+  @Override
+  public String getResourceTypeClause(Map<String, String> parametersMap) {
+    /*
+     * If there is a query string parameter 'q', then we need to search widget data content
+     * for that match as well.
+     */
+    if (hasGeneralQuery(parametersMap)) {
+      return "resourceType:(sakai/pooled-content OR sakai/widget-data)";
+    } else {
+      return "resourceType:sakai/pooled-content";
+    }
+  }
+  
+  /**
+   * {@inheritDoc}
+   * @see org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler#refineQuery(java.util.Map, org.sakaiproject.nakamura.api.search.solr.Query)
+   */
+  @Override
+  public void refineQuery(Map<String, String> parametersMap, Query query) {
+    query.getOptions().put(CommonParams.FL, "path");
+    
+    /*
+     * If there is a query string 'q' specified, then we will also need to search on
+     * widget data contents. Because of this, to avoid duplicate content (e.g, multiple
+     * widgets of a pooled content item match on the content), we need to group by the
+     * widget content "returnpath". See also the #getResourceTypeClause(Map) method to
+     * see how the widget data resourceType is dynamically included in the query.
+     */
+    if (hasGeneralQuery(parametersMap)) {
+      query.getOptions().put(GroupParams.GROUP, Boolean.TRUE);
+      query.getOptions().put(GroupParams.GROUP_FIELD, "returnpath");
+      
+      // record the number "groups" matched to give accurate total of elements
+      // returned. Here, one GROUP is one actual result, instead of all the
+      // identical elements aggregated in those groups.
+      query.getOptions().put(GroupParams.GROUP_TOTAL_COUNT, Boolean.TRUE);
+    }
   }
   
   /**
@@ -111,4 +168,43 @@ public abstract class AbstractContentSearchQueryHandler extends DomainObjectSear
     }
   }
 
+  /**
+   * Determine whether or not general text is being queried on in this search (i.e., a 'q'
+   * query string parameters was provided).
+   * 
+   * @param parametersMap
+   * @return
+   */
+  protected boolean hasGeneralQuery(Map<String, String> parametersMap) {
+    return getSearchParam(parametersMap, REQUEST_PARAMETERS.q.toString()) != null;
+  }
+  
+  /**
+   * Apply the 'search by mimetype' filter to the lucene query string.
+   * @param parametersMap
+   * @param queryString
+   */
+  protected void buildSearchByMimetype(Map<String, String> parametersMap,
+      List<String> filters) {
+    String mimeType = getSearchParam(parametersMap, REQUEST_PARAMETERS.mimetype.toString());
+    if (mimeType != null) {
+      filters.add(String.format("mimeType:%s", mimeType));
+    }
+  }
+
+  /**
+   * Apply the 'search by general text' filter to the lucene query string.
+   * 
+   * @param parametersMap
+   * @param queryString
+   */
+  protected void buildSearchByGeneralQuery(Map<String, String> parametersMap,
+      List<String> filters) {
+    String q = getSearchParam(parametersMap, REQUEST_PARAMETERS.q.toString());
+    if (q != null) {
+      filters.add(String.format(Q_TEMPLATE, q));
+    }
+  }
+  
+  
 }

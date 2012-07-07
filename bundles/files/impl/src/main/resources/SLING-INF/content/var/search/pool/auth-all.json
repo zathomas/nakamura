@@ -1,8 +1,8 @@
 {
-  "sakai:query-template": "${_q} AND ((manager:(${_au}) OR editor:(${_au}) OR viewer:(${_au})) OR (showalways:true AND (manager:(${_all}) OR editor:(${_all}) OR viewer:(${_all}))))",
+  "sakai:query-template": "${_q}",
   "sling:resourceType": "sakai/solr-search",
-  "sakai:propertyprovider" : ["MyLibrary"],
-  "sakai:resultprocessor": "MyLibrary",
+  "sakai:propertyprovider" : ["LibraryContentQueryHandler"],
+  "sakai:resultprocessor": "LibraryContentQueryHandler",
   "sakai:title": "Pooled Content - All by direct association",
   "sakai:shortDescription": "Search through all the pooled files for content that is directly associated to a given user.",
   "sakai:parameters" : [

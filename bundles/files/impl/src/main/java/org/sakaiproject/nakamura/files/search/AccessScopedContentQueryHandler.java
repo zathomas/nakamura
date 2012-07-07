@@ -25,7 +25,6 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.solr.client.solrj.util.ClientUtils;
-import org.apache.solr.common.params.GroupParams;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -35,7 +34,6 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.search.SearchConstants;
-import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchPropertyProvider;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultProcessor;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
@@ -43,7 +41,7 @@ import org.sakaiproject.nakamura.api.user.AuthorizableUtil;
 import org.sakaiproject.nakamura.util.SparseUtils;
 
 import java.util.ArrayList;
-import java.util.Formatter;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -61,13 +59,11 @@ import java.util.Map;
 @Service(value={ SolrSearchPropertyProvider.class, SolrSearchResultProcessor.class })
 @Component(inherit=true)
 @Properties(value={
-    @Property(name = SearchConstants.REG_PROVIDER_NAMES, value = "Me"),
-    @Property(name = SearchConstants.REG_PROCESSOR_NAMES, value = "Me")
+    @Property(name = SearchConstants.REG_PROVIDER_NAMES, value = "AccessScopedContentQueryHandler"),
+    @Property(name = SearchConstants.REG_PROCESSOR_NAMES, value = "AccessScopedContentQueryHandler")
   })
-public class MeQueryHandler extends AbstractContentSearchQueryHandler {
+public class AccessScopedContentQueryHandler extends AbstractContentSearchQueryHandler {
 
-  private final static String Q_TEMPLATE = "(content:(%s) OR filename:(%<s) OR " +
-  		"tag:(%<s) OR description:(%<s) OR ngram:(%<s) OR edgengram:(%<s) OR widgetdata(%<s))";
   private final static String ROLE_TEMPLATE = "(%s:(%s))";
   
   private final static Joiner JOINER_OR = Joiner.on(" OR ");
@@ -78,22 +74,11 @@ public class MeQueryHandler extends AbstractContentSearchQueryHandler {
     viewer
   }
   
-  public static enum TEMPLATE_PARAMETERS {
-    _q
-  }
-  
-  public static enum REQUEST_PARAMETERS {
-    q,
-    role,
-    userid,
-    mimetype
-  }
-
-  public MeQueryHandler() {
+  public AccessScopedContentQueryHandler() {
     
   }
   
-  public MeQueryHandler(SolrSearchServiceFactory searchServiceFactory, Repository repository) {
+  public AccessScopedContentQueryHandler(SolrSearchServiceFactory searchServiceFactory, Repository repository) {
     super(searchServiceFactory, repository);
   }
   
@@ -106,19 +91,14 @@ public class MeQueryHandler extends AbstractContentSearchQueryHandler {
       Map<String, String> propertiesMap) {
     
     // verify that we can determine a userid
-    String userid = getSearchParam(propertiesMap, REQUEST_PARAMETERS.userid.toString());
-    if (userid == null) {
-      userid = request.getRemoteUser();
-      propertiesMap.put(REQUEST_PARAMETERS.userid.toString(), userid);
-    }
-
+    String userid = SearchRequestUtils.getUser(request);
     if (userid == null || userid.equals(User.ANON_USER)) {
       throw new IllegalArgumentException("Cannot search with anonymous user. " +
           "Must authenticate, or specify 'userid' parameter.");
     }
     
     // verify there is a valid role specified
-    String roleStr = getSearchParam(propertiesMap, REQUEST_PARAMETERS.role.toString());
+    String roleStr = propertiesMap.get(REQUEST_PARAMETERS.role.toString());
     if (roleStr != null) {
       try {
         SearchableRole.valueOf(roleStr);
@@ -129,44 +109,11 @@ public class MeQueryHandler extends AbstractContentSearchQueryHandler {
       throw new IllegalArgumentException("Required parameter 'role' was not found.");
     }
     
-    propertiesMap.put(TEMPLATE_PARAMETERS._q.toString(), configureQString(propertiesMap));
+    // need to ensure non-escaped parameters get set for userid
+    propertiesMap.put(REQUEST_PARAMETERS.userid.toString(), userid);
+    
+    propertiesMap.put(TEMPLATE_PROPS._q.toString(), configureQString(propertiesMap));
 
-  }
-
-  /**
-   * {@inheritDoc}
-   * @see org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler#getResourceTypeClause(java.util.Map)
-   */
-  @Override
-  public String getResourceTypeClause(Map<String, String> parametersMap) {
-    /*
-     * If there is a query string parameter 'q', then we need to search widget data content
-     * for that match as well.
-     */
-    if (hasGeneralQuery(parametersMap)) {
-      return "resourceType:(sakai/pooled-content OR sakai/widget-data)";
-    } else {
-      return "resourceType:sakai/pooled-content";
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   * @see org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler#refineQuery(java.util.Map, org.sakaiproject.nakamura.api.search.solr.Query)
-   */
-  @Override
-  public void refineQuery(Map<String, String> parametersMap, Query query) {
-    /*
-     * If there is a query string 'q' specified, then we will also need to search on
-     * widget data contents. Because of this, to avoid duplicate content (e.g, multiple
-     * widgets of a pooled content item match on the content), we need to group by the
-     * widget content "returnpath". See also the #getResourceTypeClause(Map) method to
-     * see how the widget data resourceType is dynamically included in the query.
-     */
-    if (hasGeneralQuery(parametersMap)) {
-      query.getOptions().put(GroupParams.GROUP, "true");
-      query.getOptions().put(GroupParams.GROUP_FIELD, "returnpath");
-    }
   }
 
   /**
@@ -174,45 +121,19 @@ public class MeQueryHandler extends AbstractContentSearchQueryHandler {
    * @see org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler#configureQString(java.util.Map)
    */
   @Override
-  public StringBuilder refineQString(Map<String, String> parametersMap, StringBuilder queryString) {
+  public String buildCustomQString(Map<String, String> parametersMap) {
+    String customQuery = null;
+    List<String> filters = new LinkedList<String>();
     
-    if (queryString.length() > 0) {
-      queryString.append(" AND ");
+    buildSearchByRoleQuery(parametersMap, filters);
+    buildSearchByGeneralQuery(parametersMap, filters);
+    buildSearchByMimetype(parametersMap, filters);
+    
+    if (!filters.isEmpty()) {
+      customQuery = Joiner.on(" AND ").join(filters);
     }
     
-    buildSearchByRoleQuery(parametersMap, queryString);
-    buildSearchByGeneralQuery(parametersMap, queryString);
-    buildSearchByMimetype(parametersMap, queryString);
-    
-    return queryString;
-  }
-
-  /**
-   * Apply the 'search by mimetype' filter to the lucene query string.
-   * @param parametersMap
-   * @param queryString
-   */
-  private void buildSearchByMimetype(Map<String, String> parametersMap,
-      StringBuilder queryString) {
-    String mimeType = getSearchParam(parametersMap, REQUEST_PARAMETERS.mimetype.toString());
-    if (mimeType != null) {
-      queryString.append(" AND mimeType:").append(ClientUtils.escapeQueryChars(mimeType));
-    }
-  }
-
-  /**
-   * Apply the 'search by general text' filter to the lucene query string.
-   * 
-   * @param parametersMap
-   * @param queryString
-   */
-  private void buildSearchByGeneralQuery(Map<String, String> parametersMap,
-      StringBuilder queryString) {
-    String q = getSearchParam(parametersMap, REQUEST_PARAMETERS.q.toString());
-    if (q != null) {
-      queryString.append(" AND ");
-      new Formatter(queryString).format(Q_TEMPLATE, ClientUtils.escapeQueryChars(q));
-    }
+    return customQuery;
   }
 
   /**
@@ -221,8 +142,8 @@ public class MeQueryHandler extends AbstractContentSearchQueryHandler {
    * @param parametersMap
    * @param queryString
    */
-  private void buildSearchByRoleQuery(Map<String, String> parametersMap,
-      StringBuilder queryString) {
+  protected void buildSearchByRoleQuery(Map<String, String> parametersMap,
+      List<String> filters) {
     SearchableRole role = SearchableRole.valueOf(getSearchParam(parametersMap, REQUEST_PARAMETERS.role.toString()));
     String userid = getSearchParam(parametersMap, REQUEST_PARAMETERS.userid.toString());
     AuthorizableManager authorizableManager = null;
@@ -239,7 +160,7 @@ public class MeQueryHandler extends AbstractContentSearchQueryHandler {
         groupStrs.add(ClientUtils.escapeQueryChars(memberAuthz.getId()));
       }
       
-      new Formatter(queryString).format(ROLE_TEMPLATE, role.toString(), JOINER_OR.join(groupStrs));
+      filters.add(String.format(ROLE_TEMPLATE, role.toString(), JOINER_OR.join(groupStrs)));
       adminSession.logout();
     } catch (ClientPoolException e) {
       throw new RuntimeException(e);
@@ -252,14 +173,4 @@ public class MeQueryHandler extends AbstractContentSearchQueryHandler {
     }
   }
 
-  /**
-   * Determine whether or not general text is being queried on in this search (i.e., a 'q'
-   * query string parameters was provided).
-   * 
-   * @param parametersMap
-   * @return
-   */
-  private boolean hasGeneralQuery(Map<String, String> parametersMap) {
-    return getSearchParam(parametersMap, REQUEST_PARAMETERS.q.toString()) != null;
-  }
 }

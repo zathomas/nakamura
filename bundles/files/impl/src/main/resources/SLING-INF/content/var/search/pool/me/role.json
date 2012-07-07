@@ -1,8 +1,8 @@
 {
   "sakai:query-template": "${_q}",
   "sling:resourceType": "sakai/solr-search",
-  "sakai:propertyprovider": ["Me"],
-  "sakai:resultprocessor": "Me",
+  "sakai:propertyprovider": ["AccessScopedContentQueryHandler"],
+  "sakai:resultprocessor": "AccessScopedContentQueryHandler",
   "sakai:title": "Pooled Content - Me - By Role",
   "sakai:shortDescription": "Searches through all the files for which the current (or specified) user has the given 'role'.",
   "sakai:parameters" : [

@@ -169,8 +169,16 @@ public abstract class DomainObjectSearchQueryHandler
       qBuilder.append("tag:(").append(tagsParam).append(")");
     }
 
-    refineQString(parametersMap, qBuilder);
-
+    String customQueryString = buildCustomQString(parametersMap);
+    
+    if (customQueryString != null && !customQueryString.isEmpty()) {
+      // append the custom query string to the solr query if one has been provided
+      if (qBuilder.length() > 0) {
+        qBuilder.append(" AND ");
+      }
+      qBuilder.append("(").append(customQueryString).append(")");
+    }
+    
     if (qBuilder.length() == 0) {
       qBuilder.append(getDefaultQueryString(parametersMap));
     }
@@ -236,8 +244,8 @@ public abstract class DomainObjectSearchQueryHandler
   /**
    * Add domain-specific clauses to the base query string.
    */
-  public StringBuilder refineQString(Map<String, String> parametersMap, StringBuilder qBuilder) {
-    return qBuilder;
+  public String buildCustomQString(Map<String, String> parametersMap) {
+    return null;
   }
 
   /**

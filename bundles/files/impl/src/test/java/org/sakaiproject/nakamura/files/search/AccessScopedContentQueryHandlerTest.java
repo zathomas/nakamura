@@ -33,19 +33,19 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
+import org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler.TEMPLATE_PROPS;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
 import org.sakaiproject.nakamura.api.user.UserConstants;
-import org.sakaiproject.nakamura.files.search.MeQueryHandler.REQUEST_PARAMETERS;
-import org.sakaiproject.nakamura.files.search.MeQueryHandler.SearchableRole;
-import org.sakaiproject.nakamura.files.search.MeQueryHandler.TEMPLATE_PARAMETERS;
+import org.sakaiproject.nakamura.files.search.AbstractContentSearchQueryHandler.REQUEST_PARAMETERS;
+import org.sakaiproject.nakamura.files.search.AccessScopedContentQueryHandler.SearchableRole;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Tests the functionality of the MeQueryHandlerTest. The MeQueryHandler currently handles functionality
- * for the following search entry-points:
+ * Tests the functionality of the AccessScopedContentQueryHandlerTest. The AccessScopedContentQueryHandler
+ * currently handles functionality for the following search entry-points:
  * 
  * * /var/search/pool/me/role.json
  * * /var/search/pool/me/manager.json (DEPRECATED)
@@ -55,7 +55,7 @@ import java.util.Map;
  * 
  */
 @RunWith(MockitoJUnitRunner.class)
-public class MeQueryHandlerTest {
+public class AccessScopedContentQueryHandlerTest {
   
   @Mock
   Repository repository;
@@ -69,7 +69,7 @@ public class MeQueryHandlerTest {
    */
   @Test(expected=IllegalArgumentException.class)
   public void testNoRole() {
-    MeQueryHandler meQueryHandler = new MeQueryHandler(searchServiceFactory, repository);
+    AccessScopedContentQueryHandler meQueryHandler = new AccessScopedContentQueryHandler(searchServiceFactory, repository);
     Map<String, String> parameterMap = new HashMap<String, String>();
     
     SlingHttpServletRequest request = Mockito.mock(SlingHttpServletRequest.class);
@@ -84,7 +84,7 @@ public class MeQueryHandlerTest {
    */
   @Test(expected=IllegalArgumentException.class)
   public void testInvalidRole() {
-    MeQueryHandler meQueryHandler = new MeQueryHandler(searchServiceFactory, repository);
+    AccessScopedContentQueryHandler meQueryHandler = new AccessScopedContentQueryHandler(searchServiceFactory, repository);
     Map<String, String> parameterMap = new HashMap<String, String>();
     
     SlingHttpServletRequest request = Mockito.mock(SlingHttpServletRequest.class);
@@ -105,7 +105,7 @@ public class MeQueryHandlerTest {
   @Test
   public void testValidRequest() throws ClientPoolException, StorageClientException,
       AccessDeniedException {
-    MeQueryHandler meQueryHandler = new MeQueryHandler(searchServiceFactory, repository);
+    AccessScopedContentQueryHandler meQueryHandler = new AccessScopedContentQueryHandler(searchServiceFactory, repository);
     Map<String, String> parameterMap = new HashMap<String, String>();
     
     //mock the repository to generate the lucene query
@@ -116,8 +116,8 @@ public class MeQueryHandlerTest {
     Group everyone = Mockito.mock(Group.class);
     Mockito.when(repository.loginAdministrative()).thenReturn(adminSession);
     Mockito.when(adminSession.getAuthorizableManager()).thenReturn(am);
-    Mockito.when(am.findAuthorizable("mrvisser")).thenReturn(mrvisser);
-    Mockito.when(mrvisser.getId()).thenReturn("mrvisser");
+    Mockito.when(am.findAuthorizable("mrvisser-user")).thenReturn(mrvisser);
+    Mockito.when(mrvisser.getId()).thenReturn("mrvisser-user");
     Mockito.when(mrvisser.memberOf(am)).thenReturn(Arrays.asList(myGroup, everyone).iterator());
     Mockito.when(myGroup.getId()).thenReturn("mrvisser-group");
     Mockito.when(myGroup.isGroup()).thenReturn(true);
@@ -130,17 +130,18 @@ public class MeQueryHandlerTest {
     
     // mock the search input parameters
     SlingHttpServletRequest request = Mockito.mock(SlingHttpServletRequest.class);
-    mockRequestForUserId(request, "mrvisser");
+    mockRequestForUserId(request, "mrvisser-user");
     mockForRole(parameterMap, SearchableRole.manager);
-    mockForMime(parameterMap, "sakai/x-collection");
-    mockForQuery(parameterMap, "blah-query");
+    // parameters are pre-escaped from the request. Ensure the handler does not re-escape the parameters
+    mockForMime(parameterMap, "sakai/x\\-collection");
+    mockForQuery(parameterMap, "blah\\-query");
     
     meQueryHandler.loadUserProperties(request, parameterMap);
     
-    String q = parameterMap.get(TEMPLATE_PARAMETERS._q.toString());
+    String q = parameterMap.get(TEMPLATE_PROPS._q.toString());
     
-    Assert.assertEquals("(manager:(mrvisser\\-group OR mrvisser)) AND (content:(blah\\-query) OR filename:(blah\\-query) OR tag:(blah\\-query) OR description:(blah\\-query) OR ngram:(blah\\-query) OR edgengram:(blah\\-query) OR widgetdata(blah\\-query)) AND mimeType:sakai/x\\-collection", q);
-    Assert.assertEquals(parameterMap.get(REQUEST_PARAMETERS.userid.toString()), "mrvisser");
+    Assert.assertEquals("((manager:(mrvisser\\-group OR mrvisser\\-user)) AND (content:(blah\\-query) OR filename:(blah\\-query) OR tag:(blah\\-query) OR description:(blah\\-query) OR ngram:(blah\\-query) OR edgengram:(blah\\-query) OR widgetdata:(blah\\-query)) AND mimeType:sakai/x\\-collection)", q);
+    Assert.assertEquals(parameterMap.get(REQUEST_PARAMETERS.userid.toString()), "mrvisser-user");
     Assert.assertEquals(parameterMap.get(REQUEST_PARAMETERS.role.toString()), "manager");
   }
   
@@ -148,11 +149,11 @@ public class MeQueryHandlerTest {
     Mockito.when(request.getRemoteUser()).thenReturn(userId);
   }
 
-  private void mockForRole(Map<String, String> properties, SearchableRole role) {
+  private void mockForRole(Map<String, String> parameterMap, SearchableRole role) {
     if (role == null) {
-      properties.put(REQUEST_PARAMETERS.role.toString(), "invalid role");
+      parameterMap.put(REQUEST_PARAMETERS.role.toString(), "invalid role");
     } else {
-      properties.put(REQUEST_PARAMETERS.role.toString(), role.toString());
+      parameterMap.put(REQUEST_PARAMETERS.role.toString(), role.toString());
     }
   }
   
