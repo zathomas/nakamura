@@ -161,6 +161,11 @@ public class CasAuthenticationHandler implements AuthenticationHandler {
     renew = PropertiesUtil.toBoolean(props.get(RENEW), DEFAULT_RENEW);
     gateway = PropertiesUtil.toBoolean(props.get(GATEWAY), DEFAULT_GATEWAY);
     proxy = PropertiesUtil.toBoolean(props.get(PROXY), DEFAULT_PROXY);
+
+    pgtIOUs = cacheManagerService.getCache(CasAuthenticationHandler.class.getName()
+        + "-iou-cache", CacheScope.CLUSTERREPLICATED);
+    pgts = cacheManagerService.getCache(CasAuthenticationHandler.class.getName()
+        + "-pgt-cache", CacheScope.CLUSTERREPLICATED);
   }
 
   //----------- AuthenticationHandler interface ----------------------------
@@ -568,11 +573,4 @@ public class CasAuthenticationHandler implements AuthenticationHandler {
     pgts.put(pgtIou, pgt);
   }
 
-  @Activate
-  protected void activate(ComponentContext componentContext) throws ServletException {
-    pgtIOUs = cacheManagerService.getCache(CasAuthenticationHandler.class.getName()
-        + "-iou-cache", CacheScope.CLUSTERREPLICATED);
-    pgts = cacheManagerService.getCache(CasAuthenticationHandler.class.getName()
-        + "-pgt-cache", CacheScope.CLUSTERREPLICATED);
-  }
 }

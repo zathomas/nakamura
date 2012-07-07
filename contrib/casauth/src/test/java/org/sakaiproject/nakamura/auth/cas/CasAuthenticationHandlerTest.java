@@ -80,12 +80,11 @@ public class CasAuthenticationHandlerTest {
   @Before
   public void setUp() throws Exception {
     authnHandler = new CasAuthenticationHandler();
-    authnHandler.modified(props);
     when(
         cacheManagerService.getCache(Matchers.anyString(),
             Matchers.eq(CacheScope.CLUSTERREPLICATED))).thenReturn(cache);
     authnHandler.cacheManagerService = cacheManagerService;
-    authnHandler.activate(null);
+    authnHandler.modified(props);
   }
 
   @After
