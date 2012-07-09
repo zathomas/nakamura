@@ -67,8 +67,7 @@ public class SolrSearchUtil {
       page = SolrSearchUtil.longRequestParameter(request, PARAMS_PAGE, 0);
     }
     long offset = page * nitems;
-    long resultSize = Math.max(nitems, offset);
-    return new long[]{offset, resultSize };
+    return new long[]{offset, nitems };
   }
 
 
