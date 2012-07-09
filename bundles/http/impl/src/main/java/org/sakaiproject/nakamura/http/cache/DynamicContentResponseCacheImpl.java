@@ -94,6 +94,7 @@ public class DynamicContentResponseCacheImpl implements DynamicContentResponseCa
       TelemetryCounter.incrementValue("http", "DynamicContentResponseCache-save", cacheCategory);
     }
     response.setHeader("ETag", etag);
+    response.setHeader("Cache-Control", "max-age=0");
   }
 
   @Override
@@ -123,6 +124,8 @@ public class DynamicContentResponseCacheImpl implements DynamicContentResponseCa
     String serverEtag = cache.get(buildCacheKey(cacheCategory, request.getRemoteUser()));
     if (clientEtag != null && clientEtag.equals(serverEtag)) {
       response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+      response.setHeader("ETag", serverEtag);
+      response.setHeader("Cache-Control", "max-age=0");
       TelemetryCounter.incrementValue("http", "DynamicContentResponseCache-hit", cacheCategory);
       return true;
     }
