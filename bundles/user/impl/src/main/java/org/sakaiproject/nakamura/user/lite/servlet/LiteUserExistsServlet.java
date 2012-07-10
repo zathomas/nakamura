@@ -41,6 +41,7 @@ import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.user.UserFinder;
+import org.sakaiproject.nakamura.util.SparseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,7 +135,7 @@ public class LiteUserExistsServlet extends SlingSafeMethodsServlet {
   protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
       throws ServletException, IOException {
     long start = System.currentTimeMillis();
-    Session session;
+    Session session = null;
     try {
       RequestParameter idParam = request.getRequestParameter("userid");
       if (idParam == null) {
@@ -161,11 +162,11 @@ public class LiteUserExistsServlet extends SlingSafeMethodsServlet {
       } else {
         response.sendError(HttpServletResponse.SC_NOT_FOUND);
       }
-      session.logout();
     } catch (Exception e) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getLocalizedMessage());
       return;
     } finally {
+      SparseUtils.logoutQuietly(session);
       LOGGER.debug("checking for existence took {} ms", System.currentTimeMillis() - start);
       session = null;
       if (delayMs > 0) {
