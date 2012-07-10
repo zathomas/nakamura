@@ -39,7 +39,6 @@
           <instructions>
             <Bundle-Category> sakai-nakamura </Bundle-Category>
             <Export-Package>org.sakaiproject.nakamura.api.http.*</Export-Package>
-            <Private-Package>org.sakaiproject.nakamura.http.*</Private-Package>
           </instructions>
         </configuration>
       </plugin>
