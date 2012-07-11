@@ -92,9 +92,8 @@ public class AccessScopedContentQueryHandler extends AbstractContentSearchQueryH
     
     // verify that we can determine a userid
     String userid = SearchRequestUtils.getUser(request);
-    if (userid == null || userid.equals(User.ANON_USER)) {
-      throw new IllegalArgumentException("Cannot search with anonymous user. " +
-          "Must authenticate, or specify 'userid' parameter.");
+    if (userid == null) {
+      userid = User.ANON_USER;
     }
     
     // verify there is a valid role specified
@@ -111,7 +110,6 @@ public class AccessScopedContentQueryHandler extends AbstractContentSearchQueryH
     
     // need to ensure non-escaped parameters get set for userid
     propertiesMap.put(REQUEST_PARAMETERS.userid.toString(), userid);
-    
     propertiesMap.put(TEMPLATE_PROPS._q.toString(), configureQString(propertiesMap));
 
   }
