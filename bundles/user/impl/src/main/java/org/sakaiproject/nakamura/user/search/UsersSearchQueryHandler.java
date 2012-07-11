@@ -93,21 +93,21 @@ public class UsersSearchQueryHandler extends DomainObjectSearchQueryHandler {
   }
 
   @Override
-  public StringBuilder refineQString(Map<String, String> parametersMap, StringBuilder qBuilder) {
+  public String buildCustomQString(Map<String, String> parametersMap) {
     // Did the client specify a text search?
+    String customQuery = null;
+    StringBuilder qBuilder = new StringBuilder();
     String qParam = getSearchParam(parametersMap, REQUEST_PARAMS.q.toString());
     if (qParam != null) {
-      if (qBuilder.length() > 0) {
-        qBuilder.append(" AND ");
-      }
       qBuilder.append("(");
       (new Formatter(qBuilder)).format(Q_FORMAT, qParam);
       if (isFullProfile(parametersMap)) {
         qBuilder.append(" OR profile:(").append(qParam).append(")");
       }
       qBuilder.append(")");
+      customQuery = qBuilder.toString();
     }
-    return qBuilder;
+    return customQuery;
   }
 
   @Override
