@@ -34,6 +34,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler.TEMPLATE_PROPS;
+import org.sakaiproject.nakamura.api.search.solr.MissingParameterException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.files.search.AbstractContentSearchQueryHandler.REQUEST_PARAMETERS;
@@ -67,7 +68,7 @@ public class AccessScopedContentQueryHandlerTest {
    * Verify that if no role can be determined, an IllegalArgumentException is thrown
    * from the handler.
    */
-  @Test(expected=IllegalArgumentException.class)
+  @Test(expected=MissingParameterException.class)
   public void testNoRole() {
     AccessScopedContentQueryHandler meQueryHandler = new AccessScopedContentQueryHandler(searchServiceFactory, repository);
     Map<String, String> parameterMap = new HashMap<String, String>();

@@ -34,6 +34,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.search.SearchConstants;
+import org.sakaiproject.nakamura.api.search.solr.MissingParameterException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchPropertyProvider;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultProcessor;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
@@ -102,10 +103,10 @@ public class AccessScopedContentQueryHandler extends AbstractContentSearchQueryH
       try {
         SearchableRole.valueOf(roleStr);
       } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException("Provided role parameter is not a valid role: "+roleStr);
+        throw new IllegalArgumentException("Provided role parameter is not a valid role: "+roleStr, e);
       }
     } else {
-      throw new IllegalArgumentException("Required parameter 'role' was not found.");
+      throw new MissingParameterException("Required parameter 'role' was not found.");
     }
     
     // need to ensure non-escaped parameters get set for userid

@@ -33,6 +33,7 @@ import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler.DEFAULT_REQUEST_PARAMS;
 import org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler.TEMPLATE_PROPS;
+import org.sakaiproject.nakamura.api.search.solr.MissingParameterException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
 import org.sakaiproject.nakamura.files.search.AbstractContentSearchQueryHandler.REQUEST_PARAMETERS;
 import org.sakaiproject.nakamura.testutils.MockUtils;
@@ -52,7 +53,7 @@ public class LibraryContentQueryHandlerTest {
   @Mock
   SolrSearchServiceFactory searchServiceFactory;
 
-  @Test(expected=IllegalArgumentException.class)
+  @Test(expected=MissingParameterException.class)
   public void testAnonUserFailed() {
     LibraryContentQueryHandler handler = new LibraryContentQueryHandler(searchServiceFactory, repository);
     Map<String, String> params = new HashMap<String, String>();
