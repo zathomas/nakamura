@@ -164,7 +164,7 @@ public class ContentPoolCommentServlet extends SlingAllMethodsServlet implements
         try{
           adminSession = repository.loginAdministrative();
           ContentManager adminContentManager = adminSession.getContentManager();
-          adminContentManager.update(poolContent); 
+          adminContentManager.update(poolContent, Boolean.FALSE);
         } finally {
           if (adminSession != null) {
             try {
