@@ -61,13 +61,13 @@ public class BatchHelper {
   @Reference
   protected DynamicContentResponseCache dynamicContentResponseCache;
 
-  protected void batchRequest(SlingHttpServletRequest request,
-      SlingHttpServletResponse response, JSONArray requestsJSON, boolean allowModify) throws IOException, ServletException {
+    protected void batchRequest(SlingHttpServletRequest request,
+      SlingHttpServletResponse response, JSONArray requestsJSON, boolean allowModify, boolean useCache) throws IOException, ServletException {
 
     // Grab the JSON block out of it and convert it to RequestData objects we can use.
 
     List<RequestInfo> batchedRequests = new ArrayList<RequestInfo>();
-    boolean cacheEligible = true;
+    boolean cacheEligible = useCache;
     try {
       for (int i = 0; i < requestsJSON.length(); i++) {
         JSONObject obj = requestsJSON.getJSONObject(i);

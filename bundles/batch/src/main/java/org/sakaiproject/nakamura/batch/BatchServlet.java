@@ -144,7 +144,7 @@ public class BatchServlet extends SlingAllMethodsServlet {
 
     try {
       JSONArray requests = new JSONArray(json);
-      helper.batchRequest(request, response, requests, allowModify);
+      helper.batchRequest(request, response, requests, allowModify, true);
     } catch (JSONException e) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST,
           "Failed to parse the " + REQUESTS_PARAMETER + " parameter");

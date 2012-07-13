@@ -97,7 +97,7 @@ public class StaticFilesServlet extends SlingSafeMethodsServlet {
     } catch (JSONException e) {
       LOGGER.error("Got a JSON error building our own JSON object, should never happen", e);
     }
-    helper.batchRequest(request, response, requests, false);
+    helper.batchRequest(request, response, requests, false, false);
   }
 
 }
