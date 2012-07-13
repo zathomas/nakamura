@@ -33,6 +33,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.osgi.service.event.Event;
@@ -70,7 +71,7 @@ public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler 
 
   /*
    * TODO: This conversion is currently a work-around due to data-type inconsistency found in the
-   * sakai:mxessage property. When a message is first created the property is serialized as a
+   * sakai:message property. When a message is first created the property is serialized as a
    * Calendar, but some time later it ends up being changed to a string. To handle this inconsistency
    * we need a secondary check (if it is not a Calendar object) to convert it to date from String.
    * The below format is the default Calendar.toString() format that ends up being persisted usually.
@@ -112,7 +113,7 @@ public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler 
 //  borrowed from SparsePostServlet to provide more comprehensive date parsing
   @Property({ "EEE MMM dd yyyy HH:mm:ss 'GMT'Z", "ISO8601", "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
     "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd", "dd.MM.yyyy HH:mm:ss", "dd.MM.yyyy" })
-  private static final String PROP_DATE_FORMAT = "message.indexing.dateFormats";
+  private static final String PROP_DATE_FORMATS = "message.indexing.dateFormats";
 
   @Reference(target = "(type=sparse)")
   private ResourceIndexingService resourceIndexingService;
@@ -125,7 +126,7 @@ public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler 
       resourceIndexingService.addHandler(type, this);
     }
     dateParser = new DateParser();
-    String[] dateFormats = (String[]) properties.get(PROP_DATE_FORMAT);
+    String[] dateFormats = PropertiesUtil.toStringArray(properties.get(PROP_DATE_FORMATS), new String[0]);
     for (String dateFormat : dateFormats) {
       try {
         dateParser.register(dateFormat);
