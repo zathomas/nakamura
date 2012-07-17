@@ -17,7 +17,7 @@ class TC_Kern3038 < Test::Unit::TestCase
 
     @owner = create_test_user("owner")
     @editor = create_test_user("editor")
-	@user = create_test_user("user")
+    @user = create_test_user("user")
 
     @s.switch_user(@owner)
 
@@ -43,17 +43,17 @@ class TC_Kern3038 < Test::Unit::TestCase
     })
     assert_equal(200, result.code.to_i)
 
-	@s.switch_user(@editor)
-	result = @s.execute_post(path + ".members.html", {
-		":manager" => [@owner.name, @user.name],
-		":editor" => [@editor.name]
-	})
-	assert_equal(403, result.code.to_i)
-	
-	# ensure that @user was not added to the sakai:pooled-content-manager list
-	result = @s.execute_get(path + ".tidy.json")
-	managers = JSON.parse(result.body)["sakai:pooled-content-manager"]
-	assert_equal('["'+@owner.name+'"]', "#{managers}")
+    @s.switch_user(@editor)
+    result = @s.execute_post(path + ".members.html", {
+        ":manager" => [@owner.name, @user.name],
+        ":editor" => [@editor.name]
+    })
+    assert_equal(403, result.code.to_i)
+    
+    # ensure that @user was not added to the sakai:pooled-content-manager list
+    result = @s.execute_get(path + ".tidy.json")
+    managers = JSON.parse(result.body)["sakai:pooled-content-manager"]
+    assert_equal('["'+@owner.name+'"]', "#{managers}")
   
   end
   
