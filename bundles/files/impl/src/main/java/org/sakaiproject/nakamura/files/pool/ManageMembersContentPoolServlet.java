@@ -521,7 +521,7 @@ import javax.servlet.http.HttpServletResponse;
       updateContentAccess(session, pooledContent, aclModifications);
 
       this.authorizableCountChanger.notify(UserConstants.CONTENT_ITEMS_PROP, addViewers, addEditors, addManagers,
-          removeViewers, removeEditors, removeManagers);
+          removeViewers, removeEditors, removeManagers, Arrays.asList(thisUser.getId()));
 
       response.setStatus(SC_OK);
 
