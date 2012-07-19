@@ -123,7 +123,7 @@ public class SolrResultSetFactory implements ResultSetFactory {
   public SolrSearchResultSet processQuery(SlingHttpServletRequest request, Query query, boolean asAnon)
      throws SolrSearchException {
     try {
-      final Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(Session.class));
+      final Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
       final AuthorizableManager authzMgr = session.getAuthorizableManager();
       final Authorizable authorizable = authzMgr.findAuthorizable(asAnon ? User.ANON_USER : request.getRemoteUser());
       final SolrSearchParameters params = SolrSearchUtil.getParametersFromRequest(request);
