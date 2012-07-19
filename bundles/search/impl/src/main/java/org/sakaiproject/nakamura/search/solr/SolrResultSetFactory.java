@@ -112,16 +112,6 @@ public class SolrResultSetFactory implements ResultSetFactory {
     queryMethod = METHOD.valueOf(PropertiesUtil.toString(props.get(HTTP_METHOD), "POST"));
   }
 
-  private SolrSearchParameters getParametersFromRequest (final SlingHttpServletRequest request) {
-    final SolrSearchParameters params = new SolrSearchParameters();
-
-    params.setPage(SolrSearchUtil.longRequestParameter(request, PARAMS_PAGE, 0));
-    params.setRecordsPerPage(SolrSearchUtil.longRequestParameter(request, PARAMS_ITEMS_PER_PAGE, DEFAULT_PAGED_ITEMS));
-    params.setPath(request.getResource().getPath());
-
-    return params;
-  }
-
   /**
    * @deprecated
    * @param request
@@ -136,7 +126,7 @@ public class SolrResultSetFactory implements ResultSetFactory {
       final Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(Session.class));
       final AuthorizableManager authzMgr = session.getAuthorizableManager();
       final Authorizable authorizable = authzMgr.findAuthorizable(asAnon ? User.ANON_USER : request.getRemoteUser());
-      final SolrSearchParameters params = getParametersFromRequest(request);
+      final SolrSearchParameters params = SolrSearchUtil.getParametersFromRequest(request);
 
       return processQuery(session, authorizable, query, params);
     } catch (AccessDeniedException e) {
