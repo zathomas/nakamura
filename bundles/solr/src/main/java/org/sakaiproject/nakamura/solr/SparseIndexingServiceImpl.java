@@ -47,6 +47,7 @@ import org.sakaiproject.nakamura.api.solr.RepositorySession;
 import org.sakaiproject.nakamura.api.solr.ResourceIndexingService;
 import org.sakaiproject.nakamura.api.solr.TopicIndexer;
 import org.sakaiproject.nakamura.solr.handlers.DefaultSparseHandler;
+import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,22 +113,29 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
         LOGGER.debug("Update action at path:{}  require on {} ", event.getProperty(FIELD_PATH), event);
         Collection<SolrInputDocument> docs = indexingHandler.getDocuments(repositorySession, event);
         List<SolrInputDocument> outputDocs = Lists.newArrayList();
-        for (SolrInputDocument doc : docs) {
-          for (String name : doc.getFieldNames()) {
-            // loop through the fields of the returned docs to make sure they contain
-            // atleast 1 field that is not a system property. this is not to filter out
-            // any system properties but to make sure there are more things to index than
-            // just system properties.
-            if (!SYSTEM_PROPERTIES.contains(name)) {
-              try {
-                addDefaultFields(doc, repositorySession);
-                outputDocs.add(doc);
-              } catch (StorageClientException e) {
-                LOGGER.warn("Failed to index {} cause: {} ", event.getProperty(FIELD_PATH), e.getMessage());
-              }
-              break;
-            }
-          }
+        if ( docs != null ) {
+	        for (SolrInputDocument doc : docs) {
+	          boolean docAdded = false;
+	          for (String name : doc.getFieldNames()) {
+	            // loop through the fields of the returned docs to make sure they contain
+	            // atleast 1 field that is not a system property. this is not to filter out
+	            // any system properties but to make sure there are more things to index than
+	            // just system properties.
+	            if (!SYSTEM_PROPERTIES.contains(name)) {
+	              try {
+	                addDefaultFields(doc, repositorySession);
+	                outputDocs.add(doc);
+	                docAdded = true;
+	              } catch (StorageClientException e) {
+	                LOGGER.warn("Failed to index {} cause: {} ", event.getProperty(FIELD_PATH), e.getMessage());
+	              }
+	              break;
+	            }
+	          }
+	          if (!docAdded) {
+	            TelemetryCounter.incrementValue("solr", "SparseIndexingServiceImpl", "docHasOnlySysProps");
+	          }
+	        }
         }
         return outputDocs;
       } else {
@@ -178,6 +186,7 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
       }
       doc.removeField(_DOC_SOURCE_OBJECT);
     } else {
+      TelemetryCounter.incrementValue("solr", "SparseIndexingServiceImpl", "docMissingSource");
       LOGGER.error("Note to Developer: Indexer must add the _source fields so that the default fields can be set, please correct, SolrDoc was {} ",doc);
       throw new StorageClientException(_DOC_SOURCE_OBJECT+" fields was missing from Solr Document, please correct the handler implementation");
 
@@ -206,6 +215,7 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
           return getHandler(repositorySession, path);
         } else {
           // If there is no content system to walk, then we're done.
+          TelemetryCounter.incrementValue("solr", "SparseIndexingServiceImpl", "useDefaultHandler");
           return defaultHandler;
         }
       }
@@ -234,6 +244,7 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
                       resourceType, handler, path, indexers });
                   return handler;
                 } else {
+                  TelemetryCounter.incrementValue("solr", "SparseIndexingServiceImpl-ignoredPath", path);
                   LOGGER.debug("Ignored {} no handler for {} ", path, resourceType);
                   ignoreCache.put(path, path);
                 }
@@ -253,6 +264,7 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
       }
       path = Utils.getParentPath(path);
     }
+    TelemetryCounter.incrementValue("solr", "SparseIndexingServiceImpl", "useDefaultHandler");
     return defaultHandler;
   }
 
