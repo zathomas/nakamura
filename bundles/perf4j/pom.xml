@@ -19,122 +19,125 @@
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	
-	<!-- Extend the Nakamura Base Pom which has a whole bunch of things that 
-		will make life easier here. -->
-	<parent>
-		<groupId>org.sakaiproject.nakamura</groupId>
-		<artifactId>base</artifactId>
-		<version>1.4.0-SNAPSHOT</version>
-		<relativePath>../../pom.xml</relativePath>
-	</parent>
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <!-- Extend the Nakamura Base Pom which has a whole bunch of things that 
+    will make life easier here. -->
+  <parent>
+    <groupId>org.sakaiproject.nakamura</groupId>
+    <artifactId>base</artifactId>
+    <version>1.4.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
 
-	<artifactId>org.sakaiproject.nakamura.perf4j</artifactId>
-	<packaging>bundle</packaging>
-	
-	<!-- Configure the build with 2 plugins. -->
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-scr-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<extensions>true</extensions>
-				<configuration>
-					<instructions>
-						<Bundle-Category>sakai-nakamura</Bundle-Category>
-						<Import-Package>
-							!com.ibm.uvm.tools,
-							!com.sun.jdmk.comm,
-							!javax.jmdns,
-							!junit.framework,
-							!org.slf4j.impl,
-							!org.apache.log4j.helpers,
-							!org.apache.log4j.spi,
-							javax.interceptor;resolution:=optional,
-							*
-						</Import-Package>
-						<Export-Package>
-							org.perf4j.*;-split-package:=merge-first,
-							org.aspectj.*
-						</Export-Package>
-						<Embed-Dependency>
-							aspectjrt,
-							commons-jexl,
-							slf4j-api,
-							log4j,
-							perf4j-enhanced
-						</Embed-Dependency>
-					</instructions>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+  <artifactId>org.sakaiproject.nakamura.perf4j</artifactId>
+  <packaging>bundle</packaging>
+  <name>Sakai Nakamura :: Perf4j Support</name>
+  <description>
+    Provides the dependencies and logic necessary for bundles to use perf4j to log internal telemetry and timing
+    information.
+  </description>
+  
+  <!-- Configure the build with 2 plugins. -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-scr-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Category>sakai-nakamura</Bundle-Category>
+            <Import-Package>
+              !com.ibm.uvm.tools,
+              !com.sun.jdmk.comm,
+              !javax.jmdns,
+              !junit.framework,
+              !org.apache.log4j.helpers,
+              !org.apache.log4j.spi,
+              javax.interceptor;resolution:=optional,
+              *
+            </Import-Package>
+            <Export-Package>
+              org.perf4j.*;-split-package:=merge-first,
+              org.aspectj.*
+            </Export-Package>
+            <Embed-Dependency>
+              aspectjrt,
+              commons-jexl,
+              log4j,
+              perf4j-enhanced
+            </Embed-Dependency>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
-	<!-- some dependencies we need -->
-	<dependencies>
+  <!-- some dependencies we need -->
+  <dependencies>
 
-		<dependency>
-			<groupId>commons-jexl</groupId>
-			<artifactId>commons-jexl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.sakaiproject.nakamura</groupId>
-			<artifactId>perf4j-enhanced</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.aspectj</groupId>
-			<artifactId>aspectjrt</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-		</dependency>
+    <dependency>
+      <groupId>commons-jexl</groupId>
+      <artifactId>commons-jexl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>perf4j-enhanced</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjrt</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
 
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-		</dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+    </dependency>
 
-		<dependency>
-			<groupId>org.apache.sling</groupId>
-			<artifactId>org.apache.sling.api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.scr.annotations</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.osgi.core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.osgi.compendium</artifactId>
-		</dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr.annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.osgi.core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+    </dependency>
 
 
-		<!-- Logging Implementation for testing -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <!-- Logging Implementation for testing -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <scope>test</scope>
+    </dependency>
 
-		<!-- Mock support for testing -->
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+    <!-- Mock support for testing -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 </project>
