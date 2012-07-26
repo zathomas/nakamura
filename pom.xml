@@ -115,6 +115,7 @@
         <module>bundles/postgresqlwrapper</module>
         <module>bundles/solr</module>
         <module>bundles/robots.txt</module>
+        <module>org.json</module>
         <module>testscripts</module>
       </modules>
     </profile>
