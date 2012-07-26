@@ -36,6 +36,7 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.params.CommonParams;
+import org.perf4j.aop.Profiled;
 import org.sakaiproject.nakamura.api.connections.ConnectionConstants;
 import org.sakaiproject.nakamura.api.connections.ConnectionManager;
 import org.sakaiproject.nakamura.api.doc.BindingType;
@@ -163,6 +164,21 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     if (dynamicContentResponseCache.send304WhenClientHasFreshETag(UserConstants.USER_RESPONSE_CACHE, request, response)) {
       return;
     }
+    getUncached(request, response);
+
+  }
+
+  /**
+   * Perform the standard get operation, bypassing the etag cache.
+   * 
+   * @param request
+   * @param response
+   * @throws IOException
+   * @see {@link #doGet(SlingHttpServletRequest, SlingHttpServletResponse)}
+   */
+  @Profiled(tag="meservice:LiteMeServlet:/system/me")
+  private void getUncached(SlingHttpServletRequest request, SlingHttpServletResponse response)
+      throws IOException {
     TelemetryCounter.incrementValue("meservice", "LiteMeServlet", "/system/me");
     try {
       response.setContentType("application/json");
@@ -236,7 +252,6 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
           "Solr search error.");
     }
-
   }
 
   /**

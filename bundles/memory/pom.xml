@@ -89,6 +89,10 @@
       <artifactId>org.sakaiproject.nakamura.core</artifactId>
     </dependency>
     <dependency>
+    	<groupId>org.sakaiproject.nakamura</groupId>
+    	<artifactId>perf4j-enhanced</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>

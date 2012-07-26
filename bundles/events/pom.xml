@@ -57,7 +57,10 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.commons.osgi</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.scr.annotations</artifactId>
@@ -97,6 +100,11 @@
       <version>1.4.0-SNAPSHOT</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>perf4j-enhanced</artifactId>
+    </dependency>
+	
 <!-- testing -->
     <dependency>
       <groupId>org.easymock</groupId>
