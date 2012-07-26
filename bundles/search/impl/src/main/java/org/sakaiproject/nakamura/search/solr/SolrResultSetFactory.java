@@ -35,7 +35,6 @@ import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.GroupParams;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -157,7 +156,7 @@ public class SolrResultSetFactory implements ResultSetFactory {
       filterQueries.add("-exclude:true");
 
       // filter out deleted items
-      List<String> deletedPaths = deletedPathsService.getDeletedPaths();
+      List<String> deletedPaths = deletedPathsService.getEscapedDeletedPaths(Query.SOLR);
       if (!deletedPaths.isEmpty()) {
         // these are escaped as they are collected
         filterQueries.add("-path:(" + StringUtils.join(deletedPaths, " OR ") + ")");
