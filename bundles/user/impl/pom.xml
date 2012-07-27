@@ -52,6 +52,7 @@
           <instructions>
             <Bundle-Category>sakai-nakamura</Bundle-Category>
             <Private-Package>org.sakaiproject.nakamura.user.*</Private-Package>
+            <Sling-Initial-Content>SLING-INF/content;overwriteProperties:=true;uninstall:=false</Sling-Initial-Content>
           </instructions>
         </configuration>
       </plugin>
