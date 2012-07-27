@@ -791,7 +791,7 @@
 <!-- ====================================================================== -->
   <distributionManagement>
     <downloadUrl>http://source.sakaiproject.org/maven2/</downloadUrl>
-    <!--
+    <!-- Overwrite Sonatype <parent> -->
     <snapshotRepository>
       <uniqueVersion>false</uniqueVersion>
       <id>sakai-maven-snapshots-scp</id>
@@ -806,7 +806,6 @@
       <url>scp://source.sakaiproject.org/var/www/html/maven2</url>
       <layout>default</layout>
     </repository>
-    -->
     <site>
       <id>sakai-site</id>
       <name>Sakai release Site</name>
