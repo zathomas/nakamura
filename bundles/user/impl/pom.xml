@@ -52,7 +52,6 @@
           <instructions>
             <Bundle-Category>sakai-nakamura</Bundle-Category>
             <Private-Package>org.sakaiproject.nakamura.user.*</Private-Package>
-            <Sling-Initial-Content>SLING-INF/content;overwriteProperties:=true;uninstall:=false</Sling-Initial-Content>
           </instructions>
         </configuration>
       </plugin>
@@ -152,5 +151,41 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>net.sourceforge.cobertura</groupId>
+      <artifactId>cobertura</artifactId>
+      <version>1.9.4.1</version>
+    </dependency>
   </dependencies>
+  <profiles>
+    <profile>
+      <id>cobertura-embed</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>maven-bundle-plugin</artifactId>
+            <extensions>true</extensions>
+            <configuration>
+              <instructions>
+                <Bundle-Activator>org.sakaiproject.nakamura.user.Activator</Bundle-Activator>
+                <Import-Package>
+                  net.sourceforge.cobertura.coveragedata.*,
+                  net.sourceforge.cobertura.util.*,
+                  !org.apache.oro.text.regex.*,!
+                  org.apache.tools.ant.*,
+                  !org.apache.tools.ant.taskdefs.*,
+                  !org.apache.tools.ant.types.*,
+                  !org.objectweb.asm.*,
+                  !org.objectweb.asm.tree.*,
+                  *
+                </Import-Package>
+                <Embed-Dependency>cobertura</Embed-Dependency>
+              </instructions>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
