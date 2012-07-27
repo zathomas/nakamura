@@ -91,7 +91,7 @@ public abstract class AbstractContentSearchQueryHandler extends DomainObjectSear
     if (hasGeneralQuery(parametersMap)) {
       return "resourceType:(sakai/pooled-content OR sakai/widget-data)";
     } else {
-      return "resourceType:sakai/pooled-content";
+      return "resourceType:sakai\\/pooled-content";
     }
   }
   
