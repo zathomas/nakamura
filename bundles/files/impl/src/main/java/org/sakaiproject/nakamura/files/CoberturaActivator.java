@@ -15,23 +15,21 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.user;
+package org.sakaiproject.nakamura.files;
 
 import net.sourceforge.cobertura.coveragedata.ProjectData;
 
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Activator implements BundleActivator {
-  private static final Logger LOGGER = LoggerFactory.getLogger(Activator.class);
-
-  public void start(BundleContext bundleContext) throws Exception {
-  }
-
+public class CoberturaActivator extends Activator {
+  private static final Logger LOGGER = LoggerFactory.getLogger(CoberturaActivator.class);
+  
+  @Override
   public void stop(BundleContext bundleContext) throws Exception {
+    super.stop(bundleContext);
     try {
       LOGGER.info("stopping bundle, writing code coverage data");
       ProjectData.saveGlobalProjectData();
@@ -40,3 +38,4 @@ public class Activator implements BundleActivator {
     }
   }
 }
+           
