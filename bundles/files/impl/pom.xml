@@ -274,8 +274,8 @@
                 <Import-Package>
                   net.sourceforge.cobertura.coveragedata.*,
                   net.sourceforge.cobertura.util.*,
-                  !org.apache.oro.text.regex.*,!
-                  org.apache.tools.ant.*,
+                  !org.apache.oro.text.regex.*,
+                  !org.apache.tools.ant.*,
                   !org.apache.tools.ant.taskdefs.*,
                   !org.apache.tools.ant.types.*,
                   !org.objectweb.asm.*,
