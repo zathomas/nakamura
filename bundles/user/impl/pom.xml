@@ -52,6 +52,7 @@
           <instructions>
             <Bundle-Category>sakai-nakamura</Bundle-Category>
             <Private-Package>org.sakaiproject.nakamura.user.*</Private-Package>
+            <Import-Package>!net.sourceforge.cobertura.coveragedata.*, *</Import-Package>
             <Sling-Initial-Content>SLING-INF/content;overwriteProperties:=true;uninstall:=false</Sling-Initial-Content>
           </instructions>
         </configuration>
@@ -169,18 +170,8 @@
             <configuration>
               <instructions>
                 <Bundle-Activator>org.sakaiproject.nakamura.user.Activator</Bundle-Activator>
-                <Import-Package>
-                  net.sourceforge.cobertura.coveragedata.*,
-                  net.sourceforge.cobertura.util.*,
-                  !org.apache.oro.text.regex.*,
-                  !org.apache.tools.ant.*,
-                  !org.apache.tools.ant.taskdefs.*,
-                  !org.apache.tools.ant.types.*,
-                  !org.objectweb.asm.*,
-                  !org.objectweb.asm.tree.*,
-                  *
-                </Import-Package>
-                <Embed-Dependency>cobertura</Embed-Dependency>
+                <!-- Add Import-Package to override build settings -->
+                <Import-Package>net.sourceforge.cobertura.coveragedata, *</Import-Package>
               </instructions>
             </configuration>
           </plugin>
