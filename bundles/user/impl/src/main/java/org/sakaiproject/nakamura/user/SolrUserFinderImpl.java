@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Set;
 
-@Component(immediate = true, metatype = true, label = "SolrUserFinder", description = "Find users using the Solr index")
+@Component(metatype = true, label = "SolrUserFinder", description = "Find users using the Solr index")
 @Service
 public class SolrUserFinderImpl implements UserFinder {
 

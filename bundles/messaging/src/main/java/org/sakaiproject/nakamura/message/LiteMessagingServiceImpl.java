@@ -70,7 +70,7 @@ import java.util.Map.Entry;
 /**
  * Service for doing operations with messages.
  */
-@Component(immediate = true, label = "Sakai Messaging Service", description = "Service for doing operations with messages.", name = "org.sakaiproject.nakamura.api.message.LiteMessagingService")
+@Component(label = "Sakai Messaging Service", description = "Service for doing operations with messages.", name = "org.sakaiproject.nakamura.api.message.LiteMessagingService")
 @Service
 @Properties(value = { @Property(name = "service.vendor", value = "The Sakai Foundation") })
 public class LiteMessagingServiceImpl implements LiteMessagingService {

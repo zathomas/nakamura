@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Dictionary;
 
-@Component(immediate = true, label = "%activemqbroker.name", description = "%activemqbroker.description", metatype = true)
+@Component(label = "%activemqbroker.name", description = "%activemqbroker.description", metatype = true)
 @Properties(value = { @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = "service.description", value = "AMQ Broker Component.") })
 public class ActiveMQBrokerComponent {

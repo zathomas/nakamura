@@ -74,7 +74,7 @@ import javax.servlet.http.HttpServletResponse;
         })
     })
 @SlingServlet(resourceTypes = { "sling/servlet/default" }, methods = { "GET" }, selectors = { "widgetize" }, extensions = { "json" }, generateService = true, generateComponent = false)
-@Component(metatype = true, immediate = true)
+@Component(metatype = true)
 public class WidgetizeServlet extends SlingSafeMethodsServlet {
   private static final long serialVersionUID = -8498483459709451448L;
 

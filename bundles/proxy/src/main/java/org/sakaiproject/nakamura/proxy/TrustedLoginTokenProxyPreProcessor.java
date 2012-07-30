@@ -45,7 +45,7 @@ import java.util.Map;
  *
  */
 @Service(value = ProxyPreProcessor.class)
-@Component(metatype = true, immediate = true)
+@Component(metatype = true)
 @Properties(value = {
     @Property(name = "service.description", value = { "Pre processor for proxy requests to Sakai 2 instance with a trusted token filter." }),
     @Property(name = "service.vendor", value = { "The Sakai Foundation" }) })

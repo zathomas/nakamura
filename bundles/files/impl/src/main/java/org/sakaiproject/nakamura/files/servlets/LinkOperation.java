@@ -60,7 +60,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Create an internal jcr link to a file.
  */
-@Component(immediate = true)
+@Component
 @Service(value = SlingPostOperation.class)
 @Properties(value = {
     @Property(name = "sling.post.operation", value = "link"),

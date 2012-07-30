@@ -60,7 +60,7 @@ import java.util.List;
 
 import javax.servlet.ServletException;
 
-@Component(immediate=true, metatype=true)
+@Component(metatype = true)
 @Service(value=ActivityService.class)
 public class ActivityServiceImpl implements ActivityService {
 

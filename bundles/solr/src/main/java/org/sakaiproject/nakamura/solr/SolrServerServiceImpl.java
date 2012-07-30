@@ -22,7 +22,7 @@ import org.xml.sax.SAXException;
 
 import com.google.common.collect.Maps;
 
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Service(value = SolrServerService.class)
 @References(
 		value={

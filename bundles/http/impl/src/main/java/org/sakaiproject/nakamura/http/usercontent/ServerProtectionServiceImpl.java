@@ -100,7 +100,7 @@ import javax.servlet.http.HttpServletResponse;
  * resource expectations there are.
  * </p>
  */
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Service(value = ServerProtectionService.class)
 public class ServerProtectionServiceImpl implements ServerProtectionService {
   private static final String HMAC_SHA512 = "HmacSHA512";

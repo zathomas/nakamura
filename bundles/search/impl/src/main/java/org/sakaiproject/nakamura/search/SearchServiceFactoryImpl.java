@@ -38,7 +38,7 @@ import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
 @Service(value = SearchServiceFactory.class)
-@Component(name = "org.sakaiproject.nakamura.api.search.SearchServiceFactory", immediate = true, metatype = true, description = "%searchservicefactory.description", label = "%searchservicefactory.name")
+@Component(name = "org.sakaiproject.nakamura.api.search.SearchServiceFactory", metatype = true, description = "%searchservicefactory.description", label = "%searchservicefactory.name")
 public class SearchServiceFactoryImpl implements SearchServiceFactory {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SearchServiceFactoryImpl.class);

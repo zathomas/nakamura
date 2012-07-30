@@ -32,7 +32,7 @@ import javax.servlet.ServletException;
 /**
  *
  */
-@Component(immediate = true, label = "JcrInternalFileHandler")
+@Component(label = "JcrInternalFileHandler")
 @Service(value = LinkHandler.class)
 @Properties({ @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = "sakai.files.handler", value = "sparseinternal") })

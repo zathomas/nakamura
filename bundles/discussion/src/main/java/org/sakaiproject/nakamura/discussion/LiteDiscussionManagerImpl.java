@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 /**
  * Manager for the discussions.
  */
-@Component(immediate = true, label = "%discussion.manager.label", description = "%discussion.manager.desc")
+@Component(label = "%discussion.manager.label", description = "%discussion.manager.desc")
 @Service
 public class LiteDiscussionManagerImpl implements LiteDiscussionManager {
 

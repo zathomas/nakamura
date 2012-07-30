@@ -60,7 +60,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeMultipart;
 
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 public class SakaiSmtpServer implements SimpleMessageListener {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SakaiSmtpServer.class);

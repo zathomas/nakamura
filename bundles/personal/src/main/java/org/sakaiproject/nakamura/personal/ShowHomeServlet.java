@@ -62,7 +62,7 @@ import javax.servlet.http.HttpServletResponse;
       @ServiceResponse(code = 404, description = "Unable to find the configured home resource item to use.")
     })
 )
-@Component(immediate = true)
+@Component
 @Service({ Servlet.class, ServerProtectionValidator.class })
 @SlingServlet(resourceTypes = { "sakai/user-home", "sakai/group-home" }, methods = { "GET" }, generateComponent = false, generateService = false)
 public class ShowHomeServlet extends SlingSafeMethodsServlet implements OptingServlet, ServerProtectionValidator {

@@ -68,7 +68,7 @@ import javax.servlet.http.HttpServletResponse;
           })
     })
 @SlingServlet(methods = { "GET" }, paths = { "/var/widgets" }, generateComponent = false, generateService = true)
-@Component(metatype = true, immediate = true)
+@Component(metatype = true)
 public class WidgetsServlet extends SlingSafeMethodsServlet {
 
   private static final long serialVersionUID = -4113451154211163118L;

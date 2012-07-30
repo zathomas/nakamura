@@ -35,7 +35,7 @@ import java.util.Dictionary;
 import java.util.Map;
 
 @Service(ProxyPreProcessor.class)
-@Component(name = "org.sakaiproject.nakamura.proxy.SlideshareProxyPreProcessor", label = "ProxyPreProcessor for Slideshare", description = "Pre processor for Slideshare.", immediate = true, metatype = true)
+@Component(name = "org.sakaiproject.nakamura.proxy.SlideshareProxyPreProcessor", label = "ProxyPreProcessor for Slideshare", description = "Pre processor for Slideshare.", metatype = true)
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai foundation"),
     @Property(name = "service.description", value = "Pre processor that adds the api-key and hash to the template params.") })

@@ -70,7 +70,7 @@ import java.util.Map.Entry;
  * Handler for messages that are sent locally and intended for local delivery. Needs to be
  * started immediately to make sure it registers with JCR as soon as possible.
  */
-@Component(immediate = true, label = "%discussion.messageTransport.label", description = "%discussion.messageTransport.desc")
+@Component(label = "%discussion.messageTransport.label", description = "%discussion.messageTransport.desc")
 @Service
 public class LiteDiscussionMessageTransport implements LiteMessageTransport {
   private static final Logger LOG = LoggerFactory

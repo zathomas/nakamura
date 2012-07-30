@@ -47,7 +47,7 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
-@Component(immediate = true)
+@Component
 @Service
 @Deprecated
 public class CreateTreeOperation extends AbstractSlingPostOperation {

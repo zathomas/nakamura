@@ -51,7 +51,7 @@ import javax.management.MBeanServer;
 /**
  * The <code>CacheManagerServiceImpl</code>
  */
-@Component(immediate = true, metatype=true)
+@Component(metatype=true)
 @Service(value=CacheManagerService.class)
 public class CacheManagerServiceImpl implements CacheManagerService {
 

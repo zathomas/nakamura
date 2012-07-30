@@ -37,7 +37,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.UUID;
 
-@Component(immediate = true)
+@Component
 @Service(value = PersonalTrackingStore.class)
 public class LitePersonalTrackingStore implements PersonalTrackingStore {
 

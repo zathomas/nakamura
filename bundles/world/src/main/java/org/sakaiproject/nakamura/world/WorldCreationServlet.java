@@ -61,7 +61,7 @@ import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-@Component(immediate = true, metatype = true, enabled = true)
+@Component(metatype = true, enabled = true)
 @SlingServlet(paths = {"/system/world/create"}, methods = {"POST"}, generateComponent = false)
 public class WorldCreationServlet extends SlingAllMethodsServlet {
 

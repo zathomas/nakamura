@@ -62,7 +62,7 @@ import javax.servlet.http.HttpSession;
 /**
  *
  */
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Service
 public final class TrustedTokenServiceImpl implements TrustedTokenService {
 

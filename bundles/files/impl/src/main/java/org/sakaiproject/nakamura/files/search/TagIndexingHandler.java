@@ -54,7 +54,7 @@ import com.google.common.collect.Sets;
  * aren't assigned to any nodes and to flatten the broad lookup for tags that exist in the
  * system.
  */
-@Component(immediate = true)
+@Component
 public class TagIndexingHandler implements IndexingHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(TagIndexingHandler.class);
 

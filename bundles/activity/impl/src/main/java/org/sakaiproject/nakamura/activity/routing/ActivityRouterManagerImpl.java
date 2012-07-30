@@ -38,7 +38,7 @@ import java.util.Set;
 
 import javax.jcr.Node;
 
-@Component(immediate = true, enabled = true)
+@Component
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = "servie.description", value = "The manager who will pass the activity to all the routers") })

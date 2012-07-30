@@ -45,7 +45,7 @@ import javax.servlet.ServletException;
  *
  */
 @Service(value=DefaultServletDelegate.class)
-@Component(immediate=true, enabled=true, metatype=true)
+@Component(metatype = true)
 public class GetAlternativeContentPoolStreamServlet extends SlingSafeMethodsServlet
     implements DefaultServletDelegate {
   /**

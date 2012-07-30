@@ -31,7 +31,7 @@ import org.sakaiproject.nakamura.api.search.solr.SolrSearchPropertyProvider;
 
 import java.util.Map;
 
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Properties(value = {@Property(name = "service.vendor", value = "The Sakai Foundation")})
 @Service(value = SolrSearchPropertyProviderTracker.class)
 @References(value = {

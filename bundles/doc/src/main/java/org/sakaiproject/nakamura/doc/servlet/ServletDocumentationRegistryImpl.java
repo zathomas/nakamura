@@ -39,7 +39,7 @@ import javax.servlet.Servlet;
 /**
  * track servlets with service documentation in a single place.
  */
-@Component(immediate=true)
+@Component
 @Service(value=ServletDocumentationRegistry.class)
 @References(
     value = { 

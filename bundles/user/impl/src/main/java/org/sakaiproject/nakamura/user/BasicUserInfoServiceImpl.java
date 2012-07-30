@@ -71,7 +71,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.Map.Entry;
 
-@Component(immediate=true, metatype=true)
+@Component(metatype = true)
 @Service(value=BasicUserInfoService.class)
 public class BasicUserInfoServiceImpl implements BasicUserInfoService {
 

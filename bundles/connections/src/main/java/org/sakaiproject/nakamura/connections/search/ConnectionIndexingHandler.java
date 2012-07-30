@@ -64,7 +64,7 @@ import java.util.Set;
  * <li>contact's email: email</li>
  * </ul>
  */
-@Component(immediate = true)
+@Component
 public class ConnectionIndexingHandler implements IndexingHandler, QoSIndexHandler {
 
   private static final Logger logger = LoggerFactory

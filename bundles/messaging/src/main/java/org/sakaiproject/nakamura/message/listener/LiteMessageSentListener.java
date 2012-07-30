@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component(inherit = true, label = "%sakai-event.name", immediate = true)
+@Component(inherit = true, label = "%sakai-event.name")
 @Service
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),

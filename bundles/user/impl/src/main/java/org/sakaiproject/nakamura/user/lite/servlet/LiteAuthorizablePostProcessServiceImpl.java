@@ -45,7 +45,7 @@ import java.util.Map;
 
 
 
-@Component(immediate=true, metatype=true)
+@Component(metatype = true)
 @Service(value=LiteAuthorizablePostProcessService.class)
 @Reference(name="authorizablePostProcessor",
     target="(!default=true)",

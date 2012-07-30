@@ -139,7 +139,7 @@ import java.util.Set;
  * IMO the manager group is superfluous on a user and adds unecessary expense
  * </pre>
  */
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Service(value = LiteAuthorizablePostProcessor.class)
 @Properties(value = { @Property(name = "default", value = "true") })
 public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {

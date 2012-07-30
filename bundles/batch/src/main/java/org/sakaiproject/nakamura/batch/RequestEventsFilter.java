@@ -46,7 +46,7 @@ import javax.servlet.ServletResponse;
  *
  */
 @Service(value = Filter.class)
-@Component(name = "org.sakaiproject.nakamura.batch.RequestEventsFilter", immediate = true, metatype = true)
+@Component(name = "org.sakaiproject.nakamura.batch.RequestEventsFilter", metatype = true)
 @Properties(value = {
     @Property(name = "service.description", value = "Generates OSGi events for GET requests to resources."),
     @Property(name = "service.vendor", value = "The Sakai Foundation"),

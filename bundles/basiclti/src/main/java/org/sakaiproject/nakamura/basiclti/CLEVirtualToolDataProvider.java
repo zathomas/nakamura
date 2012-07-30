@@ -39,7 +39,7 @@ import java.util.Map;
 /**
  * Specific to CLE tools provided by LTI.
  */
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Service
 public class CLEVirtualToolDataProvider implements VirtualToolDataProvider {
   private static final Logger LOG = LoggerFactory

@@ -31,7 +31,7 @@ import org.sakaiproject.nakamura.api.memory.CacheScope;
 
 import java.util.Map;
 
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Service(value = StorageCacheManager.class)
 public class StorageCacheManagerImpl implements StorageCacheManager {
 

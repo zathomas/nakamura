@@ -40,7 +40,7 @@ import java.util.Map.Entry;
 
 import javax.servlet.ServletException;
 
-@Component(metatype=true, immediate = true, inherit=true)
+@Component(metatype = true, inherit = true)
 @Service(value=EventHandler.class)
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
