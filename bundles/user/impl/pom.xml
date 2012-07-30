@@ -160,7 +160,7 @@
   </dependencies>
   <profiles>
     <profile>
-      <id>cobertura-embed</id>
+      <id>cobertura-activate</id>
       <build>
         <plugins>
           <plugin>
