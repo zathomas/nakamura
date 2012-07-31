@@ -56,7 +56,7 @@ import java.util.Set;
 /**
  * Base class for servlets manipulating groups
  */
-@Component(metatype = true, componentAbstract = true)
+@Component(componentAbstract = true)
 public abstract class LiteAbstractSakaiGroupPostServlet extends
     LiteAbstractAuthorizablePostServlet {
   private static final long serialVersionUID = 1159063041816944076L;

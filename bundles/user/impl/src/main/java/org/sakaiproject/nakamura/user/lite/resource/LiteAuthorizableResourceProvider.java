@@ -41,7 +41,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-@Component(metatype = true)
+@Component
 @Service(value = ResourceProvider.class)
 @Properties(value = {
     @Property(name = "provider.roots", value = "/system/userManager/"),

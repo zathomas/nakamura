@@ -59,7 +59,7 @@ import javax.jcr.RepositoryException;
 /**
  * Formats the files search results.
  */
-@Component(metatype = true)
+@Component
 @Properties(value = { @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = SolrSearchConstants.REG_BATCH_PROCESSOR_NAMES, value = "LiteFiles") })
 @Service(value = SolrSearchBatchResultProcessor.class)

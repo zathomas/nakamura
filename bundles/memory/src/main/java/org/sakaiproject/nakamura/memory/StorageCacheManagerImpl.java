@@ -20,7 +20,6 @@ package org.sakaiproject.nakamura.memory;
 import com.google.common.collect.ImmutableMap;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.sakaiproject.nakamura.api.lite.CacheHolder;
@@ -31,7 +30,7 @@ import org.sakaiproject.nakamura.api.memory.CacheScope;
 
 import java.util.Map;
 
-@Component(metatype = true)
+@Component
 @Service(value = StorageCacheManager.class)
 public class StorageCacheManagerImpl implements StorageCacheManager {
 
@@ -52,11 +51,6 @@ public class StorageCacheManagerImpl implements StorageCacheManager {
     b.put("cn", new MapDeligate<String, CacheHolder>(contentCacheCache));
     b.put("sparseQueryCache", new MapDeligate<String, CacheHolder>(queryCache));
     knownCaches = b.build();
-  }
-
-  @Deactivate
-  public void deactivate(Map<String, Object> props) {
-
   }
 
   public Map<String, CacheHolder> getAccessControlCache() {

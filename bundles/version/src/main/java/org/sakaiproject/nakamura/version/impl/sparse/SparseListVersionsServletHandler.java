@@ -58,7 +58,7 @@ import javax.servlet.http.HttpServletResponse;
  * Gets a version
  */
 
-@Component(metatype = true)
+@Component
 @Service(value=SafeServletResourceHandler.class)
 @Property(name="handling.servlet",value="ListVersionsServlet")
 public class SparseListVersionsServletHandler extends AbstractSafeMethodsServletResourceHandler {

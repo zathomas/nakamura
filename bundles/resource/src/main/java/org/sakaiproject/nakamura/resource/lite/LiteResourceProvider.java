@@ -46,7 +46,7 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * Resource provider to Sling for accessing sparse map content.
  */
-@Component(metatype = true)
+@Component
 @Service
 @Property(name = ResourceProvider.ROOTS, value = "/")
 public class LiteResourceProvider implements ResourceProvider {

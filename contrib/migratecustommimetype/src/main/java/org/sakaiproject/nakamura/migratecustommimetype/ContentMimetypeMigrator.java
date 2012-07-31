@@ -26,7 +26,7 @@ import org.sakaiproject.nakamura.lite.content.InternalContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(immediate=true, metatype=true)
+@Component
 @Service(value=PropertyMigrator.class)
 public class ContentMimetypeMigrator implements PropertyMigrator {
 

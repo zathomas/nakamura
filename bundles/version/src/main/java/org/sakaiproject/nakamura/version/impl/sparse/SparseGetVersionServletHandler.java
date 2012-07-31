@@ -51,7 +51,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 
-@Component(metatype = true)
+@Component
 @Service(value=SafeServletResourceHandler.class)
 @Property(name="handling.servlet",value="GetVersionServlet")
 public class SparseGetVersionServletHandler extends AbstractSafeMethodsServletResourceHandler {

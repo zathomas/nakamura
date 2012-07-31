@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.Collection;
 
-@Component(metatype = true)
+@Component
 @Service
 public class AuthorizableCountChangerImpl implements AuthorizableCountChanger {
 

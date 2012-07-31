@@ -56,7 +56,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Outputs a version
  */
-@Component(metatype = true)
+@Component
 @Service(value=SafeServletResourceHandler.class)
 @Property(name="handling.servlet",value="GetVersionServlet")
 public class GetVersionServletHandler extends AbstractSafeMethodsServletResourceHandler {

@@ -34,7 +34,7 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 
-@Component(metatype = true)
+@Component
 @Service(value=LoginModulePlugin.class)
 public class UserContentLoginModulePlugin implements LoginModulePlugin {
 

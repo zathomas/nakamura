@@ -56,7 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@Component(immediate = true, metatype = true)
+@Component(immediate = true)
 @Service(value = ResourceIndexingService.class)
 @Properties( value={@Property(name="type", value="sparse" )})
 public class SparseIndexingServiceImpl implements IndexingHandler,

@@ -45,7 +45,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 @Service({ ServerProtectionVeto.class, DefaultServletDelegate.class })
-@Component(metatype = true)
+@Component
 public class GetPoolStructureServlet extends SlingSafeMethodsServlet implements
     DefaultServletDelegate, ServerProtectionVeto {
 

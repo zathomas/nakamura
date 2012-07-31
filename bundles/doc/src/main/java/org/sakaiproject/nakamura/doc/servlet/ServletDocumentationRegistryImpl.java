@@ -110,7 +110,7 @@ public class ServletDocumentationRegistryImpl implements ServletDocumentationReg
    */
   public void addDocumentation(ServiceReference reference) {
     Object service = context.getBundleContext().getService(reference);
-    if (notDeprecated(service) && service.getClass().getCanonicalName().startsWith("org.sakaiproject")) {
+    if (service != null && notDeprecated(service) && service.getClass().getCanonicalName().startsWith("org.sakaiproject")) {
       ServletDocumentation doc = new ServletDocumentation(reference, service);
       String key = doc.getKey();
       if (key != null) {

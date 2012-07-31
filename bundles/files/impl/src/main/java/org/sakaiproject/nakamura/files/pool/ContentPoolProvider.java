@@ -42,7 +42,7 @@ import java.util.Iterator;
 import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletRequest;
 
-@Component(metatype = true)
+@Component
 @Service(value = ResourceProvider.class)
 @Property(name = ResourceProvider.ROOTS, value = { "/", "/p" })
 public class ContentPoolProvider implements ResourceProvider {

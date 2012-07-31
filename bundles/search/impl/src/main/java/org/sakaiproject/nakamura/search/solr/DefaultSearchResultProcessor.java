@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 
-@Component(metatype = true)
+@Component
 @Properties(value = { @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = SolrSearchConstants.REG_PROCESSOR_NAMES, value = "Resource"),
     @Property(name = SolrSearchResultProcessor.DEFAULT_PROCESSOR_PROP, boolValue = true) })

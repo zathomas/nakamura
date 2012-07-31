@@ -17,7 +17,6 @@
  */
 package org.sakaiproject.nakamura.doc.servlet;
 
-import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
@@ -47,7 +46,7 @@ import javax.servlet.http.HttpServletResponse;
  * Creates documentation by tracking servlets and inspecting some annotations.
  */
 @Service(value = DocumentationServlet.class)
-@SlingServlet(generateComponent = true, methods = "GET", paths = "/system/doc/servlet")
+@SlingServlet(generateService = false, methods = "GET", paths = "/system/doc/servlet")
 @ServiceDocumentation(name = "Servlet documentation",
     okForVersion = "1.2",
     description = "Provides auto documentation of servlets registered with OSGi. Documentation will use the "

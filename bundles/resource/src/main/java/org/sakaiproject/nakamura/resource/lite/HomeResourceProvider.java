@@ -42,7 +42,7 @@ import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 
-@Component(name = "org.sakaiproject.nakamura.privacy.HomeResourceProvider", metatype = true, description = "%homeprovider.description", label = "%homeprovider.name")
+@Component(name = "org.sakaiproject.nakamura.privacy.HomeResourceProvider", description = "%homeprovider.description", label = "%homeprovider.name")
 @Service(value = ResourceProvider.class)
 @Property(name = ResourceProvider.ROOTS, value = { "/", "/group" })
 public class HomeResourceProvider implements ResourceProvider {

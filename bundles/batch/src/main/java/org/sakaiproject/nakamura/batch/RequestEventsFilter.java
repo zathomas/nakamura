@@ -46,12 +46,12 @@ import javax.servlet.ServletResponse;
  *
  */
 @Service(value = Filter.class)
-@Component(name = "org.sakaiproject.nakamura.batch.RequestEventsFilter", metatype = true)
+@Component(name = "org.sakaiproject.nakamura.batch.RequestEventsFilter")
 @Properties(value = {
     @Property(name = "service.description", value = "Generates OSGi events for GET requests to resources."),
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
-    @Property(name = "filter.scope", value = "request", propertyPrivate = true),
-    @Property(name = "filter.order", intValue = { 1000 }, propertyPrivate = true) })
+    @Property(name = "filter.scope", value = "request"),
+    @Property(name = "filter.order", intValue = { 1000 }) })
 public class RequestEventsFilter implements Filter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RequestEventsFilter.class);

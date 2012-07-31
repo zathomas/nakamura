@@ -9,6 +9,7 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
@@ -35,7 +36,12 @@ import com.google.common.collect.Maps;
 public class SolrServerServiceImpl implements SolrServerService, SolrClientListener {
 
 	
-	@Property(value=SolrClient.EMBEDDED, description="embedded|remote|multi|other")
+	@Property(value = SolrClient.EMBEDDED, options = {
+	    @PropertyOption(name = SolrClient.REMOTE, value = SolrClient.REMOTE),
+	    @PropertyOption(name = SolrClient.EMBEDDED, value = SolrClient.EMBEDDED),
+	    @PropertyOption(name = SolrClient.MULTI, value = SolrClient.MULTI),
+	    @PropertyOption(name = SolrClient.MULTIREMOTE, value = SolrClient.MULTIREMOTE)
+	})
 	private static final String SOLR_IMPL = "solr-impl";
 
   public static final String BIND = "bind";
