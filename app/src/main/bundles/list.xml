@@ -241,6 +241,46 @@ KERN-1187
             <artifactId>org.apache.sling.commons.log</artifactId>
             <version>3.0.0</version>
         </bundle>
+        <!--
+          DataNucleus bundles:
+          
+            http://www.datanucleus.org/servlet/wiki/display/USERS/HOWTO+Use+Datanucleus+with+OSGi+and+Spring+DM
+             datanucleus-api-jdo-3.0.2.jar
+             datanucleus-core-3.0.2.jar
+             datanucleus-rdbms-3.0.2.jar
+             jdo-api-3.1-SNAPSHOT-20110926.jar
+        -->
+        <bundle>
+          <groupId>org.datanucleus</groupId>
+          <artifactId>datanucleus-core</artifactId>
+          <version>3.0.11</version>
+        </bundle>
+        <bundle>
+          <groupId>org.datanucleus</groupId>
+          <artifactId>datanucleus-api-jdo</artifactId>
+          <version>3.0.8</version>
+        </bundle>
+        <bundle>
+          <groupId>org.datanucleus</groupId>
+          <artifactId>datanucleus-rdbms</artifactId>
+          <version>3.0.10</version>
+        </bundle>
+        <bundle>
+          <groupId>org.sakaiproject.nakamura</groupId>
+          <artifactId>javax.jdo.jdo-api</artifactId>
+          <version>1.5.0-SNAPSHOT</version>
+        </bundle>
+        <bundle>
+          <groupId>org.apache.servicemix.bundles</groupId>
+          <artifactId>org.apache.servicemix.bundles.commons-dbcp</artifactId>
+          <version>1.4_3</version>
+        </bundle>
+        <bundle>
+          <groupId>org.sakaiproject.nakamura</groupId>
+          <artifactId>org.sakaiproject.nakamura.jdo</artifactId>
+          <version>1.5.0-SNAPSHOT</version>
+        </bundle>
+
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.logservice</artifactId>

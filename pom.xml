@@ -58,6 +58,8 @@
       <modules>
         <module>libraries/testutils</module>
         <module>libraries/utils</module>
+        <module>bundles/javax-jdo-api</module>
+        <module>bundles/jdo</module>
         <module>bundles/formauth</module>
         <module>bundles/trustedauth</module>
         <module>bundles/securityloader</module>
@@ -772,6 +774,24 @@
             <targetJdk>1.6</targetJdk>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>org.datanucleus</groupId>
+          <artifactId>maven-datanucleus-plugin</artifactId>
+          <version>3.0.1</version>
+          <configuration>
+            <api>JDO</api>
+            <verbose>true</verbose>
+          </configuration>
+          <executions>
+            <execution>
+              <id>enhance-build</id>
+              <phase>process-classes</phase>
+              <goals>
+                <goal>enhance</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -943,7 +963,14 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
-
+    
+    <!-- used by DataNucleus JDO implementation -->
+    <repository>
+      <id>datanucleus</id>
+      <name>Data Nucleus</name>
+      <url>http://www.datanucleus.org/downloads/maven2/</url>
+    </repository>
+    
     <!-- used by calendar -->
     <repository>
       <id>modularity-releases</id>
@@ -1089,6 +1116,38 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.scr.annotations</artifactId>
         <version>1.6.0</version>
+        <scope>provided</scope>
+      </dependency>
+
+<!-- jdo -->
+      <dependency>
+        <groupId>javax.jdo</groupId>
+        <artifactId>jdo-api</artifactId>
+        <version>3.1-SNAPSHOT-20120609</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.datanucleus</groupId>
+        <artifactId>datanucleus-core</artifactId>
+        <version>3.0.11</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.datanucleus</groupId>
+        <artifactId>datanucleus-api-jdo</artifactId>
+        <version>3.0.8</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.datanucleus</groupId>
+        <artifactId>datanucleus-rdbms</artifactId>
+        <version>3.0.10</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.sakaiproject.nakamura</groupId>
+        <artifactId>org.sakaiproject.nakamura.jdo</artifactId>
+        <version>1.5.0-SNAPSHOT</version>
         <scope>provided</scope>
       </dependency>
 
