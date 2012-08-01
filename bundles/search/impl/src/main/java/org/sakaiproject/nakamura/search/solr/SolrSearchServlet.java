@@ -245,7 +245,13 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
 
             DomainObjectSearchQueryHandler queryHandler = (DomainObjectSearchQueryHandler) searchProcessor;
 
-            Map<String, String> parameterMap = loadProperties(request, null, null, Query.SOLR);
+            PropertyIterator defaultValues = null;
+            if (node.hasNode(SAKAI_QUERY_TEMPLATE_DEFAULTS)) {
+              Node defaults = node.getNode(SAKAI_QUERY_TEMPLATE_DEFAULTS);
+              defaultValues = defaults.getProperties();
+            }
+
+            Map<String, String> parameterMap = loadProperties(request, null, defaultValues, Query.SOLR);
             query = queryHandler.getQuery(parameterMap);
 
             rs = searchServiceFactory.getSearchResultSet(session, authorizable, query, params);
@@ -523,7 +529,7 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
     String userPrivatePath = ClientUtils.escapeQueryChars(LitePersonalUtils
         .getPrivatePath(userId));
     propertiesMap.put("_userPrivatePath", userPrivatePath);
-    propertiesMap.put("_userId", ClientUtils.escapeQueryChars(userId));
+    propertiesMap.put("_userId", userId);
 
     // Remember the requested path, since it sometimes determines the type of query or results handling.
     propertiesMap.put(REQUEST_PARAMETERS_PROPS._requestPath.toString(), request.getRequestURI());

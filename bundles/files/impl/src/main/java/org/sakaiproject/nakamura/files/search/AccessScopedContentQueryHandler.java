@@ -125,7 +125,13 @@ public class AccessScopedContentQueryHandler extends AbstractContentSearchQueryH
   public Query getQuery(Map<String, String> config) {
 
     // verify that we can determine a userid
-    String userid = config.get("userid");
+    //  1) start with the remote user
+    String userid = config.get("_userId");
+    //  2) revert to userid param
+    if (config.containsKey("userid")) {
+      userid = config.get("userid");
+    }
+    //  3) finally, use Anonymous if no userid is present
     if (userid == null) {
       userid = User.ANON_USER;
     }
