@@ -28,7 +28,7 @@ Before do
   if ENV["NAKAMURA_TEST_LOG_LEVEL"] != nil
     @log.level = ENV["NAKAMURA_TEST_LOG_LEVEL"].to_i
   else
-    @log.level = Logger::INFO
+    @log.level = Logger::ERROR
   end
 
   def uniqueness()
