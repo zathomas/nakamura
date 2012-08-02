@@ -39,13 +39,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 /**
  * Creates documentation by tracking servlets and inspecting some annotations.
  */
-@Service(value = DocumentationServlet.class)
+@Service(value = {DocumentationServlet.class, Servlet.class})
 @SlingServlet(generateService = false, methods = "GET", paths = "/system/doc/servlet")
 @ServiceDocumentation(name = "Servlet documentation",
     okForVersion = "1.2",
