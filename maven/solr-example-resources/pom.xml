@@ -36,6 +36,13 @@
     <solr.revision>lucene_solr_4_0_0_ALPHA</solr.revision>
   </properties>
   <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh</artifactId>
+        <version>2.2</version>
+      </extension>
+    </extensions>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -83,7 +90,7 @@
         <uniqueVersion>false</uniqueVersion>
         <id>sakai-maven-snapshots-scp</id>
         <name>Sakai snapshot Repo</name>
-        <url>scpexe://source.sakaiproject.org/var/www/html/maven2-snapshots
+        <url>scp://source.sakaiproject.org/var/www/html/maven2-snapshots
         </url>
         <layout>default</layout>
     </snapshotRepository>
@@ -91,7 +98,7 @@
         <uniqueVersion>false</uniqueVersion>
         <id>sakai-maven2-scp</id>
         <name>Sakai maven2 repository</name>
-        <url>scpexe://source.sakaiproject.org/var/www/html/maven2</url>
+        <url>scp://source.sakaiproject.org/var/www/html/maven2</url>
         <layout>default</layout>
     </repository>
   </distributionManagement>
