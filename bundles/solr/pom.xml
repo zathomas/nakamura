@@ -13,7 +13,7 @@
   <name>Sakai Nakamura :: Solr based search service.</name>
   <description>A Solr bundle that embeds Solr 4 into OSGi and makes an embeded server available or references a remote server.</description>
   <properties>
-    <solrexample.dir>${project.build.directory}/generated-resources/apache-solr-4.0.0-ALPHA/example/solr</solrexample.dir>
+    <solrexample.dir>${project.build.directory}/generated-resources/solr</solrexample.dir>
   </properties>
   <build>
     <resources>
@@ -119,7 +119,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
-          <!-- Unpack example Solr configuration files from Apache distribution. -->
+          <!-- Unpack example Solr configuration files. -->
           <execution>
             <id>unpack-configs</id>
             <phase>generate-resources</phase>
@@ -129,13 +129,10 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>org.apache.solr</groupId>
-                  <artifactId>apache-solr</artifactId>
-                  <artifactId>apache-solr</artifactId>
+                  <groupId>org.sakaiproject.nakamura</groupId>
+                  <artifactId>solr-example-resources</artifactId>
                   <version>4.0.0-ALPHA</version>
-                  <type>zip</type>
                   <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
-                  <includes>apache-solr-4.0.0-ALPHA/example/solr/**</includes>
                 </artifactItem>
               </artifactItems>
             </configuration>
