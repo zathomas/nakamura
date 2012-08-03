@@ -100,7 +100,7 @@ public class CollectionCountServiceImplTest {
     when(searchServiceFactory.getSearchResultSet(any(SlingHttpServletRequest.class), any(Query.class))).thenReturn(resultSet);
 
     when(repository.loginAdministrative()).thenReturn(session);
-    
+
     collectionCountService.searchServiceFactory = searchServiceFactory;
     collectionCountService.queryHandler = queryHandler;
 
