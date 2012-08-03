@@ -184,7 +184,7 @@ public class SolrResultSetFactory implements ResultSetFactory {
         }
       }
 
-      applyReadersRestrictions(authorizable, asAnon, queryOptions);
+      applyReadersRestrictions(authorizable, session, asAnon, queryOptions);
 
       // filter out 'excluded' items. these are indexed because we do need to search for
       // some things on the server that the UI doesn't want (e.g. collection groups)
@@ -215,7 +215,7 @@ public class SolrResultSetFactory implements ResultSetFactory {
         }
       }
       long tquery = System.currentTimeMillis();
-      QueryResponse response = doSolrQuery(request, solrServer, solrQuery);
+      QueryResponse response = doSolrQuery(solrServer, solrQuery);
       tquery = System.currentTimeMillis() - tquery;
       TelemetryCounter.incrementValue("search","SEARCH_PERFORMED",params.getPath());
       try {
@@ -231,6 +231,8 @@ public class SolrResultSetFactory implements ResultSetFactory {
         LOGGER.debug("Got {} hits in {} ms", rs.getSize(), response.getElapsedTime());
       }
       return rs;
+    } catch (AccessDeniedException e) {
+      throw new SolrSearchException(401, e.getMessage());
     } catch (StorageClientException e) {
       throw new SolrSearchException(500, e.getMessage());
     } catch (SolrServerException e) {
@@ -238,8 +240,9 @@ public class SolrResultSetFactory implements ResultSetFactory {
     }
   }
 
-  protected void applyReadersRestrictions(SlingHttpServletRequest request, boolean asAnon,
-                                          Map<String, Object> queryOptions) throws StorageClientException, AccessDeniedException {
+  protected void applyReadersRestrictions(Authorizable authorizable, Session session, boolean asAnon,
+     Map<String, Object> queryOptions) throws StorageClientException, AccessDeniedException {
+    final String userId = authorizable.getId();
     // apply readers restrictions.
     if (asAnon) {
       queryOptions.put("readers", User.ANON_USER);
@@ -257,8 +260,7 @@ public class SolrResultSetFactory implements ResultSetFactory {
   }
 
   @Profiled(tag="search:ResultSet:performed:{$0.resource.path}", el=true)
-  private QueryResponse doSolrQuery(SlingHttpServletRequest request, SolrServer solrServer,
-      SolrQuery solrQuery) throws SolrServerException {
+  private QueryResponse doSolrQuery(SolrServer solrServer, SolrQuery solrQuery) throws SolrServerException {
     return solrServer.query(solrQuery, queryMethod);
   }
   
