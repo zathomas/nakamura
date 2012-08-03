@@ -37,6 +37,7 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.GroupParams;
+import org.perf4j.aop.Profiled;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
@@ -183,27 +184,14 @@ public class SolrResultSetFactory implements ResultSetFactory {
         }
       }
 
-      // apply readers restrictions.
-      if (asAnon) {
-        queryOptions.put("readers", User.ANON_USER);
-      } else {
-        if (!User.ADMIN_USER.equals(userId)) {
-          AuthorizableManager am = session.getAuthorizableManager();
-          Set<String> readers = Sets.newHashSet();
-          for (Iterator<Group> gi = authorizable.memberOf(am); gi.hasNext();) {
-            readers.add(gi.next().getId());
-          }
-          readers.add(userId);
-          queryOptions.put("readers", StringUtils.join(readers,","));
-        }
-      }
+      applyReadersRestrictions(authorizable, asAnon, queryOptions);
 
       // filter out 'excluded' items. these are indexed because we do need to search for
       // some things on the server that the UI doesn't want (e.g. collection groups)
       filterQueries.add("-exclude:true");
 
       // filter out deleted items
-      List<String> deletedPaths = deletedPathsService.getDeletedPaths();
+      List<String> deletedPaths = deletedPathsService.getEscapedDeletedPaths(Query.SOLR);
       if (!deletedPaths.isEmpty()) {
         // these are escaped as they are collected
         filterQueries.add("-path:(" + StringUtils.join(deletedPaths, " OR ") + ")");
@@ -227,16 +215,14 @@ public class SolrResultSetFactory implements ResultSetFactory {
         }
       }
       long tquery = System.currentTimeMillis();
-      QueryResponse response = solrServer.query(solrQuery, queryMethod);
+      QueryResponse response = doSolrQuery(request, solrServer, solrQuery);
       tquery = System.currentTimeMillis() - tquery;
       TelemetryCounter.incrementValue("search","SEARCH_PERFORMED",params.getPath());
       try {
         if ( tquery > verySlowQueryThreshold ) {
-          SLOW_QUERY_LOGGER.error("Very slow solr query {} ms {} ",tquery, URLDecoder.decode(solrQuery.toString(),"UTF-8"));
-          TelemetryCounter.incrementValue("search","VERYSLOW",params.getPath());
+          logVerySlow(params.getPath(), solrQuery, tquery);
         } else if ( tquery > slowQueryThreshold ) {
-          SLOW_QUERY_LOGGER.warn("Slow solr query {} ms {} ",tquery, URLDecoder.decode(solrQuery.toString(),"UTF-8"));
-          TelemetryCounter.incrementValue("search", "SLOW", params.getPath());
+          logSlow(params.getPath(), solrQuery, tquery);
         }
       } catch (UnsupportedEncodingException e) {
       }
@@ -252,6 +238,46 @@ public class SolrResultSetFactory implements ResultSetFactory {
     }
   }
 
+  protected void applyReadersRestrictions(SlingHttpServletRequest request, boolean asAnon,
+                                          Map<String, Object> queryOptions) throws StorageClientException, AccessDeniedException {
+    // apply readers restrictions.
+    if (asAnon) {
+      queryOptions.put("readers", User.ANON_USER);
+    } else {
+      if (!User.ADMIN_USER.equals(userId)) {
+        AuthorizableManager am = session.getAuthorizableManager();
+        Set<String> readers = Sets.newHashSet();
+        for (Iterator<Group> gi = authorizable.memberOf(am); gi.hasNext();) {
+          readers.add(gi.next().getId());
+        }
+        readers.add(userId);
+        queryOptions.put("readers", StringUtils.join(readers,","));
+      }
+    }
+  }
+
+  @Profiled(tag="search:ResultSet:performed:{$0.resource.path}", el=true)
+  private QueryResponse doSolrQuery(SlingHttpServletRequest request, SolrServer solrServer,
+      SolrQuery solrQuery) throws SolrServerException {
+    return solrServer.query(solrQuery, queryMethod);
+  }
+  
+  @Profiled(tag="search:ResultSet:slow:{$0.resource.path}", el=true)
+  private void logSlow(String path, SolrQuery solrQuery, long time)
+      throws UnsupportedEncodingException {
+    SLOW_QUERY_LOGGER.error("Slow solr query {} ms {} ", time,
+        URLDecoder.decode(solrQuery.toString(),"UTF-8"));
+    TelemetryCounter.incrementValue("search","SLOW",path);
+  }
+  
+  @Profiled(tag="search:ResultSet:veryslow:{$0.resource.path}", el=true)
+  private void logVerySlow(String path, SolrQuery solrQuery, long time)
+      throws UnsupportedEncodingException {
+    SLOW_QUERY_LOGGER.error("Very slow solr query {} ms {} ", time,
+        URLDecoder.decode(solrQuery.toString(),"UTF-8"));
+    TelemetryCounter.incrementValue("search","VERYSLOW",path);
+  }
+  
   /**
    * @param queryString
    * @param options
