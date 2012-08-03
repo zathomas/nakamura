@@ -29,7 +29,6 @@ import static org.sakaiproject.nakamura.api.user.UserConstants.COUNTS_LAST_UPDAT
 import static org.sakaiproject.nakamura.api.user.UserConstants.GROUP_DESCRIPTION_PROPERTY;
 import static org.sakaiproject.nakamura.api.user.UserConstants.GROUP_TITLE_PROPERTY;
 import static org.sakaiproject.nakamura.api.user.UserConstants.PROP_GROUP_MANAGERS;
-import static org.sakaiproject.nakamura.api.user.UserConstants.PROP_MANAGED_GROUP;
 import static org.sakaiproject.nakamura.api.user.UserConstants.SAKAI_CATEGORY;
 import static org.sakaiproject.nakamura.api.user.UserConstants.SAKAI_EXCLUDE;
 import static org.sakaiproject.nakamura.api.user.UserConstants.USER_EMAIL_PROPERTY;
@@ -236,8 +235,7 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
    * Create the SolrInputDocument for an authorizable.
    *
    * @param authorizable
-   * @param doc
-   * @param properties
+   * @param repositorySession
    * @return The SolrInputDocument or null if authorizable shouldn't be indexed.
    */
   protected SolrInputDocument createAuthDoc(Authorizable authorizable, RepositorySession repositorySession) {
@@ -247,9 +245,8 @@ public class AuthorizableIndexingHandler implements IndexingHandler {
 
     boolean isAnonymous = User.ANON_USER.equals(authorizable.getId());
     boolean isUserFacingGroup = AuthorizableUtil.isUserFacing(authorizable, true);
-    boolean hasManagedGroup = authorizable.hasProperty(PROP_MANAGED_GROUP);
 
-    if (isAnonymous || !isUserFacingGroup || hasManagedGroup) {
+    if (isAnonymous || !isUserFacingGroup) {
       return null;
     }
 

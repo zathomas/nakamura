@@ -258,7 +258,6 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
    * @param writer
    * @param session
    * @param au
-   * @param jcrSession
    * @throws JSONException
    * @throws StorageClientException
    * @throws AccessDeniedException
@@ -281,13 +280,6 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
           // we don't want the "everyone" group or contact groups in this feed
           continue;
         }
-        if (group.hasProperty(UserConstants.PROP_MANAGED_GROUP)) {
-          // fetch the group that the manager group manages
-          group = authorizableManager.findAuthorizable((String) group.getProperty(UserConstants.PROP_MANAGED_GROUP));
-          if (group == null || !(group instanceof Group)) {
-            continue;
-          }
-        }
         ValueMap groupProfile = new ValueMapDecorator(basicUserInfoService.getProperties(group));
         if (groupProfile != null) {
           writer.valueMap(groupProfile);
@@ -302,8 +294,8 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
    * PENDING, ACCEPTED.
    *
    * @param writer
-   * @param session
    * @param au
+   * @param request
    * @throws JSONException
    * @throws SolrSearchException
    * @throws RepositoryException
@@ -505,7 +497,8 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
    *
    * @param write
    * @param user
-   * @param session
+   * @param subjects
+   * @param properties
    * @throws JSONException
    * @throws RepositoryException
    */

@@ -57,6 +57,7 @@ import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.api.user.UserFinder;
 import org.sakaiproject.nakamura.user.lite.resource.LiteAuthorizableResourceProvider;
 import org.sakaiproject.nakamura.user.lite.resource.LiteNameSanitizer;
+import org.sakaiproject.nakamura.util.SparseUtils;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
 import org.sakaiproject.nakamura.util.parameters.ParameterMap;
 import org.slf4j.Logger;
@@ -216,19 +217,6 @@ public class LiteCreateSakaiUserServlet extends LiteAbstractUserPostServlet {
     return getRepository().loginAdministrative();
   }
 
-  /**
-   * Return the administrative session and close it.
-   */
-  private void ungetSession(final Session session) {
-    if (session != null) {
-      try {
-        session.logout();
-      } catch (Throwable t) {
-        log.error("Unable to log out of session: " + t.getMessage(), t);
-      }
-    }
-  }
-
   // ---------- SCR integration ---------------------------------------------
 
   /**
@@ -270,8 +258,8 @@ public class LiteCreateSakaiUserServlet extends LiteAbstractUserPostServlet {
     }
     if (!administrator) {
       if (!selfRegistrationEnabled) {
-        throw new StorageClientException(
-            "Sorry, registration of new users is not currently enabled. Please try again later.");
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN, "Sorry, registration of new users is not currently enabled. Please try again later.");
+        return;
       }
 
       boolean trustedRequest = false;
@@ -279,16 +267,14 @@ public class LiteCreateSakaiUserServlet extends LiteAbstractUserPostServlet {
       if (trustMechanism != null) {
         RequestTrustValidator validator = requestTrustValidatorService
             .getValidator(trustMechanism);
-        if (validator != null
+        trustedRequest = validator != null
             && validator.getLevel() >= RequestTrustValidator.CREATE_USER
-            && validator.isTrusted(request)) {
-          trustedRequest = true;
-        }
+            && validator.isTrusted(request);
       }
 
       if (selfRegistrationEnabled && !trustedRequest) {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED, "Untrusted request.");
-        log.error("Untrusted request.");
+        log.info("Untrusted request.");
         return;
       }
     }
@@ -378,7 +364,7 @@ public class LiteCreateSakaiUserServlet extends LiteAbstractUserPostServlet {
             "Could not create user " + principalName + " because " + e1.getMessage());
       }
     } finally {
-      ungetSession(selfRegSession);
+      SparseUtils.logoutQuietly(selfRegSession);
     }
   }
 

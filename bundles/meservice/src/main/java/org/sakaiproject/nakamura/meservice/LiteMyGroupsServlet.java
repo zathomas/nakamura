@@ -141,10 +141,6 @@ import java.util.TreeMap;
 public class LiteMyGroupsServlet extends LiteAbstractMyGroupsServlet {
   private static final long serialVersionUID = 8809581334593701801L;
 
-  /**
-   * {@inheritDoc}
-   * @see org.sakaiproject.nakamura.meservice.LiteAbstractMyGroupsServlet#getGroups(org.apache.jackrabbit.api.security.user.Authorizable, org.apache.jackrabbit.api.security.user.UserManager)
-   */
   @Override
   protected TreeMap<String, Group> getGroups(Authorizable member,
       AuthorizableManager userManager, final SlingHttpServletRequest request)
@@ -156,13 +152,6 @@ public class LiteMyGroupsServlet extends LiteAbstractMyGroupsServlet {
       if (group == null || !(group instanceof Group) || group.getId().equals(Group.EVERYONE)) {
         // we don't want the "everyone" group in this feed
         continue;
-      }
-      if (group.getProperty(UserConstants.PROP_MANAGED_GROUP) != null) {
-        // fetch the group that the manager group manages
-        group = userManager.findAuthorizable((String) group.getProperty(UserConstants.PROP_MANAGED_GROUP));
-        if (group == null || !(group instanceof Group) || group.getProperty("sakai:group-title") == null) {
-          continue;
-        }
       }
 
       if (isPseudoGroup((Group)group) && !isManagerGroup((Group)group, userManager)) {

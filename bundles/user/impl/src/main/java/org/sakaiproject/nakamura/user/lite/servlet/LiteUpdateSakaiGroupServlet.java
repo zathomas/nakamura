@@ -204,8 +204,6 @@ public class LiteUpdateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
    * @throws StorageClientException 
    * @throws AccessDeniedException 
    *
-   * @see org.apache.sling.jackrabbit.usermanager.impl.post.CreateUserServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest,
-   *      org.apache.sling.api.servlets.HtmlResponse, java.util.List)
    */
   @SuppressWarnings("unchecked")
   @Override
@@ -323,14 +321,10 @@ public class LiteUpdateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
 
       // update the group memberships
 
-      dumpToSave(toSave, "after write content");
-
       if (authorizable instanceof Group) {
         updateGroupMembership(request, session, authorizable, changes, toSave);
-        dumpToSave(toSave, "after updateGroup membership");
         updateOwnership(request, (Group)authorizable, new String[0], changes, toSave);
       }
-      dumpToSave(toSave, "before save");
 
       saveAll(session, toSave);
 

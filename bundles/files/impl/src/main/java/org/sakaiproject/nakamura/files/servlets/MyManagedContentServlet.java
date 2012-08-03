@@ -80,13 +80,6 @@ public class MyManagedContentServlet extends SlingSafeMethodsServlet {
       AuthorizableManager am = session.getAuthorizableManager();
       ContentManager cm = session.getContentManager();
       Authorizable currentUser = am.findAuthorizable(session.getUserId());
-      Iterator<Group> allGroupsIter = currentUser.memberOf(am);
-      while(allGroupsIter.hasNext()) {
-        Group group = allGroupsIter.next();
-        if (!group.getId().equals(Group.EVERYONE) && group.hasProperty(UserConstants.PROP_MANAGED_GROUP)) {
-          contentResults.addAll(findManagedContent(cm, (String)group.getProperty(UserConstants.PROP_MANAGED_GROUP), searchLimit));
-        }
-      }
       contentResults.addAll(findManagedContent(cm, currentUser.getId(), searchLimit));
       PrintWriter w = response.getWriter();
       ExtendedJSONWriter writer = new ExtendedJSONWriter(w);
