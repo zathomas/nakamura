@@ -132,7 +132,7 @@ public abstract class AbstractContentSearchQueryHandler extends DomainObjectSear
     configureQuery(parametersMap, query);
     return searchServiceFactory.getSearchResultSet(request, query);
   }
-  
+
   /**
    * {@inheritDoc}
    * @see org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler#writeResult(org.sakaiproject.nakamura.api.lite.Session, java.util.Map, org.apache.sling.commons.json.io.JSONWriter, org.sakaiproject.nakamura.api.search.solr.Result)
