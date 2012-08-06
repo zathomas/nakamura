@@ -440,7 +440,7 @@
 <!-- ====================================================================== -->
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <slf4j.version>1.6.3</slf4j.version>
+    <slf4j.version>1.6.6</slf4j.version>
     <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
     <cobertura.version>1.9.4.1</cobertura.version>
   </properties>

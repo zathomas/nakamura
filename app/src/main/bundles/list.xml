@@ -226,24 +226,25 @@ KERN-1187
         </bundle>
     </startLevel>
     <startLevel level="1">
-        <!--
-        These can be used to separate api from impl but commons.log will need to make a release first
         <bundle>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.6.1</version>
+            <version>1.6.6</version>
+        </bundle>
+        <bundle>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.6.6</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.log</artifactId>
-            <version>2.1.4.0-SNAPSHOT</version>
+            <version>3.0.0</version>
         </bundle>
-        -->
-
         <bundle>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.log</artifactId>
-            <version>2.1.2</version>
+            <artifactId>org.apache.sling.commons.logservice</artifactId>
+            <version>1.0.0</version>
         </bundle>
     </startLevel>
     <startLevel level="5">
