@@ -278,6 +278,16 @@ KERN-1187
             <version>1.0.4</version>
         </bundle>
         <bundle>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.webconsole.plugins.packageadmin</artifactId>
+            <version>1.0.0</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.webconsole.plugins.obr</artifactId>
+            <version>1.0.0</version>
+        </bundle>
+        <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.json</artifactId>
             <version>2.0.6</version>
@@ -285,7 +295,7 @@ KERN-1187
         <bundle>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.bundlerepository</artifactId>
-            <version>1.6.4</version>
+            <version>1.6.6</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -318,7 +328,7 @@ KERN-1187
         <bundle>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>1.2.8</version>
+            <version>1.4.0</version>
         </bundle>
         <bundle>
             <groupId>org.apache.felix</groupId>
@@ -674,7 +684,7 @@ KERN-1187
     <bundle>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.fileinstall</artifactId>
-      <version>3.1.10</version>
+      <version>3.2.4</version>
     </bundle>
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
