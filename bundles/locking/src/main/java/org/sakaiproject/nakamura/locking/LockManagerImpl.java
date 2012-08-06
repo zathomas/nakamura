@@ -40,7 +40,7 @@ import java.security.SecureRandom;
 /**
  * A lock manager that uses a cluster replicated cache to manage the locks
  */
-@Component(immediate = true)
+@Component
 @Service
 @SuppressWarnings(justification="Circular dependency noted ", value={"CD_CIRCULAR_DEPENDENCY"})
 public class LockManagerImpl implements LockManager {

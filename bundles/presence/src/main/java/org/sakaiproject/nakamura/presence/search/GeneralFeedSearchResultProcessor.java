@@ -57,7 +57,7 @@ import javax.jcr.RepositoryException;
  *
  * @author ad602@caret.cam.ac.uk
  */
-@Component(metatype = true)
+@Component
 @Service
 @Properties({
     @Property(name = "service.vendor", value = "The Sakai Foundation"),

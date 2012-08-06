@@ -88,7 +88,7 @@ import java.util.Set;
 /**
  * Service for doing operations with connections.
  */
-@Component(immediate = true, description = "Service for doing operations with connections.", label = "ConnectionSearchResultProcessor")
+@Component(description = "Service for doing operations with connections.", label = "ConnectionSearchResultProcessor")
 @Properties(value = { @Property(name = "service.vendor", value = "The Sakai Foundation") })
 @Service(value = ConnectionManager.class)
 public class ConnectionManagerImpl implements ConnectionManager {

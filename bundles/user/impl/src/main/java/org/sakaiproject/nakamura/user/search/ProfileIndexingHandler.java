@@ -63,7 +63,7 @@ import com.google.common.collect.Lists;
  * Any changes to content-system-stored User Profile paths will need to be
  * reflected in both the Profile module and this class.
  */
-@Component(immediate = true)
+@Component
 public class ProfileIndexingHandler implements IndexingHandler {
   private static final Logger LOGGER = LoggerFactory
       .getLogger(ProfileIndexingHandler.class);

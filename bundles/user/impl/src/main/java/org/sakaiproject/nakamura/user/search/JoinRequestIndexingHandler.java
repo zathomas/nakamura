@@ -50,7 +50,7 @@ import java.util.Set;
 /**
  *
  */
-@Component(immediate = true)
+@Component
 public class JoinRequestIndexingHandler implements IndexingHandler {
 
   private static final Logger logger = LoggerFactory

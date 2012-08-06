@@ -84,7 +84,7 @@ import java.util.Hashtable;
                 @ServiceResponse(code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR, description = "Unable to process request due to a runtime error.")
             })
     })
-@Component(immediate = true, label = "%group.joinServlet.label", description = "%group.joinServlet.desc")
+@Component(label = "%group.joinServlet.label", description = "%group.joinServlet.desc")
 @SlingServlet(resourceTypes = "sparse/joinrequests", methods = "POST", selectors = "create", generateComponent = false)
 public class LiteGroupJoinRequestServlet extends SlingAllMethodsServlet {
 

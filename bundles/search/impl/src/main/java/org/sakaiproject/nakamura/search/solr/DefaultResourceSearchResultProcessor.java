@@ -54,7 +54,7 @@ import javax.jcr.RepositoryException;
  *
  */
 
-@Component(immediate = true, metatype = true)
+@Component
 @Properties(value = { @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = SolrSearchConstants.REG_PROCESSOR_NAMES, value = "FullResource") })
 @Service

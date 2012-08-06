@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * discussion messages should be re-routed to an email address, this router will take care
  * of it.
  */
-@Component(immediate = true, inherit = true, label = "%discussion.router.label", description = "%discussion.router.desc")
+@Component(inherit = true, label = "%discussion.router.label", description = "%discussion.router.desc")
 @Service
 public class LiteDiscussionRouter implements LiteMessageRouter {
 

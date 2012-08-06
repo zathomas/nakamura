@@ -37,7 +37,7 @@ import javax.jcr.RepositoryException;
 /**
  * This router will deliver an activity to the acted-upon object's feed.
  */
-@Component(immediate = true, enabled = true)
+@Component
 @Service(value = ActivityRouter.class)
 public class SelfActivityRouter implements ActivityRouter {
 

@@ -44,7 +44,7 @@ import javax.jcr.RepositoryException;
 /**
  * This router will deliver an activity to the public feed.
  */
-@Component(immediate = true, enabled = true)
+@Component
 @Service(value = ActivityRouter.class)
 public class PublicActivityRouter implements ActivityRouter {
 

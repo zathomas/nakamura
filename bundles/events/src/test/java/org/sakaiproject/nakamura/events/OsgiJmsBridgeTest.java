@@ -110,7 +110,6 @@ public class OsgiJmsBridgeTest {
     // construct and send the message
     Dictionary<Object, Object> props = buildEventProperties();
     sendMessage(props);
-    bridge.deactivate(ctx);
 
     // verify that all expected calls were made.
     verify(ctx, connFactory, conn, sess, topic, prod, clusterTrackingService);
@@ -151,7 +150,6 @@ public class OsgiJmsBridgeTest {
     // construct and send the message
     Dictionary<Object, Object> props = buildEventProperties();
     sendMessage(props);
-    bridge.deactivate(ctx);
 
     // verify that all expected calls were made.
     verify(ctx, connFactory, conn, sess, topic, prod, clusterTrackingService);
@@ -217,7 +215,6 @@ public class OsgiJmsBridgeTest {
     // construct and send the message
     Dictionary<Object, Object> props = buildEventProperties();
     sendMessage(props);
-    bridge.deactivate(ctx);
 
     // verify that all expected calls were made.
     verify(ctx, conn, connFactory, clusterTrackingService);

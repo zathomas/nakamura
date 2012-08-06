@@ -85,7 +85,7 @@ import java.util.Set;
  * content items.
  * </pre>
  */
-@Component(immediate = true, metatype = true)
+@Component
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = SolrSearchConstants.REG_BATCH_PROCESSOR_NAMES, value = "RelatedContactsSearchBatchResultProcessor") })

@@ -56,7 +56,7 @@ import java.util.Set;
  * random content. However, preference should be given to items that have a thumbnail
  * (page1-small.jpg), a description, tags and comments.
  */
-@Component(immediate = true, metatype = true)
+@Component
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = SolrSearchConstants.REG_BATCH_PROCESSOR_NAMES, value = "RelatedContentSearchBatchResultProcessor") })

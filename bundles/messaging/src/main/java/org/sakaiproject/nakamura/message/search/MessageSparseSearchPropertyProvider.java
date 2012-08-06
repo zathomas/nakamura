@@ -37,7 +37,7 @@ import java.util.Map;
 /**
  * Provides properties to process the search
  */
-@Component(immediate = true, label = "MessageSearchPropertyProvider", description = "Provides some message search properties.")
+@Component(label = "MessageSearchPropertyProvider", description = "Provides some message search properties.")
 @Service
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),

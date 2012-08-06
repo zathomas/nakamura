@@ -42,7 +42,7 @@ import javax.servlet.http.HttpServletResponse;
  * Sakai Cache and Transaction services..
  */
 @Service(value=Filter.class)
-@Component(immediate=true, metatype=false)
+@Component(metatype=false)
 @Properties(value={@Property(name="service.description", value="Custer Tracking Filter"),
     @Property(name="service.vendor",value="The Sakai Foundation"),
     @Property(name="filter.scope",value="request", propertyPrivate=true),

@@ -72,7 +72,7 @@ import javax.servlet.http.HttpServletResponse;
     @ServiceResponse(code = 403, description = "Anonymous users can't tag anything, other people can tag <i>every</i> node in the repository where they have READ on."),
     @ServiceResponse(code = HttpServletResponse.SC_NOT_FOUND, description = "Requested Node  for given key could not be found."),
     @ServiceResponse(code = 500, description = "Something went wrong, the error is in the HTML.") }) }, bindings = { @ServiceBinding(type = BindingType.OPERATION, bindings = { "tag" }) })
-@Component(immediate = true)
+@Component
 @Service(value = SparsePostOperation.class)
 @Properties(value = {
     @Property(name = "sling.post.operation", value = "deletetag"),

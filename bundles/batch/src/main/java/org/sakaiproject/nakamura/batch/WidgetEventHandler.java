@@ -33,7 +33,7 @@ import org.sakaiproject.nakamura.api.batch.WidgetService;
  */
 
 @Service
-@Component(immediate = true)
+@Component
 @Properties(value = { @Property(name = EventConstants.EVENT_TOPIC, value = {
     SlingConstants.TOPIC_RESOURCE_ADDED, SlingConstants.TOPIC_RESOURCE_CHANGED,
     SlingConstants.TOPIC_RESOURCE_REMOVED }) })

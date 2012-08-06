@@ -40,7 +40,7 @@ import javax.servlet.http.HttpServletResponse;
  * 
  */
 
-@Component(immediate = true, label = "JcrInternalFileHandler")
+@Component(label = "JcrInternalFileHandler")
 @Service(value = LinkHandler.class)
 @Properties(value = { @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = "sakai.files.handler", value = "jcrinternal") })

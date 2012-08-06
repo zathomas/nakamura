@@ -21,6 +21,7 @@ import static org.apache.sling.jcr.resource.JcrResourceConstants.AUTHENTICATION_
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -40,7 +41,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Handles requests to transfer user authN from a trusted host to a non content host.
  */
-@Component(immediate = true, metatype = true, enabled=true)
+@Component
 @Service(value=AuthenticationHandler.class)
 @Properties( value={
     @Property(name="service.description",value="User Content Authentication Handler"),
@@ -69,7 +70,7 @@ public class UserContentAuthenticationHandler implements AuthenticationHandler, 
     trustedTokenService.registerType(UserContentAuthenticationTokenServiceWrapper.TYPE, this);
   }
 
-  @Activate
+  @Deactivate
   public void deactivate(Map<String, Object> properties) {
     trustedTokenService.deregisterType(UserContentAuthenticationTokenServiceWrapper.TYPE, this);
   }

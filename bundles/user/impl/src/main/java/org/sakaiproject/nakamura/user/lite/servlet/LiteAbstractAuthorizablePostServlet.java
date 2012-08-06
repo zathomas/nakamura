@@ -68,7 +68,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Base class for all the POST servlets for the UserManager operations
  */
-@Component(immediate=true, metatype=true,componentAbstract=true)
+@Component(metatype = true, componentAbstract = true)
 public abstract class LiteAbstractAuthorizablePostServlet extends
         SlingAllMethodsServlet {
     private static final long serialVersionUID = -5918670409789895333L;

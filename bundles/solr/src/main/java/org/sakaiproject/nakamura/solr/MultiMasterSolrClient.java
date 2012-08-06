@@ -61,7 +61,7 @@ import org.xml.sax.SAXException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Service(value = SolrClient.class)
 public class MultiMasterSolrClient implements SolrClient {
 

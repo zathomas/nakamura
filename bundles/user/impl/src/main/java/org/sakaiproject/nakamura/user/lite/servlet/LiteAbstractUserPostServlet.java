@@ -30,7 +30,7 @@ import org.osgi.service.component.ComponentContext;
 /**
  * Base class for servlets manipulating users
  */
-@Component(immediate=true, metatype=true,componentAbstract=true)
+@Component(metatype = true, componentAbstract = true)
 public abstract class LiteAbstractUserPostServlet extends
         LiteAbstractAuthorizablePostServlet {
     private static final long serialVersionUID = -8401210711297654453L;

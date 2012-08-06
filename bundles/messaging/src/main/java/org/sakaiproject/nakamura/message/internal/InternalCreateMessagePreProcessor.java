@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Checks if the message the user wants to create has all the right properties on it.
  */
-@Component(immediate = true, label = "InternalCreateMessagePreProcessor", description = "Checks request for Internal messages")
+@Component(label = "InternalCreateMessagePreProcessor", description = "Checks request for Internal messages")
 @Service
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),

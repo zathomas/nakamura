@@ -43,7 +43,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 @Service
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = "service.description", value = "An implementation for the CaptchaService that uses the Google reCAPTCHA webservice.") })

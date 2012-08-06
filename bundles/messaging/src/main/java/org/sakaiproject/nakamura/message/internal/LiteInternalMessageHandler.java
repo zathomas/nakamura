@@ -65,7 +65,7 @@ import java.util.List;
  * Handler for messages that are sent locally and intended for local delivery. Needs to be
  * started immediately to make sure it registers with JCR as soon as possible.
  */
-@Component(immediate = true, label = "LiteInternalMessageHandler", description = "Handler for internally delivered messages.")
+@Component(label = "LiteInternalMessageHandler", description = "Handler for internally delivered messages.")
 @Service({ LiteMessageTransport.class, LiteMessageProfileWriter.class })
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),

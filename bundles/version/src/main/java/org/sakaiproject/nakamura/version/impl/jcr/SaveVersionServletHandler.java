@@ -46,7 +46,7 @@ import javax.servlet.http.HttpServletResponse;
  * writeable version.
  */
 
-@Component(metatype=true, immediate=true)
+@Component
 @Service(value=ServletResourceHandler.class)
 @Property(name="handling.servlet",value="SaveVersionServlet")
 public class SaveVersionServletHandler  extends AbstractAllMethodsServletResourceHandler {

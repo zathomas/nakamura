@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * A service tracker that contains validators indexed by name.
  */
-@Component(immediate=true)
+@Component
 @Service(value=RequestTrustValidatorService.class)
 @Reference(bind="bindRequestValidator",unbind="unbindRequestValidator",cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,name="requestValidators",policy=ReferencePolicy.DYNAMIC, referenceInterface=RequestTrustValidator.class, strategy=ReferenceStrategy.EVENT)
 public class RequestTrustValidatorServiceImpl implements RequestTrustValidatorService {

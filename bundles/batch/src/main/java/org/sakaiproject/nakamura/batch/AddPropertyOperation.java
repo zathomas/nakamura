@@ -41,7 +41,7 @@ import javax.jcr.RepositoryException;
         @ServiceParameter(name = ":applyTo", description = "Stores the path or paths of resources to add properties to. If this is left out, then the request path is used.")
       })
 })
-@Component(immediate = true)
+@Component
 @Service
 public class AddPropertyOperation extends AbstractPropertyOperationModifier {
 

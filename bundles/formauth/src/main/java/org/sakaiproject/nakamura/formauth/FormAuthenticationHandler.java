@@ -62,7 +62,7 @@ import javax.servlet.http.HttpServletResponse;
  * </p>
  *
  */
-@Component(immediate=true, metatype=true, label="%auth.http.name", description="%auth.http.description")
+@Component(label = "%auth.http.name", description = "%auth.http.description")
 @Service(value=AuthenticationHandler.class)
 @Properties( value={
     @Property(name="service.description",value="Form Authentication Handler"),

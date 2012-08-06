@@ -50,7 +50,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.ReferenceStrategy;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.osgi.service.event.Event;
@@ -68,7 +67,6 @@ import org.sakaiproject.nakamura.api.solr.RepositorySession;
 import org.sakaiproject.nakamura.api.solr.TopicIndexer;
 import org.sakaiproject.nakamura.api.user.AuthorizableUtil;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
-import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.api.user.indexing.AuthorizableIndexingException;
 import org.sakaiproject.nakamura.api.user.indexing.AuthorizableIndexingWorker;
 import org.sakaiproject.nakamura.util.PathUtils;
@@ -85,7 +83,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  *
  */
-@Component(immediate = true)
+@Component
 @Reference(name="authorizableIndexingWorker",
 		cardinality= ReferenceCardinality.OPTIONAL_MULTIPLE,
 		policy= ReferencePolicy.DYNAMIC,

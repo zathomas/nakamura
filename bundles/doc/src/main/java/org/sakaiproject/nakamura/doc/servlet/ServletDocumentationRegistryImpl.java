@@ -24,10 +24,13 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.servlets.post.SlingPostOperation;
+import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 
 import org.sakaiproject.nakamura.api.resource.lite.SparsePostOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +42,7 @@ import javax.servlet.Servlet;
 /**
  * track servlets with service documentation in a single place.
  */
-@Component(immediate=true)
+@Component(immediate = true)
 @Service(value=ServletDocumentationRegistry.class)
 @References(
     value = { 
@@ -49,6 +52,8 @@ import javax.servlet.Servlet;
     }
   )
 public class ServletDocumentationRegistryImpl implements ServletDocumentationRegistry {
+  private static final Logger LOGGER = LoggerFactory
+      .getLogger(ServletDocumentationRegistryImpl.class);
 
   private ComponentContext context;
   private List<ServiceReference> pendingReferences = new ArrayList<ServiceReference>();
@@ -109,13 +114,17 @@ public class ServletDocumentationRegistryImpl implements ServletDocumentationReg
    * @param reference the service reference representing the service object to add to the documentation
    */
   public void addDocumentation(ServiceReference reference) {
-    Object service = context.getBundleContext().getService(reference);
-    if (notDeprecated(service) && service.getClass().getCanonicalName().startsWith("org.sakaiproject")) {
-      ServletDocumentation doc = new ServletDocumentation(reference, service);
-      String key = doc.getKey();
-      if (key != null) {
-        servletDocumentation.put(key, doc);
+    try {
+      Object service = context.getBundleContext().getService(reference);
+      if (service != null && notDeprecated(service) && service.getClass().getCanonicalName().startsWith("org.sakaiproject")) {
+        ServletDocumentation doc = new ServletDocumentation(reference, service);
+        String key = doc.getKey();
+        if (key != null) {
+          servletDocumentation.put(key, doc);
+        }
       }
+    } catch (ServiceException e) {
+      LOGGER.info("Unable to get service for documentation: {}", e.getMessage());
     }
   }
 

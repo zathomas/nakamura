@@ -75,7 +75,7 @@ import javax.servlet.http.HttpServletResponse;
     )
   }
 )
-@Component(immediate = true)
+@Component
 @SlingServlet(resourceTypes = "sparse/group", methods = "POST", selectors = "leave", generateComponent = false)
 public class LiteGroupLeaveServlet extends LiteAbstractSakaiGroupPostServlet {
 

@@ -52,7 +52,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-@Component(immediate = true, label = "MostActiveGroupSearchBatchResultProcessor", description = "Formatter for most active groups")
+@Component(label = "MostActiveGroupSearchBatchResultProcessor", description = "Formatter for most active groups")
 @Service
 @Properties(value = { @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = "sakai.search.batchprocessor", value = "MostActiveGroups") })

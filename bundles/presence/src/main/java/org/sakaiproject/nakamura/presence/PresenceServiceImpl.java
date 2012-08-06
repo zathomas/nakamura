@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component(immediate = true,label = "Sakai Presence Service", description = "Service for getting info about the presence status and locations of current users", name = "org.sakaiproject.nakamura.api.presence.PresenceService")
+@Component(label = "Sakai Presence Service", description = "Service for getting info about the presence status and locations of current users", name = "org.sakaiproject.nakamura.api.presence.PresenceService")
 @Service(value = PresenceService.class)
 @Properties(value = {
     @Property(name = "service.description", value = { "Gets the presence status and locations for users." }),

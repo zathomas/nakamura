@@ -43,7 +43,7 @@ import javax.servlet.http.HttpServletResponse;
  * authenticate users externally and eventually pass through this handler to establish a
  * trusted relationship continuing into the container.
  */
-@Component(immediate = true)
+@Component
 @Service
 public final class TrustedAuthenticationHandler implements AuthenticationHandler {
   /**
