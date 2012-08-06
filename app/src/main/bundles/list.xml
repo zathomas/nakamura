@@ -207,22 +207,22 @@ KERN-1187
         <bundle>
             <groupId>org.apache.aries.jmx</groupId>
             <artifactId>org.apache.aries.jmx.api</artifactId>
-            <version>0.3</version>
+            <version>1.0.0</version>
         </bundle>
         <bundle>
             <groupId>org.apache.aries.jmx</groupId>
             <artifactId>org.apache.aries.jmx.core</artifactId>
-            <version>0.3</version>
+            <version>1.0.0</version>
         </bundle>
         <bundle>
             <groupId>org.apache.aries.jmx</groupId>
             <artifactId>org.apache.aries.jmx.whiteboard</artifactId>
-            <version>0.3</version>
+            <version>1.0.0</version>
         </bundle>
         <bundle>
             <groupId>org.apache.aries</groupId>
             <artifactId>org.apache.aries.util</artifactId>
-            <version>0.3</version>
+            <version>1.0.0</version>
         </bundle>
     </startLevel>
     <startLevel level="1">
