@@ -237,7 +237,13 @@
    <field name="showalways" type="boolean" indexed="true" stored="false" />
 
    <!-- sakai users -->
-   <field name="name" type="text_punct_phrase" indexed="true" stored="true" termVectors="true" />
+   <!--
+     The 'name' field holds the Authorizable ID. In many deployments,
+     it will be dictated by campus services and not look much like normal
+     text. To avoid false positives and data loss due to stop-words, matches
+     must be much stricter than with free text.
+   -->
+   <field name="name" type="string_case_insensitive" indexed="true" stored="true" />
    <field name="firstName" type="text_en_splitting" indexed="true" stored="true" />
    <field name="lastName" type="text_en_splitting" indexed="true" stored="true" />
    <field name="email" type="text_punct_phrase" indexed="true" stored="true" />
@@ -1196,7 +1202,19 @@
     </fieldType>
 
     <!--
-      Sakai OAE field type for ID and email searches. Splits on punctuation as well as
+      Sakai OAE field type for Authorizable ID searches. Case-insensitive and whitespace
+      trimmed, but otherwise strict matches.
+    -->
+    <fieldType name="string_case_insensitive" class="solr.TextField">
+      <analyzer>
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.TrimFilterFactory"/>
+      </analyzer>
+    </fieldType>
+
+    <!--
+      Sakai OAE field type for email searches. Splits on punctuation as well as
       whitespace and treats result as phrase-search. Case-insensitive. Does not use stop-words.
     -->
     <fieldType name="text_punct_phrase" class="solr.TextField" positionIncrementGap="100" autoGeneratePhraseQueries="true">
