@@ -124,16 +124,8 @@ public class LiteGroupMemberServlet extends SlingSafeMethodsServlet {
       throws ServletException, IOException {
     response.setCharacterEncoding("UTF-8");
 
-    Authorizable authorizable = null;
     Resource resource = request.getResource();
-    if (resource != null) {
-      authorizable = resource.adaptTo(Authorizable.class);
-    }
-
-    if (!(authorizable instanceof Group)) {
-      response.sendError(HttpServletResponse.SC_NO_CONTENT, "Couldn't find group");
-      return;
-    }
+    Authorizable authorizable = resource.adaptTo(Authorizable.class);
 
     Group group = (Group) authorizable;
 
@@ -242,7 +234,7 @@ public class LiteGroupMemberServlet extends SlingSafeMethodsServlet {
   /**
    * @param request
    * @param group
-   * @param writer
+   * @param comparator
    * @throws RepositoryException
    * @throws JSONException
    * @throws StorageClientException
@@ -287,7 +279,7 @@ public class LiteGroupMemberServlet extends SlingSafeMethodsServlet {
    *
    * @param request
    * @param group
-   * @param writer
+   * @param comparator
    * @throws RepositoryException
    * @throws JSONException
    * @throws StorageClientException
@@ -335,10 +327,7 @@ public class LiteGroupMemberServlet extends SlingSafeMethodsServlet {
    */
   private String getName(Authorizable member)  {
     logger.debug("getName(Authorizable {})", member);
-    if (member == null) {
-      throw new IllegalArgumentException("Authorizable member == null");
-    }
-    String name = member.getId();
+    String name;
     if (member instanceof Group) {
       name = (String) member.getProperty("sakai:group-title");
     } else {

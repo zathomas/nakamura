@@ -73,22 +73,12 @@ public interface UserConstants {
    */
   public static final String PROP_GROUP_VIEWERS = "rep:group-viewers";
 
-  /**
-   * The ID of the special group that manages a group.
-   */
-  public static final String PROP_MANAGERS_GROUP = "sakai:managers-group";
-  public static final String PROP_MANAGED_GROUP = "sakai:managed-group";
   public static final String PROP_JOINABLE_GROUP = "sakai:group-joinable";
   public static final String PROP_PSEUDO_GROUP = "sakai:pseudoGroup";
   public static final String PROP_PARENT_GROUP_ID = "sakai:parent-group-id";
   public static final String PROP_PARENT_GROUP_TITLE = "sakai:parent-group-title";
   public static final String PROP_ROLE_TITLE = "sakai:role-title";
   public static final String PROP_ROLE_TITLE_PLURAL = "sakai:role-title-plural";
-
-  /**
-   * Bare Authorizables have no /~ content and don't do any post processing.
-   */
-  public static final String PROP_BARE_AUTHORIZABLE = "sakai:bare";
 
   /**
    * The name of the property that holds the value of identifier (authorizable ID) for

@@ -63,6 +63,7 @@ import org.sakaiproject.nakamura.api.user.LiteAuthorizablePostProcessService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.user.lite.resource.LiteAuthorizableResourceProvider;
 import org.sakaiproject.nakamura.user.lite.resource.LiteNameSanitizer;
+import org.sakaiproject.nakamura.util.SparseUtils;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
 import org.sakaiproject.nakamura.util.parameters.ParameterMap;
 import org.slf4j.Logger;
@@ -275,20 +276,15 @@ public class LiteCreateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
                 // write content from form
                 writeContent(session, group, reqProperties, changes, toSave);
 
-                dumpToSave(toSave,"after write content");
                 // update the group memberships, although this uses session from the request, it
                 // only
                 // does so for finding authorizables, so its ok that we are using an admin session
                 // here.
                 updateGroupMembership(request, session, group, changes, toSave);
 
-                dumpToSave(toSave, " after update group membership");
-
                 // TODO We should probably let the client decide whether the
                 // current user belongs in the managers list or not.
                 updateOwnership(request, group, new String[] {currentUser.getId()}, changes, toSave);
-
-                dumpToSave(toSave, "before save");
 
                 saveAll(session, toSave);
                 try {
@@ -316,7 +312,7 @@ public class LiteCreateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
                 }
             }
         } finally {
-            ungetSession(session);
+          SparseUtils.logoutQuietly(session);
         }
   }
 
@@ -338,19 +334,6 @@ public class LiteCreateSakaiGroupServlet extends LiteAbstractSakaiGroupPostServl
    */
   private Session getSession() throws ClientPoolException, StorageClientException, AccessDeniedException {
     return getRepository().loginAdministrative();
-  }
-
-  /**
-   * Return the administrative session and close it.
-   */
-  private void ungetSession(final Session session) {
-    if (session != null) {
-      try {
-        session.logout();
-      } catch (Throwable t) {
-        LOGGER.error("Unable to log out of session: " + t.getMessage(), t);
-      }
-    }
   }
 
   // ---------- SCR integration ---------------------------------------------

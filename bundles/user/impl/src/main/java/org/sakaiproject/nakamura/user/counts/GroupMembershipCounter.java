@@ -53,17 +53,6 @@ public class GroupMembershipCounter {
     if ( au != null && !CountProvider.IGNORE_AUTHIDS.contains(au.getId())) {
       // get groups from AuthorizableUtil
       List<Authorizable> groups = AuthorizableUtil.getUserFacingGroups(au,authorizableManager);
-      for (Authorizable group : groups) {
-        if (group.hasProperty(UserConstants.PROP_MANAGED_GROUP)) {
-          // fetch the group that the manager group manages
-          Authorizable managedGroup = authorizableManager.findAuthorizable((String) group
-              .getProperty(UserConstants.PROP_MANAGED_GROUP));
-          if (managedGroup == null || !(managedGroup instanceof Group)) {
-            // dont count this group if the managed group doesnt exist. (ieb why ?, the users is still a member of this group even if the managed group doesnt exist)
-            groups.remove(group);
-          }
-        }
-      }
       count = groups.size();
       if (count >= MAX_GROUP_COUNT) {
         LOGGER.warn("getGroupsCount() has reached its maximum of {} check for reason, possible DOS issue?", new Object[]{MAX_GROUP_COUNT});

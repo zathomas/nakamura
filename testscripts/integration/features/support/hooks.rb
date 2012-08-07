@@ -64,3 +64,14 @@ Before do
   end
 
 end
+
+After('@restore_user_registration') do
+  params = {
+          "action" => "ajaxConfigManager",
+          "apply" => true,
+          "self.registration.enabled" => true,
+          "propertylist" => "self.registration.enabled"
+      }
+      @s.switch_user(User.admin_user)
+      @s.execute_post(@s.url_for("/system/console/configMgr/org.sakaiproject.nakamura.user.lite.servlet.LiteCreateSakaiUserServlet"), params)
+end
