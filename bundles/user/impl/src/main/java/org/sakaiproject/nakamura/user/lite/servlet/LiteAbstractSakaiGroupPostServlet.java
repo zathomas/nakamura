@@ -183,11 +183,15 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
               //to add the member to the group:
 
               group.addMember(memberAuthorizable.getId());
-              LOGGER.debug("{} Membership now {} {} {}", new Object[]{group.getId(), Arrays.toString(group.getMembers()), Arrays.toString(group.getMembersAdded()), Arrays.toString(group.getMembersRemoved())});
+              if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("{} Membership now {} {} {}", new Object[]{group.getId(), Arrays.toString(group.getMembers()), Arrays.toString(group.getMembersAdded()), Arrays.toString(group.getMembersRemoved())});
+              }
 
               toSave.put(group.getId(), group);
               Group gt = (Group) toSave.get(group.getId());
-              LOGGER.debug("{} Membership now {} {} {}", new Object[]{group.getId(), Arrays.toString(gt.getMembers()), Arrays.toString(gt.getMembersAdded()), Arrays.toString(gt.getMembersRemoved())});
+              if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("{} Membership now {} {} {}", new Object[]{group.getId(), Arrays.toString(gt.getMembers()), Arrays.toString(gt.getMembersAdded()), Arrays.toString(gt.getMembersRemoved())});
+              }
 
               changed = true;
             }
