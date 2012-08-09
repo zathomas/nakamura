@@ -57,6 +57,8 @@ import static org.sakaiproject.nakamura.basiclti.LiteBasicLTIServletUtils.sensit
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -109,7 +111,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
@@ -130,11 +134,13 @@ import javax.servlet.http.HttpServletResponse;
         @ServiceResponse(code = HttpServletResponse.SC_NOT_FOUND, description = "Resource could not be found."),
         @ServiceResponse(code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR, description = "Unable to delete the node due to a runtime error.") }) })
 @SlingServlet(methods = { "GET", "PUT", "DELETE" }, resourceTypes = { "sakai/basiclti" })
+@Reference(name = "virtualToolDataProviders", policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, referenceInterface = VirtualToolDataProvider.class, bind = "addVirtualToolDataProvider", unbind = "removeVirtualToolDataProvider")
 public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
   private static final long serialVersionUID = 5985490994324951127L;
   private static final String SAKAI_EXTERNAL_COURSE_ID = "sakai:external-course-id";
   private static final Logger LOG = LoggerFactory
       .getLogger(LiteBasicLTIConsumerServlet.class);
+
   /**
    * A {@link Map} containing all of the known application settings and their associated
    * locking keys.
@@ -154,9 +160,11 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
   @Reference
   protected transient LiteBasicLTIContextIdResolver contextIdResolver;
 
-  // TODO eventually needs to be a list of providers not just a single provider.
-  @Reference
-  protected transient VirtualToolDataProvider virtualToolDataProvider;
+  /**
+   * Order is not deterministic - first one will that can service a request will be the
+   * only.
+   */
+  protected transient Set<VirtualToolDataProvider> virtualToolDataProviders = new CopyOnWriteArraySet<VirtualToolDataProvider>();
 
   @Reference
   protected transient LocaleUtils localeUtils;
@@ -610,13 +618,20 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
   private Map<String, Object> getAdminSettings(final String vtoolId,
       final boolean launchMode) {
     Map<String, Object> adminSettings = null;
-    if (launchMode) {
+    VirtualToolDataProvider virtualToolDataProvider = null;
+    for (final VirtualToolDataProvider currentProvider : virtualToolDataProviders) {
+      if (currentProvider.getSupportedVirtualToolIds() != null
+          && currentProvider.getSupportedVirtualToolIds().contains(vtoolId)) {
+        virtualToolDataProvider = currentProvider;
+        break;
+      }
+    }
+    if (virtualToolDataProvider != null) {
+      // found a provider and has supported tool id
       adminSettings = virtualToolDataProvider.getLaunchValues(vtoolId);
-      if (adminSettings != null) {
+      if (launchMode && adminSettings != null) {
         adminSettings.putAll(virtualToolDataProvider.getKeySecret(vtoolId));
       }
-    } else {
-      adminSettings = virtualToolDataProvider.getLaunchValues(vtoolId);
     }
     if (adminSettings == null) {
       adminSettings = Collections.emptyMap();
@@ -942,6 +957,16 @@ public class LiteBasicLTIConsumerServlet extends SlingAllMethodsServlet {
       LOG.error(errorCode + ": " + message, exception);
       throw new Error(message, exception);
     }
+  }
+
+  protected void addVirtualToolDataProvider(
+      VirtualToolDataProvider virtualToolDataProvider) {
+    virtualToolDataProviders.add(virtualToolDataProvider);
+  }
+
+  protected void removeVirtualToolDataProvider(
+      VirtualToolDataProvider virtualToolDataProvider) {
+    virtualToolDataProviders.remove(virtualToolDataProvider);
   }
 
 }

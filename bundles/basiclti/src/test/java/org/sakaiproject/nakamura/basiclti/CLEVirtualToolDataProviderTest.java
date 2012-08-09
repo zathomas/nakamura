@@ -60,6 +60,7 @@ import java.util.Map;
 public class CLEVirtualToolDataProviderTest {
 
   CLEVirtualToolDataProvider cleVirtualToolDataProvider;
+  CLEVirtualToolDataProvider otherCLEVirtualToolDataProvider;
   @Mock
   ComponentContext componentContext;
   @Mock
@@ -86,6 +87,7 @@ public class CLEVirtualToolDataProviderTest {
   @Before
   public void setUp() {
     cleVirtualToolDataProvider = new CLEVirtualToolDataProvider();
+    otherCLEVirtualToolDataProvider = new CLEVirtualToolDataProvider();
     cleUrl = cleVirtualToolDataProvider.cleUrl;
     ltiKey = cleVirtualToolDataProvider.ltiKey;
     ltiSecret = cleVirtualToolDataProvider.ltiSecret;
@@ -102,6 +104,11 @@ public class CLEVirtualToolDataProviderTest {
     releasePrincipalLock = cleVirtualToolDataProvider.releasePrincipalLock;
     debug = cleVirtualToolDataProvider.debug;
     debugLock = cleVirtualToolDataProvider.debugLock;
+
+    otherCLEVirtualToolDataProvider.cleUrl = cleVirtualToolDataProvider.cleUrl;
+    otherCLEVirtualToolDataProvider.ltiKey = cleVirtualToolDataProvider.ltiKey;
+    otherCLEVirtualToolDataProvider.ltiSecret = cleVirtualToolDataProvider.ltiSecret;
+    otherCLEVirtualToolDataProvider.toolList = cleVirtualToolDataProvider.toolList;
 
     applyWhenConditions();
   }
@@ -237,6 +244,171 @@ public class CLEVirtualToolDataProviderTest {
     final Map<String, Object> launchValues = cleVirtualToolDataProvider
         .getLaunchValues("/foo/bar/bazooey");
     assertNull(launchValues);
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#hashCode()}
+   */
+  @Test
+  public void testHashCode() {
+    int hc = cleVirtualToolDataProvider.hashCode();
+    assertTrue(hc != 0);
+
+    final CLEVirtualToolDataProvider other = new CLEVirtualToolDataProvider();
+    other.cleUrl = null;
+    other.ltiKey = null;
+    other.ltiSecret = null;
+    other.toolList = null;
+    assertTrue(cleVirtualToolDataProvider.hashCode() != other.hashCode());
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsSameObject() {
+    assertTrue(cleVirtualToolDataProvider.equals(cleVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullObject() {
+    assertTrue(!cleVirtualToolDataProvider.equals(null));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsEqualObject() {
+    assertTrue(cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsWrongObjectType() {
+    assertTrue(!cleVirtualToolDataProvider.equals("foo"));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullUrl1() {
+    cleVirtualToolDataProvider.cleUrl = null;
+    assertTrue(!cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullUrl2() {
+    otherCLEVirtualToolDataProvider.cleUrl = null;
+    assertTrue(!cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullUrl3() {
+    cleVirtualToolDataProvider.cleUrl = otherCLEVirtualToolDataProvider.cleUrl = null;
+    assertTrue(cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullKey1() {
+    cleVirtualToolDataProvider.ltiKey = null;
+    assertTrue(!cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullKey2() {
+    otherCLEVirtualToolDataProvider.ltiKey = null;
+    assertTrue(!cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullKey3() {
+    cleVirtualToolDataProvider.ltiKey = otherCLEVirtualToolDataProvider.ltiKey = null;
+    assertTrue(cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullSecret1() {
+    cleVirtualToolDataProvider.ltiSecret = null;
+    assertTrue(!cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullSecret2() {
+    otherCLEVirtualToolDataProvider.ltiSecret = null;
+    assertTrue(!cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullSecret3() {
+    cleVirtualToolDataProvider.ltiSecret = otherCLEVirtualToolDataProvider.ltiSecret = null;
+    assertTrue(cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullToolList1() {
+    cleVirtualToolDataProvider.toolList = null;
+    assertTrue(!cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullToolList2() {
+    otherCLEVirtualToolDataProvider.toolList = null;
+    assertTrue(!cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#equals(Object)}
+   */
+  @Test
+  public void testEqualsNullToolList3() {
+    cleVirtualToolDataProvider.toolList = otherCLEVirtualToolDataProvider.toolList = null;
+    assertTrue(cleVirtualToolDataProvider.equals(otherCLEVirtualToolDataProvider));
+  }
+
+  /**
+   * Code coverage for {@link CLEVirtualToolDataProvider#toString()}
+   */
+  @Test
+  public void testToString() {
+    assertTrue(cleVirtualToolDataProvider.toString() != null
+        && cleVirtualToolDataProvider.toString().length() > 0);
   }
 
   // --------------------------------------------------------------------------

@@ -83,11 +83,13 @@ public class LiteBasicLTIConsumerServletTest {
   private static final String _12345 = "12345";
   private static final String SECRET = "ourSpecialSecret";
   private static final String SAKAI_GRADEBOOK_GWT_RPC = "sakai.gradebook.gwt.rpc";
+  private static final String WIMBA_VTOOL_ID = WimbaVirtualToolDataProvider.VTOOLID;
   private static final String ADMIN = "admin";
   private static final String CURRENT_USER_ID = "lance";
   LiteBasicLTIConsumerServlet liteBasicLTIConsumerServlet;
   protected transient LiteBasicLTIContextIdResolver contextIdResolver;
-  protected transient VirtualToolDataProvider virtualToolDataProvider;
+  protected transient VirtualToolDataProvider cleVirtualToolDataProvider;
+  protected transient VirtualToolDataProvider wimbaVirtualToolDataProvider;
   protected transient LocaleUtils localeUtils;
   String[] selectors;
   String contentPath;
@@ -106,6 +108,7 @@ public class LiteBasicLTIConsumerServletTest {
   boolean hasEmail;
   boolean canManageContentPool;
   boolean anonymous;
+  boolean wimbaVtoolUseCase;
 
   @Mock
   protected transient Repository sparseRepository;
@@ -168,14 +171,17 @@ public class LiteBasicLTIConsumerServletTest {
     hasEmail = true;
     canManageContentPool = true;
     anonymous = false;
-    virtualToolDataProvider = new CLEVirtualToolDataProvider();
+    wimbaVtoolUseCase = false;
     contextIdResolver = new LiteDefaultContextIdResolver();
     localeUtils = new LocaleUtilsImpl();
     liteBasicLTIConsumerServlet = new LiteBasicLTIConsumerServlet();
     liteBasicLTIConsumerServlet.sparseRepository = sparseRepository;
     liteBasicLTIConsumerServlet.contextIdResolver = contextIdResolver;
     liteBasicLTIConsumerServlet.eventAdmin = eventAdmin;
-    liteBasicLTIConsumerServlet.virtualToolDataProvider = virtualToolDataProvider;
+    cleVirtualToolDataProvider = new CLEVirtualToolDataProvider();
+    wimbaVirtualToolDataProvider = new WimbaVirtualToolDataProvider();
+    liteBasicLTIConsumerServlet.addVirtualToolDataProvider(cleVirtualToolDataProvider);
+    liteBasicLTIConsumerServlet.addVirtualToolDataProvider(wimbaVirtualToolDataProvider);
     liteBasicLTIConsumerServlet.localeUtils = localeUtils;
     when(request.getRequestPathInfo()).thenReturn(requestPathInfo);
     when(requestPathInfo.getSelectors()).thenReturn(selectors);
@@ -526,6 +532,40 @@ public class LiteBasicLTIConsumerServletTest {
     setUpLaunchUseCase();
     contentProperties.put("release_email", false);
     releaseEmail = false;
+
+    liteBasicLTIConsumerServlet.doGet(request, response);
+
+    verifyHtml();
+  }
+
+  /**
+   * Happy case where we are using Wimba virtual tool and launch selector inside world.
+   * {@link LiteBasicLTIConsumerServlet#doGet(SlingHttpServletRequest, SlingHttpServletResponse)}
+   * 
+   * @throws Exception
+   */
+  @Test
+  public void testDoGetDoLaunchInWorldWimbaVtoolId() throws Exception {
+    setUpLaunchUseCase();
+    when(content.getProperty(eq(LTI_VTOOL_ID))).thenReturn(WIMBA_VTOOL_ID);
+    wimbaVtoolUseCase = true;
+
+    liteBasicLTIConsumerServlet.doGet(request, response);
+
+    verifyHtml();
+  }
+
+  /**
+   * Unhappy case where we are using Wimba virtual tool but no provider is available.
+   * {@link LiteBasicLTIConsumerServlet#doGet(SlingHttpServletRequest, SlingHttpServletResponse)}
+   * 
+   * @throws Exception
+   */
+  @Test
+  public void testDoGetDoLaunchInWorldWimbaVtoolIdMissingProvider() throws Exception {
+    setUpLaunchUseCase();
+    when(content.getProperty(eq(LTI_VTOOL_ID))).thenReturn(WIMBA_VTOOL_ID);
+    wimbaVtoolUseCase = true;
 
     liteBasicLTIConsumerServlet.doGet(request, response);
 
@@ -1132,6 +1172,17 @@ public class LiteBasicLTIConsumerServletTest {
         new Throwable(), response);
   }
 
+  /**
+   * Code coverage for
+   * {@link LiteBasicLTIConsumerServlet#removeVirtualToolDataProvider(VirtualToolDataProvider)}
+   */
+  @Test
+  public void testRemoveVirtualToolDataProvider() {
+    liteBasicLTIConsumerServlet.removeVirtualToolDataProvider(cleVirtualToolDataProvider);
+    assertFalse(liteBasicLTIConsumerServlet.virtualToolDataProviders
+        .contains(cleVirtualToolDataProvider));
+  }
+
   // --------------------------------------------------------------------------
 
   private void verifyHtml() {
@@ -1156,9 +1207,15 @@ public class LiteBasicLTIConsumerServletTest {
       verify(writer, times(1)).write(
           contains("form action=\"http://dr-chuck.com/ims/php-simple/tool.php\""));
     } else {
-      verify(writer, times(1))
-          .write(
-              contains("form action=\"http://localhost/imsblti/provider/sakai.gradebook.gwt.rpc\""));
+      if (wimbaVtoolUseCase) {
+        verify(writer, times(1))
+            .write(
+                contains("form action=\"http://www.imsglobal.org/developers/LTI/test/v1p1/tool.php\""));
+      } else {
+        verify(writer, times(1))
+            .write(
+                contains("form action=\"http://localhost/imsblti/provider/sakai.gradebook.gwt.rpc\""));
+      }
     }
     verify(writer, times(1)).write(
         contains("name=\"context_label\" value=\"pooledContentDescription\""));

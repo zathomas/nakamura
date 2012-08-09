@@ -231,4 +231,79 @@ public class CLEVirtualToolDataProvider implements VirtualToolDataProvider {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   * 
+   * @see java.lang.Object#hashCode()
+   */
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((cleUrl == null) ? 0 : cleUrl.hashCode());
+    result = prime * result + ((ltiKey == null) ? 0 : ltiKey.hashCode());
+    result = prime * result + ((ltiSecret == null) ? 0 : ltiSecret.hashCode());
+    result = prime * result + ((toolList == null) ? 0 : toolList.hashCode());
+    return result;
+  }
+
+  /**
+   * {@inheritDoc}
+   * 
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (!(obj instanceof CLEVirtualToolDataProvider)) {
+      return false;
+    }
+    CLEVirtualToolDataProvider other = (CLEVirtualToolDataProvider) obj;
+    if (cleUrl == null) {
+      if (other.cleUrl != null) {
+        return false;
+      }
+    } else if (!cleUrl.equals(other.cleUrl)) {
+      return false;
+    }
+    if (ltiKey == null) {
+      if (other.ltiKey != null) {
+        return false;
+      }
+    } else if (!ltiKey.equals(other.ltiKey)) {
+      return false;
+    }
+    if (ltiSecret == null) {
+      if (other.ltiSecret != null) {
+        return false;
+      }
+    } else if (!ltiSecret.equals(other.ltiSecret)) {
+      return false;
+    }
+    if (toolList == null) {
+      if (other.toolList != null) {
+        return false;
+      }
+    } else if (!toolList.equals(other.toolList)) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   * 
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return "CLEVirtualToolDataProvider [toolList=" + toolList + ", cleUrl=" + cleUrl
+        + "]";
+  }
+
 }

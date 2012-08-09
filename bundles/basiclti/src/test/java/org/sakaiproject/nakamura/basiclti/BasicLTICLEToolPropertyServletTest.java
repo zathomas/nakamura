@@ -31,7 +31,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.sakaiproject.nakamura.api.basiclti.VirtualToolDataProvider;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -41,7 +40,6 @@ import javax.servlet.ServletException;
 @RunWith(MockitoJUnitRunner.class)
 public class BasicLTICLEToolPropertyServletTest {
   BasicLTICLEToolPropertyServlet basicLTICLEToolPropertyServlet;
-  VirtualToolDataProvider virtualToolDataProvider;
   @Mock
   SlingHttpServletRequest request;
   @Mock
@@ -52,8 +50,6 @@ public class BasicLTICLEToolPropertyServletTest {
   @Before
   public void setUp() throws IOException {
     basicLTICLEToolPropertyServlet = new BasicLTICLEToolPropertyServlet();
-    virtualToolDataProvider = new CLEVirtualToolDataProvider();
-    basicLTICLEToolPropertyServlet.virtualToolDataProvider = virtualToolDataProvider;
 
     when(response.getWriter()).thenReturn(printWriter);
   }
