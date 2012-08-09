@@ -81,6 +81,11 @@ public interface UserConstants {
   public static final String PROP_ROLE_TITLE_PLURAL = "sakai:role-title-plural";
 
   /**
+   * Bare Authorizables have no /~ content and don't do any post processing.
+   */
+  public static final String PROP_BARE_AUTHORIZABLE = "sakai:bare";
+
+  /**
    * The name of the property that holds the value of identifier (authorizable ID) for
    * this profile.
    */
