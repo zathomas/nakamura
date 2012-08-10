@@ -114,7 +114,7 @@ public class DirectoryTagFeedServlet extends SlingSafeMethodsServlet {
   @Reference
   private ProfileService profileService;
 
-  @Reference
+  @Reference(target = "(type=LiteFiles)")
   protected LiteFileSearchBatchResultProcessor liteFileSearchBatchResultProcessor;
 
   /**
