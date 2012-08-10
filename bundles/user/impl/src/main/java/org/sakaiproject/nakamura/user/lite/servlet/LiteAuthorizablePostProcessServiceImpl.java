@@ -68,7 +68,7 @@ public class LiteAuthorizablePostProcessServiceImpl extends AbstractOrderedServi
   @Reference(target="(default=true)")
   protected LiteAuthorizablePostProcessor defaultPostProcessor;
 
-  private LiteAuthorizablePostProcessor[] orderedServices = new LiteAuthorizablePostProcessor[0];
+  protected LiteAuthorizablePostProcessor[] orderedServices = new LiteAuthorizablePostProcessor[0];
 
   
   public LiteAuthorizablePostProcessServiceImpl() {
