@@ -21,7 +21,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.ModificationType;
@@ -35,6 +37,7 @@ import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.user.LiteAuthorizablePostProcessor;
+import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.user.postprocessors.DefaultPostProcessor;
 
 import java.util.Arrays;
@@ -72,6 +75,9 @@ public class LiteAuthorizablePostProcessServiceImplTest {
     map.put(Constants.SERVICE_ID, new Long(2L));
     liteAuthorizablePostProcessServiceImpl.bindAuthorizablePostProcessor(service2, map);
     liteAuthorizablePostProcessServiceImpl.defaultPostProcessor = defaultPostProcessor;
+
+    when(authorizable.getProperty(eq(UserConstants.PROP_BARE_AUTHORIZABLE))).thenReturn(
+        "false");
   }
 
   /**
@@ -139,6 +145,29 @@ public class LiteAuthorizablePostProcessServiceImplTest {
         eq(parameters));
     verify(service2).process(eq(group), eq(session), any(Modification.class),
         eq(parameters));
+  }
+
+  /**
+   * UCB Ray Davis: we're dependent on PROP_BARE_AUTHORIZABLE to script Authorizable
+   * integrations without all the home-folder junk.
+   * {@link LiteAuthorizablePostProcessServiceImpl#process(Authorizable, Session, ModificationType, Map)}
+   * 
+   * @throws Exception
+   */
+  @Test
+  public void testProcessBareAuthorizable() throws Exception {
+    when(authorizable.getProperty(eq(UserConstants.PROP_BARE_AUTHORIZABLE))).thenReturn(
+        "true");
+
+    final Map<String, Object[]> parameters = new HashMap<String, Object[]>();
+    liteAuthorizablePostProcessServiceImpl.process(authorizable, session,
+        ModificationType.CREATE, parameters);
+    verify(defaultPostProcessor, never()).process(eq(authorizable), eq(session),
+        any(Modification.class), eq(parameters));
+    verify(service1, never()).process(eq(authorizable), eq(session),
+        any(Modification.class), eq(parameters));
+    verify(service2, never()).process(eq(authorizable), eq(session),
+        any(Modification.class), eq(parameters));
   }
 
   /**
