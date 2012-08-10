@@ -435,10 +435,10 @@ def main()
           # USERNAME PASSWORD SERVER
           $username = "admin"
           auth = "../auth.sh " + $username + " " + $pw + " " + $preview_referer
-          cookietoken = '`#{auth}`'
+          cookietoken = `#{auth}`
 
           # Append end of line containing arguments for print css, delay and authentication
-          line += " --print-media-type --javascript-delay " + $delay + "000 --cookie 'sakai-trusted-authn' " + cookietoken + " " + filename_p
+          line += " --print-media-type --javascript-delay " + $delay + "000 --cookie 'sakai-trusted-authn' '" + cookietoken.gsub(/\n/,"") + "' " + filename_p
 
           # Run the command line (run wkhtmltopdf)
           `#{line}`
