@@ -435,16 +435,16 @@ def main()
           # USERNAME PASSWORD SERVER
           $username = "admin"
           auth = "../auth.sh " + $username + " " + $pw + " " + $preview_referer
-          cookietoken = `#{auth}`
+          cookietoken = '`#{auth}`'
 
           # Append end of line containing arguments for print css, delay and authentication
-          line += filename_p + " --print-media-type --redirect-delay " + $delay + "000 --cookie 'sakai-trusted-authn' " + cookietoken
+          line += " --print-media-type --javascript-delay " + $delay + "000 --cookie 'sakai-trusted-authn' " + cookietoken + " " + filename_p
 
           # Run the command line (run wkhtmltopdf)
           `#{line}`
 
           # We read the content from the pdf in the PDF directory
-          content = open(filename_p, 'rb') { |f| f.read }
+          content = open(PDFS_DIR + "/" + filename_p, 'rb') { |f| f.read }
 
           # We post it to server through this function
           post_pdf_to_server id, content
