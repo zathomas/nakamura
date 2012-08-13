@@ -44,7 +44,7 @@ import java.util.Dictionary;
  * the value of that property as the context_id. See: {@link #LTI_CONTEXT_ID}.
  * 
  */
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Service
 public class LiteDefaultContextIdResolver implements LiteBasicLTIContextIdResolver {
   private static final Logger LOG = LoggerFactory

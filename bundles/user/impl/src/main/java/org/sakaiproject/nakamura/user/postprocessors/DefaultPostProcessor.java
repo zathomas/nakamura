@@ -36,7 +36,6 @@ import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.ModificationType;
-import org.apache.sling.servlets.post.SlingPostConstants;
 import org.osgi.service.event.EventAdmin;
 import org.sakaiproject.nakamura.api.activity.ActivityUtils;
 import org.sakaiproject.nakamura.api.lite.Repository;
@@ -58,6 +57,7 @@ import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.user.LiteAuthorizablePostProcessor;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
+import org.sakaiproject.nakamura.util.SparseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,7 +139,7 @@ import java.util.Set;
  * IMO the manager group is superfluous on a user and adds unecessary expense
  * </pre>
  */
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Service(value = LiteAuthorizablePostProcessor.class)
 @Properties(value = { @Property(name = "default", value = "true") })
 public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
@@ -180,10 +180,6 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
   public static final String VISIBILITY_PUBLIC = "public";
 
   public static final String PROFILE_JSON_IMPORT_PARAMETER = ":sakai:profile-import";
-
-  public static final String PARAM_ADD_TO_MANAGERS_GROUP = ":sakai:manager";
-  public static final String PARAM_REMOVE_FROM_MANAGERS_GROUP = PARAM_ADD_TO_MANAGERS_GROUP
-      + SlingPostConstants.SUFFIX_DELETE;
 
   /**
    * Restrict behavior as closely as possible to Sling's original client-server Authorizable
@@ -281,13 +277,7 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
           ":sakai:profile-import", new Object[]{"{'basic': {'access': 'everybody', 'elements': {'email': {'value': 'anon@sakai.invalid'}, 'firstName': {'value': 'Anon'}, 'lastName': {'value': 'User'}}}}"});
       process(anon, session, Modification.onCreated("anon"), anonMap);
     } finally {
-      if (session != null) {
-        try {
-          session.logout();
-        } catch (Exception e) {
-          LOGGER.debug(e.getMessage(),e);
-        }
-      }
+      SparseUtils.logoutQuietly(session);
     }
   }
 
@@ -295,15 +285,6 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
       Session session, Modification change, Map<String, Object[]> parameters)
       throws Exception {
     LOGGER.debug("Default Post processor on {} with {} ", authorizable.getId(), change);
-
-    if (parameters.containsKey(PARAM_AUTHORIZABLE_ONLY)) {
-      String paramAuthorizableOnly = (String) parameters.get(PARAM_AUTHORIZABLE_ONLY)[0];
-      if ("true".equalsIgnoreCase(paramAuthorizableOnly)) {
-        LOGGER.info("Authorizable-only mode specified; skipping Home folder post-processing for {}",
-            authorizable.getId());
-        return;
-      }
-    }
 
     Session adminSession = null;
     try {
@@ -364,9 +345,10 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
           Builder<String, Object> props = ImmutableMap.builder();
           if (isGroup) {
             props.put(SLING_RESOURCE_TYPE, SAKAI_GROUP_HOME_RT);
-
+            ActivityUtils.postActivity(eventAdmin, session.getUserId(), homePath, "Authorizable", "default", "group", "GROUP_CREATED", null);
           } else {
             props.put(SLING_RESOURCE_TYPE, SAKAI_USER_HOME_RT);
+            ActivityUtils.postActivity(eventAdmin, session.getUserId(), homePath, "Authorizable", "default", "user", "USER_CREATED", null);
           }
           if (authorizable.hasProperty(SAKAI_SEARCH_EXCLUDE_TREE_PROP)) {
             // raw copy
@@ -465,19 +447,12 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
             authorizable.setProperty(propName, property.getValue());
           }
           authorizableManager.updateAuthorizable(authorizable);
-          if ( isCreate ) {
-            if ( isGroup ) {
-              ActivityUtils.postActivity(eventAdmin, session.getUserId(), homePath, "Authorizable", "default", "group", "GROUP_CREATED", null);
-            } else {
-              ActivityUtils.postActivity(eventAdmin, session.getUserId(), homePath, "Authorizable", "default", "user", "USER_CREATED", null);
-            }
-          } else {
+        } else {
             if ( isGroup ) {
               ActivityUtils.postActivity(eventAdmin, session.getUserId(), homePath, "Authorizable", "default", "group", "GROUP_UPDATED", null);
             } else {
               ActivityUtils.postActivity(eventAdmin, session.getUserId(), homePath, "Authorizable", "default", "user", "USER_UPDATED", null);
             }
-          }
         }
       } else {
         // Attempt to sync the Acl on the home folder with whatever is present in the
@@ -512,9 +487,7 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
             aclModifications.toArray(new AclModification[aclModifications.size()]));
       }
     } finally {
-      if (adminSession != null) {
-        adminSession.logout();
-      }
+      SparseUtils.logoutQuietly(adminSession);
     }
 
   }
@@ -540,19 +513,6 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
     Set<String> managers = Sets.newHashSet(StorageClientUtils.nonNullStringArray(
         (String[])authorizable.getProperty(UserConstants.PROP_GROUP_MANAGERS)));
 
-    Object[] addValues = parameters.get(PARAM_ADD_TO_MANAGERS_GROUP);
-    if ((addValues != null) && (addValues instanceof String[])) {
-      for (String memberId : (String[]) addValues) {
-        Authorizable toAdd = authorizableManager.findAuthorizable(memberId);
-        managers.add(memberId);
-        if (toAdd != null) {
-          ((Group) authorizable).addMember(toAdd.getId());
-        } else {
-          LOGGER.warn("Could not add manager {} group {}", memberId,
-              authorizable.getId());
-        }
-      }
-    }
     authorizable.setProperty(UserConstants.PROP_GROUP_MANAGERS,
         managers.toArray(new String[managers.size()]));
     authorizableManager.updateAuthorizable(authorizable);
@@ -585,30 +545,6 @@ public class DefaultPostProcessor implements LiteAuthorizablePostProcessor {
       AuthorizableManager authorizableManager, AccessControlManager accessControlManager,
       Map<String, Object[]> parameters) throws AccessDeniedException,
       StorageClientException {
-    boolean isUpdateNeeded = false;
-    Object[] removeValues = parameters.get(PARAM_REMOVE_FROM_MANAGERS_GROUP);
-    if ((removeValues != null) && (removeValues instanceof String[])) {
-      isUpdateNeeded = true;
-      for (String memberId : (String[]) removeValues) {
-        ((Group) authorizable).removeMember(memberId);
-      }
-    }
-    Object[] addValues = parameters.get(PARAM_ADD_TO_MANAGERS_GROUP);
-    if ((addValues != null) && (addValues instanceof String[])) {
-      isUpdateNeeded = true;
-      for (String memberId : (String[]) addValues) {
-        Authorizable toAdd = authorizableManager.findAuthorizable(memberId);
-        if (toAdd != null) {
-          ((Group) authorizable).addMember(toAdd.getId());
-        } else {
-          LOGGER.warn("Could not add manager {} to group {}", memberId,
-              authorizable.getId());
-        }
-      }
-    }
-    if (isUpdateNeeded) {
-      authorizableManager.updateAuthorizable(authorizable);
-    }
   }
 
   private Map<String, Object> processProfileParameters(Authorizable authorizable, Map<String, Object[]> parameters) throws JSONException {

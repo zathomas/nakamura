@@ -301,21 +301,14 @@ public class PathUtils {
   }
 
   /**
+   * Find the last element of a path. After the last / but before the first .
+   * If the path ends in / the last element is ""
    * @param dest
-   * @return
+   * @return the last elemtent of a path or empty if ending in "/"
    */
   public static String lastElement(String dest) {
-    int i = dest.lastIndexOf('/');
-    if ( i == dest.length()-1 ) {
-      return "";
-    }
-    if (i > -1) {
-      dest = dest.substring(i+1);
-    }
-    i = dest.indexOf('.');
-    if (i > -1) {
-      dest = dest.substring(0, i);
-    }
+    dest = org.apache.commons.lang.StringUtils.substringAfterLast(dest, "/");
+    dest = org.apache.commons.lang.StringUtils.substringBefore(dest, ".");
     return dest;
   }
   

@@ -17,7 +17,9 @@
  */
 package org.sakaiproject.nakamura.events;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -55,7 +57,7 @@ import javax.jms.Session;
 /**
  * Bridge to send OSGi events onto a JMS topic.
  */
-@Component(label = "%bridge.name", description = "%bridge.description", metatype = true, immediate = true)
+@Component(label = "%bridge.name", description = "%bridge.description", metatype = true)
 @Service
 public class OsgiJmsBridge implements EventHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(OsgiJmsBridge.class);
@@ -119,6 +121,7 @@ public class OsgiJmsBridge implements EventHandler {
    * @param ctx
    */
   @SuppressWarnings("rawtypes")
+  @Activate @Modified
   protected void activate(ComponentContext ctx) {
     Dictionary props = ctx.getProperties();
 
@@ -136,16 +139,8 @@ public class OsgiJmsBridge implements EventHandler {
       }
     }
 
-    LOGGER.info("Session Transacted: {}, Acknowledge Mode: {}, " + "Client ID: {}",
+    LOGGER.debug("Session Transacted: {}, Acknowledge Mode: {}, " + "Client ID: {}",
         new Object[] { transacted, acknowledgeMode, connectionClientId });
-  }
-
-  /**
-   * Called by the OSGi container to deactivate this component.
-   *
-   * @param ctx
-   */
-  protected void deactivate(ComponentContext ctx) {
   }
 
   /**

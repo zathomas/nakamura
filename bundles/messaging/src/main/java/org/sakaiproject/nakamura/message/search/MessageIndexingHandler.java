@@ -65,7 +65,7 @@ import java.util.Set;
  * Indexes messages for searching as autonomous items or as part of the user,group
  * searching.
  */
-@Component(immediate = true)
+@Component
 public class MessageIndexingHandler implements IndexingHandler, QoSIndexHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(MessageIndexingHandler.class);
 

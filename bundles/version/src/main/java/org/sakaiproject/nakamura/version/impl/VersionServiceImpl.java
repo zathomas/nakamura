@@ -36,7 +36,7 @@ import javax.jcr.version.VersionManager;
 /**
  * Service for doing operations with versions.
  */
-@Component(immediate = true, label = "Sakai Versioning Service", description = "Service for doing operations with versions.")
+@Component(label = "Sakai Versioning Service", description = "Service for doing operations with versions.")
 @Service
 public class VersionServiceImpl implements VersionService {
 

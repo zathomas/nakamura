@@ -56,7 +56,7 @@ import java.util.Set;
 /**
  * Base class for servlets manipulating groups
  */
-@Component(immediate=true, metatype=true,componentAbstract=true)
+@Component(componentAbstract = true)
 public abstract class LiteAbstractSakaiGroupPostServlet extends
     LiteAbstractAuthorizablePostServlet {
   private static final long serialVersionUID = 1159063041816944076L;
@@ -147,8 +147,6 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
       if (membersToAdd != null) {
         LOGGER.info("Members to add {} ",membersToAdd);
         this.authorizableCountChanger.notify(UserConstants.GROUP_MEMBERSHIPS_PROP, Arrays.asList(membersToAdd));
-        Group peerGroup = getPeerGroupOf(group, authorizableManager, toSave);
-        List<Authorizable> membersToRemoveFromPeer = new ArrayList<Authorizable>();
         for (String member : membersToAdd) {
           String memberId = getAuthIdFromParameter(member);
           Authorizable memberAuthorizable = (Authorizable) toSave.get(memberId);
@@ -185,36 +183,20 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
               //to add the member to the group:
 
               group.addMember(memberAuthorizable.getId());
-              if ( LOGGER.isInfoEnabled() ) {
-                LOGGER.info("{} Membership now {} {} {}", new Object[]{ group.getId(),Arrays.toString(group.getMembers()), Arrays.toString(group.getMembersAdded()), Arrays.toString(group.getMembersRemoved())});
+              if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("{} Membership now {} {} {}", new Object[]{group.getId(), Arrays.toString(group.getMembers()), Arrays.toString(group.getMembersAdded()), Arrays.toString(group.getMembersRemoved())});
               }
+
               toSave.put(group.getId(), group);
               Group gt = (Group) toSave.get(group.getId());
-              if ( LOGGER.isInfoEnabled() ) {
-                LOGGER.info("{} Membership now {} {} {}", new Object[]{ group.getId(),Arrays.toString(gt.getMembers()), Arrays.toString(gt.getMembersAdded()), Arrays.toString(gt.getMembersRemoved())});
+              if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("{} Membership now {} {} {}", new Object[]{group.getId(), Arrays.toString(gt.getMembers()), Arrays.toString(gt.getMembersAdded()), Arrays.toString(gt.getMembersRemoved())});
               }
+
               changed = true;
-            }
-            if (peerGroup != null && peerGroup.getId().equals(group.getId())) {
-              Set<String> members = ImmutableSet.copyOf(peerGroup.getMembers());
-              if (members.contains(memberAuthorizable.getId())) {
-                membersToRemoveFromPeer.add(memberAuthorizable);
-              }
             }
           } else {
             LOGGER.warn("member not found {} ", memberId);
-          }
-        }
-        if ((peerGroup != null) && (membersToRemoveFromPeer.size() > 0)) {
-          for (Authorizable member : membersToRemoveFromPeer) {
-            if ( LOGGER.isInfoEnabled() ) {
-              LOGGER.info("Removing Member {} from {} ",member.getId(), peerGroup.getId());
-            }
-            peerGroup.removeMember(member.getId());
-          }
-          toSave.put(peerGroup.getId(), peerGroup);
-          if ( LOGGER.isInfoEnabled() ) {
-            LOGGER.info("{} Just Updated Peer Group Membership now {} {} {}", new Object[]{peerGroup.getId(), Arrays.toString(peerGroup.getMembers()), Arrays.toString(peerGroup.getMembersAdded()), Arrays.toString(peerGroup.getMembersRemoved())});
           }
         }
 
@@ -236,44 +218,6 @@ public abstract class LiteAbstractSakaiGroupPostServlet extends
     //we might be sent a parameter that looks like a full path
     //we only want the id at the end
     return member.substring(member.lastIndexOf("/") + 1);
-  }
-
-  private Group getPeerGroupOf(Group group, AuthorizableManager authorizableManager, Map<String, Object> toSave) throws AccessDeniedException, StorageClientException  {
-    Group peerGroup = null;
-    if (group.hasProperty(UserConstants.PROP_MANAGERS_GROUP)) {
-      String managersGroupId = (String) group.getProperty(UserConstants.PROP_MANAGERS_GROUP);
-      if ( group.getId().equals(managersGroupId)) {
-        return group;
-      }
-      peerGroup = (Group) toSave.get(managersGroupId);
-      if ( peerGroup == null ) {
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("For {} Not in toSave List loading Managers Group from store {} ",group.getId(),managersGroupId);
-        }
-        peerGroup = (Group) authorizableManager.findAuthorizable(managersGroupId);
-      } else {
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("For {} got Managers Group from save list {} ",group.getId(),managersGroupId);
-        }
-      }
-    } else if (group.hasProperty(UserConstants.PROP_MANAGED_GROUP)) {
-      String managedGroupId = (String) group.getProperty(UserConstants.PROP_MANAGED_GROUP);
-      if ( group.getId().equals(managedGroupId)) {
-        return group;
-      }
-      peerGroup = (Group) toSave.get(managedGroupId);
-      if ( peerGroup == null ) {
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("For {} Not in toSave List loading Managed Group from store {} ",group.getId(),managedGroupId);
-        }
-        peerGroup = (Group) authorizableManager.findAuthorizable(managedGroupId);
-      } else {
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("For {} got Managed Group from save list {} ",group.getId(),managedGroupId);
-        }
-      }
-    }
-    return peerGroup;
   }
 
 

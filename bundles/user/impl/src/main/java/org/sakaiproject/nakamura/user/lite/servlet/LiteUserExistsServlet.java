@@ -103,7 +103,7 @@ import javax.servlet.http.HttpServletResponse;
           @ServiceResponse(code=409,description="The specified username conflicts with a username on the system or is invalid."),
           @ServiceResponse(code=404,description="The specified user does not exist in the system.")
         }))
-@Component(immediate=true, metatype=true)
+@Component(metatype = true)
 @SlingServlet(methods={"GET"}, selectors={"exists"}, resourceTypes={"sparse/users"}, generateComponent=false)
 public class LiteUserExistsServlet extends SlingSafeMethodsServlet {
   private static final long serialVersionUID = 7051557537133012560L;

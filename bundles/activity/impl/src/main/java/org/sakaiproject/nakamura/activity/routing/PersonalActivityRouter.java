@@ -37,7 +37,7 @@ import javax.jcr.RepositoryException;
 /**
  * This router will deliver an activity to the creator's personal feed.
  */
-@Component(immediate = true, enabled = true)
+@Component
 @Service(value = ActivityRouter.class)
 public class PersonalActivityRouter implements ActivityRouter {
 

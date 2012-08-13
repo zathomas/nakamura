@@ -67,8 +67,7 @@ import javax.servlet.http.HttpServletResponse;
           @ServiceResponse(code = 500, description = "The servlet is unable to produce a proper JSON output.")
           })
     })
-@SlingServlet(methods = { "GET" }, paths = { "/var/widgets" }, generateComponent = false, generateService = true)
-@Component(metatype = true, immediate = true)
+@SlingServlet(methods = { "GET" }, paths = { "/var/widgets" })
 public class WidgetsServlet extends SlingSafeMethodsServlet {
 
   private static final long serialVersionUID = -4113451154211163118L;

@@ -90,7 +90,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  */
 @Service
-@Component(immediate = true)
+@Component
 public class ProxyClientServiceImpl implements ProxyClientService, ProxyNodeSource {
 
   /**

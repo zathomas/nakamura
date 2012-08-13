@@ -51,8 +51,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-@Service()
-@Component(immediate = true, metatype = true)
+@Service
+@Component(metatype = true)
 public class WidgetServiceImpl implements WidgetService {
 
   @Property(value = { "bundles" }, description = "The directorynames that should be ignored when outputting a widget.", cardinality = 2147483647)

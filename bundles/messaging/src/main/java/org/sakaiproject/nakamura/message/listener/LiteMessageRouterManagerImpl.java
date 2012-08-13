@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Set;
 
 
-@Component(inherit = true, label = "%sakai-manager.name", immediate = true)
+@Component(inherit = true, label = "%sakai-manager.name")
 @Service
 @Properties(value = { @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = "service.description", value = "Manages messaging routing.") })

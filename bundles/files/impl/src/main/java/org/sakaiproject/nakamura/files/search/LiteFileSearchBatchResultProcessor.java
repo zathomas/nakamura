@@ -59,10 +59,11 @@ import javax.jcr.RepositoryException;
 /**
  * Formats the files search results.
  */
-@Component(immediate = true, metatype = true)
+@Component
 @Properties(value = { @Property(name = "service.vendor", value = "The Sakai Foundation"),
-    @Property(name = SolrSearchConstants.REG_BATCH_PROCESSOR_NAMES, value = "LiteFiles") })
-@Service(value = SolrSearchBatchResultProcessor.class)
+    @Property(name = SolrSearchConstants.REG_BATCH_PROCESSOR_NAMES, value = "LiteFiles"),
+    @Property(name = "type", value = "LiteFiles")})
+@Service(value = { SolrSearchBatchResultProcessor.class, LiteFileSearchBatchResultProcessor.class })
 public class LiteFileSearchBatchResultProcessor implements SolrSearchBatchResultProcessor {
 
   public static final Logger LOGGER = LoggerFactory
@@ -76,11 +77,6 @@ public class LiteFileSearchBatchResultProcessor implements SolrSearchBatchResult
   
   @Reference
   private Repository repository;
-
-  public LiteFileSearchBatchResultProcessor(SolrSearchServiceFactory searchServiceFactory, ProfileService profileService) {
-    this.searchServiceFactory = searchServiceFactory;
-    this.profileService = profileService;
-  }
 
   public LiteFileSearchBatchResultProcessor() {
   }

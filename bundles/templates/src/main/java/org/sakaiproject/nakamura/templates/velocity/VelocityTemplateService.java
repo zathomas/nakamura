@@ -46,7 +46,7 @@ import javax.jcr.Node;
 import javax.jcr.Repository;
 
 @Service
-@Component(immediate = true)
+@Component
 public class VelocityTemplateService implements TemplateService, TemplateNodeSource {
 
   private static final Logger LOGGER = LoggerFactory

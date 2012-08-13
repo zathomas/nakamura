@@ -42,7 +42,7 @@ import java.util.Properties;
  * Handler for messages that are intended for email delivery. Needs to be started
  * immediately to make sure it registers with JCR as soon as possible.
  */
-@Component(label = "%external.message.handler.name", description = "%external.message.handler.description", immediate = true)
+@Component(label = "%external.message.handler.name", description = "%external.message.handler.description")
 @Service
 public class LiteEmailMessageHandler implements LiteMessageTransport {
 

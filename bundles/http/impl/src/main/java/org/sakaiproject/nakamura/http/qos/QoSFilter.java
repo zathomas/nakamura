@@ -52,7 +52,7 @@ import javax.servlet.http.HttpServletResponse;
  * Provides a configurable QoS filter that manages request in and out of the server, based on number of concurrent requests. Pending requests are prioritiezed into queue, taken out of the queue based on priority and time of entry. If the request does not match any Quality of Service Configuration, the default configuration will be used.
  * Configuration is via the
  */
-@Component(immediate = true, metatype = true)
+@Component(metatype = true)
 @Properties(value = {
     @Property(name = "service.description", value = "Nakamura Quality of Service Filter"),
     @Property(name = "service.vendor", value = "The Sakai Foundation") })

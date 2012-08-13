@@ -52,7 +52,7 @@ import java.util.Set;
 /**
  *
  */
-@Component(immediate = true)
+@Component
 public class ResourceUpdateIndexingHandler implements IndexingHandler {
 
   // list of properties to be indexed

@@ -54,7 +54,7 @@ import java.util.Set;
 /**
  * Indexing handler for activities.
  */
-@Component(immediate = true)
+@Component
 public class ActivityIndexingHandler implements IndexingHandler {
 
   // list of properties to be indexed

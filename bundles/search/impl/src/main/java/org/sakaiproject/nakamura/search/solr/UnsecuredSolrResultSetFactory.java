@@ -21,9 +21,10 @@ package org.sakaiproject.nakamura.search.solr;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest;
+import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
+import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.search.solr.ResultSetFactory;
 
 import java.util.Map;
@@ -38,7 +39,7 @@ import java.util.Map;
 public class UnsecuredSolrResultSetFactory extends SolrResultSetFactory {
 
   @Override
-  protected void applyReadersRestrictions(SlingHttpServletRequest request, boolean asAnon,
+  protected void applyReadersRestrictions(Authorizable authorizable, Session session, boolean asAnon,
                                           Map<String, Object> queryOptions) throws StorageClientException, AccessDeniedException {
     // no-op (there are no reader restrictions in this result set factory)
   }

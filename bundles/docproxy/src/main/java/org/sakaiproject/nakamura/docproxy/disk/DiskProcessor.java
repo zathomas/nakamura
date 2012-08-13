@@ -72,7 +72,7 @@ import javax.jcr.ValueFactory;
  * This processor will write/read files to disk, DO NOT ENABLE THIS SERVICE ON A PUBLIC
  * OX!
  */
-@Component(enabled = false, immediate = true, metatype = true)
+@Component(enabled = false, metatype = true)
 @Service(value = ExternalRepositoryProcessor.class)
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),

@@ -73,8 +73,7 @@ import javax.servlet.http.HttpServletResponse;
           @ServiceResponse(code = 403, description = "The resource where this action is performed on is not a valid widget.")
         })
     })
-@SlingServlet(resourceTypes = { "sling/servlet/default" }, methods = { "GET" }, selectors = { "widgetize" }, extensions = { "json" }, generateService = true, generateComponent = false)
-@Component(metatype = true, immediate = true)
+@SlingServlet(resourceTypes = { "sling/servlet/default" }, methods = { "GET" }, selectors = { "widgetize" }, extensions = { "json" })
 public class WidgetizeServlet extends SlingSafeMethodsServlet {
   private static final long serialVersionUID = -8498483459709451448L;
 

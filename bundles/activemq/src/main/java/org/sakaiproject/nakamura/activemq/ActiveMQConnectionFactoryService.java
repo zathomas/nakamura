@@ -31,7 +31,7 @@ import java.util.Dictionary;
 
 import javax.jms.ConnectionFactory;
 
-@Component(immediate=true, metatype=true, label="%amqf.name", description="%amqf.description")
+@Component(metatype = true, label = "%amqf.name", description = "%amqf.description")
 @Service(value=ConnectionFactoryService.class)
 public class ActiveMQConnectionFactoryService implements ConnectionFactoryService {
 

@@ -40,7 +40,7 @@ import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 
 import java.util.Iterator;
 
-@Component(immediate = true, metatype=true)
+@Component
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = SolrSearchConstants.REG_BATCH_PROCESSOR_NAMES, value = "Resource"),

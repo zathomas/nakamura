@@ -45,7 +45,7 @@ import javax.security.auth.login.LoginException;
 /**
  *
  */
-@Component(immediate = true)
+@Component
 @Service
 public final class TrustedLoginModulePlugin implements LoginModulePlugin {
 

@@ -18,6 +18,7 @@
 package org.sakaiproject.nakamura.doc;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;

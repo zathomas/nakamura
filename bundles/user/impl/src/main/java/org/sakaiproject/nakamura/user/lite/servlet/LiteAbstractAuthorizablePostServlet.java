@@ -68,7 +68,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Base class for all the POST servlets for the UserManager operations
  */
-@Component(immediate=true, metatype=true,componentAbstract=true)
+@Component(metatype = true, componentAbstract = true)
 public abstract class LiteAbstractAuthorizablePostServlet extends
         SlingAllMethodsServlet {
     private static final long serialVersionUID = -5918670409789895333L;
@@ -209,7 +209,7 @@ public abstract class LiteAbstractAuthorizablePostServlet extends
     /**
      * Creates an instance of a HtmlResponse.
      * @param req The request being serviced
-     * @return a {@link org.apache.sling.api.servlets.JSONResponse} if any of these conditions are true:
+     * @return a <code>JSONResponse</code> if any of these conditions are true:
      * <ul>
      *   <li>the response content type is application/json
      * </ul>
@@ -483,16 +483,13 @@ public abstract class LiteAbstractAuthorizablePostServlet extends
      * Removes all properties listed as {@link RequestProperty#isDelete()} from
      * the authorizable.
      *
-     * @param authorizable The
+     * @param resource The
      *            <code>org.apache.jackrabbit.api.security.user.Authorizable</code>
      *            that should have properties deleted.
      * @param reqProperties The map of request properties to check for
      *            properties to be removed.
+     * @param changes
      * @param toSave
-     * @param response The <code>HtmlResponse</code> to be updated with
-     *            information on deleted properties.
-     * @throws RepositoryException Is thrown if an error occurrs checking or
-     *             removing properties.
      */
     protected void processDeletes(Authorizable resource,
             Map<String, RequestProperty> reqProperties,
@@ -619,7 +616,7 @@ public abstract class LiteAbstractAuthorizablePostServlet extends
      * Removes the property with the given name from the parent resource if it
      * exists.
      *
-     * @param parent the parent resource
+     * @param resource the parent resource
      * @param name the name of the property to remove
      * @return path of the property that was removed or <code>null</code> if it
      *         was not removed
@@ -682,24 +679,6 @@ public abstract class LiteAbstractAuthorizablePostServlet extends
         }
 
         return requirePrefix;
-    }
-
-    protected void dumpToSave(Map<String, Object> toSave, String message) throws AccessDeniedException, StorageClientException {
-      if ( LOGGER.isDebugEnabled() ) {
-        LOGGER.debug("At [{}], Save List Contains {} objects ",message, toSave.size());
-        for ( Object o : toSave.values()) {
-          if (o instanceof Group ) {
-            Group g = (Group)o;
-            LOGGER.debug(" Would Save {} {} {} {} {}",new Object[]{o, g.getPropertiesForUpdate(), Arrays.toString(g.getMembers()),  Arrays.toString(g.getMembersAdded()),  Arrays.toString(g.getMembersRemoved())});
-          } else if (o instanceof User ) {
-            LOGGER.debug(" Would Save {} {} ",o,((User)o).getPropertiesForUpdate());
-          } else if ( o instanceof Content ) {
-            LOGGER.debug(" Would Save {} {} ",o,((Content)o).getProperties());
-          } else {
-            LOGGER.debug(" Skipping {} ",o);
-          }
-        }
-      }
     }
 
     protected void saveAll(Session session, Map<String, Object> toSave) throws AccessDeniedException, StorageClientException {

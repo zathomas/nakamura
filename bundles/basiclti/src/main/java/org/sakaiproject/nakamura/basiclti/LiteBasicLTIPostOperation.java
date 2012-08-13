@@ -98,7 +98,7 @@ import javax.servlet.http.HttpServletResponse;
       }
     )
   })
-@Component(immediate = true)
+@Component
 @Service(value = SparsePostOperation.class)
 @Properties(value = {
     @Property(name = "sling.post.operation", value = "basiclti"),

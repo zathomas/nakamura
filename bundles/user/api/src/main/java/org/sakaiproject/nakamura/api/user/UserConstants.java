@@ -73,11 +73,6 @@ public interface UserConstants {
    */
   public static final String PROP_GROUP_VIEWERS = "rep:group-viewers";
 
-  /**
-   * The ID of the special group that manages a group.
-   */
-  public static final String PROP_MANAGERS_GROUP = "sakai:managers-group";
-  public static final String PROP_MANAGED_GROUP = "sakai:managed-group";
   public static final String PROP_JOINABLE_GROUP = "sakai:group-joinable";
   public static final String PROP_PSEUDO_GROUP = "sakai:pseudoGroup";
   public static final String PROP_PARENT_GROUP_ID = "sakai:parent-group-id";

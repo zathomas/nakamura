@@ -214,7 +214,7 @@ public class NakamuraQueryComponent extends QueryComponent {
           }
         }
 
-        LOGGER.info("\n\nBuilding {}-bit filter for segment [{}] took: {} msecs",
+        LOGGER.debug("Building {}-bit filter for segment [{}] took: {} msecs",
             new Object[] { rdr.maxDoc(), rdr, (System.currentTimeMillis() - start) });
 
         return bits;

@@ -44,7 +44,7 @@ import javax.jcr.query.Query;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
-@Component(immediate = true, label = "NodeSearchBatchResultProcessor", description = "Formatter for batch search results.")
+@Component(label = "NodeSearchBatchResultProcessor", description = "Formatter for batch search results.")
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = SearchConstants.REG_BATCH_PROCESSOR_NAMES, value = "Node"),

@@ -63,7 +63,7 @@ import com.google.common.collect.ImmutableSet;
  * Will convert iCal to JSON.
  */
 @Service(value = ProxyPostProcessor.class)
-@org.apache.felix.scr.annotations.Component(label = "ProxyPostProcessor for iCal", description = "Post processor which converts iCal data to JSON.", immediate = true)
+@org.apache.felix.scr.annotations.Component(label = "ProxyPostProcessor for iCal", description = "Post processor which converts iCal data to JSON.")
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai foundation"),
     @Property(name = "service.description", value = "Post processor which converts iCal data to JSON."),

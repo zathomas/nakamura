@@ -37,7 +37,7 @@ import javax.jms.Topic;
 /**
  *
  */
-@Component(immediate = true)
+@Component
 public class ClusterUserMessageListener implements MessageListener {
 
   private static final Logger LOGGER = LoggerFactory

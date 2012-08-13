@@ -53,7 +53,7 @@ import javax.jcr.security.Privilege;
  * will only deliver if the contact has READ access on the node where the activity was
  * performed on.
  */
-@Component(immediate = true, enabled = true)
+@Component
 @Service(value = ActivityRouter.class)
 public class ContactsActivityRouter implements ActivityRouter {
 

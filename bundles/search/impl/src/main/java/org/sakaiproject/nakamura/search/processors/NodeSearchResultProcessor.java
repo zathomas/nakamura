@@ -44,7 +44,7 @@ import javax.jcr.query.Row;
  *
  */
 
-@Component(immediate = true, label = "NodeSearchResultProcessor", description = "Formatter for user search results.")
+@Component(label = "NodeSearchResultProcessor", description = "Formatter for user search results.")
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = SearchConstants.REG_PROCESSOR_NAMES, value = "Node"),
