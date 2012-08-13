@@ -67,6 +67,7 @@ import org.sakaiproject.nakamura.api.resource.lite.AbstractSparsePostOperation;
 import org.sakaiproject.nakamura.api.resource.lite.SparsePostOperation;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.PathUtils;
+import org.sakaiproject.nakamura.util.SparseUtils;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,35 +136,30 @@ public class SparseTagOperation extends AbstractSparsePostOperation {
       return null;
     }
 
-    Resource tagResource = resolver.getResource(tagContentPath);
+    // Tag nodes are always accessed via an administrative session.
     Content tagContent = null;
-
-    if (tagResource == null) {
-      Session session = StorageClientUtils.adaptToSession(resolver
-          .adaptTo(javax.jcr.Session.class));
-      Session adminSession = session.getRepository().loginAdministrative();
-
-      // wrap in a try so we can ensure logout in finally
-      try {
-        tagContent = createTag(tagContentPath, adminSession);
-      } catch (Exception e) {
-        LOGGER.error("error creating tag {}", tagContentPath, e);
-      } finally {
-        if (adminSession != null) {
-          try {
-            adminSession.logout();
-          } catch (Exception e) {// noop - this was just a failsafe}
-          }
+    Session session = StorageClientUtils.adaptToSession(resolver
+        .adaptTo(javax.jcr.Session.class));
+    Session adminSession = null;
+    try {
+      adminSession = session.getRepository().loginAdministrative();
+      ContentManager contentManager = adminSession.getContentManager();
+      if (contentManager.exists(tagContentPath)) {
+        Content content = contentManager.get(tagContentPath);
+        if (TagUtils.isTag(content)) {
+          LOGGER.debug("retrieved existing tag at {}", tagContentPath);
+          tagContent = content;
+        } else {
+          LOGGER.warn("Non-tag found at path {}", tagContentPath);
         }
+      } else {
+        tagContent = createTag(tagContentPath, adminSession);
       }
-    } else {
-      LOGGER.info("retrieved existing tag at {}", tagContentPath);
-      Content _tagContent = tagResource.adaptTo(Content.class);
-      if (TagUtils.isTag(_tagContent)) {
-        tagContent = _tagContent;
-      }
+    } catch (Exception e) {
+      LOGGER.error("error creating tag {}", tagContentPath, e);
+    } finally {
+      SparseUtils.logoutQuietly(adminSession);
     }
-
     return tagContent;
   }
 
