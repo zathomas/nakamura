@@ -41,7 +41,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-@Component(immediate = true)
+@Component(immediate = true, metatype = true)
 @Properties({
     @Property(name = LocaleUtilsImpl.LOCALE_LANGUAGE_PROP, value = LocaleUtilsImpl.DEFAULT_LANGUAGE),
     @Property(name = LocaleUtilsImpl.LOCALE_COUNTRY_PROP, value = LocaleUtilsImpl.DEFAULT_COUNTRY) })
