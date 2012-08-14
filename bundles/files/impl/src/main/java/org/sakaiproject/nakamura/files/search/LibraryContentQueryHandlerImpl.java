@@ -30,6 +30,7 @@ import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
+import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.search.SearchConstants;
 import org.sakaiproject.nakamura.api.search.solr.MissingParameterException;
@@ -166,10 +167,12 @@ public class LibraryContentQueryHandlerImpl extends AbstractContentSearchQueryHa
       session = repository.loginAdministrative();
       // find all groups that the user is "closely" related to
       final Set<String> principals = SearchRequestUtils.getPrincipals(session, user, levels);
+      setDefaultPrincipals(user, principals);
       String auOr = Joiner.on(" OR ").join(principals);
   
       // find all groups that the user is related to
       final Set<String> allPrincipals = SearchRequestUtils.getPrincipals(session, user, PRINCIPAL_MAX_DEPTH);
+      setDefaultPrincipals(user, allPrincipals);
       String allOr = Joiner.on(" OR ").join(allPrincipals);
       
       session.logout();
@@ -192,6 +195,24 @@ public class LibraryContentQueryHandlerImpl extends AbstractContentSearchQueryHa
       throw new RuntimeException(e);
     } finally {
       SparseUtils.logoutQuietly(session);
+    }
+  }
+
+  /**
+   * Set default principals if there are no principals provided. The anonymous user is
+   * added and if <code>user</code> is not null nor <code>User.ANON_USER</code>, add
+   * <code>Group.EVERYONE</code>. This assumes that the provided user has been vetted as
+   * an actual system user.
+   *
+   * @param user
+   * @param principals
+   */
+  private void setDefaultPrincipals(String user, final Set<String> principals) {
+    if (principals.isEmpty()) {
+      principals.add(User.ANON_USER);
+      if (user != null && !User.ANON_USER.equals(user)) {
+        principals.add(Group.EVERYONE);
+      }
     }
   }
 
