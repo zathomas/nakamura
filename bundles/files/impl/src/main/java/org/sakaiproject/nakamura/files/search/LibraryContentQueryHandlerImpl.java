@@ -116,8 +116,15 @@ public class LibraryContentQueryHandlerImpl extends AbstractContentSearchQueryHa
   @Override
   public Query getQuery(Map<String, String> config) {
     // determine the user to use for the search
-    String user = config.get("userid");
-    if (user == null || User.ANON_USER.equals(user)) {
+    String _userId = config.get("_userId"); // set using remote user
+    String userid = config.get("userid");   // set from url parameter
+    String user = null;
+    if (userid != null && !User.ANON_USER.equals(userid)) {
+      user = userid;
+    } else if (_userId != null && !User.ANON_USER.equals(_userId)) {
+      user = _userId;
+    }
+    if (user == null) {
       throw new MissingParameterException("Cannot search with anonymous user. " +
           "Must authenticate, or specify 'userid' parameter.");
     }
