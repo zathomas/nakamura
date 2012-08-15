@@ -35,7 +35,6 @@ import org.sakaiproject.nakamura.api.http.cache.StaticContentResponseCache;
 import org.sakaiproject.nakamura.api.memory.Cache;
 import org.sakaiproject.nakamura.api.memory.CacheManagerService;
 import org.sakaiproject.nakamura.api.memory.CacheScope;
-import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -258,7 +257,6 @@ public class StaticContentResponseCacheImpl implements Filter, StaticContentResp
 
     if (cachedResponse != null && cachedResponse.isValid()) {
       String key = getCacheKey(request);
-      TelemetryCounter.incrementValue("http", "StaticContentResponseCacheImpl-hit", key);
       hitEntry(key, response, cachedResponse);
       return true;
     }
@@ -293,7 +291,6 @@ public class StaticContentResponseCacheImpl implements Filter, StaticContentResp
       if (responseOperation.canCache()) {
         String key = getCacheKey(request);
         saveEntry(key, new CachedResponse(responseOperation, cacheConfig.getMaxAge()));
-        TelemetryCounter.incrementValue("http", "StaticContentResponseCacheImpl-save", key);
       }
     } catch (IOException e) {
       LOGGER.info("Failed to save response in cache ", e);

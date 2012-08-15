@@ -49,7 +49,6 @@ import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.api.util.LocaleUtils;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
-import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -165,7 +164,6 @@ public class LiteRevisedMeServlet extends SlingSafeMethodsServlet {
   @Profiled(tag="meservice:LiteMeServlet:/system/me-revised")
   private void getUncached(SlingHttpServletRequest request, SlingHttpServletResponse response)
       throws IOException {
-    TelemetryCounter.incrementValue("meservice", "LiteMeServlet", "/system/me-revised");
     try {
       response.setContentType("application/json");
       response.setCharacterEncoding("UTF-8");

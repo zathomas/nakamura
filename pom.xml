@@ -361,45 +361,6 @@
       </build>
     </profile>
     <profile>
-        <id>perf4j</id>
-        <build>
-          <plugins>
-            <plugin>
-              <groupId>org.codehaus.mojo</groupId>
-              <artifactId>aspectj-maven-plugin</artifactId>
-              <version>1.4</version>
-              <configuration>
-                <showWeaveInfo>true</showWeaveInfo>
-                <source>1.6</source>
-                <aspectLibraries>
-                  <aspectLibrary>
-                    <groupId>org.sakaiproject.nakamura</groupId>
-                    <artifactId>perf4j-enhanced</artifactId>
-                  </aspectLibrary>
-                </aspectLibraries>
-              </configuration>
-              <executions>
-                <execution>
-                  <goals>
-                    <goal>compile</goal>
-                  </goals>
-                </execution>
-              </executions>
-            </plugin>
-          </plugins>
-        </build>
-        <dependencies>
-          <dependency>
-            <groupId>org.sakaiproject.nakamura</groupId>
-            <artifactId>perf4j-enhanced</artifactId>
-          </dependency>
-          <dependency>
-            <groupId>org.aspectj</groupId>
-            <artifactId>aspectjrt</artifactId>
-          </dependency>
-        </dependencies>
-	</profile>
-    <profile>
       <id>cobertura-instrument</id>
       <build>
         <plugins>
@@ -553,6 +514,28 @@
         <configuration>
           <argLine>"-XX:-UseSplitVerifier"</argLine>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>aspectj-maven-plugin</artifactId>
+        <version>1.4</version>
+        <configuration>
+          <showWeaveInfo>true</showWeaveInfo>
+          <source>1.6</source>
+          <aspectLibraries>
+            <aspectLibrary>
+              <groupId>org.sakaiproject.nakamura</groupId>
+              <artifactId>perf4j-enhanced</artifactId>
+            </aspectLibrary>
+          </aspectLibraries>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
     <pluginManagement>
@@ -1017,6 +1000,19 @@
 <!-- D E P E N D E N C I E S -->
 <!-- ====================================================================== -->
   <dependencies>
+  
+<!-- profiling -->
+    <dependency>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>perf4j-enhanced</artifactId>
+      <version>0.9.16</version>
+    </dependency>
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjrt</artifactId>
+      <version>1.7.0</version>
+    </dependency>  
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -1076,19 +1072,6 @@
         <scope>provided</scope>
       </dependency>
 
-<!-- profiling -->
-      <!-- We use an enhanced verision of the perf4j library, which is necessary for
-          unit tests. -->
-      <dependency>
-        <groupId>org.sakaiproject.nakamura</groupId>
-        <artifactId>perf4j-enhanced</artifactId>
-        <version>0.9.16</version>
-      </dependency>
-      <dependency>
-        <groupId>org.aspectj</groupId>
-        <artifactId>aspectjrt</artifactId>
-        <version>1.7.0</version>
-      </dependency>
       <dependency>
         <groupId>commons-jexl</groupId>
         <artifactId>commons-jexl</artifactId>

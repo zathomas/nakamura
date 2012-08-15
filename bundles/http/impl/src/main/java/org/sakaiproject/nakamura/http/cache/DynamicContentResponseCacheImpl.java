@@ -32,7 +32,6 @@ import org.sakaiproject.nakamura.api.memory.Cache;
 import org.sakaiproject.nakamura.api.memory.CacheManagerService;
 import org.sakaiproject.nakamura.api.memory.CacheScope;
 import org.sakaiproject.nakamura.util.StringUtils;
-import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -93,7 +92,6 @@ public class DynamicContentResponseCacheImpl implements DynamicContentResponseCa
     if (etag == null) {
       etag = buildETag(request);
       saveEntry(cacheCategory, key, etag);
-      TelemetryCounter.incrementValue("http", "DynamicContentResponseCache-save", cacheCategory);
     }
     setHeaders(response, etag);
   }
@@ -106,12 +104,10 @@ public class DynamicContentResponseCacheImpl implements DynamicContentResponseCa
     String key = buildCacheKey(cacheCategory, userID);
     if (cache.containsKey(key)) {
       invalidateEntry(cacheCategory, key);
-      TelemetryCounter.incrementValue("http", "DynamicContentResponseCache-invalidation", cacheCategory);
     }
     String wildcardKey = buildCacheKey("*", userID);
     if (cache.containsKey(wildcardKey)) {
       invalidateEntry("*", wildcardKey);
-      TelemetryCounter.incrementValue("http", "DynamicContentResponseCache-invalidation", "*");
     }
   }
 
@@ -126,7 +122,6 @@ public class DynamicContentResponseCacheImpl implements DynamicContentResponseCa
     if (clientEtag != null && clientEtag.equals(serverEtag)) {
       hitEntry(cacheCategory, response);
       setHeaders(response, serverEtag);
-      TelemetryCounter.incrementValue("http", "DynamicContentResponseCache-hit", cacheCategory);
       return true;
     }
     return false;
