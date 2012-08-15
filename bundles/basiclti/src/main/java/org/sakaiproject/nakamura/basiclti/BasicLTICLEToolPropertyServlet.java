@@ -23,7 +23,6 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
-import org.sakaiproject.nakamura.api.basiclti.VirtualToolDataProvider;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,7 @@ import javax.servlet.ServletException;
 public class BasicLTICLEToolPropertyServlet extends SlingSafeMethodsServlet {
 
   @Reference
-  protected transient VirtualToolDataProvider virtualToolDataProvider;
+  protected transient CLEVirtualToolDataProvider cleVirtualToolDataProvider = new CLEVirtualToolDataProvider();
 
   private static final long serialVersionUID = 4209601992662802279L;
 
@@ -50,7 +49,8 @@ public class BasicLTICLEToolPropertyServlet extends SlingSafeMethodsServlet {
     ExtendedJSONWriter ejw = new ExtendedJSONWriter(response.getWriter());
     try {
       ejw.object();
-      ejw.key("toolList").value(virtualToolDataProvider.getSupportedVirtualToolIds().toArray());
+      ejw.key("toolList").value(
+          cleVirtualToolDataProvider.getSupportedVirtualToolIds().toArray());
       ejw.endObject();
     } catch (JSONException e) {
       LOG.error(e.getLocalizedMessage(), e);
