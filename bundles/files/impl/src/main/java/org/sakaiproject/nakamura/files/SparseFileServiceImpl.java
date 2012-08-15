@@ -32,13 +32,17 @@ import org.apache.felix.scr.annotations.Service;
 import org.osgi.service.event.EventAdmin;
 import org.sakaiproject.nakamura.api.activity.ActivityUtils;
 import org.sakaiproject.nakamura.api.cluster.ClusterTrackingService;
+import org.sakaiproject.nakamura.api.files.File;
+import org.sakaiproject.nakamura.api.files.FileParams;
 import org.sakaiproject.nakamura.api.files.FileService;
+import org.sakaiproject.nakamura.api.files.FilesConstants;
 import org.sakaiproject.nakamura.api.files.PermissionException;
 import org.sakaiproject.nakamura.api.files.StorageException;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
+import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AclModification;
@@ -48,11 +52,12 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
+import org.sakaiproject.nakamura.util.SparseUtils;
+import org.sakaiproject.nakamura.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -75,31 +80,31 @@ public class SparseFileServiceImpl implements FileService {
   @Reference
   protected EventAdmin eventAdmin;
 
-  public Map<String, Object> createFile(String creator, String filename, String contentType, InputStream inputStream)
+  public File createFile(FileParams params)
       throws StorageException, IOException {
-    Map<String, Object> fileProps = new HashMap<String, Object>();
+    File file = null;
     Session adminSession = null;
     try {
       // Grab an admin session so we can create files in the pool space.
       adminSession = sparseRepository.loginAdministrative();
 
-      ContentManager contentManager = adminSession.getContentManager();
       String poolID = generatePoolId();
 
       Map<String, Object> contentProperties = new HashMap<String, Object>();
-      contentProperties.put(POOLED_CONTENT_FILENAME, filename);
+      contentProperties.put(POOLED_CONTENT_FILENAME, params.getFilename());
       contentProperties.put(SLING_RESOURCE_TYPE_PROPERTY, POOLED_CONTENT_RT);
-      contentProperties.put(POOLED_CONTENT_CREATED_FOR, creator);
+      contentProperties.put(POOLED_CONTENT_CREATED_FOR, params.getCreator());
       contentProperties.put(POOLED_NEEDS_PROCESSING, "true");
-      contentProperties.put(Content.MIMETYPE_FIELD, contentType);
-      contentProperties.put(POOLED_CONTENT_USER_MANAGER, new String[]{creator});
+      contentProperties.put(Content.MIMETYPE_FIELD, params.getContentType());
+      contentProperties.put(POOLED_CONTENT_USER_MANAGER, new String[]{params.getCreator()});
 
       Content content = new Content(poolID, contentProperties);
+      ContentManager contentManager = adminSession.getContentManager();
       contentManager.update(content);
 
       // TODO figure out how to make FileUploadFilter work without RequestParam dependency
       // InputStream inputStream = filterUploadInputStream(poolID, value.getInputStream(), contentType, value);
-      contentManager.writeBody(poolID, inputStream);
+      contentManager.writeBody(poolID, params.getInputStream());
 
       // deny anon everything
       // deny everyone everything
@@ -107,13 +112,13 @@ public class SparseFileServiceImpl implements FileService {
       List<AclModification> modifications = new ArrayList<AclModification>();
       AclModification.addAcl(false, Permissions.ALL, User.ANON_USER, modifications);
       AclModification.addAcl(false, Permissions.ALL, Group.EVERYONE, modifications);
-      AclModification.addAcl(true, Permissions.CAN_MANAGE, creator, modifications);
+      AclModification.addAcl(true, Permissions.CAN_MANAGE, params.getCreator(), modifications);
       AccessControlManager accessControlManager = adminSession.getAccessControlManager();
       accessControlManager.setAcl(Security.ZONE_CONTENT, poolID, modifications.toArray(new AclModification[modifications.size()]));
 
-      ActivityUtils.postActivity(eventAdmin, creator, poolID, "Content", "default", "pooled content", "CREATED_FILE", null);
+      ActivityUtils.postActivity(eventAdmin, params.getCreator(), poolID, "Content", "default", "pooled content", "CREATED_FILE", null);
 
-      fileProps = ImmutableMap.of("poolId", poolID, "item", content.getProperties());
+      file = new File(params.getCreator(), params.getFilename(), params.getContentType(), poolID, content.getProperties());
 
     } catch (AccessDeniedException e) {
       LOGGER.warn(e.getMessage(), e);
@@ -131,16 +136,88 @@ public class SparseFileServiceImpl implements FileService {
       LOGGER.warn(e.getMessage(), e);
       throw new StorageException(e);
     } finally {
-      if (adminSession != null) {
-        try {
-          adminSession.logout();
-        } catch (ClientPoolException e) {
-          LOGGER.error("Could not log out of admin session", e);
-        }
-      }
+      SparseUtils.logoutQuietly(adminSession);
     }
 
-    return fileProps;
+    return file;
+  }
+
+  public File createAlternativeStream(FileParams params)
+      throws StorageException, IOException {
+    File file = null;
+
+    Session adminSession = null;
+    try {
+      // Grab an admin session so we can create files in the pool space.
+      adminSession = sparseRepository.loginAdministrative();
+
+      String[] alternativeStreamParts = StringUtils.split(params.getAlternativeStream(), FilesConstants.ALTERNATIVE_STREAM_SELECTOR_SEPARATOR);
+      String pageId = alternativeStreamParts[0];
+      String previewSize = alternativeStreamParts[1];
+      Content alternativeContent = new Content(params.getPoolID() + "/" + pageId, ImmutableMap.of(
+          Content.MIMETYPE_FIELD, (Object) params.getContentType(), SLING_RESOURCE_TYPE_PROPERTY,
+          POOLED_CONTENT_RT));
+      ContentManager contentManager = adminSession.getContentManager();
+      contentManager.update(alternativeContent);
+
+      // TODO figure out how to make FileUploadFilter work without RequestParam dependency
+      // InputStream inputStream = filterUploadInputStream(alternativeContent.getPath(), value.getInputStream(), contentType, value);
+      contentManager.writeBody(alternativeContent.getPath(), params.getInputStream(), previewSize);
+
+      ActivityUtils.postActivity(eventAdmin, params.getCreator(), params.getPoolID(), "Content", "default",
+          "pooled content", "CREATED_ALT_FILE",
+          ImmutableMap.<String, Object>of("altPath", params.getPoolID() + "/" + pageId));
+
+      file = new File(params.getCreator(), params.getFilename(), params.getContentType(), params.getPoolID(), alternativeContent.getProperties());
+
+    } catch (AccessDeniedException e) {
+      LOGGER.warn(e.getMessage(), e);
+      throw new PermissionException("Admin session should be able to do anything!", e);
+    } catch (ClientPoolException e) {
+      LOGGER.warn(e.getMessage(), e);
+      throw new StorageException(e);
+    } catch (StorageClientException e) {
+      LOGGER.warn(e.getMessage(), e);
+      throw new StorageException(e);
+    } finally {
+      SparseUtils.logoutQuietly(adminSession);
+    }
+    return file;
+
+  }
+
+  public File updateFile(FileParams params)
+      throws StorageException, IOException {
+    File file = null;
+    Session adminSession = null;
+    try {
+      // Grab an admin session so we can create files in the pool space.
+      adminSession = sparseRepository.loginAdministrative();
+      ContentManager contentManager = adminSession.getContentManager();
+      Content content = contentManager.get(params.getPoolID());
+      content.setProperty(StorageClientUtils.getAltField(Content.MIMETYPE_FIELD, params.getAlternativeStream()), params.getContentType());
+      contentManager.update(content);
+
+      // TODO figure out how to make FileUploadFilter work without RequestParam dependency
+      // InputStream inputStream = filterUploadInputStream(poolId, value.getInputStream(), contentType, value);
+      contentManager.writeBody(params.getPoolID(), params.getInputStream(), params.getAlternativeStream());
+      ActivityUtils.postActivity(eventAdmin, params.getCreator(), params.getPoolID(), "Content", "default", "pooled content", "UPDATED_FILE", null);
+
+      file = new File(params.getCreator(), params.getFilename(), params.getContentType(), params.getPoolID(), content.getProperties());
+
+    } catch (AccessDeniedException e) {
+      LOGGER.warn(e.getMessage(), e);
+      throw new PermissionException("Admin session should be able to do anything!", e);
+    } catch (ClientPoolException e) {
+      LOGGER.warn(e.getMessage(), e);
+      throw new StorageException(e);
+    } catch (StorageClientException e) {
+      LOGGER.warn(e.getMessage(), e);
+      throw new StorageException(e);
+    } finally {
+      SparseUtils.logoutQuietly(adminSession);
+    }
+    return file;
   }
 
   private String generatePoolId() throws UnsupportedEncodingException,

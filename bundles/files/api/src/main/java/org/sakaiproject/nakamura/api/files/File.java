@@ -18,16 +18,45 @@
 
 package org.sakaiproject.nakamura.api.files;
 
-import java.io.IOException;
+import java.util.Map;
 
-public interface FileService {
+public class File {
 
-  File createFile(FileParams params)
-      throws StorageException, IOException;
+  private String creator;
 
-  File createAlternativeStream(FileParams params)
-      throws StorageException, IOException;
+  private String filename;
 
-  File updateFile(FileParams params)
-      throws StorageException, IOException;
+  private String contentType;
+
+  private String poolID;
+
+  private Map<String, Object> properties;
+
+  public File(String creator, String filename, String contentType, String poolID, Map<String, Object> properties) {
+    this.creator = creator;
+    this.filename = filename;
+    this.contentType = contentType;
+    this.poolID = poolID;
+    this.properties = properties;
+  }
+
+  public String getCreator() {
+    return creator;
+  }
+
+  public String getFilename() {
+    return filename;
+  }
+
+  public String getContentType() {
+    return contentType;
+  }
+
+  public String getPoolID() {
+    return poolID;
+  }
+
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
 }

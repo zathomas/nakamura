@@ -51,6 +51,8 @@ import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
 import org.sakaiproject.nakamura.api.doc.ServiceExtension;
 import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
+import org.sakaiproject.nakamura.api.files.File;
+import org.sakaiproject.nakamura.api.files.FileParams;
 import org.sakaiproject.nakamura.api.files.FileService;
 import org.sakaiproject.nakamura.api.files.FileUploadFilter;
 import org.sakaiproject.nakamura.api.files.FileUploadHandler;
@@ -98,45 +100,45 @@ import javax.servlet.http.HttpServletResponse;
 @SlingServlet(methods = "POST", paths = "/system/pool/createfile")
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
-    @Property(name = "service.description", value = "Allows for uploading files to the pool.") })
-@ServiceDocumentation(name="Create Content Pool Servlet", okForVersion = "1.2",
-    description="Creates and Updates files in the pool",
-    shortDescription="Creates and Updates files in the pool",
-    bindings=@ServiceBinding(type=BindingType.PATH,bindings={"/system/pool/createfile"},
-              extensions=@ServiceExtension(name="*", description="If an extension is provided it is assumed to be the PoolID which is to be updated.")),
-    methods=@ServiceMethod(name="POST",
-      description={"A normal file post. If this is to create files, each file in the multipart file will create a new file in the pool. If a PoolID is supplied only the first file in the upload is used to overwrite the file." +
-        "If versioning is required, then a POST must be performed to /p/poolID.save ",
-        "Example<br>" +
-        "<pre>A Multipart file upload to http://localhost:8080/system/pool/createfile will create one Pool file per file in the upload</pre>",
-        "Example<br>" +
-        "<pre>A Multipart file upload to http://localhost:8080/system/pool/createfile.3sd23a4QW4WD will update the file content for PoolID 3sd23a4QW4WD </pre>",
-        "Response is of the form " +
-        "<pre>" +
-        "   { \"file1\" : \"3sd23a4QW4WD\", \"file2\" : \"3sd23a4QW4ZS\" } " +
-        "</pre>"
+    @Property(name = "service.description", value = "Allows for uploading files to the pool.")})
+@ServiceDocumentation(name = "Create Content Pool Servlet", okForVersion = "1.2",
+    description = "Creates and Updates files in the pool",
+    shortDescription = "Creates and Updates files in the pool",
+    bindings = @ServiceBinding(type = BindingType.PATH, bindings = {"/system/pool/createfile"},
+        extensions = @ServiceExtension(name = "*", description = "If an extension is provided it is assumed to be the PoolID which is to be updated.")),
+    methods = @ServiceMethod(name = "POST",
+        description = {"A normal file post. If this is to create files, each file in the multipart file will create a new file in the pool. If a PoolID is supplied only the first file in the upload is used to overwrite the file." +
+            "If versioning is required, then a POST must be performed to /p/poolID.save ",
+            "Example<br>" +
+                "<pre>A Multipart file upload to http://localhost:8080/system/pool/createfile will create one Pool file per file in the upload</pre>",
+            "Example<br>" +
+                "<pre>A Multipart file upload to http://localhost:8080/system/pool/createfile.3sd23a4QW4WD will update the file content for PoolID 3sd23a4QW4WD </pre>",
+            "Response is of the form " +
+                "<pre>" +
+                "   { \"file1\" : \"3sd23a4QW4WD\", \"file2\" : \"3sd23a4QW4ZS\" } " +
+                "</pre>"
         },
-      response={
-        @ServiceResponse(code = 201, description = "Where files are created"),
-        @ServiceResponse(code = 400, description = "Where the request is invalid"),
-        @ServiceResponse(code = 403, description = "Anonymous users my not upload files to the content pool."),
-        @ServiceResponse(code = 200, description = "Where the file is updated"),
-        @ServiceResponse(code = 500, description = "Failure with HTML explanation.")
-      }))
+        response = {
+            @ServiceResponse(code = 201, description = "Where files are created"),
+            @ServiceResponse(code = 400, description = "Where the request is invalid"),
+            @ServiceResponse(code = 403, description = "Anonymous users my not upload files to the content pool."),
+            @ServiceResponse(code = 200, description = "Where the file is updated"),
+            @ServiceResponse(code = 500, description = "Failure with HTML explanation.")
+        }))
 
 @References(value = {
-  @Reference(name = "fileUploadHandler",
-             referenceInterface = FileUploadHandler.class,
-             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-             policy = ReferencePolicy.DYNAMIC,
-             bind = "bindFileUploadHandler",
-             unbind = "unbindFileUploadHandler"),
-  @Reference(name = "fileUploadFilter",
-             referenceInterface = FileUploadFilter.class,
-             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-             policy = ReferencePolicy.DYNAMIC,
-             bind = "bindFileUploadFilter",
-             unbind = "unbindFileUploadFilter")
+    @Reference(name = "fileUploadHandler",
+        referenceInterface = FileUploadHandler.class,
+        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+        policy = ReferencePolicy.DYNAMIC,
+        bind = "bindFileUploadHandler",
+        unbind = "unbindFileUploadHandler"),
+    @Reference(name = "fileUploadFilter",
+        referenceInterface = FileUploadFilter.class,
+        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+        policy = ReferencePolicy.DYNAMIC,
+        bind = "bindFileUploadFilter",
+        unbind = "unbindFileUploadFilter")
 })
 public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
 
@@ -187,8 +189,7 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
   private void notifyFileUploadHandlers(Map<String, Object> results, Session session,
                                         String poolId, RequestParameter p,
                                         String userId, boolean isNew)
-    throws AccessDeniedException, StorageClientException
-  {
+      throws AccessDeniedException, StorageClientException {
     ContentManager contentManager = session.getContentManager();
 
     for (FileUploadHandler fileUploadHandler : fileUploadHandlers) {
@@ -198,7 +199,7 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
         inputStream.close();
       } catch (Throwable t) {
         LOGGER.error("FileUploadHandler '{}' failed to handle upload of file '{}' for userid '{}': {}",
-                     new Object[] { fileUploadHandler, p.getFileName(), userId, t.getMessage()});
+            new Object[]{fileUploadHandler, p.getFileName(), userId, t.getMessage()});
         LOGGER.error(t.getMessage(), t);
       }
     }
@@ -214,16 +215,9 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
     String poolId = rpi.getExtension();
     String[] selectors = rpi.getSelectors();
     String alternativeStream = null;
-    if ( selectors != null && selectors.length > 0 ) {
+    if (selectors != null && selectors.length > 0) {
       alternativeStream = poolId;
       poolId = selectors[0];
-    }
-    javax.jcr.Session jcrSession = request.getResourceResolver().adaptTo(javax.jcr.Session.class);
-    Session session;
-    try {
-      session = JackrabbitSparseUtils.getSparseSession(jcrSession);
-    } catch (RepositoryException e) {
-      throw new ServletException(e.getMessage(), e);
     }
 
     Session adminSession = null;
@@ -248,34 +242,42 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
             // This is a file upload.
             // Generate an ID and store it.
             String fileName = FilenameUtils.getName(p.getFileName()); // IE still sends in an absolute path sometimes.
-            if ( poolId == null ) {
+            FileParams params = new FileParams();
+            params.setCreator(userId);
+            params.setFilename(fileName);
+            params.setContentType(getContentType(p));
+            params.setInputStream(p.getInputStream());
+            params.setPoolID(poolId);
+            params.setAlternativeStream(alternativeStream);
 
-              Map<String, Object> thisFile = fileService.createFile(userId, fileName, getContentType(p), p.getInputStream());
-              results.put(fileName, thisFile);
+            File thisFile;
+            boolean isNew = false;
+            fileUpload = true;
+
+            if (poolId == null) {
+              thisFile = fileService.createFile(params);
               statusCode = HttpServletResponse.SC_CREATED;
-              fileUpload = true;
-
-              notifyFileUploadHandlers(results, adminSession, (String) thisFile.get("poolId"), p, au.getId(), true);
-            } else {
-              // Add it to the map so we can output something to the UI.
-              Content content = createFile(poolId, alternativeStream, session, p, au, false);
-              results.put(fileName, ImmutableMap.of("poolId", (Object)poolId, "item", content.getProperties()));
+              isNew = true;
+            } else if (alternativeStream != null && alternativeStream.indexOf(FilesConstants.ALTERNATIVE_STREAM_SELECTOR_SEPARATOR) > 0) {
+              thisFile = fileService.createAlternativeStream(params);
               statusCode = HttpServletResponse.SC_OK;
-              fileUpload = true;
-
-              notifyFileUploadHandlers(results, adminSession, poolId, p, au.getId(), false);
-              break;
+            } else {
+              thisFile = fileService.updateFile(params);
+              statusCode = HttpServletResponse.SC_OK;
             }
+
+            results.put(fileName, ImmutableMap.of("poolId", thisFile.getPoolID(), "item", thisFile.getProperties()));
+            notifyFileUploadHandlers(results, adminSession, thisFile.getPoolID(), p, au.getId(), isNew);
 
           }
         }
       }
-      if (!fileUpload ) {
+      if (!fileUpload) {
         // not a file upload, ok, create an item and use all the request parameters, only
         // if there was no poolId specified
-        if ( poolId == null ) {
+        if (poolId == null) {
           String createPoolId = generatePoolId();
-          results.put("_contentItem",  ImmutableMap.of("poolId", (Object)createPoolId,  "item", createContentItem(createPoolId, adminSession, request, au).getProperties()));
+          results.put("_contentItem", ImmutableMap.of("poolId", (Object) createPoolId, "item", createContentItem(createPoolId, adminSession, request, au).getProperties()));
           statusCode = HttpServletResponse.SC_CREATED;
         }
       }
@@ -283,7 +285,7 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
       this.authorizableCountChanger.notify(UserConstants.CONTENT_ITEMS_PROP, userId);
 
       // Make sure we're outputting proper json.
-      if ( statusCode == HttpServletResponse.SC_BAD_REQUEST ) {
+      if (statusCode == HttpServletResponse.SC_BAD_REQUEST) {
         response.setStatus(statusCode);
       } else {
         response.setStatus(statusCode);
@@ -314,7 +316,7 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
     } finally {
       // Make sure we're logged out.
       try {
-        if ( adminSession != null ) {
+        if (adminSession != null) {
           adminSession.logout();
         }
       } catch (ClientPoolException e) {
@@ -324,7 +326,7 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
   }
 
   private Content createContentItem(String poolId, Session session,
-      SlingHttpServletRequest request, Authorizable au) throws StorageClientException, AccessDeniedException {
+                                    SlingHttpServletRequest request, Authorizable au) throws StorageClientException, AccessDeniedException {
     ContentManager contentManager = session.getContentManager();
     AccessControlManager accessControlManager = session.getAccessControlManager();
     Map<String, Object> contentProperties = new HashMap<String, Object>();
@@ -332,35 +334,35 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
     contentProperties.put(POOLED_CONTENT_CREATED_FOR, au.getId());
     contentProperties.put(POOLED_CONTENT_USER_MANAGER, new String[]{au.getId()});
     contentProperties.put(POOLED_CONTENT_COMMENT_COUNT, Integer.valueOf(0));
-    for ( Entry<String, RequestParameter[]>   e : request.getRequestParameterMap().entrySet() ) {
+    for (Entry<String, RequestParameter[]> e : request.getRequestParameterMap().entrySet()) {
       String k = e.getKey();
-      if ( !(k.startsWith("_") || k.startsWith(":")) && !FilesConstants.RESERVED_POOL_KEYS.contains(k) ) {
+      if (!(k.startsWith("_") || k.startsWith(":")) && !FilesConstants.RESERVED_POOL_KEYS.contains(k)) {
         RequestParameter[] rp = e.getValue();
-        if ( rp != null && rp.length > 0 ) {
-          if ( rp.length == 1) {
-              if ( rp[0].isFormField() ) {
+        if (rp != null && rp.length > 0) {
+          if (rp.length == 1) {
+            if (rp[0].isFormField()) {
               // Since this is a non-file upload allow override of the mimetype
               if ("mimeType".equals(k)) {
                 contentProperties.put(Content.MIMETYPE_FIELD, rp[0].getString());
               } else {
                 contentProperties.put(k, rp[0].getString());
               }
-              }
+            }
           } else {
             List<String> values = Lists.newArrayList();
-            for ( RequestParameter rpp : rp) {
-              if ( rpp.isFormField() ) {
+            for (RequestParameter rpp : rp) {
+              if (rpp.isFormField()) {
                 values.add(rpp.getString());
               }
             }
-            if ( values.size() > 0 ) {
-              contentProperties.put(k,values.toArray(new String[values.size()]));
+            if (values.size() > 0) {
+              contentProperties.put(k, values.toArray(new String[values.size()]));
             }
           }
         }
       }
     }
-    Content content = new Content(poolId,contentProperties);
+    Content content = new Content(poolId, contentProperties);
 
     contentManager.update(content);
 
@@ -397,13 +399,13 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
 
 
   private Content createFile(String poolId, String alternativeStream, Session session, RequestParameter value,
-      Authorizable au, boolean create) throws IOException, AccessDeniedException, StorageClientException {
+                             Authorizable au, boolean create) throws IOException, AccessDeniedException, StorageClientException {
     // Get the content type.
     String contentType = getContentType(value);
 
     ContentManager contentManager = session.getContentManager();
     AccessControlManager accessControlManager = session.getAccessControlManager();
-    if ( create ) {
+    if (create) {
       // Create a proper nt:file node in jcr with some properties on it to make it possible
       // to locate this pool file without having to use the path.
       Map<String, Object> contentProperties = new HashMap<String, Object>();
@@ -414,7 +416,7 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
       contentProperties.put(Content.MIMETYPE_FIELD, contentType);
       contentProperties.put(POOLED_CONTENT_USER_MANAGER, new String[]{au.getId()});
 
-      Content content = new Content(poolId,contentProperties);
+      Content content = new Content(poolId, contentProperties);
 
       contentManager.update(content);
 
@@ -437,7 +439,7 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
       String[] alternativeStreamParts = StringUtils.split(alternativeStream, ALTERNATIVE_STREAM_SELECTOR_SEPARATOR);
       String pageId = alternativeStreamParts[0];
       String previewSize = alternativeStreamParts[1];
-      Content alternativeContent = new Content(poolId+"/"+pageId, ImmutableMap.of(
+      Content alternativeContent = new Content(poolId + "/" + pageId, ImmutableMap.of(
           Content.MIMETYPE_FIELD, (Object) contentType, SLING_RESOURCE_TYPE_PROPERTY,
           POOLED_CONTENT_RT));
       contentManager.update(alternativeContent);
@@ -447,7 +449,7 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
 
       ActivityUtils.postActivity(eventAdmin, au.getId(), poolId, "Content", "default",
           "pooled content", "CREATED_ALT_FILE",
-          ImmutableMap.<String, Object> of("altPath", poolId + "/" + pageId));
+          ImmutableMap.<String, Object>of("altPath", poolId + "/" + pageId));
     } else {
       Content content = contentManager.get(poolId);
       content.setProperty(StorageClientUtils.getAltField(Content.MIMETYPE_FIELD, alternativeStream), contentType);
@@ -463,8 +465,7 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
   /**
    * Get the content type of a file that's in a {@link org.apache.sling.api.request.RequestParameter}.
    *
-   * @param value
-   *          The request parameter.
+   * @param value The request parameter.
    * @return The content type.
    */
   private String getContentType(RequestParameter value) {
@@ -490,7 +491,6 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
       NoSuchAlgorithmException {
     return clusterTrackingService.getClusterUniqueId();
   }
-
 
 
 }
