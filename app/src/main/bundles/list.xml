@@ -399,6 +399,11 @@ KERN-1187
       <artifactId>org.sakaiproject.nakamura.postgresqlwrapper</artifactId>
       <version>1.5.0-SNAPSHOT</version>
     </bundle>
+    <bundle>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>org.sakaiproject.nakamura.jaxrs</artifactId>
+      <version>1.5.0-SNAPSHOT</version>
+    </bundle>
 
     <bundle>
       <groupId>org.sakaiproject.nakamura</groupId>
