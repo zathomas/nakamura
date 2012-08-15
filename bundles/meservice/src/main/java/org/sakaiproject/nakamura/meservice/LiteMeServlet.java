@@ -17,9 +17,6 @@
  */
 package org.sakaiproject.nakamura.meservice;
 
-import static org.sakaiproject.nakamura.api.connections.ConnectionState.ACCEPTED;
-import static org.sakaiproject.nakamura.api.connections.ConnectionState.INVITED;
-import static org.sakaiproject.nakamura.api.connections.ConnectionState.PENDING;
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.PARAMS_ITEMS_PER_PAGE;
 
 import com.google.common.collect.ImmutableMap;
@@ -52,22 +49,17 @@ import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
-import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.message.LiteMessagingService;
 import org.sakaiproject.nakamura.api.message.MessagingException;
+import org.sakaiproject.nakamura.api.messagebucket.MessageBucketService;
 import org.sakaiproject.nakamura.api.search.solr.Query;
-import org.sakaiproject.nakamura.api.search.solr.Result;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchServiceFactory;
-import org.sakaiproject.nakamura.api.user.AuthorizableUtil;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.api.util.LocaleUtils;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
-import org.sakaiproject.nakamura.util.LitePersonalUtils;
-import org.sakaiproject.nakamura.util.PathUtils;
-import org.sakaiproject.nakamura.util.ServletUtils;
 import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,13 +67,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.MissingResourceException;
-import java.util.Set;
 import java.util.TimeZone;
 
 import javax.jcr.RepositoryException;
@@ -204,33 +192,18 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
       }
       PrintWriter w = response.getWriter();
       ExtendedJSONWriter writer = new ExtendedJSONWriter(w);
-      writer.setTidy(ServletUtils.isTidy(request));
-      writer.object();
-      // User info
-      writer.key("user");
-      writeUserJSON(writer, session, au, request);
+      writer.object(); // start output object
 
       // Dump this user his info
-      writer.key("profile");
-      ValueMap profile = new ValueMapDecorator(basicUserInfoService.getProperties(au));
-      writer.valueMap(profile);
+      Map<String, Object> counts = writeProfile(au, writer);
 
-      // Dump this user his number of unread messages.
-      writer.key("messages");
-      writeMessageCounts(writer, session, au, request);
+      writeLocale(writer, getProperties(au), request);
 
-      // Dump this user his number of contacts.
-      writer.key("contacts");
-      writeContactCounts(writer, au, request);
-
-      // Dump the groups for this user.
-      writer.key("groups");
-      writeGroups(writer, session, au);
-
-      writer.endObject();
+      writeCounts(request, response, session, au, writer, counts);
 
       dynamicContentResponseCache.recordResponse(UserConstants.USER_RESPONSE_CACHE, request, response);
 
+      writer.endObject(); // end output object
     } catch (JSONException e) {
       LOG.error("Failed to create proper JSON response in /system/me", e);
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
@@ -255,97 +228,82 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
   }
 
   /**
-   * @param writer
-   * @param session
    * @param au
+   * @param writer
+   * @return
    * @throws JSONException
-   * @throws StorageClientException
-   * @throws AccessDeniedException
-   * @throws RepositoryException
    */
-  protected void writeGroups(ExtendedJSONWriter writer, Session session, Authorizable au)
-      throws JSONException, StorageClientException, AccessDeniedException {
-    AuthorizableManager authorizableManager = session.getAuthorizableManager();
-    writer.array();
-    if (!UserConstants.ANON_USERID.equals(au.getId())) {
-      // KERN-1831 changed from getPrincipals to memberOf to drill down list
-      for (Iterator<Group> memberOf = au.memberOf(authorizableManager); memberOf.hasNext(); ) {
-//      this is the old code for outputting only direct memberships. might be needed later if such a flag is added.
-//      String[] principals = au.getPrincipals();
-//      for(String principal : principals) {
-//        Authorizable group = authorizableManager.findAuthorizable(principal);
-        Authorizable group = memberOf.next();
-        if (AuthorizableUtil.isContactGroup(group)
-            || Group.EVERYONE.equals(group.getId())) {
-          // we don't want the "everyone" group or contact groups in this feed
-          continue;
-        }
-        ValueMap groupProfile = new ValueMapDecorator(basicUserInfoService.getProperties(group));
-        if (groupProfile != null) {
-          writer.valueMap(groupProfile);
-        }
-      }
-    }
-    writer.endArray();
+  protected Map<String, Object> writeProfile(Authorizable au, ExtendedJSONWriter writer)
+      throws JSONException {
+    writer.key("profile");
+    Map<String, Object> props = basicUserInfoService.getProperties(au);
+    // remove the counts to be displayed further down
+    Map<String, Object> counts = (Map<String, Object>) props.remove(UserConstants.COUNTS_PROP);
+    ValueMap profile = new ValueMapDecorator(props);
+    writer.valueMap(profile);
+    return counts;
   }
 
   /**
-   * Writes a JSON Object that contains the number of contacts for a user split up in
-   * PENDING, ACCEPTED.
-   *
-   * @param writer
-   * @param au
    * @param request
+   * @param session
+   * @param au
+   * @param writer
+   * @param counts
    * @throws JSONException
    * @throws SolrSearchException
-   * @throws RepositoryException
    */
-  protected void writeContactCounts(ExtendedJSONWriter writer, Authorizable au,
-      SlingHttpServletRequest request) throws JSONException, SolrSearchException {
-    writer.object();
+  protected void writeCounts(SlingHttpServletRequest request,
+      SlingHttpServletResponse response, Session session, Authorizable au,
+      ExtendedJSONWriter writer, Map<String, Object> counts) throws JSONException,
+      SolrSearchException, IOException, ServletException {//, URISyntaxException {
+    writer.key(UserConstants.COUNTS_PROP);
+    writer.object(); // start "counts"
 
-    // We don't do queries for anonymous users. (Possible ddos hole).
-    String userID = au.getId();
-    if (UserConstants.ANON_USERID.equals(userID)) {
-      writer.endObject();
-      return;
-    }
+    writer.key("content");
+    writer.value(counts.get(UserConstants.CONTENT_ITEMS_PROP));
 
-    // Get the path to the store for this user.
-    Map<String, Integer> contacts = new HashMap<String, Integer>();
-    contacts.put(ACCEPTED.toString().toLowerCase(), 0);
-    contacts.put(INVITED.toString().toLowerCase(), 0);
-    contacts.put(PENDING.toString().toLowerCase(), 0);
-    try {
-      // This could just use ConnectionUtils.getConnectionPathBase, but that util class is
-      // in the private package unfortunately.
-      String store = LitePersonalUtils.getHomePath(userID) + "/"
-          + ConnectionConstants.CONTACT_STORE_NAME;
-      store = ISO9075.encodePath(store);
-      String queryString = "path:" + ClientUtils.escapeQueryChars(store) + " AND resourceType:sakai\\/contact AND state:(ACCEPTED OR INVITED OR PENDING)";
-      Query query = new Query(queryString);
-      LOG.debug("Submitting Query {} ", query);
-      SolrSearchResultSet resultSet = searchServiceFactory.getSearchResultSet(
-          request, query, false);
-      Iterator<Result> resultIterator = resultSet.getResultSetIterator();
-      while (resultIterator.hasNext()) {
-        Result contact = resultIterator.next();
-        if (contact.getProperties().containsKey("state")) {
-          String state = ((String) contact.getProperties().get("state").iterator().next()).toLowerCase();
-          int count = 0;
-          if (contacts.containsKey(state)) {
-            count = contacts.get(state);
-          }
-          contacts.put(state, count + 1);
-        }
-      }
-    } finally {
-      for (Entry<String, Integer> entry : contacts.entrySet()) {
-        writer.key(entry.getKey());
-        writer.value(entry.getValue());
-      }
-    }
-    writer.endObject();
+    writer.key("contacts");
+    writer.value(counts.get(UserConstants.CONTACTS_PROP));
+
+    writer.key("memberships");
+    writer.value(counts.get(UserConstants.GROUP_MEMBERSHIPS_PROP));
+
+    /*
+     * TODO unreadmessages and collections come from solr queries. If possible, these
+     * should be stored on the authorizable to save recalculating them every time.
+     */
+    writer.key("unreadmessages");
+    writer.value(getUnreadMessageCount(session, au, request));
+
+    // this is just nasty. we should move away from http calls and just call solr directly
+    // if we can't store on the authorizable.
+//    writer.key("collections");
+//    JSONObject json = new JSONObject();
+//    json.put("url", "/var/search/pool/auth-all.json");
+//    json.put("method", "GET");
+//
+//    // /var/search/pool/auth-all.json?
+//    //   mimetype=x-sakai/collection
+//    //   page=0
+//    //   items=0
+//    JSONObject params = new JSONObject();
+//    params.put("_charset_", "utf-8");
+//    params.put("page", 0);
+//    params.put("items", 0);
+//
+//    json.put("parameters", params);
+//
+//    RequestInfo requestInfo = new RequestInfo(json);
+//    RequestWrapper requestWrapper = new RequestWrapper(request, requestInfo);
+//    ResponseWrapper responseWrapper = new ResponseWrapper(response);
+//    request.getRequestDispatcher(requestInfo.getUrl()).forward(requestWrapper, responseWrapper);
+//    String jsonStr = responseWrapper.getDataAsString();
+//    JSONObject jsonCount = new JSONObject(jsonStr);
+//    int collectionsCount = jsonCount.getInt("count");
+//    writer.value(collectionsCount);
+
+    writer.endObject(); // end "counts"
   }
 
   /**
@@ -363,75 +321,28 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
    * @throws MessagingException
    * @throws SolrSearchException
    */
-  protected void writeMessageCounts(ExtendedJSONWriter writer, Session session,
-      Authorizable au, SlingHttpServletRequest request) throws JSONException, MessagingException, SolrSearchException {
-    writer.object();
-    writer.key("unread");
-
+  protected long getUnreadMessageCount(Session session, Authorizable au,
+      SlingHttpServletRequest request) throws JSONException, MessagingException,
+      SolrSearchException {
     // We don't do queries for anonymous users. (Possible ddos hole).
     String userID = au.getId();
     if (UserConstants.ANON_USERID.equals(userID)) {
-      writer.value(0);
-      writer.endObject();
-      return;
+      return 0;
     }
 
-    long count = 0;
-    try {
-      String store = messagingService.getFullPathToStore(au.getId(), session);
-      store = ISO9075.encodePath(store);
-      String queryString = "messagestore:" + ClientUtils.escapeQueryChars(store);
-      final Map<String, Object> queryOptions = ImmutableMap.of(
-          PARAMS_ITEMS_PER_PAGE, (Object) "0",
-          CommonParams.START, "0",
-          CommonParams.FQ, "resourceType:sakai\\/message AND type:internal AND messagebox:inbox AND read:false"
-      );
-      Query query = new Query(queryString, queryOptions);
-      LOG.debug("Submitting Query {} ", query);
-      SolrSearchResultSet resultSet = searchServiceFactory.getSearchResultSet(
-          request, query, false);
-      count = resultSet.getSize();
-    } finally {
-      writer.value(count);
-    }
-    writer.endObject();
-  }
-
-  /**
-   *
-   * @param write
-   * @param session
-   * @param authorizable
-   * @throws RepositoryException
-   * @throws JSONException
-   * @throws StorageClientException
-   */
-  protected void writeUserJSON(ExtendedJSONWriter write, Session session,
-      Authorizable authorizable, SlingHttpServletRequest request)
-      throws JSONException, StorageClientException {
-
-    String user = session.getUserId();
-    boolean isAnonymous = (UserConstants.ANON_USERID.equals(user));
-    if (isAnonymous || authorizable == null) {
-
-      write.object();
-      write.key("anon").value(true);
-      write.key("subjects");
-      write.array();
-      write.endArray();
-      write.key("superUser");
-      write.value(false);
-      write.endObject();
-    } else {
-      Set<String> subjects = getSubjects(authorizable, session.getAuthorizableManager());
-      Map<String, Object> properties = localeUtils.getProperties(authorizable);
-
-      write.object();
-      writeGeneralInfo(write, authorizable, subjects, properties);
-      writeLocale(write, properties, request);
-      write.endObject();
-    }
-
+    String store = messagingService.getFullPathToStore(au.getId(), session);
+    store = ISO9075.encodePath(store);
+    String queryString = "messagestore:" + ClientUtils.escapeQueryChars(store) + " AND type:internal AND messagebox:inbox AND read:false";
+    final Map<String, Object> queryOptions = ImmutableMap.of(
+        PARAMS_ITEMS_PER_PAGE, (Object) "0",
+        CommonParams.START, "0"
+    );
+    Query query = new Query(queryString, queryOptions);
+    LOG.debug("Submitting Query {} ", query);
+    SolrSearchResultSet resultSet = searchServiceFactory.getSearchResultSet(
+        request, query, false);
+    long count = resultSet.getSize();
+    return count;
   }
 
   /**
@@ -449,7 +360,7 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
 
     /* Add the locale information into the output */
     write.key("locale");
-    write.object();
+    write.object(); // start "locale"
     write.key("country");
     write.value(locale.getCountry());
     write.key("displayCountry");
@@ -458,8 +369,6 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     write.value(locale.getDisplayLanguage(locale));
     write.key("displayName");
     write.value(locale.getDisplayName(locale));
-    write.key("displayVariant");
-    write.value(locale.getDisplayVariant(locale));
     write.key("ISO3Country");
     try {
       write.value(locale.getISO3Country());
@@ -476,82 +385,79 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
     }
     write.key("language");
     write.value(locale.getLanguage());
-    write.key("variant");
-    write.value(locale.getVariant());
 
     /* Add the timezone information into the output */
     write.key("timezone");
-    write.object();
+    write.object(); // start "timezone"
     write.key("name");
     write.value(tz.getID());
     write.key("GMT");
     write.value(localeUtils.getOffset(tz));
     write.endObject();
 
-    write.endObject();
+    write.endObject(); // end "locale"
   }
 
   /**
-   * Writes the general information about a user such as the userid, storagePrefix, wether
-   * he is a superUser or not..
+   * Get a valid {@link Locale}. Checks <code>properties</code> for a locale setting.
+   * Defaults to the server configured language and country code.
    *
-   * @param write
-   * @param user
-   * @param subjects
    * @param properties
-   * @throws JSONException
-   * @throws RepositoryException
+   * @return
    */
-  protected void writeGeneralInfo(ExtendedJSONWriter write, Authorizable user,
-      Set<String> subjects, Map<String, Object> properties) throws JSONException {
-
-    write.key("userid").value(user.getId());
-    write.key("userStoragePrefix");
-    // For backwards compatibility we substring the first slash out and append one at the
-    // back.
-    write.value("~" + user.getId() + "/");
-    write.key("userProfilePath");
-    write.value(PathUtils.translateAuthorizablePath(LitePersonalUtils.getProfilePath(user.getId())));
-    write.key("superUser");
-    write.value(subjects.contains("administrators"));
-    write.key("properties");
-    ValueMap jsonProperties = new ValueMapDecorator(properties);
-    write.valueMap(jsonProperties);
-    write.key("subjects");
-    write.array();
-    for (String groupName : subjects) {
-      write.value(groupName);
+  protected Locale getLocale(Map<String, Object> properties) {
+    /* Get the correct locale */
+    String localeLanguage = defaultLanguage;
+    String localeCountry = defaultCountry;
+    if (properties.containsKey(LOCALE_FIELD)) {
+      String localeProp = String.valueOf(properties.get(LOCALE_FIELD));
+      Matcher localeMatcher = LOCALE_REGEX.matcher(localeProp);
+      if (localeMatcher.matches()) {
+        localeLanguage = localeMatcher.group(1);
+        if (localeMatcher.groupCount() == 3 && localeMatcher.group(3) != null) {
+          localeCountry = localeMatcher.group(3).toUpperCase();
+        } else {
+          localeCountry = "";
+        }
+      } else {
+        LOG.info("Using default locale [{}_{}] instead of locale setting [{}]",
+            new Object[] { localeLanguage, localeCountry, localeProp });
+      }
+    } else {
+      LOG.info("Using default locale [{}_{}]; no locale setting found", new Object[] {
+          localeLanguage, localeCountry });
     }
-    write.endArray();
+
+    Locale locale = new Locale(localeLanguage, localeCountry);
+    return locale;
   }
 
-  /**
-   * All the names of the {@link Group groups} a user is a member of.
-   *
-   * @param authorizable
-   *          The {@link Authorizable authorizable} that represents the user.
-   * @param authorizableManager
-   *          The {@link AuthorizableManager authorizableManager} that can be used to retrieve
-   *          the group membership.
-   * @return All the names of the {@link Group groups} a user is a member of.
-   * @throws RepositoryException
-   */
-  protected Set<String> getSubjects(Authorizable authorizable,
-      AuthorizableManager authorizableManager) {
-    Set<String> subjects = new HashSet<String>();
+  private Map<String, Object> getProperties(Authorizable authorizable) {
+    Map<String, Object> result = new HashMap<String, Object>();
     if (authorizable != null) {
-      String principal = authorizable.getId();
-      if (principal != null) {
-        Iterator<Group> it = authorizable.memberOf(authorizableManager);
-        while (it.hasNext()) {
-          Group aGroup = it.next();
-          if (!aGroup.getId().equals(Group.EVERYONE)) {
-            subjects.add(aGroup.getId());
+      for (String propName : authorizable.getSafeProperties().keySet()) {
+        if (propName.startsWith("rep:")) {
+          continue;
+        }
+        Object o = authorizable.getProperty(propName);
+        if ( o instanceof Object[] ) {
+          Object[] values = (Object[]) o;
+          switch (values.length) {
+          case 0:
+            continue;
+          case 1:
+            result.put(propName, values[0]);
+            break;
+          default: {
+            String valueString = Joiner.on(',').join(values);
+            result.put(propName, valueString);
           }
+          }
+        } else {
+          result.put(propName, o);
         }
       }
     }
-    return subjects;
+    return result;
   }
-
 }
