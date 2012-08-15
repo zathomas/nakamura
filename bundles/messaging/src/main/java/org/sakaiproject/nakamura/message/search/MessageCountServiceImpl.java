@@ -18,7 +18,9 @@
 package org.sakaiproject.nakamura.message.search;
 
 import com.google.common.collect.ImmutableMap;
+import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.solr.client.solrj.util.ClientUtils;
@@ -41,6 +43,8 @@ import java.util.Map;
 
 import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.PARAMS_ITEMS_PER_PAGE;
 
+@Component
+@Service
 public class MessageCountServiceImpl implements MessageCountService {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(MessageCountServiceImpl.class);

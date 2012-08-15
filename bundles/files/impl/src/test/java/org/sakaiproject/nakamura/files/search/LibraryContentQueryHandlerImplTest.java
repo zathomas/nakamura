@@ -45,7 +45,7 @@ import java.util.Map;
  *
  */
 @RunWith(MockitoJUnitRunner.class)
-public class LibraryContentQueryHandlerTest {
+public class LibraryContentQueryHandlerImplTest {
 
   @Mock
   Repository repository;
@@ -55,7 +55,7 @@ public class LibraryContentQueryHandlerTest {
 
   @Test(expected=MissingParameterException.class)
   public void testAnonUserFailed() {
-    LibraryContentQueryHandler handler = new LibraryContentQueryHandler(searchServiceFactory, repository);
+    LibraryContentQueryHandlerImpl handler = new LibraryContentQueryHandlerImpl(searchServiceFactory, repository);
     Map<String, String> params = new HashMap<String, String>();
     SlingHttpServletRequest request = Mockito.mock(SlingHttpServletRequest.class);
     mockRequestForUserId(request, User.ANON_USER);
@@ -64,7 +64,7 @@ public class LibraryContentQueryHandlerTest {
   
   @Test
   public void testUser() throws AccessDeniedException, StorageClientException {
-    LibraryContentQueryHandler handler = new LibraryContentQueryHandler(searchServiceFactory, repository);
+    LibraryContentQueryHandlerImpl handler = new LibraryContentQueryHandlerImpl(searchServiceFactory, repository);
     Map<String, String> params = new HashMap<String, String>();
     Session session = Mockito.mock(Session.class);
     SlingHttpServletRequest request = MockUtils.mockRequestWithSession(session);

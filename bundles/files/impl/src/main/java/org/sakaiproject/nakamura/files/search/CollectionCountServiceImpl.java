@@ -18,10 +18,12 @@
 package org.sakaiproject.nakamura.files.search;
 
 import com.google.common.collect.ImmutableMap;
+import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.sakaiproject.nakamura.api.files.search.CollectionCountService;
+import org.sakaiproject.nakamura.api.files.search.LibraryContentQueryHandler;
 import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchException;
@@ -33,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
 @Service
 public class CollectionCountServiceImpl implements CollectionCountService{
 

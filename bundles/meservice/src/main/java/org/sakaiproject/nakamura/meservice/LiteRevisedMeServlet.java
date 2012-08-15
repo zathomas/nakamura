@@ -66,7 +66,7 @@ import java.util.TimeZone;
 @ServiceDocumentation(name = "MeServlet", okForVersion = "1.2",
     shortDescription = "Returns information about the current active user.",
     description = "Presents information about current user in JSON format.",
-    bindings = @ServiceBinding(type = BindingType.PATH, bindings = "/system/me-revised"),
+    bindings = @ServiceBinding(type = BindingType.PATH, bindings = "/api/people/me"),
     methods = @ServiceMethod(name = "GET", description = "Get information about current user.",
         parameters = { @ServiceParameter(name="uid", description="If present the user id of the me feed to be returned")},
         response = {
@@ -111,7 +111,7 @@ import java.util.TimeZone;
         "}<pre>"),
     @ServiceResponse(code = 401, description = "Unauthorized: credentials provided were not acceptable to return information for."),
     @ServiceResponse(code = 500, description = "Unable to return information about current user.") }))
-@SlingServlet(paths = { "/system/me-revised" }, generateComponent = false, methods = { "GET" })
+@SlingServlet(paths = { "/api/people/me" }, generateComponent = false, methods = { "GET" })
 @Component
 public class LiteRevisedMeServlet extends SlingSafeMethodsServlet {
   private static final long serialVersionUID = -3786472219389695181L;

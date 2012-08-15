@@ -41,7 +41,7 @@ public class CollectionCountServiceImplTest {
 
   CollectionCountServiceImpl collectionCountService;
 
-  LibraryContentQueryHandler queryHandler;
+  LibraryContentQueryHandlerImpl queryHandler;
 
   @Mock
   SolrSearchServiceFactory searchServiceFactory;
@@ -74,7 +74,7 @@ public class CollectionCountServiceImplTest {
   public void testCollectionCount() throws Exception {
 
     collectionCountService = new CollectionCountServiceImpl();
-    queryHandler = new LibraryContentQueryHandler();
+    queryHandler = new LibraryContentQueryHandlerImpl();
     queryHandler.repository = repository;
 
     javax.jcr.Session jcrSession = mock(javax.jcr.Session.class, withSettings().extraInterfaces(SessionAdaptable.class));

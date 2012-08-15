@@ -24,6 +24,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.sakaiproject.nakamura.api.files.search.LibraryContentQueryHandler;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -50,14 +51,16 @@ import java.util.Set;
  * content that belongs in users' My Library page.
  */
 @Component(inherit=true)
-@Service(value={ SolrSearchResultProcessor.class, SolrSearchPropertyProvider.class })
+@Service(value={ SolrSearchResultProcessor.class, SolrSearchPropertyProvider.class, LibraryContentQueryHandler.class })
 @Properties(value={
     @Property(name = SearchConstants.REG_PROVIDER_NAMES, value = "LibraryContentQueryHandler"),
     @Property(name = SearchConstants.REG_PROCESSOR_NAMES, value = "LibraryContentQueryHandler")
   })
-public class LibraryContentQueryHandler extends AbstractContentSearchQueryHandler {
+public class LibraryContentQueryHandlerImpl extends AbstractContentSearchQueryHandler
+   implements LibraryContentQueryHandler
+{
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(LibraryContentQueryHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(LibraryContentQueryHandlerImpl.class);
   
   private static final String AU_TEMPLATE = "(manager:(%s) OR editor:(%<s) OR viewer:(%<s))";
   private static final String ALL_TEMPLATE = "(showalways:true AND (manager:(%s) OR editor:(%<s) OR viewer:(%<s)))";
@@ -67,11 +70,11 @@ public class LibraryContentQueryHandler extends AbstractContentSearchQueryHandle
    */
   private static final int PRINCIPAL_MAX_DEPTH = 6;
   
-  public LibraryContentQueryHandler() {
+  public LibraryContentQueryHandlerImpl() {
     
   }
   
-  public LibraryContentQueryHandler(SolrSearchServiceFactory searchServiceFactory, Repository repository) {
+  public LibraryContentQueryHandlerImpl(SolrSearchServiceFactory searchServiceFactory, Repository repository) {
     super(searchServiceFactory, repository);
   }
   
