@@ -23,17 +23,57 @@ import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.user.BadRequestException;
-import org.sakaiproject.nakamura.api.user.SakaiUserService;
+import org.sakaiproject.nakamura.api.user.SakaiPerson;
+import org.sakaiproject.nakamura.api.user.SakaiPersonService;
 import org.sakaiproject.nakamura.util.SparseUtils;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 @Service
-public class SparseMapUserService implements SakaiUserService {
+public class SparseMapPersonService implements SakaiPersonService {
 
   @Reference
   Repository repository;
 
   @Override
-  public void changeUserPassword(String userId, String oldPwd, String newPwd, String newPwdConfirm) {
+  public SakaiPerson createPerson(String personId, String firstName, String lastName, String email, String password, String passwordConfirm, Map<String, Object> properties) {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
+  public void updatePerson(String personId, String firstName, String lastName, String email, Map<String, Object> properties) {
+    //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
+  public SakaiPerson getPerson(String personId) {
+    return new SakaiPerson() { };
+  }
+
+  @Override
+  public void deletePerson(String personId) {
+    //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
+  public boolean isPersonIdInUse(String personId) {
+    return false;  //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
+  public void tagPerson(String personId, Set<String> tags) {
+    //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
+  public void untagPerson(String personId, Set<String> tags) {
+    //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
+  public void changePersonAccountPassword(String userId, String oldPwd, String newPwd, String newPwdConfirm) {
     if (userId == null || oldPwd == null || newPwd == null || newPwdConfirm == null) {
       throw new BadRequestException("All parameters are required: userId, oldPwd, newPwd, newPwdConfirm");
     }
@@ -50,5 +90,10 @@ public class SparseMapUserService implements SakaiUserService {
     } finally {
       SparseUtils.logoutQuietly(adminSession);
     }
+  }
+
+  @Override
+  public List<SakaiPerson> searchPeople(String query, Set<String> tags, boolean alsoSearchProfile, String sortOn, SortOrder sortOrder, int limit, int offset) {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
   }
 }

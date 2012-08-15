@@ -26,7 +26,7 @@ import org.sakaiproject.nakamura.api.http.cache.DynamicContentResponseCache;
 import org.sakaiproject.nakamura.api.user.BadRequestException;
 import org.sakaiproject.nakamura.api.user.PermissionDeniedException;
 import org.sakaiproject.nakamura.api.user.SakaiAuthorizationService;
-import org.sakaiproject.nakamura.api.user.SakaiUserService;
+import org.sakaiproject.nakamura.api.user.SakaiPersonService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 
 import javax.servlet.ServletException;
@@ -40,7 +40,7 @@ public class ChangeSakaiUserPasswordServlet extends SlingAllMethodsServlet {
   protected transient DynamicContentResponseCache responseCache;
 
   @Reference
-  protected transient SakaiUserService userService;
+  protected transient SakaiPersonService userService;
 
   @Reference
   protected transient SakaiAuthorizationService authorizationService;
@@ -50,7 +50,7 @@ public class ChangeSakaiUserPasswordServlet extends SlingAllMethodsServlet {
       throws ServletException, IOException {
     try {
       authorizationService.canChangeUserPassword(request.getRemoteUser(), request.getParameter("userId"));
-      userService.changeUserPassword(request.getParameter("userId"), request.getParameter("oldPwd"),
+      userService.changePersonAccountPassword(request.getParameter("userId"), request.getParameter("oldPwd"),
           request.getParameter("newPwd"), request.getParameter("newPwdConfirm"));
       responseCache.invalidate(UserConstants.USER_RESPONSE_CACHE, request.getParameter("userId"));
     } catch (PermissionDeniedException pde) {

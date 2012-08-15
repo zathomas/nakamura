@@ -17,6 +17,5 @@ package org.sakaiproject.nakamura.api.user;
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-public interface SakaiUserService {
-  void changeUserPassword(String userId, String oldPwd, String newPwd, String newPwdConfirm);
+public interface SakaiPerson {
 }
