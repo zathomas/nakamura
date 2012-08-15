@@ -91,6 +91,7 @@ public class DocMigrator implements FileMigrationService {
     try {
       return !(content == null || isNotSakaiDoc(content) || schemaVersionIsCurrent(content) || contentHasUpToDateStructure(content));
     } catch (SakaiDocMigrationException e) {
+      LOGGER.error(e.getLocalizedMessage(), e);
       LOGGER.error("Could not determine requiresMigration with content {}", content.getPath());
       throw new RuntimeException("Could not determine requiresMigration with content " + content.getPath());
     }
@@ -145,7 +146,7 @@ public class DocMigrator implements FileMigrationService {
         try {
           adminSession.logout();
         } catch (ClientPoolException e) {
-          LOGGER.error(e.getMessage());
+          LOGGER.error(e.getLocalizedMessage(), e);
         }
       }
     }
@@ -191,14 +192,14 @@ public class DocMigrator implements FileMigrationService {
         }
       }
     } catch (Exception e) {
-      LOGGER.error(e.getMessage());
+      LOGGER.error(e.getLocalizedMessage(), e);
       throw new RuntimeException("Error while migrating " + content.getPath());
     } finally {
       if (adminSession != null) {
         try {
           adminSession.logout();
         } catch (ClientPoolException e) {
-          LOGGER.error(e.getMessage());
+          LOGGER.error(e.getLocalizedMessage(), e);
         }
       }
     }
@@ -221,8 +222,9 @@ public class DocMigrator implements FileMigrationService {
       }
       return contentFromJson(migratedPage);
     } catch (JSONException e) {
-      LOGGER.error(e.getLocalizedMessage());
-      throw new RuntimeException("failed to migrate single page: " + e.getLocalizedMessage());
+      LOGGER.error(e.getLocalizedMessage(), e);
+      throw new RuntimeException("failed to migrate single page: "
+          + e.getLocalizedMessage(), e);
     }
   }
 
