@@ -23,7 +23,7 @@
         <configuration>
           <instructions>
             <Bundle-Category> sakai-nakamura </Bundle-Category>
-            <Export-Package> org.sakaiproject.nakamura.api.files.* </Export-Package>
+            <Export-Package> org.sakaiproject.nakamura.api.files.*, org.sakaiproject.nakamura.api.files.search.* </Export-Package>
             <Embed-Transitive>true</Embed-Transitive>
             <Embed-Dependency />
           </instructions>
@@ -89,7 +89,13 @@
       <version>1.5.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
-    
+    <dependency>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>org.sakaiproject.nakamura.search.api</artifactId>
+      <version>1.5.0-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- Testing -->
     <dependency>
        <groupId>org.apache.sling</groupId>

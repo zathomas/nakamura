@@ -48,9 +48,7 @@ public class LiteMeServletTest {
   @Before
   public void setUp() {
     meServlet = new LiteMeServlet();
-    meServlet.messagingService = messagingService;
     meServlet.connectionManager = connectionManager;
-    meServlet.searchServiceFactory = searchServiceFactory;
     meServlet.basicUserInfoService = basicUserInfoService;
     
   }
