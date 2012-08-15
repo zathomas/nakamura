@@ -27,14 +27,13 @@ import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_NEEDS_PR
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -52,9 +51,11 @@ import org.sakaiproject.nakamura.api.doc.ServiceDocumentation;
 import org.sakaiproject.nakamura.api.doc.ServiceExtension;
 import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
-import org.sakaiproject.nakamura.api.files.FileUploadHandler;
+import org.sakaiproject.nakamura.api.files.FileService;
 import org.sakaiproject.nakamura.api.files.FileUploadFilter;
+import org.sakaiproject.nakamura.api.files.FileUploadHandler;
 import org.sakaiproject.nakamura.api.files.FilesConstants;
+import org.sakaiproject.nakamura.api.files.StorageException;
 import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
@@ -79,8 +80,8 @@ import org.sakaiproject.nakamura.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -90,12 +91,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-@SlingServlet(methods = "POST", paths = "/system/pool/createfile_old")
+@SlingServlet(methods = "POST", paths = "/system/pool/createfile")
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = "service.description", value = "Allows for uploading files to the pool.") })
@@ -138,12 +138,12 @@ import javax.servlet.http.HttpServletResponse;
              bind = "bindFileUploadFilter",
              unbind = "unbindFileUploadFilter")
 })
-public class CreateContentPoolServlet extends SlingAllMethodsServlet {
+public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
 
   private static final char ALTERNATIVE_STREAM_SELECTOR_SEPARATOR = '-';
   @Reference
   protected ClusterTrackingService clusterTrackingService;
-  
+
   @Reference
   protected Repository sparseRepository;
 
@@ -153,11 +153,14 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
   @Reference
   protected transient AuthorizableCountChanger authorizableCountChanger;
 
+  @Reference
+  protected FileService fileService;
+
   private static final long serialVersionUID = -5099697955361286370L;
 
 
   private static final Logger LOGGER = LoggerFactory
-      .getLogger(CreateContentPoolServlet.class);
+      .getLogger(NewCreateContentPoolServlet.class);
 
   private Set<FileUploadHandler> fileUploadHandlers = new HashSet<FileUploadHandler>();
 
@@ -229,8 +232,8 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
       adminSession = sparseRepository.loginAdministrative();
       AuthorizableManager authorizableManager = adminSession.getAuthorizableManager();
       // We need the authorizable for the user node that we'll create under the file.
-      
-      
+
+
       Authorizable au = authorizableManager.findAuthorizable(userId);
 
       // Loop over all the parameters
@@ -246,13 +249,13 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
             // Generate an ID and store it.
             String fileName = FilenameUtils.getName(p.getFileName()); // IE still sends in an absolute path sometimes.
             if ( poolId == null ) {
-              String createPoolId = generatePoolId();
-              Content content = createFile(createPoolId, null, adminSession, p, au, true);
-              results.put(fileName, ImmutableMap.of("poolId", (Object)createPoolId, "item", content.getProperties()));
+
+              Map<String, Object> thisFile = fileService.createFile(userId, fileName, getContentType(p), p.getInputStream());
+              results.put(fileName, thisFile);
               statusCode = HttpServletResponse.SC_CREATED;
               fileUpload = true;
 
-              notifyFileUploadHandlers(results, adminSession, createPoolId, p, au.getId(), true);
+              notifyFileUploadHandlers(results, adminSession, (String) thisFile.get("poolId"), p, au.getId(), true);
             } else {
               // Add it to the map so we can output something to the UI.
               Content content = createFile(poolId, alternativeStream, session, p, au, false);
@@ -303,6 +306,9 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
       LOGGER.warn(e.getMessage(), e);
       throw new ServletException(e.getMessage(), e);
     } catch (JSONException e) {
+      LOGGER.warn(e.getMessage(), e);
+      throw new ServletException(e.getMessage(), e);
+    } catch (StorageException e) {
       LOGGER.warn(e.getMessage(), e);
       throw new ServletException(e.getMessage(), e);
     } finally {
@@ -407,16 +413,16 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
       contentProperties.put(POOLED_NEEDS_PROCESSING, "true");
       contentProperties.put(Content.MIMETYPE_FIELD, contentType);
       contentProperties.put(POOLED_CONTENT_USER_MANAGER, new String[]{au.getId()});
-      
+
       Content content = new Content(poolId,contentProperties);
-      
+
       contentManager.update(content);
-      
+
       InputStream inputStream = filterUploadInputStream(poolId, value.getInputStream(), contentType, value);
 
       contentManager.writeBody(poolId, inputStream);
-      
-      
+
+
       // deny anon everything
       // deny everyone everything
       // grant the user everything.
@@ -455,7 +461,7 @@ public class CreateContentPoolServlet extends SlingAllMethodsServlet {
   }
 
   /**
-   * Get the content type of a file that's in a {@link RequestParameter}.
+   * Get the content type of a file that's in a {@link org.apache.sling.api.request.RequestParameter}.
    *
    * @param value
    *          The request parameter.
