@@ -17,20 +17,36 @@
  */
 package org.sakaiproject.nakamura.user.sparsemap;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.osgi.service.component.ComponentContext;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
+import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.user.PermissionDeniedException;
 import org.sakaiproject.nakamura.api.user.SakaiAuthorizationService;
 import org.sakaiproject.nakamura.util.SparseUtils;
 
+import java.util.Dictionary;
+
+@Component(metatype = true)
 @Service
 public class SparseMapAuthorizationService implements SakaiAuthorizationService {
+  private static final String PROP_SELF_REGISTRATION_ENABLED = "self.registration.enabled";
+
+  private static final Boolean DEFAULT_SELF_REGISTRATION_ENABLED = Boolean.TRUE;
+
+  private Boolean selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
+
   @Reference
   Repository repository;
 
@@ -48,5 +64,20 @@ public class SparseMapAuthorizationService implements SakaiAuthorizationService 
     } finally {
       SparseUtils.logoutQuietly(adminSession);
     }
+  }
+
+  @Override
+  public void canCreateNewSakaiPerson(String personId) throws PermissionDeniedException {
+    if (User.ADMIN_USER.equals(personId) || selfRegistrationEnabled) {
+      return;
+    } else {
+      throw new PermissionDeniedException();
+    }
+  }
+
+  @Activate @Modified
+  protected void activate(ComponentContext componentContext) {
+    Dictionary<?, ?> props = componentContext.getProperties();
+    selfRegistrationEnabled = PropertiesUtil.toBoolean(props.get(PROP_SELF_REGISTRATION_ENABLED), DEFAULT_SELF_REGISTRATION_ENABLED);
   }
 }

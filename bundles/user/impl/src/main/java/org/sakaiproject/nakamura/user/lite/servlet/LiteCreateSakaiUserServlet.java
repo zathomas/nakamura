@@ -43,7 +43,6 @@ import org.sakaiproject.nakamura.api.doc.ServiceMethod;
 import org.sakaiproject.nakamura.api.doc.ServiceParameter;
 import org.sakaiproject.nakamura.api.doc.ServiceResponse;
 import org.sakaiproject.nakamura.api.doc.ServiceSelector;
-import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
@@ -210,9 +209,8 @@ public class LiteCreateSakaiUserServlet extends LiteAbstractUserPostServlet {
    * 
    * @throws AccessDeniedException
    * @throws StorageClientException
-   * @throws ClientPoolException
    */
-  private Session getSession() throws ClientPoolException, StorageClientException,
+  private Session getSession() throws StorageClientException,
       AccessDeniedException {
     return getRepository().loginAdministrative();
   }
@@ -236,7 +234,7 @@ public class LiteCreateSakaiUserServlet extends LiteAbstractUserPostServlet {
    * (non-Javadoc)
    * 
    * @see org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet
-   * #handleOperation(org.apache.sling.api.SlingHttpServletRequest,
+   * #createSparseUser(org.apache.sling.api.SlingHttpServletRequest,
    * org.apache.sling.api.servlets.HtmlResponse, java.util.List)
    */
   @Override
@@ -244,7 +242,7 @@ public class LiteCreateSakaiUserServlet extends LiteAbstractUserPostServlet {
       List<Modification> changes) throws StorageClientException, AccessDeniedException {
 
     // check for an administrator
-    boolean administrator = false;
+    boolean administrator;
     try {
       Session currentSession = StorageClientUtils.adaptToSession(request
           .getResourceResolver().adaptTo(javax.jcr.Session.class));

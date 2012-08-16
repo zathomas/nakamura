@@ -128,7 +128,7 @@ public class LiteUpdateSakaiUserServlet extends LiteAbstractUserPostServlet {
      * (non-Javadoc)
      * @see
      * org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet
-     * #handleOperation(org.apache.sling.api.SlingHttpServletRequest,
+     * #createSparseUser(org.apache.sling.api.SlingHttpServletRequest,
      * org.apache.sling.api.servlets.HtmlResponse, java.util.List)
      */
     @Override

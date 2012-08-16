@@ -17,8 +17,5 @@
  */
 package org.sakaiproject.nakamura.api.user;
 
-public interface SakaiAuthorizationService {
-  void canChangeUserPassword(String userId, String userIdToChange) throws PermissionDeniedException;
-
-  void canCreateNewSakaiPerson(String userid) throws PermissionDeniedException;
+public class UntrustedRequestException extends Exception {
 }

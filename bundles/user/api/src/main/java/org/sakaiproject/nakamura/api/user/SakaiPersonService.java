@@ -40,7 +40,7 @@ public interface SakaiPersonService {
    */
   SakaiPerson createPerson(String personId, String firstName, String lastName, String email,
                            String password, String passwordConfirm,
-                           Map<String, Object> properties);
+                           Map<String, Object[]> properties);
 
   /**
    * Update th
