@@ -19,6 +19,7 @@
 package org.sakaiproject.nakamura.files;
 
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
+import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_COMMENT_COUNT;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_CREATED_FOR;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_FILENAME;
 import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_RT;
@@ -94,9 +95,17 @@ public class SparseFileServiceImpl implements FileService {
       contentProperties.put(POOLED_CONTENT_FILENAME, params.getFilename());
       contentProperties.put(SLING_RESOURCE_TYPE_PROPERTY, POOLED_CONTENT_RT);
       contentProperties.put(POOLED_CONTENT_CREATED_FOR, params.getCreator());
-      contentProperties.put(POOLED_NEEDS_PROCESSING, "true");
-      contentProperties.put(Content.MIMETYPE_FIELD, params.getContentType());
+      if (params.hasStream()) {
+        contentProperties.put(POOLED_NEEDS_PROCESSING, "true");
+      }
+      if (params.getContentType() != null) {
+        contentProperties.put(Content.MIMETYPE_FIELD, params.getContentType());
+      }
       contentProperties.put(POOLED_CONTENT_USER_MANAGER, new String[]{params.getCreator()});
+      contentProperties.put(POOLED_CONTENT_COMMENT_COUNT, 0);
+      if (params.getProperties() != null) {
+        contentProperties.putAll(params.getProperties());
+      }
 
       Content content = new Content(poolID, contentProperties);
       ContentManager contentManager = adminSession.getContentManager();
@@ -104,7 +113,9 @@ public class SparseFileServiceImpl implements FileService {
 
       // TODO figure out how to make FileUploadFilter work without RequestParam dependency
       // InputStream inputStream = filterUploadInputStream(poolID, value.getInputStream(), contentType, value);
-      contentManager.writeBody(poolID, params.getInputStream());
+      if (params.hasStream()) {
+        contentManager.writeBody(poolID, params.getInputStream());
+      }
 
       // deny anon everything
       // deny everyone everything
@@ -116,7 +127,11 @@ public class SparseFileServiceImpl implements FileService {
       AccessControlManager accessControlManager = adminSession.getAccessControlManager();
       accessControlManager.setAcl(Security.ZONE_CONTENT, poolID, modifications.toArray(new AclModification[modifications.size()]));
 
-      ActivityUtils.postActivity(eventAdmin, params.getCreator(), poolID, "Content", "default", "pooled content", "CREATED_FILE", null);
+      if (params.hasStream()) {
+        ActivityUtils.postActivity(eventAdmin, params.getCreator(), poolID, "Content", "default", "pooled content", "CREATED_FILE", null);
+      } else {
+        ActivityUtils.postActivity(eventAdmin, params.getCreator(), poolID, "Content", "default", "pooled content", "UPDATED_CONTENT", null);
+      }
 
       file = new File(params.getCreator(), params.getFilename(), params.getContentType(), poolID, content.getProperties());
 

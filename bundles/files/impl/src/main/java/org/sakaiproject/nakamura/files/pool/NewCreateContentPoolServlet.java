@@ -17,14 +17,6 @@
  */
 package org.sakaiproject.nakamura.files.pool;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_COMMENT_COUNT;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_CREATED_FOR;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_FILENAME;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_RT;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_CONTENT_USER_MANAGER;
-import static org.sakaiproject.nakamura.api.files.FilesConstants.POOLED_NEEDS_PROCESSING;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.commons.io.FilenameUtils;
@@ -43,7 +35,6 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.osgi.service.event.EventAdmin;
-import org.sakaiproject.nakamura.api.activity.ActivityUtils;
 import org.sakaiproject.nakamura.api.cluster.ClusterTrackingService;
 import org.sakaiproject.nakamura.api.doc.BindingType;
 import org.sakaiproject.nakamura.api.doc.ServiceBinding;
@@ -62,30 +53,19 @@ import org.sakaiproject.nakamura.api.lite.ClientPoolException;
 import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
-import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
-import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessControlManager;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
-import org.sakaiproject.nakamura.api.lite.accesscontrol.AclModification;
-import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
-import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
-import org.sakaiproject.nakamura.api.lite.authorizable.Group;
-import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
 import org.sakaiproject.nakamura.api.user.AuthorizableCountChanger;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
-import org.sakaiproject.nakamura.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -140,7 +120,6 @@ import javax.servlet.http.HttpServletResponse;
 })
 public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
 
-  private static final char ALTERNATIVE_STREAM_SELECTOR_SEPARATOR = '-';
   @Reference
   protected ClusterTrackingService clusterTrackingService;
 
@@ -270,12 +249,14 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
           }
         }
       }
+
       if (!fileUpload) {
         // not a file upload, ok, create an item and use all the request parameters, only
         // if there was no poolId specified
         if (poolId == null) {
-          String createPoolId = generatePoolId();
-          results.put("_contentItem", ImmutableMap.of("poolId", (Object) createPoolId, "item", createContentItem(createPoolId, adminSession, request, au).getProperties()));
+          File streamlessFile = createStreamlessFile(request, userId);
+          results.put(streamlessFile.getFilename(), ImmutableMap.of("poolId", streamlessFile.getPoolID(), "item",
+              streamlessFile.getProperties()));
           statusCode = HttpServletResponse.SC_CREATED;
         }
       }
@@ -293,9 +274,6 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
         JSONWriter jsonWriter = new JSONWriter(response.getWriter());
         ExtendedJSONWriter.writeValueMap(jsonWriter, results);
       }
-    } catch (NoSuchAlgorithmException e) {
-      LOGGER.warn(e.getMessage(), e);
-      throw new ServletException(e.getMessage(), e);
     } catch (ClientPoolException e) {
       LOGGER.warn(e.getMessage(), e);
       throw new ServletException(e.getMessage(), e);
@@ -323,15 +301,8 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
     }
   }
 
-  private Content createContentItem(String poolId, Session session,
-                                    SlingHttpServletRequest request, Authorizable au) throws StorageClientException, AccessDeniedException {
-    ContentManager contentManager = session.getContentManager();
-    AccessControlManager accessControlManager = session.getAccessControlManager();
+  private File createStreamlessFile(SlingHttpServletRequest request, String creator) throws StorageException, IOException {
     Map<String, Object> contentProperties = new HashMap<String, Object>();
-    contentProperties.put(SLING_RESOURCE_TYPE_PROPERTY, POOLED_CONTENT_RT);
-    contentProperties.put(POOLED_CONTENT_CREATED_FOR, au.getId());
-    contentProperties.put(POOLED_CONTENT_USER_MANAGER, new String[]{au.getId()});
-    contentProperties.put(POOLED_CONTENT_COMMENT_COUNT, Integer.valueOf(0));
     for (Entry<String, RequestParameter[]> e : request.getRequestParameterMap().entrySet()) {
       String k = e.getKey();
       if (!(k.startsWith("_") || k.startsWith(":")) && !FilesConstants.RESERVED_POOL_KEYS.contains(k)) {
@@ -360,104 +331,12 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
         }
       }
     }
-    Content content = new Content(poolId, contentProperties);
+    FileParams params = new FileParams();
+    params.setCreator(creator);
+    params.setFilename("_contentItem");
+    params.setProperties(contentProperties);
 
-    contentManager.update(content);
-
-    ActivityUtils.postActivity(eventAdmin, au.getId(), poolId, "Content", "default", "pooled content", "UPDATED_CONTENT", null);
-
-    // deny anon everything
-    // deny everyone everything
-    // grant the user everything.
-    List<AclModification> modifications = new ArrayList<AclModification>();
-    AclModification.addAcl(false, Permissions.ALL, User.ANON_USER, modifications);
-    AclModification.addAcl(false, Permissions.ALL, Group.EVERYONE, modifications);
-    AclModification.addAcl(true, Permissions.CAN_MANAGE, au.getId(), modifications);
-    accessControlManager.setAcl(Security.ZONE_CONTENT, poolId, modifications.toArray(new AclModification[modifications.size()]));
-
-    return contentManager.get(poolId);
-  }
-
-
-  private InputStream filterUploadInputStream(String poolId, InputStream inputStream, String contentType, RequestParameter value) {
-
-    InputStream result = inputStream;
-
-    for (FileUploadFilter filter : fileUploadFilters) {
-      try {
-        result = filter.filterInputStream(poolId, inputStream, contentType, value);
-      } catch (Throwable t) {
-        LOGGER.error("FileUploadFilter '{}' failed when filtering file upload.", filter);
-        LOGGER.error(t.getMessage(), t);
-      }
-    }
-
-    return result;
-  }
-
-
-  private Content createFile(String poolId, String alternativeStream, Session session, RequestParameter value,
-                             Authorizable au, boolean create) throws IOException, AccessDeniedException, StorageClientException {
-    // Get the content type.
-    String contentType = getContentType(value);
-
-    ContentManager contentManager = session.getContentManager();
-    AccessControlManager accessControlManager = session.getAccessControlManager();
-    if (create) {
-      // Create a proper nt:file node in jcr with some properties on it to make it possible
-      // to locate this pool file without having to use the path.
-      Map<String, Object> contentProperties = new HashMap<String, Object>();
-      contentProperties.put(POOLED_CONTENT_FILENAME, FilenameUtils.getName(value.getFileName()));
-      contentProperties.put(SLING_RESOURCE_TYPE_PROPERTY, POOLED_CONTENT_RT);
-      contentProperties.put(POOLED_CONTENT_CREATED_FOR, au.getId());
-      contentProperties.put(POOLED_NEEDS_PROCESSING, "true");
-      contentProperties.put(Content.MIMETYPE_FIELD, contentType);
-      contentProperties.put(POOLED_CONTENT_USER_MANAGER, new String[]{au.getId()});
-
-      Content content = new Content(poolId, contentProperties);
-
-      contentManager.update(content);
-
-      InputStream inputStream = filterUploadInputStream(poolId, value.getInputStream(), contentType, value);
-
-      contentManager.writeBody(poolId, inputStream);
-
-
-      // deny anon everything
-      // deny everyone everything
-      // grant the user everything.
-      List<AclModification> modifications = new ArrayList<AclModification>();
-      AclModification.addAcl(false, Permissions.ALL, User.ANON_USER, modifications);
-      AclModification.addAcl(false, Permissions.ALL, Group.EVERYONE, modifications);
-      AclModification.addAcl(true, Permissions.CAN_MANAGE, au.getId(), modifications);
-      accessControlManager.setAcl(Security.ZONE_CONTENT, poolId, modifications.toArray(new AclModification[modifications.size()]));
-
-      ActivityUtils.postActivity(eventAdmin, au.getId(), poolId, "Content", "default", "pooled content", "CREATED_FILE", null);
-    } else if (alternativeStream != null && alternativeStream.indexOf("-") > 0) {
-      String[] alternativeStreamParts = StringUtils.split(alternativeStream, ALTERNATIVE_STREAM_SELECTOR_SEPARATOR);
-      String pageId = alternativeStreamParts[0];
-      String previewSize = alternativeStreamParts[1];
-      Content alternativeContent = new Content(poolId + "/" + pageId, ImmutableMap.of(
-          Content.MIMETYPE_FIELD, (Object) contentType, SLING_RESOURCE_TYPE_PROPERTY,
-          POOLED_CONTENT_RT));
-      contentManager.update(alternativeContent);
-
-      InputStream inputStream = filterUploadInputStream(alternativeContent.getPath(), value.getInputStream(), contentType, value);
-      contentManager.writeBody(alternativeContent.getPath(), inputStream, previewSize);
-
-      ActivityUtils.postActivity(eventAdmin, au.getId(), poolId, "Content", "default",
-          "pooled content", "CREATED_ALT_FILE",
-          ImmutableMap.<String, Object>of("altPath", poolId + "/" + pageId));
-    } else {
-      Content content = contentManager.get(poolId);
-      content.setProperty(StorageClientUtils.getAltField(Content.MIMETYPE_FIELD, alternativeStream), contentType);
-      contentManager.update(content);
-
-      InputStream inputStream = filterUploadInputStream(poolId, value.getInputStream(), contentType, value);
-      contentManager.writeBody(poolId, inputStream, alternativeStream);
-      ActivityUtils.postActivity(eventAdmin, au.getId(), poolId, "Content", "default", "pooled content", "UPDATED_FILE", null);
-    }
-    return contentManager.get(poolId);
+    return fileService.createFile(params);
   }
 
   /**
@@ -483,12 +362,5 @@ public class NewCreateContentPoolServlet extends SlingAllMethodsServlet {
     }
     return contentType;
   }
-
-
-  private String generatePoolId() throws UnsupportedEncodingException,
-      NoSuchAlgorithmException {
-    return clusterTrackingService.getClusterUniqueId();
-  }
-
 
 }

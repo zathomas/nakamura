@@ -19,6 +19,7 @@
 package org.sakaiproject.nakamura.api.files;
 
 import java.io.InputStream;
+import java.util.Map;
 
 public class FileParams {
 
@@ -33,6 +34,8 @@ public class FileParams {
   private InputStream inputStream;
 
   private String alternativeStream;
+
+  private Map<String, Object> properties;
 
   public String getCreator() {
     return creator;
@@ -80,5 +83,17 @@ public class FileParams {
 
   public void setAlternativeStream(String alternativeStream) {
     this.alternativeStream = alternativeStream;
+  }
+
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
+
+  public void setProperties(Map<String, Object> properties) {
+    this.properties = properties;
+  }
+
+  public boolean hasStream() {
+    return getInputStream() != null;
   }
 }
