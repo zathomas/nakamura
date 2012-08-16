@@ -74,7 +74,6 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Group;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.lite.content.Content;
 import org.sakaiproject.nakamura.api.lite.content.ContentManager;
-import org.sakaiproject.nakamura.api.lite.jackrabbit.JackrabbitSparseUtils;
 import org.sakaiproject.nakamura.api.user.AuthorizableCountChanger;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
@@ -93,11 +92,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-@SlingServlet(methods = "POST", paths = "/system/pool/createfile")
+@SlingServlet(methods = "POST", paths = "/api/content")
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = "service.description", value = "Allows for uploading files to the pool.")})

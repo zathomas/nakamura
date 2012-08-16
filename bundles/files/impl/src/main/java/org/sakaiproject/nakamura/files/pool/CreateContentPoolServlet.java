@@ -95,7 +95,7 @@ import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-@SlingServlet(methods = "POST", paths = "/system/pool/createfile_old")
+@SlingServlet(methods = "POST", paths = "/system/pool/createfile")
 @Properties(value = {
     @Property(name = "service.vendor", value = "The Sakai Foundation"),
     @Property(name = "service.description", value = "Allows for uploading files to the pool.") })
