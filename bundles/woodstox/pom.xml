@@ -18,7 +18,7 @@
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 	<artifactId>org.sakaiproject.nakamura.woodstox</artifactId>
-	<version>4.0.7.1.5.0-SNAPSHOT</version>
+	<version>4.1.4.1.5.0-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 	<name>Sakai Nakamura :: Woodstox/StAX</name>
 	<description>
@@ -37,7 +37,7 @@
 		<dependency>
 			<groupId>org.codehaus.woodstox</groupId>
 			<artifactId>stax2-api</artifactId>
-			<version>3.0.1</version>
+			<version>3.1.1</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>stax-api</artifactId>
@@ -48,7 +48,7 @@
 		<dependency>
 			<groupId>org.codehaus.woodstox</groupId>
 			<artifactId>woodstox-core-asl</artifactId>
-			<version>4.0.7</version>
+			<version>4.1.4</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>stax-api</artifactId>
@@ -74,8 +74,8 @@
 						<Import-Package>!javax.xml.stream.*,!com.sun.msv.*,*</Import-Package>
 						<Export-Package>
 							javax.xml.stream.*;version=1.0.1,
-							org.codehaus.stax2.*;version=3.0.1,
-							com.ctc.wstx.*;version=4.0.7,
+							org.codehaus.stax2.*;version=3.1.1,
+							com.ctc.wstx.*;version=4.1.4,
 							org.relaxng.datatype.*;version=20020414
 						</Export-Package>
 					</instructions>

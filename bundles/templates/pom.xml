@@ -73,7 +73,7 @@
     <dependency>
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity</artifactId>
-      <version>1.6.2</version>
+      <version>1.7</version>
     </dependency>
 
     <!-- Velocity dependencies -->
@@ -85,7 +85,7 @@
     <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
-        <version>1.1</version>
+        <version>1.1.1</version>
     </dependency>
     <dependency>
         <groupId>werken-xpath</groupId>

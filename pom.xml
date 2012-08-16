@@ -34,7 +34,7 @@
   <url>http://groups.google.com/group/sakai-kernel</url>
   <inceptionYear>2008</inceptionYear>
   <prerequisites>
-    <maven>2.2.0</maven>
+    <maven>3.0.3</maven>
   </prerequisites>
   <organization>
     <name>Sakai Project</name>
@@ -599,7 +599,7 @@
                   <pluginExecutionFilter>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-antrun-plugin</artifactId>
-                    <versionRange>[1.4,)</versionRange>
+                    <versionRange>[1.7,)</versionRange>
                     <goals><goal>run</goal></goals>
                   </pluginExecutionFilter>
                   <action><ignore /></action>
@@ -1087,7 +1087,7 @@
       <dependency>
         <groupId>org.aspectj</groupId>
         <artifactId>aspectjrt</artifactId>
-        <version>1.6.11</version>
+        <version>1.7.0</version>
       </dependency>
       <dependency>
         <groupId>commons-jexl</groupId>
@@ -1146,7 +1146,7 @@
       <dependency>
          <groupId>org.apache.sling</groupId>
          <artifactId>org.apache.sling.commons.testing</artifactId>
-         <version>2.0.8</version>
+         <version>2.0.10</version>
          <scope>test</scope>
       </dependency>
       <dependency>
@@ -1287,7 +1287,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>10.0</version>
+        <version>11.0.1</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
@@ -1325,7 +1325,7 @@
       <dependency>
         <groupId>org.jboss.resteasy</groupId>
         <artifactId>jaxrs-api</artifactId>
-        <version>1.0.2.GA</version>
+        <version>2.3.4.Final</version>
         <scope>provided</scope>
       </dependency>
 
@@ -1346,8 +1346,7 @@
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <!-- KERN-2566 needs version 1.4 -->
-        <version>1.4</version>
+        <version>2.4</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
@@ -1359,13 +1358,13 @@
       <dependency>
         <groupId>commons-net</groupId>
         <artifactId>commons-net</artifactId>
-        <version>2.0</version>
+        <version>3.1</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>commons-pool</groupId>
         <artifactId>commons-pool</artifactId>
-        <version>1.5.6</version>
+        <version>1.6</version>
         <scope>provided</scope>
       </dependency>
       <dependency>

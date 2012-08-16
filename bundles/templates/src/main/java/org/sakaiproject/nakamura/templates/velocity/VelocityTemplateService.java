@@ -66,12 +66,8 @@ public class VelocityTemplateService implements TemplateService, TemplateNodeSou
     VelocityContext context = new VelocityContext(sanitizedParameters);
     // combine template with parameter map
     StringWriter templateWriter = new StringWriter();
-    try {
-      velocityEngine.evaluate(context, templateWriter, "templateprocessing",
-          templateReader);
-    } catch (IOException e) {
-      LOGGER.error(e.getMessage(), e);
-    }
+    velocityEngine
+        .evaluate(context, templateWriter, "templateprocessing", templateReader);
     return templateWriter.toString();
   }
 
