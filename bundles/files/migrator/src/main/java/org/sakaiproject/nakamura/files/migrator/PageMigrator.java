@@ -226,40 +226,56 @@ public class PageMigrator {
   }
 
   void extractWidget(JSONObject originalStructure, String contentId, Set<String> widgetsUsed, String ref, JSONObject currentPage, JSONObject currentRow, int leftSideColumn, Element widgetElement) throws JSONException {
-    String[] widgetIdParts = widgetElement.attr("id").split("_");
-    String widgetType = widgetIdParts[1];
-    String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
-    int columnIndex;
-    if (widgetElement.hasClass("block_image_left")) {
-      columnIndex = 0;
-    } else if (widgetElement.hasClass("block_image_right")) {
-      columnIndex = leftSideColumn > 0 ? 2 : 1;
+    final String[] widgetIdParts = widgetElement.attr("id").split("_");
+    if (widgetIdParts != null && widgetIdParts.length > 1) {
+      final String widgetType = widgetIdParts[1];
+      final String widgetId = widgetIdParts.length > 2 ? widgetIdParts[2] : generateWidgetId();
+      int columnIndex;
+      if (widgetElement.hasClass("block_image_left")) {
+        columnIndex = 0;
+      } else if (widgetElement.hasClass("block_image_right")) {
+        columnIndex = leftSideColumn > 0 ? 2 : 1;
+      } else {
+        columnIndex = leftSideColumn > 0 ? 1 : 0;
+      }
+      generateNewCell(widgetId, widgetType, currentPage, currentRow, columnIndex,
+          getJSONObjectOrNull(originalStructure, widgetId));
+      widgetsUsed.add(widgetId);
+      if ("discussion".equals(widgetType)) {
+        migrateDiscussionWidget(contentId, ref, currentPage, widgetId);
+      }
+      widgetElement.remove();
     } else {
-      columnIndex = leftSideColumn > 0 ? 1 : 0;
+      LOGGER.warn("Could not parse widgetElement.attr(\"id\").split(\"_\") for: {} : {}",
+          contentId, ref);
     }
-    generateNewCell(widgetId, widgetType, currentPage, currentRow, columnIndex, getJSONObjectOrNull(originalStructure, widgetId));
-    widgetsUsed.add(widgetId);
-    if ("discussion".equals(widgetType)) {
-      migrateDiscussionWidget(contentId, ref, currentPage, widgetId);
-    }
-    widgetElement.remove();
   }
 
   void migrateDiscussionWidget(String contentId, String ref, JSONObject currentPage, String widgetId) throws JSONException {
-    String newMessageStorePath = contentId + "/" + ref + "/" + widgetId + "/discussion/message";
-    String newAbsoluteMessageStorePath = "/p/" + newMessageStorePath;
-    JSONObject discussionMessageStore = currentPage.getJSONObject(widgetId).getJSONObject("discussion").getJSONObject("message");
-    if (discussionMessageStore.has("inbox")) {
-      JSONObject inbox = discussionMessageStore.getJSONObject("inbox");
-      for (Iterator<String> inboxIterator = inbox.keys(); inboxIterator.hasNext(); ) {
-        String inboxKey = inboxIterator.next();
-        if (inboxKey.startsWith("_")) {
-          continue;
+    final String newMessageStorePath = contentId + "/" + ref + "/" + widgetId
+        + "/discussion/message";
+    final String newAbsoluteMessageStorePath = "/p/" + newMessageStorePath;
+    if (currentPage.has(widgetId)
+        && currentPage.getJSONObject(widgetId).has("discussion")
+        && currentPage.getJSONObject(widgetId).getJSONObject("discussion").has("message")) {
+      final JSONObject discussionMessageStore = currentPage.getJSONObject(widgetId)
+          .getJSONObject("discussion").getJSONObject("message");
+      if (discussionMessageStore.has("inbox")) {
+        final JSONObject inbox = discussionMessageStore.getJSONObject("inbox");
+        for (final Iterator<String> inboxIterator = inbox.keys(); inboxIterator.hasNext();) {
+          final String inboxKey = inboxIterator.next();
+          if (inboxKey.startsWith("_")) {
+            continue;
+          }
+          inbox.getJSONObject(inboxKey).put("sakai:to", newAbsoluteMessageStorePath);
+          inbox.getJSONObject(inboxKey).put("sakai:writeto", newAbsoluteMessageStorePath);
+          inbox.getJSONObject(inboxKey).put("sakai:messagestore",
+              newMessageStorePath + "/");
         }
-        inbox.getJSONObject(inboxKey).put("sakai:to", newAbsoluteMessageStorePath);
-        inbox.getJSONObject(inboxKey).put("sakai:writeto", newAbsoluteMessageStorePath);
-        inbox.getJSONObject(inboxKey).put("sakai:messagestore", newMessageStorePath + "/");
       }
+    } else {
+      LOGGER.warn("Could not find 'discussion' or 'message' in JSON object for {} : {}",
+          contentId, ref);
     }
   }
 
