@@ -109,8 +109,12 @@ public class PageMigrator {
   }
 
   protected JSONObject generateHtmlBlock(String html) throws JSONException {
+    Element htmlElement = Jsoup.parse(html).select("body").first();
+    for (Element widgetElement : htmlElement.select(".widget_inline")) {
+      widgetElement.remove();
+    }
     JSONObject contentObject = new JSONObject();
-    contentObject.put("content", html);
+    contentObject.put("content", htmlElement.html());
     JSONObject htmlBlockObject = new JSONObject();
     htmlBlockObject.put("htmlblock", contentObject);
     return htmlBlockObject;
