@@ -20,14 +20,41 @@ package org.sakaiproject.nakamura.api.files;
 
 import java.io.IOException;
 
+/**
+ * A service for creating and modifying {@link File} pooled content items in persistent storage.
+ */
 public interface FileService {
 
+  /**
+   * Create a {@link File} with the given parameters.
+   *
+   * @param params Parameters for the new file.
+   * @return A file that has been stored persistently.
+   * @throws StorageException
+   * @throws IOException
+   */
   File createFile(FileParams params)
       throws StorageException, IOException;
 
+  /**
+   * Create an alternative stream for a {@link File} that already exists.
+   *
+   * @param params Parameters for the new alternative stream.
+   * @return A file that has been stored persistently.
+   * @throws StorageException
+   * @throws IOException
+   */
   File createAlternativeStream(FileParams params)
       throws StorageException, IOException;
 
+  /**
+   * Update a {@link File} that already exists.
+   *
+   * @param params Parameters for the file.
+   * @return A file that has been stored persistently.
+   * @throws StorageException
+   * @throws IOException
+   */
   File updateFile(FileParams params)
       throws StorageException, IOException;
 }

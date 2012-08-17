@@ -20,6 +20,9 @@ package org.sakaiproject.nakamura.api.files;
 
 import java.util.Map;
 
+/**
+ * Represents a pooled content item that is in persistent storage.
+ */
 public class File {
 
   private String creator;
@@ -40,22 +43,37 @@ public class File {
     this.properties = properties;
   }
 
+  /**
+   * @return The user ID of the user who created this file.
+   */
   public String getCreator() {
     return creator;
   }
 
+  /**
+   * @return The logical file name of the file.
+   */
   public String getFilename() {
     return filename;
   }
 
+  /**
+   * @return The content type (mimeType) of the file.
+   */
   public String getContentType() {
     return contentType;
   }
 
+  /**
+   * @return The internal storage ID of the file. Null when creating a new file.
+   */
   public String getPoolID() {
     return poolID;
   }
 
+  /**
+   * @return A map of properties that are set on the file.
+   */
   public Map<String, Object> getProperties() {
     return properties;
   }
