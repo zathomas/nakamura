@@ -133,6 +133,7 @@
                   <artifactId>solr-example-resources</artifactId>
                   <version>4.0.0-ALPHA</version>
                   <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
+                  <overWrite>true</overWrite>
                 </artifactItem>
               </artifactItems>
             </configuration>
