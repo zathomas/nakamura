@@ -68,7 +68,6 @@ import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.sakaiproject.nakamura.util.LitePersonalUtils;
 import org.sakaiproject.nakamura.util.PathUtils;
 import org.sakaiproject.nakamura.util.ServletUtils;
-import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -179,7 +178,6 @@ public class LiteMeServlet extends SlingSafeMethodsServlet {
   @Profiled(tag="meservice:LiteMeServlet:/system/me")
   private void getUncached(SlingHttpServletRequest request, SlingHttpServletResponse response)
       throws IOException {
-    TelemetryCounter.incrementValue("meservice", "LiteMeServlet", "/system/me");
     try {
       response.setContentType("application/json");
       response.setCharacterEncoding("UTF-8");

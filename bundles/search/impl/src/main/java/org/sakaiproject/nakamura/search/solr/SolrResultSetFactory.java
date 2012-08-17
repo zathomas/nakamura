@@ -54,7 +54,6 @@ import org.sakaiproject.nakamura.api.search.solr.SolrSearchParameters;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchUtil;
 import org.sakaiproject.nakamura.api.solr.SolrServerService;
-import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,10 +64,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
-import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.DEFAULT_PAGED_ITEMS;
-import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.PARAMS_ITEMS_PER_PAGE;
-import static org.sakaiproject.nakamura.api.search.solr.SolrSearchConstants.PARAMS_PAGE;
 
 /**
  *
@@ -217,7 +212,6 @@ public class SolrResultSetFactory implements ResultSetFactory {
       long tquery = System.currentTimeMillis();
       QueryResponse response = doSolrQuery(solrServer, solrQuery);
       tquery = System.currentTimeMillis() - tquery;
-      TelemetryCounter.incrementValue("search","SEARCH_PERFORMED",params.getPath());
       try {
         if ( tquery > verySlowQueryThreshold ) {
           logVerySlow(params.getPath(), solrQuery, tquery);
@@ -269,7 +263,6 @@ public class SolrResultSetFactory implements ResultSetFactory {
       throws UnsupportedEncodingException {
     SLOW_QUERY_LOGGER.error("Slow solr query {} ms {} ", time,
         URLDecoder.decode(solrQuery.toString(),"UTF-8"));
-    TelemetryCounter.incrementValue("search","SLOW",path);
   }
   
   @Profiled(tag="search:ResultSet:veryslow:{$0.resource.path}", el=true)
@@ -277,7 +270,6 @@ public class SolrResultSetFactory implements ResultSetFactory {
       throws UnsupportedEncodingException {
     SLOW_QUERY_LOGGER.error("Very slow solr query {} ms {} ", time,
         URLDecoder.decode(solrQuery.toString(),"UTF-8"));
-    TelemetryCounter.incrementValue("search","VERYSLOW",path);
   }
   
   /**

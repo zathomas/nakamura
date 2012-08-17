@@ -26,7 +26,6 @@ import net.sf.ehcache.config.CacheConfiguration;
 import org.perf4j.aop.Profiled;
 import org.sakaiproject.nakamura.api.memory.Cache;
 import org.sakaiproject.nakamura.api.memory.CacheScope;
-import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,12 +124,12 @@ public class CacheImpl<V> implements Cache<V> {
   
   @Profiled(tag="memory:Cache:misses")
   private void logMiss() {
-    TelemetryCounter.incrementValue("memory", "Cache", "misses");
+    // just for profiling
   }
   
   @Profiled(tag="memory:Cache:hits")
   private void logHit() {
-    TelemetryCounter.incrementValue("memory", "Cache", "hits");
+    // just for profiling
   }
   
   /**

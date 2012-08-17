@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -31,6 +32,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.solr.common.SolrInputDocument;
 import org.osgi.service.event.Event;
+import org.perf4j.aop.Profiled;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
@@ -47,7 +49,6 @@ import org.sakaiproject.nakamura.api.solr.RepositorySession;
 import org.sakaiproject.nakamura.api.solr.ResourceIndexingService;
 import org.sakaiproject.nakamura.api.solr.TopicIndexer;
 import org.sakaiproject.nakamura.solr.handlers.DefaultSparseHandler;
-import org.sakaiproject.nakamura.util.telemetry.TelemetryCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,7 +134,7 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
 	            }
 	          }
 	          if (!docAdded) {
-	            TelemetryCounter.incrementValue("solr", "SparseIndexingServiceImpl", "docHasOnlySysProps");
+	            docHasOnlySysProps();
 	          }
 	        }
         }
@@ -146,7 +147,7 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
     }
     return ImmutableList.of();
   }
-
+  
   private void addDefaultFields(SolrInputDocument doc, RepositorySession repositorySession) throws StorageClientException {
     Object o = doc.getFieldValue(_DOC_SOURCE_OBJECT);
     if ( o instanceof Content ) {
@@ -186,7 +187,7 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
       }
       doc.removeField(_DOC_SOURCE_OBJECT);
     } else {
-      TelemetryCounter.incrementValue("solr", "SparseIndexingServiceImpl", "docMissingSource");
+      docMissingSource();
       LOGGER.error("Note to Developer: Indexer must add the _source fields so that the default fields can be set, please correct, SolrDoc was {} ",doc);
       throw new StorageClientException(_DOC_SOURCE_OBJECT+" fields was missing from Solr Document, please correct the handler implementation");
 
@@ -215,7 +216,7 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
           return getHandler(repositorySession, path);
         } else {
           // If there is no content system to walk, then we're done.
-          TelemetryCounter.incrementValue("solr", "SparseIndexingServiceImpl", "useDefaultHandler");
+          useDefaultHandler();
           return defaultHandler;
         }
       }
@@ -244,7 +245,7 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
                       resourceType, handler, path, indexers });
                   return handler;
                 } else {
-                  TelemetryCounter.incrementValue("solr", "SparseIndexingServiceImpl-ignoredPath", path);
+                  ignoredPath(path);
                   LOGGER.debug("Ignored {} no handler for {} ", path, resourceType);
                   ignoreCache.put(path, path);
                 }
@@ -264,7 +265,7 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
       }
       path = Utils.getParentPath(path);
     }
-    TelemetryCounter.incrementValue("solr", "SparseIndexingServiceImpl", "useDefaultHandler");
+    useDefaultHandler();
     return defaultHandler;
   }
 
@@ -309,6 +310,26 @@ public class SparseIndexingServiceImpl implements IndexingHandler,
     }
   }
 
+  @Profiled(tag="solr:SparseIndexingServiceImpl:docHasOnlySysProps")
+  private void docHasOnlySysProps() {
+    // only for profiling
+  }
+  
+  @Profiled(tag="solr:SparseIndexingServiceImpl:docMissingSource")
+  private void docMissingSource() {
+    // only for profiling
+  }
+  
+  @Profiled(tag="solr:SparseIndexingServiceImpl:useDefaultHandler")
+  private void useDefaultHandler() {
+    // only for profiling
+  }
+  
+  @Profiled(tag="solr:SparseIndexingServiceImpl:ignoredPath:{$0}", el=true)
+  private void ignoredPath(String path) {
+    // only for profiling
+  }
+  
   private boolean ignore(String path) {
     if ( path == null ) {
       return true;
