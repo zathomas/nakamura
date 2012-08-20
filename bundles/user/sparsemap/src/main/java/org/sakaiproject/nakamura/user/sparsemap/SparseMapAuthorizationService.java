@@ -75,6 +75,22 @@ public class SparseMapAuthorizationService implements SakaiAuthorizationService 
     }
   }
 
+  @Override
+  public void canModifySakaiPerson(String personId, String personIdToChange) throws PermissionDeniedException {
+    Session adminSession = null;
+    try {
+      adminSession = repository.loginAdministrative(personId);
+      AccessControlManager accessControlManager = adminSession.getAccessControlManager();
+      accessControlManager.check(Security.ZONE_AUTHORIZABLES, personIdToChange, Permissions.CAN_WRITE);
+    } catch (AccessDeniedException ade) {
+      throw new PermissionDeniedException();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    } finally {
+      SparseUtils.logoutQuietly(adminSession);
+    }
+  }
+
   @Activate @Modified
   protected void activate(ComponentContext componentContext) {
     Dictionary<?, ?> props = componentContext.getProperties();

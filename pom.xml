@@ -85,6 +85,9 @@
         <module>bundles/smtp</module>
         <module>bundles/user/api</module>
         <module>bundles/user/impl</module>
+        <module>bundles/user/http</module>
+        <module>bundles/user/sparsemap</module>
+        <module>bundles/user/solr</module>
         <module>bundles/events</module>
         <module>bundles/batch</module>
         <module>bundles/activation-mail</module>

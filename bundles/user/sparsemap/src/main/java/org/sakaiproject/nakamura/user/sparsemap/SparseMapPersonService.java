@@ -37,17 +37,17 @@ import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
+import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.resource.DateParser;
 import org.sakaiproject.nakamura.api.user.BadRequestException;
+import org.sakaiproject.nakamura.api.user.DefaultSakaiPerson;
 import org.sakaiproject.nakamura.api.user.LiteAuthorizablePostProcessService;
-import org.sakaiproject.nakamura.api.user.PermissionDeniedException;
 import org.sakaiproject.nakamura.api.user.SakaiPerson;
 import org.sakaiproject.nakamura.api.user.SakaiPersonService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.api.user.UserFinder;
-import org.sakaiproject.nakamura.user.lite.resource.LiteNameSanitizer;
 import org.sakaiproject.nakamura.util.SparseUtils;
 import org.sakaiproject.nakamura.util.osgi.EventUtils;
 import org.slf4j.Logger;
@@ -55,11 +55,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @Component(metatype = true)
 @Service
@@ -67,6 +69,13 @@ public class SparseMapPersonService implements SakaiPersonService {
   private static final Logger LOGGER = LoggerFactory.getLogger(SparseMapPersonService.class);
 
   private DateParser dateParser;
+
+  @Property(label="Restricted name patterns",
+      description="A regular expression string to check usernames against and report the conflict.",
+      value=SparseMapPersonService.RESTRICTED_USERNAME_REGEX_DEFAULT)
+  public static final String RESTRICTED_USERNAME_REGEX_PROPERTY = "restricted.username.regex";
+  public static final String RESTRICTED_USERNAME_REGEX_DEFAULT  = "admin|administrator.*";
+  protected Pattern restrictedUsernamePattern;
 
   /**
    * Used to post process authorizable creation request.
@@ -89,33 +98,115 @@ public class SparseMapPersonService implements SakaiPersonService {
   protected transient EventAdmin eventAdmin;
 
   @Override
-  public void updatePerson(String personId, String firstName, String lastName, String email, Map<String, Object> properties) {
-    //To change body of implemented methods use File | Settings | File Templates.
+  public void updatePerson(String personId, String firstName, String lastName, String email, Map<String, Object[]> properties) {
+
+    Session adminSession = null;
+    try {
+      adminSession = repository.loginAdministrative();
+      AuthorizableManager authorizableManager = adminSession.getAuthorizableManager();
+      Authorizable person = authorizableManager.findAuthorizable(personId);
+      for (Map.Entry<String, Object[]> property : properties.entrySet()) {
+        if (property.getKey().endsWith("@Delete")) {
+          person.removeProperty(property.getKey().substring(0, property.getKey().lastIndexOf("@Delete")));
+        } else {
+          if (property.getValue().length == 1) {
+            person.setProperty(property.getKey(), property.getValue()[0]);
+          } else {
+            person.setProperty(property.getKey(), property.getValue());
+          }
+        }
+      }
+      authorizableManager.updateAuthorizable(person);
+      try {
+        postProcessorService.process(person, adminSession, ModificationType.MODIFY, properties);
+      } catch (Exception e) {
+        LOGGER.warn(e.getMessage(), e);
+        throw new RuntimeException(e);
+      }
+      // Launch an OSGi event for updating a user.
+      try {
+        Dictionary<String, String> eventProps = new Hashtable<String, String>();
+        eventProps.put(UserConstants.EVENT_PROP_USERID, personId);
+        EventUtils.sendOsgiEvent(eventProps, UserConstants.TOPIC_USER_UPDATE, eventAdmin);
+      } catch (Exception e) {
+        LOGGER.error("Failed to launch an OSGi event for updating a user.", e);
+      }
+    } catch (AccessDeniedException e) {
+      throw new RuntimeException();
+    } catch (StorageClientException e) {
+      throw new RuntimeException();
+    } finally {
+      SparseUtils.logoutQuietly(adminSession);
+    }
   }
 
   @Override
   public SakaiPerson getPerson(String personId) {
-    return new SakaiPerson() { };
+    Session adminSession = null;
+    try {
+      adminSession = repository.loginAdministrative();
+      AuthorizableManager authorizableManager = adminSession.getAuthorizableManager();
+      Authorizable person = authorizableManager.findAuthorizable(personId);
+
+      return new DefaultSakaiPerson(person.getId(),
+          (String) person.getProperty("firstName"),
+          (String) person.getProperty("lastName"),
+          (String) person.getProperty("email"),
+          person.getOriginalProperties());
+    } catch (AccessDeniedException e) {
+      throw new RuntimeException(e);
+    } catch (ClientPoolException e) {
+      throw new RuntimeException(e);
+    } catch (StorageClientException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
   public void deletePerson(String personId) {
-    //To change body of implemented methods use File | Settings | File Templates.
+    Session adminSession = null;
+    try {
+      adminSession = repository.loginAdministrative();
+      AuthorizableManager authorizableManager = adminSession.getAuthorizableManager();
+      Authorizable person = authorizableManager.findAuthorizable(personId);
+      authorizableManager.delete(personId);
+      postProcessorService.process(person, adminSession, ModificationType.DELETE, Collections.<String, Object[]> emptyMap());
+
+    } catch (AccessDeniedException e) {
+      throw new RuntimeException();
+    } catch (StorageClientException e) {
+      throw new RuntimeException();
+    } catch (Exception e) {
+      LOGGER.warn(e.getMessage(), e);
+      throw new RuntimeException();
+    } finally {
+      SparseUtils.logoutQuietly(adminSession);
+    }
   }
 
   @Override
   public boolean isPersonIdInUse(String personId) {
-    return false;  //To change body of implemented methods use File | Settings | File Templates.
-  }
-
-  @Override
-  public void tagPerson(String personId, Set<String> tags) {
-    //To change body of implemented methods use File | Settings | File Templates.
-  }
-
-  @Override
-  public void untagPerson(String personId, Set<String> tags) {
-    //To change body of implemented methods use File | Settings | File Templates.
+    Session adminSession = null;
+    try {
+      adminSession = repository.loginAdministrative();
+      AuthorizableManager authorizableManager = adminSession.getAuthorizableManager();
+      if (userFinder.userExists(personId) || authorizableManager.findAuthorizable(personId) != null) {
+        return true;
+      }
+      else if (restrictedUsernamePattern.matcher(personId).matches()){
+        return true;
+      } else {
+        return false;
+      }
+    } catch (AccessDeniedException e) {
+      throw new RuntimeException(e);
+    } catch (StorageClientException e) {
+      throw new RuntimeException(e);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    } finally {
+      SparseUtils.logoutQuietly(adminSession);
+    }
   }
 
   @Override
@@ -148,12 +239,12 @@ public class SparseMapPersonService implements SakaiPersonService {
 
   private static final String DEFAULT_PASSWORD_DIGEST_ALGORITHM = "sha1";
 
-  private String passwordDigestAlgoritm = null;
+  private String passwordDigestAlgorithm = null;
 
   @Deactivate
   protected void deactivate(ComponentContext context) {
     dateParser = null;
-    passwordDigestAlgoritm = null;
+    passwordDigestAlgorithm = null;
   }
 
   /**
@@ -164,7 +255,7 @@ public class SparseMapPersonService implements SakaiPersonService {
    * @throws IllegalArgumentException
    */
   protected String digestPassword(String pwd) throws IllegalArgumentException {
-    return digestPassword(pwd, passwordDigestAlgoritm);
+    return digestPassword(pwd, passwordDigestAlgorithm);
   }
 
   /**
@@ -192,7 +283,9 @@ public class SparseMapPersonService implements SakaiPersonService {
   @Modified
   protected void activate(ComponentContext componentContext) {
     Dictionary<?, ?> props = componentContext.getProperties();
-    passwordDigestAlgoritm = PropertiesUtil.toString(props.get(PROP_PASSWORD_DIGEST_ALGORITHM), DEFAULT_PASSWORD_DIGEST_ALGORITHM);
+    restrictedUsernamePattern = Pattern.compile(PropertiesUtil.toString(props.get(RESTRICTED_USERNAME_REGEX_PROPERTY),
+        RESTRICTED_USERNAME_REGEX_DEFAULT), Pattern.CASE_INSENSITIVE);
+    passwordDigestAlgorithm = PropertiesUtil.toString(props.get(PROP_PASSWORD_DIGEST_ALGORITHM), DEFAULT_PASSWORD_DIGEST_ALGORITHM);
   }
 
   @Override
@@ -203,7 +296,7 @@ public class SparseMapPersonService implements SakaiPersonService {
       throw new BadRequestException("User name was not submitted");
     }
 
-    LiteNameSanitizer san = new LiteNameSanitizer(principalName, true);
+    SparsePersonNameSanitizer san = new SparsePersonNameSanitizer(principalName);
     san.validate();
 
 
@@ -228,7 +321,6 @@ public class SparseMapPersonService implements SakaiPersonService {
             User user = (User) authorizableManager.findAuthorizable(principalName);
 
             try {
-              // this is the call to DefaultPostProcessor
               postProcessorService.process(user, selfRegSession, ModificationType.CREATE, parameters);
             } catch (Exception e) {
               LOGGER.warn(e.getMessage(), e);
@@ -257,7 +349,7 @@ public class SparseMapPersonService implements SakaiPersonService {
     } catch (AccessDeniedException e) {
       throw new RuntimeException();
     } catch (StorageClientException e) {
-      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+      throw new RuntimeException();
     } finally {
       SparseUtils.logoutQuietly(selfRegSession);
     }
@@ -295,10 +387,8 @@ public class SparseMapPersonService implements SakaiPersonService {
    *
    * @throws AccessDeniedException
    * @throws StorageClientException
-   * @throws org.sakaiproject.nakamura.api.lite.ClientPoolException
    */
-  private Session getSession() throws ClientPoolException, StorageClientException,
-      AccessDeniedException {
+  private Session getSession() throws StorageClientException, AccessDeniedException {
     return getRepository().loginAdministrative();
   }
 

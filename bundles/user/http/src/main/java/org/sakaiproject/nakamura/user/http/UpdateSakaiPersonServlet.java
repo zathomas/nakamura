@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.user.servlet;
+package org.sakaiproject.nakamura.user.http;
 
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
@@ -28,35 +28,48 @@ import org.sakaiproject.nakamura.api.user.PermissionDeniedException;
 import org.sakaiproject.nakamura.api.user.SakaiAuthorizationService;
 import org.sakaiproject.nakamura.api.user.SakaiPersonService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
+import org.sakaiproject.nakamura.util.parameters.ParameterMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
 
-@SlingServlet(paths = { "/system/changePassword" }, generateComponent = false, methods = { "POST" })
-public class ChangeSakaiUserPasswordServlet extends SlingAllMethodsServlet {
+@SlingServlet(paths = { "/system/personUpdate" }, methods = { "POST" })
+public class UpdateSakaiPersonServlet  extends SlingAllMethodsServlet {
+  private static final Logger LOGGER = LoggerFactory.getLogger(UpdateSakaiPersonServlet.class);
+
+  @Reference
+  SakaiPersonService sakaiPersonService;
+
+  @Reference
+  SakaiAuthorizationService sakaiAuthorizationService;
 
   @Reference
   protected transient DynamicContentResponseCache responseCache;
 
-  @Reference
-  protected transient SakaiPersonService userService;
-
-  @Reference
-  protected transient SakaiAuthorizationService authorizationService;
-
   @Override
   public void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
-      throws ServletException, IOException {
+    throws ServletException, IOException {
     try {
-      authorizationService.canChangeUserPassword(request.getRemoteUser(), request.getParameter("userId"));
-      userService.changePersonAccountPassword(request.getParameter("userId"), request.getParameter("oldPwd"),
-          request.getParameter("newPwd"), request.getParameter("newPwdConfirm"));
-      responseCache.invalidate(UserConstants.USER_RESPONSE_CACHE, request.getParameter("userId"));
-    } catch (PermissionDeniedException pde) {
-      response.sendError(HttpServletResponse.SC_FORBIDDEN, pde.getLocalizedMessage());
+      String personId = request.getParameter("personId");
+      sakaiAuthorizationService.canModifySakaiPerson(request.getRemoteUser(), personId);
+      String firstName = request.getParameter("firstName");
+      String lastName = request.getParameter("lastName");
+      String email = request.getParameter("email");
+      Map<String, Object[]> parameters = ParameterMap.extractParameters(request);
+      sakaiPersonService.updatePerson(personId, firstName, lastName, email, parameters);
+
+      responseCache.invalidate(UserConstants.USER_RESPONSE_CACHE, personId);
+    } catch (PermissionDeniedException e) {
+      response.sendError(HttpServletResponse.SC_FORBIDDEN);
     } catch (BadRequestException bre) {
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST, bre.getLocalizedMessage());
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+    } catch (Exception e) {
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
   }
+
 }

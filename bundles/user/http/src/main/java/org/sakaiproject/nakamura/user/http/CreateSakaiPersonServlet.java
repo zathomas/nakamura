@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.user.servlet;
+package org.sakaiproject.nakamura.user.http;
 
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -42,7 +42,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 
-@SlingServlet(paths = { "/api/people" }, methods = { "POST" })
+@SlingServlet(paths = { "/system/personCreate" }, methods = { "POST" })
 @Properties(value = {
     @Property(name = "password.digest.algorithm", value = "sha1"),
     @Property(name = "servlet.post.dateFormats", value = {

@@ -21,11 +21,7 @@ import java.util.Set;
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-public interface SakaiPersonService {
-
-  public enum SortOrder {
-    ASCENDING, DESCENDING
-  }
+public interface SakaiPersonService extends SakaiPersonSearchService {
 
   /**
    *
@@ -51,7 +47,7 @@ public interface SakaiPersonService {
    * @param properties
    */
   void updatePerson(String personId, String firstName, String lastName, String email,
-                  Map<String, Object> properties);
+                  Map<String, Object[]> properties);
 
   /**
    * Returns the {@link SakaiPerson} specified by {@code personId}
@@ -78,23 +74,6 @@ public interface SakaiPersonService {
   boolean isPersonIdInUse(String personId);
 
   /**
-   * Add the set of specified {@code String} tags to the specified {@link SakaiPerson}
-   * If any of the specified tags is on that person already, it will be ignored.
-   * @param personId
-   * @param tags
-   */
-  void tagPerson(String personId, Set<String> tags);
-
-  /**
-   * Remove the set of specified {@code String} tags from the specified {@link SakaiPerson}
-   * If any of specified tags is not on that person, it will be ignored.
-   * @param personId
-   * @param tags
-   */
-  void untagPerson(String personId, Set<String> tags);
-
-
-  /**
    * Change the password for the specified {@link SakaiPerson}
    * @param userId
    * @param oldPwd
@@ -102,22 +81,6 @@ public interface SakaiPersonService {
    * @param newPwdConfirm
    */
   void changePersonAccountPassword(String userId, String oldPwd, String newPwd, String newPwdConfirm);
-
-  /**
-   * Perform a full-text search for {@link SakaiPerson}s matching the given criteria
-   * @param query
-   * @param tags
-   * @param alsoSearchProfile a flag for searching in the person profile information
-   * @param sortOn the name of a {@link SakaiPerson} property to sort by
-   * @param sortOrder
-   * @param limit the maximum number of results to return
-   * @param offset the number of results to skip over before returning
-   * @return
-   */
-  List<SakaiPerson> searchPeople(String query, Set<String> tags,
-                                 boolean alsoSearchProfile,
-                                 String sortOn, SortOrder sortOrder,
-                                 int limit, int offset);
 
 
 }

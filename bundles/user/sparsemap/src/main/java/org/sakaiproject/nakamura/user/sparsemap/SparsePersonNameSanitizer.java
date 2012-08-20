@@ -15,12 +15,28 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.api.user;
+package org.sakaiproject.nakamura.user.sparsemap;
 
-public interface SakaiAuthorizationService {
-  void canChangeUserPassword(String personId, String personIdToChange) throws PermissionDeniedException;
+public class SparsePersonNameSanitizer {
 
-  void canCreateNewSakaiPerson(String personId) throws PermissionDeniedException;
 
-  void canModifySakaiPerson(String personId, String personIdToChange) throws PermissionDeniedException;
+  private String name;
+
+  public SparsePersonNameSanitizer(String name) {
+    this.name = name;
+  }
+
+  public void validate()  {
+    String name = this.name;
+
+    // At least 3 chars.
+    if (name.length() < 3) {
+      throw new IllegalArgumentException("Name must be bigger than 3 chars.");
+    }
+
+    // KERN-763 - UserIDs starting with g-contacts- are reserved for the contact groups.
+    if (name.startsWith("g-contacts-")) {
+      throw new IllegalArgumentException("'g-contacts-' is a reserved prefix.");
+    }
+  }
 }
