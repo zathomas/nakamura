@@ -210,7 +210,7 @@ public class SolrResultSetFactory implements ResultSetFactory {
         }
       }
       long tquery = System.currentTimeMillis();
-      QueryResponse response = doSolrQuery(solrServer, solrQuery);
+      QueryResponse response = doSolrQuery(params.getPath(), solrServer, solrQuery);
       tquery = System.currentTimeMillis() - tquery;
       try {
         if ( tquery > verySlowQueryThreshold ) {
@@ -253,19 +253,19 @@ public class SolrResultSetFactory implements ResultSetFactory {
     }
   }
 
-  @Profiled(tag="search:ResultSet:performed:{$0.resource.path}", el=true)
-  private QueryResponse doSolrQuery(SolrServer solrServer, SolrQuery solrQuery) throws SolrServerException {
+  @Profiled(tag="search:ResultSet:performed:{$0}", el=true)
+  private QueryResponse doSolrQuery(String path, SolrServer solrServer, SolrQuery solrQuery) throws SolrServerException {
     return solrServer.query(solrQuery, queryMethod);
   }
   
-  @Profiled(tag="search:ResultSet:slow:{$0.resource.path}", el=true)
+  @Profiled(tag="search:ResultSet:slow:{$0}", el=true)
   private void logSlow(String path, SolrQuery solrQuery, long time)
       throws UnsupportedEncodingException {
     SLOW_QUERY_LOGGER.error("Slow solr query {} ms {} ", time,
         URLDecoder.decode(solrQuery.toString(),"UTF-8"));
   }
   
-  @Profiled(tag="search:ResultSet:veryslow:{$0.resource.path}", el=true)
+  @Profiled(tag="search:ResultSet:veryslow:{$0}", el=true)
   private void logVerySlow(String path, SolrQuery solrQuery, long time)
       throws UnsupportedEncodingException {
     SLOW_QUERY_LOGGER.error("Very slow solr query {} ms {} ", time,
