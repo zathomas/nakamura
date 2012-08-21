@@ -15,11 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.sakaiproject.nakamura.api.user;
+package org.sakaiproject.nakamura.api.people;
 
-public class BadRequestException extends RuntimeException {
-
-  public BadRequestException(String message) {
-    super(message);
-  }
+public class PermissionDeniedException extends Exception {
 }

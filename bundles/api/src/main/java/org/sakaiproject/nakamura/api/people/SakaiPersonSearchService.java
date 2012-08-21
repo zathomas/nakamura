@@ -1,4 +1,4 @@
-package org.sakaiproject.nakamura.api.user;
+package org.sakaiproject.nakamura.api.people;
 
 import java.util.List;
 import java.util.Set;
@@ -22,11 +22,11 @@ import java.util.Set;
  */
 public interface SakaiPersonSearchService {
   /**
-   * Perform a full-text search for {@link org.sakaiproject.nakamura.api.user.SakaiPerson}s matching the given criteria
+   * Perform a full-text search for {@link SakaiPerson}s matching the given criteria
    * @param query
    * @param tags
    * @param alsoSearchProfile a flag for searching in the person profile information
-   * @param sortOn the name of a {@link org.sakaiproject.nakamura.api.user.SakaiPerson} property to sort by
+   * @param sortOn the name of a {@link SakaiPerson} property to sort by
    * @param sortOrder
    * @param limit the maximum number of results to return
    * @param offset the number of results to skip over before returning

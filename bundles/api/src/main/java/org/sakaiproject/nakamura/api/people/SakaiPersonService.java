@@ -1,8 +1,6 @@
-package org.sakaiproject.nakamura.api.user;
+package org.sakaiproject.nakamura.api.people;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Licensed to the Sakai Foundation (SF) under one
