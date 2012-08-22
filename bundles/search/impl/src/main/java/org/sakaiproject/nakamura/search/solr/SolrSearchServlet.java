@@ -239,9 +239,6 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
 
         if (useQueryHandler) {
           try {
-            final Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
-            final AuthorizableManager authzMgr = session.getAuthorizableManager();
-            final Authorizable authorizable = authzMgr.findAuthorizable(request.getRemoteUser());
             final SolrSearchParameters params = SolrSearchUtil.getParametersFromRequest(request);
 
             DomainObjectSearchQueryHandler queryHandler = (DomainObjectSearchQueryHandler) searchProcessor;
@@ -255,14 +252,8 @@ public class SolrSearchServlet extends SlingSafeMethodsServlet {
             Map<String, String> parameterMap = loadProperties(request, null, defaultValues, Query.SOLR);
             query = queryHandler.getQuery(parameterMap);
 
-            rs = searchServiceFactory.getSearchResultSet(session, authorizable, query, params);
-          } catch (AccessDeniedException e) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
-            return;
+            rs = searchServiceFactory.getSearchResultSet(request.getRemoteUser(), query, params);
           } catch (SolrSearchException e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-            return;
-          } catch (StorageClientException e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             return;
           }

@@ -32,9 +32,9 @@ public interface SakaiPersonSearchService {
    * @param offset the number of results to skip over before returning
    * @return
    */
-  List<SakaiPerson> searchPeople(String query, Set<String> tags,
+  List<SakaiPerson> searchPeople(String searchUserId, String query, Set<String> tags,
                                  boolean alsoSearchProfile,
-                                 String sortOn, SakaiPersonService.SortOrder sortOrder,
+                                 String sortOn, SortOrder sortOrder,
                                  int limit, int offset);
 
   enum SortOrder {

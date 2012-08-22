@@ -19,7 +19,7 @@ import java.util.Map;
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-public interface SakaiPersonService extends SakaiPersonSearchService {
+public interface SakaiPersonService {
 
   /**
    *

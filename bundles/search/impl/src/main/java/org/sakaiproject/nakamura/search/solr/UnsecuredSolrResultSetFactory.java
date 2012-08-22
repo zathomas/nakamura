@@ -39,7 +39,7 @@ import java.util.Map;
 public class UnsecuredSolrResultSetFactory extends SolrResultSetFactory {
 
   @Override
-  protected void applyReadersRestrictions(Authorizable authorizable, Session session, boolean asAnon,
+  protected void applyReadersRestrictions(String searchUserId, boolean asAnon,
                                           Map<String, Object> queryOptions) throws StorageClientException, AccessDeniedException {
     // no-op (there are no reader restrictions in this result set factory)
   }

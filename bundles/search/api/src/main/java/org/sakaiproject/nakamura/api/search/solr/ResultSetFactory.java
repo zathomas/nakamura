@@ -36,6 +36,6 @@ public interface ResultSetFactory {
   SolrSearchResultSet processQuery(SlingHttpServletRequest request, Query query,
       boolean asAnon) throws SolrSearchException;
 
-  SolrSearchResultSet processQuery(Session session, Authorizable authorizable, Query query, SolrSearchParameters params)
+  SolrSearchResultSet processQuery(String searchUserId, Query query, SolrSearchParameters params)
      throws SolrSearchException;
 }

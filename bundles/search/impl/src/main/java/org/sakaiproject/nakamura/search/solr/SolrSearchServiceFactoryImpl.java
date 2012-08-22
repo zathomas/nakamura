@@ -96,12 +96,12 @@ public class SolrSearchServiceFactoryImpl implements SolrSearchServiceFactory {
     return getSearchResultSet(request, query, false);
   }
 
-  public SolrSearchResultSet getSearchResultSet (final Session session, final Authorizable authorizable,
+  public SolrSearchResultSet getSearchResultSet (String searchUserId,
      final Query query, final SolrSearchParameters params) throws SolrSearchException {
     SolrSearchResultSet rs = null;
     ResultSetFactory factory = resultSetFactories.get(Query.SOLR);
     if (factory != null) {
-      rs = factory.processQuery(session, authorizable, query, params);
+      rs = factory.processQuery(searchUserId, query, params);
     }
     return rs;
   }

@@ -29,6 +29,7 @@ import java.net.URLDecoder;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -40,6 +41,7 @@ import org.apache.lucene.util.Version;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.solr.schema.TextField;
+import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
@@ -64,6 +66,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchUtil;
+import org.sakaiproject.nakamura.util.SparseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +83,9 @@ public class SparseResultSetFactory implements ResultSetFactory {
   private static final String SLOW_QUERY_TIME = "slowQueryTime";
   @Property(intValue = 100)
   private static final String DEFAULT_MAX_RESULTS = "defaultMaxResults";
+
+  @Reference
+  Repository sparseRepository;
 
   private int defaultMaxResults = 100; // set to 100 to allow testing
   private long slowQueryThreshold;
@@ -101,33 +107,23 @@ public class SparseResultSetFactory implements ResultSetFactory {
 
   public SolrSearchResultSet processQuery(SlingHttpServletRequest request, Query query, boolean asAnon)
      throws SolrSearchException {
-    try {
-      final Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(Session.class));
-      final AuthorizableManager authzMgr = session.getAuthorizableManager();
-      final Authorizable authorizable = authzMgr.findAuthorizable(asAnon ? User.ANON_USER : request.getRemoteUser());
-
-      return processQuery(session, authorizable, query, SolrSearchUtil.getParametersFromRequest(request));
-    } catch (AccessDeniedException e) {
-      LOGGER.error("Access denied for {}", request.getRemoteUser());
-      throw new SolrSearchException(403, "access denied");
-    } catch (StorageClientException e) {
-      LOGGER.error("Error processing query", e);
-      throw new SolrSearchException(500, "internal error");
-    }
+    String searchUserId = asAnon ? User.ANON_USER : request.getRemoteUser();
+    return processQuery(searchUserId, query, SolrSearchUtil.getParametersFromRequest(request));
   }
 
   /**
    * Process properties to query sparse content directly.
    *
-   * @param session
-   * @param authorizable
+   * @param searchUserId
    * @param query
+   * @param params
    * @return
    * @throws StorageClientException
    * @throws AccessDeniedException
    */
-  public SolrSearchResultSet processQuery(Session session, Authorizable authorizable, Query query,
+  public SolrSearchResultSet processQuery(String searchUserId, Query query,
      SolrSearchParameters params) throws SolrSearchException {
+    Session searchSession = null;
     try {
     // use solr parsing to get the terms from the query string
     QueryParser parser = new QueryParser(Version.LUCENE_40, "id",
@@ -172,8 +168,8 @@ public class SparseResultSetFactory implements ResultSetFactory {
     if ( name != null ) {
        props.put(StorageConstants.CUSTOM_STATEMENT_SET, name);
     }
-
-    ContentManager cm = session.getContentManager();
+    searchSession = sparseRepository.loginAdministrative(searchUserId);
+    ContentManager cm = searchSession.getContentManager();
     long tquery = System.currentTimeMillis();
     Iterable<Content> items = cm.find(props);
     tquery = System.currentTimeMillis() - tquery;
@@ -195,6 +191,8 @@ public class SparseResultSetFactory implements ResultSetFactory {
       throw new SolrSearchException(500, e.getMessage());
     } catch (ParseException e) {
       throw new SolrSearchException(500, e.getMessage());
+    } finally {
+      SparseUtils.logoutQuietly(searchSession);
     }
   }
 

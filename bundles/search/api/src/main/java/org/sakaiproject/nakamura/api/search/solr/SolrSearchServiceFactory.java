@@ -45,7 +45,7 @@ public interface SolrSearchServiceFactory {
   SolrSearchResultSet getSearchResultSet(SlingHttpServletRequest request, Query query)
       throws SolrSearchException;
 
-  public SolrSearchResultSet getSearchResultSet (Session session, Authorizable authorizable, Query query,
+  public SolrSearchResultSet getSearchResultSet (String searchUserId, Query query,
      SolrSearchParameters params) throws SolrSearchException;
 
 }

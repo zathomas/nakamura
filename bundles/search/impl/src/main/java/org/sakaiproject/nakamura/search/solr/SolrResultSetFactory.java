@@ -38,6 +38,7 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.GroupParams;
 import org.perf4j.aop.Profiled;
+import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
@@ -54,6 +55,7 @@ import org.sakaiproject.nakamura.api.search.solr.SolrSearchParameters;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchResultSet;
 import org.sakaiproject.nakamura.api.search.solr.SolrSearchUtil;
 import org.sakaiproject.nakamura.api.solr.SolrServerService;
+import org.sakaiproject.nakamura.util.SparseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +96,9 @@ public class SolrResultSetFactory implements ResultSetFactory {
   @Reference
   private DeletedPathsService deletedPathsService;
 
+  @Reference
+  private Repository sparsemapRepository;
+
   private int defaultMaxResults = 100; // set to 100 to allow testing
   private long slowQueryThreshold;
   private long verySlowQueryThreshold;
@@ -118,37 +123,24 @@ public class SolrResultSetFactory implements ResultSetFactory {
    */
   public SolrSearchResultSet processQuery(SlingHttpServletRequest request, Query query, boolean asAnon)
      throws SolrSearchException {
-    try {
-      final Session session = StorageClientUtils.adaptToSession(request.getResourceResolver().adaptTo(javax.jcr.Session.class));
-      final AuthorizableManager authzMgr = session.getAuthorizableManager();
-      final Authorizable authorizable = authzMgr.findAuthorizable(asAnon ? User.ANON_USER : request.getRemoteUser());
-      final SolrSearchParameters params = SolrSearchUtil.getParametersFromRequest(request);
-
-      return processQuery(session, authorizable, query, params);
-    } catch (AccessDeniedException e) {
-      LOGGER.error("Access denied for {}", request.getRemoteUser());
-      throw new SolrSearchException(403, "access denied");
-    } catch (StorageClientException e) {
-      LOGGER.error("Error processing query", e);
-      throw new SolrSearchException(500, "internal error");
-    }
+    String searchUserId = asAnon ? User.ANON_USER : request.getRemoteUser();
+    final SolrSearchParameters params = SolrSearchUtil.getParametersFromRequest(request);
+    return processQuery(searchUserId, query, params);
   }
 
   /**
    * Process a query string to search using Solr.
    *
-   * @param session
-   * @param authorizable
+   * @param userId
    * @param query
    * @param params
    * @return
    * @throws SolrSearchException
    */
   @SuppressWarnings("rawtypes")
-  public SolrSearchResultSet processQuery(Session session, Authorizable authorizable, Query query,
+  public SolrSearchResultSet processQuery(String userId, Query query,
      SolrSearchParameters params) throws SolrSearchException {
-    final boolean asAnon = (authorizable == null || User.ANON_USER.equals(authorizable.getId()));
-    final String userId = (authorizable != null) ? authorizable.getId() : User.ANON_USER;
+    final boolean asAnon = (userId == null || User.ANON_USER.equals(userId));
 
     try {
       // Add reader restrictions to solr fq (filter query) parameter,
@@ -179,7 +171,7 @@ public class SolrResultSetFactory implements ResultSetFactory {
         }
       }
 
-      applyReadersRestrictions(authorizable, session, asAnon, queryOptions);
+      applyReadersRestrictions(userId, asAnon, queryOptions);
 
       // filter out 'excluded' items. these are indexed because we do need to search for
       // some things on the server that the UI doesn't want (e.g. collection groups)
@@ -234,21 +226,27 @@ public class SolrResultSetFactory implements ResultSetFactory {
     }
   }
 
-  protected void applyReadersRestrictions(Authorizable authorizable, Session session, boolean asAnon,
+  protected void applyReadersRestrictions(final String userId, boolean asAnon,
      Map<String, Object> queryOptions) throws StorageClientException, AccessDeniedException {
-    final String userId = authorizable.getId();
     // apply readers restrictions.
     if (asAnon) {
       queryOptions.put("readers", User.ANON_USER);
     } else {
-      if (!User.ADMIN_USER.equals(userId)) {
-        AuthorizableManager am = session.getAuthorizableManager();
-        Set<String> readers = Sets.newHashSet();
-        for (Iterator<Group> gi = authorizable.memberOf(am); gi.hasNext();) {
-          readers.add(gi.next().getId());
+      Session adminSession = null;
+      try {
+        adminSession = sparsemapRepository.loginAdministrative();
+        AuthorizableManager authorizableManager = adminSession.getAuthorizableManager();
+        Authorizable searchUser = authorizableManager.findAuthorizable(userId);
+        if (searchUser != null && !((User)searchUser).isAdmin()) {
+          Set<String> readers = Sets.newHashSet();
+          for (Iterator<Group> gi = searchUser.memberOf(authorizableManager); gi.hasNext();) {
+            readers.add(gi.next().getId());
+          }
+          readers.add(userId);
+          queryOptions.put("readers", StringUtils.join(readers,","));
         }
-        readers.add(userId);
-        queryOptions.put("readers", StringUtils.join(readers,","));
+      } finally {
+        SparseUtils.logoutQuietly(adminSession);
       }
     }
   }
