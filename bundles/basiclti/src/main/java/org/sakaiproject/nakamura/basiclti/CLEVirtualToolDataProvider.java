@@ -18,16 +18,22 @@
 package org.sakaiproject.nakamura.basiclti;
 
 import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.sling.SlingServlet;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.component.ComponentContext;
 import org.sakaiproject.nakamura.api.basiclti.BasicLTIAppConstants;
 import org.sakaiproject.nakamura.api.basiclti.VirtualToolDataProvider;
+import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,12 +42,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
+
 /**
  * Specific to CLE tools provided by LTI.
  */
-@Component(metatype = true)
 @Service
-public class CLEVirtualToolDataProvider implements VirtualToolDataProvider {
+@SlingServlet(methods = { "GET" }, generateService = true, paths = { "/var/basiclti/cletools" })
+public class CLEVirtualToolDataProvider extends SlingSafeMethodsServlet implements
+    VirtualToolDataProvider {
+  private static final long serialVersionUID = 1871722416187493177L;
+
   private static final Logger LOG = LoggerFactory
       .getLogger(CLEVirtualToolDataProvider.class);
 
@@ -304,6 +315,30 @@ public class CLEVirtualToolDataProvider implements VirtualToolDataProvider {
   public String toString() {
     return "CLEVirtualToolDataProvider [toolList=" + toolList + ", cleUrl=" + cleUrl
         + "]";
+  }
+
+  /**
+   * Provides a very simple REST endpoint that returns the Sakai CLE tool ids that are
+   * available for use by the Sakai CLE Tools widget.
+   * 
+   * {@inheritDoc}
+   * 
+   * @see org.apache.sling.api.servlets.SlingSafeMethodsServlet#doGet(org.apache.sling.api.SlingHttpServletRequest,
+   *      org.apache.sling.api.SlingHttpServletResponse)
+   */
+  @Override
+  protected void doGet(final SlingHttpServletRequest request,
+      final SlingHttpServletResponse response) throws ServletException, IOException {
+    LOG.debug("doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)");
+    final ExtendedJSONWriter ejw = new ExtendedJSONWriter(response.getWriter());
+    try {
+      ejw.object();
+      ejw.key("toolList").value(getSupportedVirtualToolIds().toArray());
+      ejw.endObject();
+    } catch (JSONException e) {
+      LOG.error(e.getLocalizedMessage(), e);
+      response.sendError(500, e.getLocalizedMessage());
+    }
   }
 
 }

@@ -17,6 +17,12 @@
  */
 package org.sakaiproject.nakamura.basiclti;
 
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.contains;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
@@ -42,6 +48,8 @@ import static org.sakaiproject.nakamura.basiclti.CLEVirtualToolDataProvider.LTI_
 import static org.sakaiproject.nakamura.basiclti.CLEVirtualToolDataProvider.LTI_URL_LOCK;
 import static org.sakaiproject.nakamura.basiclti.CLEVirtualToolDataProvider.TOOL_LIST;
 
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,11 +58,15 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.service.component.ComponentContext;
 import org.sakaiproject.nakamura.api.basiclti.BasicLTIAppConstants;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.ServletException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CLEVirtualToolDataProviderTest {
@@ -65,6 +77,12 @@ public class CLEVirtualToolDataProviderTest {
   ComponentContext componentContext;
   @Mock
   Dictionary properties;
+  @Mock
+  SlingHttpServletRequest request;
+  @Mock
+  SlingHttpServletResponse response;
+  @Mock
+  PrintWriter printWriter;
 
   protected String cleUrl;
   protected String ltiKey;
@@ -85,7 +103,7 @@ public class CLEVirtualToolDataProviderTest {
   protected List<String> toolList = Arrays.asList(DEFAULT_TOOL_LIST);
 
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     cleVirtualToolDataProvider = new CLEVirtualToolDataProvider();
     otherCLEVirtualToolDataProvider = new CLEVirtualToolDataProvider();
     cleUrl = cleVirtualToolDataProvider.cleUrl;
@@ -109,6 +127,8 @@ public class CLEVirtualToolDataProviderTest {
     otherCLEVirtualToolDataProvider.ltiKey = cleVirtualToolDataProvider.ltiKey;
     otherCLEVirtualToolDataProvider.ltiSecret = cleVirtualToolDataProvider.ltiSecret;
     otherCLEVirtualToolDataProvider.toolList = cleVirtualToolDataProvider.toolList;
+
+    when(response.getWriter()).thenReturn(printWriter);
 
     applyWhenConditions();
   }
@@ -409,6 +429,26 @@ public class CLEVirtualToolDataProviderTest {
   public void testToString() {
     assertTrue(cleVirtualToolDataProvider.toString() != null
         && cleVirtualToolDataProvider.toString().length() > 0);
+  }
+
+  /**
+   * Test happy case for
+   * {@link CLEVirtualToolDataProvider#doGet(SlingHttpServletRequest, SlingHttpServletResponse)}
+   * 
+   * @throws ServletException
+   * @throws IOException
+   */
+  @Test
+  public void testDoGet() throws ServletException, IOException {
+    cleVirtualToolDataProvider.doGet(request, response);
+    verify(printWriter, atLeastOnce()).write(anyString());
+    verify(printWriter, times(1)).write(contains("toolList"));
+    verify(printWriter, times(1)).write(
+        contains(CLEVirtualToolDataProvider.DEFAULT_TOOL_LIST[0]));
+    verify(printWriter, times(1)).write(
+        contains(CLEVirtualToolDataProvider.DEFAULT_TOOL_LIST[1]));
+    verify(printWriter, times(1)).write(
+        contains(CLEVirtualToolDataProvider.DEFAULT_TOOL_LIST[2]));
   }
 
   // --------------------------------------------------------------------------
