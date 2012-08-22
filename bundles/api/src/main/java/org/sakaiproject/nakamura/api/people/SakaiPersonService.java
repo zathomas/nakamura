@@ -1,7 +1,3 @@
-package org.sakaiproject.nakamura.api.people;
-
-import java.util.Map;
-
 /**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
@@ -19,6 +15,10 @@ import java.util.Map;
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package org.sakaiproject.nakamura.api.people;
+
+import java.util.Map;
+
 public interface SakaiPersonService {
 
   /**

@@ -1,8 +1,3 @@
-package org.sakaiproject.nakamura.api.people;
-
-import java.util.List;
-import java.util.Set;
-
 /**
  * Licensed to the Sakai Foundation (SF) under one
  * or more contributor license agreements. See the NOTICE file
@@ -20,6 +15,11 @@ import java.util.Set;
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package org.sakaiproject.nakamura.api.people;
+
+import java.util.List;
+import java.util.Set;
+
 public interface SakaiPersonSearchService {
   /**
    * Perform a full-text search for {@link SakaiPerson}s matching the given criteria
