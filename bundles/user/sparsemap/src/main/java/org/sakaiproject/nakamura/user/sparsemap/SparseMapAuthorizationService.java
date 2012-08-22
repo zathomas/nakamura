@@ -31,8 +31,8 @@ import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Permissions;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.Security;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
-import org.sakaiproject.nakamura.api.user.PermissionDeniedException;
-import org.sakaiproject.nakamura.api.user.SakaiAuthorizationService;
+import org.sakaiproject.nakamura.api.people.PermissionDeniedException;
+import org.sakaiproject.nakamura.api.people.SakaiAuthorizationService;
 import org.sakaiproject.nakamura.util.SparseUtils;
 
 import java.util.Dictionary;

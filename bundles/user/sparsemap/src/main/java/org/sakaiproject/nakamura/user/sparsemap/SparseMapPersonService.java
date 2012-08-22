@@ -41,11 +41,11 @@ import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
 import org.sakaiproject.nakamura.api.lite.authorizable.User;
 import org.sakaiproject.nakamura.api.resource.DateParser;
-import org.sakaiproject.nakamura.api.user.BadRequestException;
-import org.sakaiproject.nakamura.api.user.DefaultSakaiPerson;
+import org.sakaiproject.nakamura.api.people.BadRequestException;
+import org.sakaiproject.nakamura.api.people.DefaultSakaiPerson;
 import org.sakaiproject.nakamura.api.user.LiteAuthorizablePostProcessService;
-import org.sakaiproject.nakamura.api.user.SakaiPerson;
-import org.sakaiproject.nakamura.api.user.SakaiPersonService;
+import org.sakaiproject.nakamura.api.people.SakaiPerson;
+import org.sakaiproject.nakamura.api.people.SakaiPersonService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 import org.sakaiproject.nakamura.api.user.UserFinder;
 import org.sakaiproject.nakamura.util.SparseUtils;
@@ -58,7 +58,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -193,10 +192,8 @@ public class SparseMapPersonService implements SakaiPersonService {
       if (userFinder.userExists(personId) || authorizableManager.findAuthorizable(personId) != null) {
         return true;
       }
-      else if (restrictedUsernamePattern.matcher(personId).matches()){
-        return true;
-      } else {
-        return false;
+      else {
+        return restrictedUsernamePattern.matcher(personId).matches();
       }
     } catch (AccessDeniedException e) {
       throw new RuntimeException(e);
@@ -227,11 +224,6 @@ public class SparseMapPersonService implements SakaiPersonService {
     } finally {
       SparseUtils.logoutQuietly(adminSession);
     }
-  }
-
-  @Override
-  public List<SakaiPerson> searchPeople(String query, Set<String> tags, boolean alsoSearchProfile, String sortOn, SortOrder sortOrder, int limit, int offset) {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
   }
 
   @Property(value={"sha1"})

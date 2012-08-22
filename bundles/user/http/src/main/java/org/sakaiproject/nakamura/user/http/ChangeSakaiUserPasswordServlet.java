@@ -23,10 +23,10 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.sakaiproject.nakamura.api.http.cache.DynamicContentResponseCache;
-import org.sakaiproject.nakamura.api.user.BadRequestException;
-import org.sakaiproject.nakamura.api.user.PermissionDeniedException;
-import org.sakaiproject.nakamura.api.user.SakaiAuthorizationService;
-import org.sakaiproject.nakamura.api.user.SakaiPersonService;
+import org.sakaiproject.nakamura.api.people.BadRequestException;
+import org.sakaiproject.nakamura.api.people.PermissionDeniedException;
+import org.sakaiproject.nakamura.api.people.SakaiAuthorizationService;
+import org.sakaiproject.nakamura.api.people.SakaiPersonService;
 import org.sakaiproject.nakamura.api.user.UserConstants;
 
 import javax.servlet.ServletException;
