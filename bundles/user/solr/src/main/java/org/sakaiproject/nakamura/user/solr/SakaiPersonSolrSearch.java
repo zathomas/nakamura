@@ -51,18 +51,15 @@ public class SakaiPersonSolrSearch implements SakaiPersonSearchService {
         PersonSearchQueryHandler.REQUEST_PARAMS.fullprofile.toString(), Boolean.toString(alsoSearchProfile));
     Query solrQuery = personSearchQueryHandler.getQuery(searchParams);
     try {
-      SolrSearchResultSet resultSet = searchServiceFactory.getSearchResultSet(searchUserId, solrQuery, new SolrSearchParameters(offset, limit, SolrQuery.ORDER.valueOf(sortOrder.toString()), sortOn));
+      SolrSearchResultSet resultSet = searchServiceFactory.getSearchResultSet(searchUserId, solrQuery,
+          new SolrSearchParameters(offset, limit, SolrQuery.ORDER.valueOf(sortOrder.toString()), sortOn));
       for (Iterator<Result> iterator = resultSet.getResultSetIterator(); iterator.hasNext();) {
         Result result = iterator.next();
-        results.add(makeSakaiPerson(result));
+        results.add(personSearchQueryHandler.makePersonFromResult(result));
       }
     } catch (SolrSearchException e) {
       throw new RuntimeException(e);
     }
     return results;
-  }
-
-  private SakaiPerson makeSakaiPerson(Result searchResult) {
-    return null;  //To change body of created methods use File | Settings | File Templates.
   }
 }

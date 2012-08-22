@@ -29,17 +29,22 @@ import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.GroupParams;
 import org.sakaiproject.nakamura.api.connections.ConnectionManager;
+import org.sakaiproject.nakamura.api.lite.ClientPoolException;
+import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException;
 import org.sakaiproject.nakamura.api.lite.authorizable.Authorizable;
 import org.sakaiproject.nakamura.api.lite.authorizable.AuthorizableManager;
+import org.sakaiproject.nakamura.api.people.DefaultSakaiPerson;
+import org.sakaiproject.nakamura.api.people.SakaiPerson;
 import org.sakaiproject.nakamura.api.search.SearchConstants;
 import org.sakaiproject.nakamura.api.search.solr.DomainObjectSearchQueryHandler;
 import org.sakaiproject.nakamura.api.search.solr.Query;
 import org.sakaiproject.nakamura.api.search.solr.Result;
 import org.sakaiproject.nakamura.api.user.BasicUserInfoService;
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
+import org.sakaiproject.nakamura.util.SparseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +73,9 @@ public class PersonSearchQueryHandler extends DomainObjectSearchQueryHandler {
 
   @Reference
   ConnectionManager connectionManager;
+
+  @Reference
+  Repository sparseRepository;
 
   @Override
   public String getResourceTypeClause(Map<String, String> parametersMap) {
@@ -130,6 +138,29 @@ public class PersonSearchQueryHandler extends DomainObjectSearchQueryHandler {
     } catch (AccessDeniedException e) {
       LOGGER.error(e.getMessage(), e);
     }
+  }
+
+  public SakaiPerson makePersonFromResult(Result result) {
+    if (result != null) {
+      Session adminSession = null;
+      try {
+        adminSession = sparseRepository.loginAdministrative();
+        AuthorizableManager authorizableManager = adminSession.getAuthorizableManager();
+        Authorizable person = authorizableManager.findAuthorizable(result.getPath());
+        if (person != null) {
+          Map<String, Object> basicInfo = basicUserInfoService.getProperties(person);
+          String firstName = (String) basicInfo.get("firstName");
+          String lastName = (String) basicInfo.get("lastName");
+          String email = (String) basicInfo.get("email");
+          return new DefaultSakaiPerson(person.getId(), firstName, lastName, email, basicInfo);
+        }
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      } finally {
+        SparseUtils.logoutQuietly(adminSession);
+      }
+    }
+    throw new RuntimeException("Unable to reconstitute a SakaiPerson from solr result: " + result.toString());
   }
 
   /**
