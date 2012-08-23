@@ -156,7 +156,7 @@ public abstract class AbstractContentSearchQueryHandler extends DomainObjectSear
           }
         }
         ExtendedJSONWriter.writeContentTreeToWriter(jsonWriter, content, true, traversalDepth);
-        FileUtils.writeCommentCountProperty(content, session, jsonWriter, repository);
+        FileUtils.writeCommentCountProperty(content, session, jsonWriter);
         jsonWriter.endObject();
       }
     } catch (StorageClientException e) {

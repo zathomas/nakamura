@@ -56,6 +56,8 @@ import org.sakaiproject.nakamura.files.search.LiteFileSearchBatchResultProcessor
 import org.sakaiproject.nakamura.util.ExtendedJSONWriter;
 import org.sakaiproject.nakamura.util.PathUtils;
 import org.sakaiproject.nakamura.util.ServletUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -101,6 +103,8 @@ response = {
 )
 public class DirectoryTagFeedServlet extends SlingSafeMethodsServlet {
   private static final long serialVersionUID = -8815248520601921760L;
+
+  private static final Logger LOG = LoggerFactory.getLogger(DirectoryTagFeedServlet.class);
 
   @Reference
   protected transient SearchServiceFactory searchServiceFactory;
@@ -170,6 +174,7 @@ public class DirectoryTagFeedServlet extends SlingSafeMethodsServlet {
       }
       write.endObject();
     } catch (Exception e) {
+      LOG.warn("Could not write <directory>.tagged.json", e);
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getLocalizedMessage());
     }
   }

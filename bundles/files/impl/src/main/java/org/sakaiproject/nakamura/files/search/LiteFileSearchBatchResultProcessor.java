@@ -30,7 +30,6 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.sakaiproject.nakamura.api.files.FileUtils;
 import org.sakaiproject.nakamura.api.files.FilesConstants;
-import org.sakaiproject.nakamura.api.lite.Repository;
 import org.sakaiproject.nakamura.api.lite.Session;
 import org.sakaiproject.nakamura.api.lite.StorageClientException;
 import org.sakaiproject.nakamura.api.lite.StorageClientUtils;
@@ -74,9 +73,6 @@ public class LiteFileSearchBatchResultProcessor implements SolrSearchBatchResult
 
   @Reference
   private ProfileService profileService;
-  
-  @Reference
-  private Repository repository;
 
   public LiteFileSearchBatchResultProcessor() {
   }
@@ -182,7 +178,7 @@ public class LiteFileSearchBatchResultProcessor implements SolrSearchBatchResult
       FileUtils.writeFileNode(content, session, write, depth, true);
     }
     FileUtils.writeComments(content, session, write);
-    FileUtils.writeCommentCountProperty(content, session, write, repository);
+    FileUtils.writeCommentCountProperty(content, session, write);
     write.endObject();
   }
 

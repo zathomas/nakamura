@@ -342,14 +342,18 @@ public class FileUtils {
    * @throws JSONException
    */
   public static void writeCommentCountProperty(Content content,
-      org.sakaiproject.nakamura.api.lite.Session session, JSONWriter writer, Repository repository) 
+      org.sakaiproject.nakamura.api.lite.Session session, JSONWriter writer)
           throws StorageClientException, JSONException {
 
     int commentCount = 0;
     String COMMENTCOUNT = "commentCount";
 
     if(content.hasProperty(COMMENTCOUNT)){
-      commentCount = (Integer)content.getProperty(COMMENTCOUNT);
+      try {
+        commentCount = (Integer)content.getProperty(COMMENTCOUNT);
+      } catch (ClassCastException e) {
+        commentCount = Integer.parseInt((String) content.getProperty(COMMENTCOUNT));
+      }
     } else {
       // no commentCount property on Content, then evaluate count and add property
       Content comments = null;
@@ -361,7 +365,7 @@ public class FileUtils {
         }
         content.setProperty(COMMENTCOUNT, commentCount);
         //save property
-        adminSession = repository.loginAdministrative();
+        adminSession = session.getRepository().loginAdministrative();
         ContentManager adminContentManager = adminSession.getContentManager();
         adminContentManager.update(content);
       } catch (org.sakaiproject.nakamura.api.lite.accesscontrol.AccessDeniedException e) {
