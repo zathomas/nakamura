@@ -313,4 +313,24 @@ public class SparseTagOperationTest {
 
     assertNull(tagResult);
   }
+
+  @Test
+  public void testDontAcceptEmptyTag() throws Exception {
+    Resource resource = mock(Resource.class);
+    when(resource.getPath()).thenReturn("/bla/bla");
+
+    when(resource.adaptTo(Content.class)).thenReturn(content);
+    when(request.getResource()).thenReturn(resource);
+    when(request.getResourceResolver()).thenReturn(resolver);
+    when(request.getParameterValues("key")).thenReturn(new String[] { "/tags/ " });
+    when(request.getParameter(":operation")).thenReturn("tag");
+    when(request.getRemoteUser()).thenReturn("john");
+
+    operation.doRun(request, response, contentManager, null, "/bla/bla");
+
+    assertEquals(404, response.getStatusCode());
+
+    Content tagResult = contentManager.get("/tags/ ");
+    assertNull(tagResult);
+  }
 }
