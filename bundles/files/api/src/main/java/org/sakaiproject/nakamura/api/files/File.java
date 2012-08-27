@@ -77,4 +77,32 @@ public class File {
   public Map<String, Object> getProperties() {
     return properties;
   }
+
+  public void setCreator(String creator) {
+    this.creator = creator;
+  }
+
+  public void setFilename(String filename) {
+    this.filename = filename;
+  }
+
+  public void setContentType(String contentType) {
+    this.contentType = contentType;
+  }
+
+  public void setPoolID(String poolID) {
+    this.poolID = poolID;
+  }
+
+  public void setProperties(Map<String, Object> properties) {
+    this.properties = properties;
+  }
+
+  public void updateFromParams(FileParams fileParams) {
+    this.filename = fileParams.getFilename();
+    this.creator = fileParams.getCreator();
+    this.poolID = fileParams.getPoolID();
+    this.contentType = fileParams.getContentType();
+    this.properties = fileParams.getProperties();
+  }
 }

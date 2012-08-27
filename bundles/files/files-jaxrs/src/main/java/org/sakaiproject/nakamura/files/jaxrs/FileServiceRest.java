@@ -49,6 +49,11 @@ public class FileServiceRest implements JaxrsService {
   @Reference
   NakamuraWebContext nakamuraContext;
 
+  @GET @Path("/hello")
+  public String getMessage() {
+    return "Wassup?";
+  }
+
   @GET @Path("/id/{id}")
   public File getFile(@PathParam("id") String id) {
     String currentUserId = nakamuraContext.getCurrentUserId();
@@ -56,8 +61,9 @@ public class FileServiceRest implements JaxrsService {
   }
 
   @POST @Path("/id/{id}")
-  public void updateFile(FileParams fileParams) {
+  public void updateFile(@PathParam("id") String id) {
     try {
+      FileParams fileParams = new FileParams();
       fileService.updateFile(fileParams);
     } catch (Exception e) {
       throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
