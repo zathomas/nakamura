@@ -18,24 +18,34 @@
 
 package org.sakaiproject.nakamura.api.files;
 
+import javax.jdo.annotations.NotPersistent;
+import javax.jdo.annotations.PersistenceCapable;
+import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.PrimaryKey;
 import java.util.Map;
 
 /**
  * Represents a pooled content item that is in persistent storage.
  */
+@PersistenceCapable
 public class File {
 
+  @Persistent
   private String creator;
 
+  @Persistent
   private String filename;
 
+  @Persistent
   private String contentType;
 
+  @Persistent @PrimaryKey
   private String poolID;
 
-  private Map<String, Object> properties;
+  @NotPersistent
+  private Map<String, String> properties;
 
-  public File(String creator, String filename, String contentType, String poolID, Map<String, Object> properties) {
+  public File(String creator, String filename, String contentType, String poolID, Map<String, String> properties) {
     this.creator = creator;
     this.filename = filename;
     this.contentType = contentType;
@@ -74,7 +84,7 @@ public class File {
   /**
    * @return A map of properties that are set on the file.
    */
-  public Map<String, Object> getProperties() {
+  public Map<String, String> getProperties() {
     return properties;
   }
 
@@ -94,7 +104,7 @@ public class File {
     this.poolID = poolID;
   }
 
-  public void setProperties(Map<String, Object> properties) {
+  public void setProperties(Map<String, String> properties) {
     this.properties = properties;
   }
 

@@ -13,6 +13,40 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.datanucleus</groupId>
+        <artifactId>maven-datanucleus-plugin</artifactId>
+        <version>3.1.0-release</version>
+        <configuration>
+          <props>${basedir}/datanucleus.properties</props>
+          <verbose>true</verbose>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>enhance</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-api-jdo</artifactId>
+            <version>3.1.0-release</version>
+          </dependency>
+          <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-rdbms</artifactId>
+            <version>3.1.0-release</version>
+          </dependency>
+          <dependency>
+            <groupId>postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>9.1-901-1.jdbc4</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-scr-plugin</artifactId>
       </plugin>
@@ -36,7 +70,11 @@
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
     </dependency>
-    
+    <dependency>
+      <groupId>javax.jdo</groupId>
+      <artifactId>jdo-api</artifactId>
+    </dependency>
+
     <!--  JCR, Jackrabbit and Sling -->
     <dependency>
       <groupId>javax.jcr</groupId>

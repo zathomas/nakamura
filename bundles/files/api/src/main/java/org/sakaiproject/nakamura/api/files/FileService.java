@@ -25,6 +25,8 @@ import java.io.IOException;
  */
 public interface FileService {
 
+  File getFile(String poolID);
+
   /**
    * Create a {@link File} with the given parameters.
    *

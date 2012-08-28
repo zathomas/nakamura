@@ -66,7 +66,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Component
+@Component(enabled = false)
 @Service(value = FileService.class)
 public class SparseFileServiceImpl implements FileService {
 

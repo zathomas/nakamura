@@ -39,7 +39,7 @@ public class FileParams {
 
   private String alternativeStream;
 
-  private Map<String, Object> properties;
+  private Map<String, String> properties;
 
   /**
    * @return The user ID of the user that created the file.
@@ -129,14 +129,14 @@ public class FileParams {
   /**
    * @return A map of properties that will be set on the file.
    */
-  public Map<String, Object> getProperties() {
+  public Map<String, String> getProperties() {
     return properties;
   }
 
   /**
    * @param properties A map of properties that will be set on the file.
    */
-  public void setProperties(Map<String, Object> properties) {
+  public void setProperties(Map<String, String> properties) {
     this.properties = properties;
   }
 
